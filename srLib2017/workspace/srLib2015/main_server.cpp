@@ -1,6 +1,6 @@
 #include <cstdio>
 
-//#include "myRenderer.h"
+#include "myRenderer.h"
 //#include "2ndRenderer.h"
 
 #include "common\dataIO.h"
