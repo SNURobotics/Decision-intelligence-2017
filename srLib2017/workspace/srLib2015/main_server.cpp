@@ -206,9 +206,9 @@ int main(int argc, char **argv)
 		else if (hyu_data_flag == 'G') {
 			
 			char* send_data;
-			//send_data = getSimulationState(objects);
-			//serv.SendMessageToClient(send_data);
-			serv.SendMessageToClient(hyu_data);
+			send_data = getSimulationState(objects);
+			serv.SendMessageToClient(send_data);
+			//serv.SendMessageToClient(hyu_data);
 		}
 		else if (hyu_data_flag == 'R')
 		{

@@ -13,7 +13,7 @@
 #include "robotManager\environment_QBtech.h"
 #include "robotManager\environment_workcell.h"
 #include "robotManager\robotRRTManager.h"
-
+#include "ForceCtrlManager\hybridPFCtrlManager.h"
 #include <fstream>
 #include <iostream>
 
@@ -78,12 +78,14 @@ indyRobotManager* rManager1;
 indyRobotManager* rManager2;
 robotRRTManager* RRTManager = new robotRRTManager;
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::HYBRID;
+hybridPFCtrlManager_6dof* hctrl = new hybridPFCtrlManager_6dof;
 void initDynamics();
 void rendering(int argc, char **argv);
 void updateFunc();
 void updateFuncInput();
 void updateFuncPlanning();
 void updateFuncTestSensor();
+void updateFuncTestSensorToRobot();
 void updateFuncLoadJointValAttachStatus();
 void environmentSetting_HYU(bool connect, int startLocation, Vec2 goalLocation);
 void environmentSetting_HYU2(bool connect);
@@ -96,6 +98,7 @@ void RRT_problemSetting(Eigen::VectorXd init, vector<SE3> wayPoints, vector<bool
 void RRTSolve();
 void RRTSolve_HYU(vector<bool> attachObject, vector<double> stepsize);
 void rrtSetting();
+void setHybridPFCtrl();
 
 Vec2 goalLocation; // busbar insertion location
 
@@ -108,6 +111,7 @@ SE3 Twaypoint;
 SE3 Trobotbase;
 Eigen::VectorXd testWaypoint;
 vector<Eigen::VectorXd> testJointVal(0);
+Eigen::VectorXd testjointvalue(6);
 int main(int argc, char **argv)
 {
 	srand(time(NULL));
@@ -518,7 +522,54 @@ int main(int argc, char **argv)
 	//dir_temp = dir_folder;
 	//saveDataToText(traj[0], dir_temp.append("/testJointValTraj0").append(".txt"));
 	/////////////////////////////////////////////////////////////////////////////////////////////////
-	rManager1->setJointVal(homePos);
+
+	//////////////////////////////////////////////////////////////////////////////// 170524 test robot HW matching
+	//testjointvalue[0] = 5.268; testjointvalue[1] = -97.95; testjointvalue[2] = 18.47; testjointvalue[3] = 90.0; testjointvalue[4] = 10.59; testjointvalue[5] = -1.48;
+	//testjointvalue *= SR_PI / 180.0;
+	//rManager1->setJointVal(testjointvalue);
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	//testjointvalue[0] = -45.469; testjointvalue[1] = -98.083; testjointvalue[2] = 16.538; testjointvalue[3] = 90.0; testjointvalue[4] = 10.566; testjointvalue[5] = 44.116;
+	//testjointvalue *= SR_PI / 180.0;
+	//rManager1->setJointVal(testjointvalue);
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	//testjointvalue[0] = -51.876; testjointvalue[1] = -91.79; testjointvalue[2] = -15.676; testjointvalue[3] = 90.0; testjointvalue[4] = -14.205; testjointvalue[5] = 44.251;
+	//testjointvalue *= SR_PI / 180.0;
+	//rManager1->setJointVal(testjointvalue);
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+
+	//////////////////////////////////////////////////////////////////////////////// 170524 test robot HW matching
+	double x1 = 0.75 - 0.49;
+	double x2 = x1 - 0.48;
+	SE3 Twayconv1 = SE3(Vec3(0.5*(x1 + x2), 0.5*2.068 - 0.29972 - 0.05 - 0.15, 0.5*(0.1511) + 1.03555 - 0.03));
+	Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
+	qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
+	int flag;
+	testjointvalue = rManager1->inverseKin(Twayconv1 * Tbusbar2gripper, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit2);
+	cout << flag << endl;
+	cout << Twayconv1 * Tbusbar2gripper << endl;
+	rManager1->setJointVal(testjointvalue);
+	vector<SE3> Tdestrj(1);
+	vector<dse3> fdestrj(1);
+	Tdestrj[0] = SE3(Vec3(0.0, 0.0, -0.009 - 0.001))*Twayconv1 * Tbusbar2gripper;	// -0.009: when contact start
+	fdestrj[0] = dse3(0.0);
+	setHybridPFCtrl();
+	hctrl->setDesiredTraj(Tdestrj, fdestrj);
+
+
+
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	//testjointvalue[0] = -45.469; testjointvalue[1] = -98.083; testjointvalue[2] = 16.538; testjointvalue[3] = 90.0; testjointvalue[4] = 10.566; testjointvalue[5] = 44.116;
+	//testjointvalue *= SR_PI / 180.0;
+	//rManager1->setJointVal(testjointvalue);
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	//testjointvalue[0] = -51.876; testjointvalue[1] = -91.79; testjointvalue[2] = -15.676; testjointvalue[3] = 90.0; testjointvalue[4] = -14.205; testjointvalue[5] = 44.251;
+	//testjointvalue *= SR_PI / 180.0;
+	//rManager1->setJointVal(testjointvalue);
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 	cout << Trobotbase % robot1->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() << endl;
 
 
@@ -537,7 +588,7 @@ void rendering(int argc, char **argv)
 
 	renderer->InitializeRenderer(argc, argv, windows, false);
 	renderer->InitializeNode(&gSpace);
-	renderer->setUpdateFunc(updateFunc);
+	renderer->setUpdateFunc(updateFuncTestSensorToRobot);
 	//if (planning)
 	//	renderer->setUpdateFunc(updateFuncPlanning);
 	//else
@@ -560,7 +611,7 @@ void updateFunc()
 	
 	rManager2->setJointVal(jointVal);
 	static int cnt = 0;
-	rManager1->setJointVal(homePos);
+	rManager1->setJointVal(testjointvalue);
 	//rManager1->setJointVal(testWaypoint);
 	//rManager1->setJointVal(traj[0][cnt%(traj[0].size()-1)]);
 	cnt++;
@@ -1047,7 +1098,36 @@ void rrtSetting()
 }
 
 
+void setHybridPFCtrl()
+{
+	// initial config should be aligned to the contact plane
+	// assume target object is rigidly attached to robot end-effector
+	vector<srLink*> contactLinks(2);
+	contactLinks[0] = &robot1->gLink[Indy_Index::GRIPPER_FINGER_L];
+	contactLinks[1] = &robot1->gLink[Indy_Index::GRIPPER_FINGER_U];
+	hctrl->isSystemSet = hctrl->setSystem((robotManager*)rManager1, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], SE3(), contactLinks);
+	hctrl->setTimeStep(rManager1->m_space->m_Timestep_dyn_fixed);
+	double kv_v = 0.25e2, kp_v = 0.25*kv_v*kv_v, ki_v = 0.0e3, kp_f = 1.0e-1, ki_f = 1.0e-1;
+	hctrl->setGain(kv_v, kp_v, ki_v, kp_f, ki_f);
+	//hctrl->Kp_v = kp_v * Eigen::MatrixXd::Identity(6, 6);
+	//hctrl->Kv_v = kv_v * Eigen::MatrixXd::Identity(6, 6);
+	//hctrl->Ki_v = ki_v * Eigen::MatrixXd::Identity(6, 6);
+	//hctrl->Ki_f = ki_f * Eigen::MatrixXd::Identity(6, 6);
+	//hctrl->Kp_f = kp_f * Eigen::MatrixXd::Identity(6, 6);
 
+	// S*V = 0 should be satisfied
+	// pos controlled dir: trans x, y, rot z
+	// force controlled dir: moment x, y, force z
+	Eigen::MatrixXd S = Eigen::MatrixXd::Zero(3, 6);
+	S(0, 0) = 1.0;
+	S(1, 1) = 1.0;
+	S(2, 5) = 1.0;
+	Eigen::MatrixXd S2 = Eigen::MatrixXd::Zero(1, 6);
+	S2(0, 5) = 1.0;
+
+	//hctrl->setSelectionMatrix(S);
+	hctrl->setSelectionMatrix(Eigen::MatrixXd());	//Eigen::MatrixXd(), S
+}
 
 void RRT_problemSetting()
 {
@@ -1292,6 +1372,19 @@ void RRTSolve_HYU(vector<bool> attachObject, vector<double> stepsize)
 			tempTtraj[j] = rManager1->forwardKin(traj[i][j], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
 		Ttraj.push_back(tempTtraj);
 	}
+}
+
+void updateFuncTestSensorToRobot()
+{
+	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
+	hctrl->hybridPFControl();
+
+	cout << "q: " << rManager1->getJointVal().transpose() << endl;
+	cout << "F: " << rManager1->readSensorValue() << endl;
+	//cout << rManager1->m_ftSensorInfo[0]->m_sensorLocJoint->GetFrame() << endl;
+	cout << rManager1->m_activeArmInfo->m_endeffector[0]->GetFrame() << endl;
+	cout << hctrl->T_des_trj[0] << endl;
+	int stop = 1;
 }
 
 void updateFuncLoadJointValAttachStatus()
