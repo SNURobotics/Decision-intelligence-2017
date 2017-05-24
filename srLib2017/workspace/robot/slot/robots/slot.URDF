@@ -1,0 +1,255 @@
+<robot
+  name="slot">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="0.129515317786923 0.000392470659963994 0.515"
+        rpy="0 0 0" />
+      <mass
+        value="0.03296" />
+      <inertia
+        ixx="2.82357333333334E-06"
+        ixy="-3.37495448380618E-36"
+        ixz="-1.396680880802E-19"
+        iyy="0.000731297253333334"
+        iyz="-1.51377645420539E-23"
+        izz="0.000728495653333334" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://slot/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://slot/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="slot_side-2">
+    <inertial>
+      <origin
+        xyz="0.00125000000000003 0.0075 -0.016"
+        rpy="0 0 0" />
+      <mass
+        value="0.0012" />
+      <inertia
+        ixx="1.249E-07"
+        ixy="2.20581496680795E-25"
+        ixz="4.41162993361634E-25"
+        iyy="1.03025E-07"
+        iyz="1.88649805759728E-40"
+        izz="2.3125E-08" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://slot/meshes/slot_side-2.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://slot/meshes/slot_side-2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="slot_side-2-joint"
+    type="fixed">
+    <origin
+      xyz="0.384515317786923 -0.531 0.00139247065996403"
+      rpy="1.5707963267949 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="slot_side-2" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="slot_side-1">
+    <inertial>
+      <origin
+        xyz="0.00125 0.0075 -0.016"
+        rpy="0 0 0" />
+      <mass
+        value="0.0012" />
+      <inertia
+        ixx="1.249E-07"
+        ixy="0"
+        ixz="0"
+        iyy="1.03025E-07"
+        iyz="1.88649805759728E-40"
+        izz="2.3125E-08" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://slot/meshes/slot_side-1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://slot/meshes/slot_side-1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="slot_side-1-joint"
+    type="fixed">
+    <origin
+      xyz="-0.127984682213077 -0.531 0.00139247065996403"
+      rpy="1.5707963267949 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="slot_side-1" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="slot_back-1">
+    <inertial>
+      <origin
+        xyz="0.255 0.0075 -0.00250000000000006"
+        rpy="0 0 0" />
+      <mass
+        value="0.03825" />
+      <inertia
+        ixx="7.96875000000001E-07"
+        ixy="-4.99585099099472E-35"
+        ixz="-7.3233056898027E-22"
+        iyy="0.000829148437500001"
+        iyz="-1.06726737744559E-39"
+        izz="0.000829785937500001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://slot/meshes/slot_back-1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://slot/meshes/slot_back-1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="slot_back-1-joint"
+    type="fixed">
+    <origin
+      xyz="-0.125484682213077 -0.504 0.00139247065996403"
+      rpy="1.5707963267949 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="slot_back-1" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="slot-2">
+    <inertial>
+      <origin
+        xyz="-0.2575 0.000999999999999997 -0.016"
+        rpy="0 0 0" />
+      <mass
+        value="0.0329600000000001" />
+      <inertia
+        ixx="2.82357333333334E-06"
+        ixy="-2.24996965587078E-36"
+        ixz="-1.39678675992041E-19"
+        iyy="0.000731297253333335"
+        iyz="-1.5137764542054E-23"
+        izz="0.000728495653333335" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://slot/meshes/slot-2.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://slot/meshes/slot-2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="slot-2-joint"
+    type="fixed">
+    <origin
+      xyz="0.387015317786923 -0.531 0.016392470659964"
+      rpy="1.5707963267949 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="slot-2" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+</robot>

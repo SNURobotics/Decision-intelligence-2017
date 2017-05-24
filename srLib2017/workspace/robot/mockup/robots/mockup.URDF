@@ -1,0 +1,361 @@
+<robot
+  name="mockup">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="0.00058212294029869 -0.000288787516209759 0.0500876489030859"
+        rpy="0 0 0" />
+      <mass
+        value="0.0224018252295753" />
+      <inertia
+        ixx="5.06846023965497E-06"
+        ixy="1.29525743021127E-24"
+        ixz="-3.33479486220217E-22"
+        iyy="6.3256638175295E-06"
+        iyz="4.93025079858009E-09"
+        izz="2.09808476900114E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mockup/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mockup/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="leg1-1">
+    <inertial>
+      <origin
+        xyz="-0.015 0.0363855644816041 -0.0102484577173933"
+        rpy="0 0 0" />
+      <mass
+        value="0.0433036504591506" />
+      <inertia
+        ixx="2.07833110419417E-05"
+        ixy="1.34383581090448E-21"
+        ixz="-2.70490306451324E-22"
+        iyy="4.72508409065181E-06"
+        iyz="-4.49818752520106E-07"
+        izz="2.25438036450412E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mockup/meshes/leg1-1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mockup/meshes/leg1-1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="leg1-1-joint"
+    type="fixed">
+    <origin
+      xyz="0.0155821229402987 -0.045 0.00722216859667598"
+      rpy="1.5707963267949 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="leg1-1" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="foot2-1">
+    <inertial>
+      <origin
+        xyz="-0.015 0.00748904388711427 -0.0249123510969141"
+        rpy="0 0 0" />
+      <mass
+        value="0.0224018252295753" />
+      <inertia
+        ixx="5.06846023965497E-06"
+        ixy="-7.16526759544816E-24"
+        ixz="-5.12172323933567E-22"
+        iyy="6.3256638175295E-06"
+        iyz="4.93025079858009E-09"
+        izz="2.09808476900114E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mockup/meshes/foot2-1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mockup/meshes/foot2-1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="foot2-1-joint"
+    type="fixed">
+    <origin
+      xyz="0.250582122940299 -0.075 -0.00777783140332399"
+      rpy="1.5707963267949 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="foot2-1" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="foot3-1">
+    <inertial>
+      <origin
+        xyz="-0.015 0.00748904388711427 -0.0249123510969141"
+        rpy="0 0 0" />
+      <mass
+        value="0.0224018252295753" />
+      <inertia
+        ixx="5.06846023965496E-06"
+        ixy="1.49418149565374E-22"
+        ixz="-4.6574788441216E-24"
+        iyy="6.32566381752949E-06"
+        iyz="4.93025079858009E-09"
+        izz="2.09808476900113E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mockup/meshes/foot3-1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mockup/meshes/foot3-1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="foot3-1-joint"
+    type="fixed">
+    <origin
+      xyz="0.485582122940299 -0.075 -0.00777783140332402"
+      rpy="1.5707963267949 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="foot3-1" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="leg2_modify-1">
+    <inertial>
+      <origin
+        xyz="-0.015 0.0363855644816041 -0.0102484577173933"
+        rpy="0 0 0" />
+      <mass
+        value="0.0433036504591506" />
+      <inertia
+        ixx="2.07833110419417E-05"
+        ixy="1.12577411975672E-21"
+        ixz="-4.03783154775522E-22"
+        iyy="4.72508409065181E-06"
+        iyz="-4.49818752520106E-07"
+        izz="2.25438036450412E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mockup/meshes/leg2_modify-1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mockup/meshes/leg2_modify-1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="leg2_modify-1-joint"
+    type="fixed">
+    <origin
+      xyz="0.250582122940299 -0.045 0.00722216859667602"
+      rpy="1.5707963267949 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="leg2_modify-1" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="leg3_modify-1">
+    <inertial>
+      <origin
+        xyz="-0.015 0.0363855644816041 -0.0102484577173933"
+        rpy="0 0 0" />
+      <mass
+        value="0.0433036504591507" />
+      <inertia
+        ixx="2.07833110419417E-05"
+        ixy="1.4950020181051E-21"
+        ixz="-1.7142096693701E-22"
+        iyy="4.72508409065182E-06"
+        iyz="-4.49818752520106E-07"
+        izz="2.25438036450413E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mockup/meshes/leg3_modify-1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mockup/meshes/leg3_modify-1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="leg3_modify-1-joint"
+    type="fixed">
+    <origin
+      xyz="0.485582122940299 -0.045 0.00722216859667596"
+      rpy="1.5707963267949 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="leg3_modify-1" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="bar-1">
+    <inertial>
+      <origin
+        xyz="-0.25 0.005 -0.0200221219005331"
+        rpy="0 0 0" />
+      <mass
+        value="0.199705475688726" />
+      <inertia
+        ixx="2.82643982139142E-05"
+        ixy="-3.2393006184842E-19"
+        ixz="1.02539742052652E-20"
+        iyy="0.00418239388171009"
+        iyz="1.70801236625673E-21"
+        izz="0.00415745790809098" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mockup/meshes/bar-1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mockup/meshes/bar-1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="bar-1-joint"
+    type="fixed">
+    <origin
+      xyz="0.485582122940299 -0.03 0.087222168596676"
+      rpy="-1.5707963267949 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="bar-1" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+</robot>
