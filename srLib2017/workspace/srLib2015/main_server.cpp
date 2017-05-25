@@ -33,11 +33,12 @@
 #include <vector>
 
 
-mutex m;
+static mutex m;
 
 // Environment
 JigAssem_QB* jigAssem = new JigAssem_QB;
 vector<BusBar_HYU*> busbar(1);
+
 vector<SE3>	initSE3(2);
 vector<SE3>	goalSE3(2);
 
@@ -48,7 +49,7 @@ Eigen::VectorXd stageVal(3);
 // Robot
 IndyRobot* robot1 = new IndyRobot;
 IndyRobot* robot2 = new IndyRobot;
-Eigen::VectorXd jointVal(6);
+Eigen::VectorXd homePosRobot2(6);
 Eigen::VectorXd jointAcc(6);
 Eigen::VectorXd jointVel(6);
 srSpace gSpace;
@@ -68,7 +69,7 @@ vector<Eigen::VectorXd> initPos(0);
 vector<Eigen::VectorXd> goalPos(0);
 vector<SE3> wayPoints(0);
 
-Eigen::VectorXd homePos = Eigen::VectorXd::Zero(6);
+Eigen::VectorXd homePosRobot1 = Eigen::VectorXd::Zero(6);
 
 SE3 initBusbar = SE3(Vec3(0.0, 0.0, -0.5));
 
@@ -88,11 +89,17 @@ indyRobotManager* rManager2;
 robotRRTManager* RRTManager = new robotRRTManager;
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::HYBRID;
 void initDynamics();
+// rendering
 void rendering(int argc, char **argv);
 void updateFunc();
 void updateFuncInput();
 void updateFuncPlanning();
 void updateFuncTestSensor();
+
+void updateFuncVision();
+void updateFuncHYUPlanning();
+void updateFuncRobotState();
+
 void environmentSetting_HYU(bool connect, int startLocation, Vec2 goalLocation);
 void environmentSetting_HYU2(bool connect);
 
@@ -111,10 +118,15 @@ void RRTSolve();
 void RRTSolve_HYU(vector<bool> attachObject, vector<double> stepsize);
 void rrtSetting();
 
-void communicationFunc();
+void communicationFunc(int argc, char **argv);
+
 void renderFunc();
 bool renderNow;
 
+// Rendering flags
+bool isVision;
+bool isHYUPlanning;
+bool isRobotState;
 
 vector<int> flags(0);
 
@@ -142,30 +154,28 @@ int nway = 0;
 
 vector<srSystem*> objects(2);
 
+
+vector<srLink*> obstacle(10);
+vector<srWeldJoint*> wJoint(10);
+
+
 int main(int argc, char **argv)
 {
-	//// 서버 초기화
-	//Server serv = Server::Server();
-	//dataset hyu_dataset;
-	//desired_dataset hyu_desired_dataset;
-	//vision_data skku_dataset;
 
-	//char *hyu_data;
-	//char *copy;
-	//char *pbuffer;
+	busbar[0] = new BusBar_HYU;
 
-	//char hyu_data_flag;
-	//char tmp_buffer[255];
-	//char divChar = 'd';
-
-	//int digit_num = 5;
-	//int nway = 0;
-
+	for (int i = 0; i < obstacle.size(); i++)
+	{
+		obstacle[i] = new srLink();
+		wJoint[i] = new srWeldJoint;
+	}
 	
+
+
 
 	srand(time(NULL));
 	// Robot home position
-	homePos[1] = -SR_PI_HALF; homePos[3] = SR_PI_HALF; homePos[4] = 1.5 * SR_PI;
+	homePosRobot1[1] = -SR_PI_HALF; homePosRobot1[3] = SR_PI_HALF; homePosRobot1[4] = 1.5 * SR_PI;
 
 	// environment
 	workspaceSetting();
@@ -181,32 +191,32 @@ int main(int argc, char **argv)
 	busbar[0]->setBaseLinkFrame(initBusbar);
 
 	////////////////////////////////////////////// setting srLib
-	initDynamics();								// initialize srLib
+	//initDynamics();								// initialize srLib
 
-												// robot manager setting
-	robotManagerSetting();
+	//											// robot manager setting
+	//robotManagerSetting();
 
-	// workcell robot initial config
-	jointVal.setZero();
-	jointVal[0] = 0.0; jointVal[1] = -SR_PI_HALF; jointVal[2] = 80.0 / 90.0*SR_PI_HALF; jointVal[3] = SR_PI_HALF;
-	rManager2->setJointVal(jointVal);
-	rManager1->setJointVal(homePos);
-	Eigen::VectorXd gripInput(2);
-	gripInput[0] = -0.009;
-	gripInput[1] = 0.009;
-	rManager1->setGripperPosition(gripInput);
-	rManager2->setGripperPosition(gripInput);
+	//// workcell robot initial config
+	//homePosRobot2.setZero();
+	//homePosRobot2[0] = 0.0; homePosRobot2[1] = -SR_PI_HALF; homePosRobot2[2] = 80.0 / 90.0*SR_PI_HALF; homePosRobot2[3] = SR_PI_HALF;
+	//rManager2->setJointVal(homePosRobot2);
+	//rManager1->setJointVal(homePosRobot1);
+	//Eigen::VectorXd gripInput(2);
+	//gripInput[0] = -0.009;
+	//gripInput[1] = 0.009;
+	//rManager1->setGripperPosition(gripInput);
+	//rManager2->setGripperPosition(gripInput);
 
-	// rrt
-	rrtSetting();
+	//// rrt
+	//rrtSetting();
 	///////////////////////////////////////////////////////////
 
 
 	///////////////////////////////////////////////////////////
-	cout << Trobotbase % initBusbar << endl;
-	cout << jigAssem->GetBaseLink()->GetFrame() << endl;
-	char* send_data;
-	send_data = getSimulationState(objects);
+	//cout << Trobotbase % initBusbar << endl;
+	//cout << jigAssem->GetBaseLink()->GetFrame() << endl;
+	//char* send_data;
+	//send_data = getSimulationState(objects);
 	///////////////////////////////////////////////////////////
 
 	//rendering(argc, argv);
@@ -225,15 +235,12 @@ int main(int argc, char **argv)
 	//	rendThread.join();
 
 
-	
 
 	//만약 while 루프를 돌리지 않을 경우 무한정 서버를 기다리는 함수, 실제 사용하지는 않는다.
 	//serv.WaitServer(); 
 
 	// 서버를 종료 시킴
 	serv.~Server();
-
-
 
 	return 0;
 }
@@ -249,6 +256,16 @@ void rendering(int argc, char **argv)
 
 	renderer->InitializeRenderer(argc, argv, windows, false);
 	renderer->InitializeNode(&gSpace);
+
+	if (isVision)
+		renderer->setUpdateFunc(updateFuncVision);
+	else if (isHYUPlanning)
+		renderer->setUpdateFunc(updateFuncHYUPlanning);
+	else
+		renderer->setUpdateFunc(updateFuncRobotState);
+		
+
+
 	//if (planning)
 	//	renderer->setUpdateFunc(updateFuncPlanning);
 	//else
@@ -269,8 +286,8 @@ void initDynamics()
 void updateFunc()
 {
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
-	rManager2->setJointVal(jointVal);
-	rManager1->setJointVal(homePos);
+	rManager2->setJointVal(homePosRobot2);
+	rManager1->setJointVal(homePosRobot1);
 
 }
 
@@ -284,7 +301,7 @@ void updateFuncPlanning()
 	gripInput[1] = 0.009;
 	rManager1->setGripperPosition(gripInput);
 	rManager2->setGripperPosition(gripInput);
-	rManager2->setJointVal(jointVal);
+	rManager2->setJointVal(homePosRobot2);
 
 	static int cnt = 0;
 	static int writeCnt = 0;
@@ -489,21 +506,21 @@ void updateFuncTestSensor()
 	static int cnt = 0;
 	if (cnt == 0)
 	{
-		rManager1->setJointValVel(homePos, testjointVel);
-		jointVal = homePos;
+		rManager1->setJointValVel(homePosRobot1, testjointVel);
+		homePosRobot2 = homePosRobot1;
 		jointVel = testjointVel;
 	}
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 
-	jointVal = rManager1->getJointVal();
+	homePosRobot2 = rManager1->getJointVal();
 	jointVel = rManager1->getJointVel();
 	
 		
 	cnt++;
 	Eigen::VectorXd jointAcc = Eigen::VectorXd::Ones(6);
-	Eigen::VectorXd tau = rManager1->inverseDyn(jointVal, jointVel, jointAcc);
+	Eigen::VectorXd tau = rManager1->inverseDyn(homePosRobot2, jointVel, jointAcc);
 	rManager1->controlJointTorque(tau);
-	SE3 renderEndeff = rManager1->forwardKin(jointVal, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
+	SE3 renderEndeff = rManager1->forwardKin(homePosRobot2, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
 	busbar[0]->setBaseLinkFrame(renderEndeff*Inv(Tbusbar2gripper));
 	// read sensor value
 	dse3 Ftsensor = rManager1->readSensorValue();
@@ -511,11 +528,11 @@ void updateFuncTestSensor()
 	se3 g(0.0);
 	se3 Vdot(0.0);
 	se3 V(0.0);
-	V = Vectortose3(rManager1->getBodyJacobian(jointVal, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper)) * jointVel);
+	V = Vectortose3(rManager1->getBodyJacobian(homePosRobot2, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper)) * jointVel);
 	if (cnt == 0)
 		jointAcc = rManager1->getJointAcc();
-	Vdot = Vectortose3(rManager1->getBodyJacobian(jointVal, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper)) * jointAcc +
-		rManager1->getBodyJacobianDot(jointVal, jointVel, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper)) * jointVel);
+	Vdot = Vectortose3(rManager1->getBodyJacobian(homePosRobot2, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper)) * jointAcc +
+		rManager1->getBodyJacobianDot(homePosRobot2, jointVel, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper)) * jointVel);
 	for (int i = 0; i < 3; i++)
 		g[i + 3] = gSpace.m_Gravity[i];
 	Fr = busbar[0]->GetBaseLink()->m_Inertia * Vdot - dad(V, busbar[0]->GetBaseLink()->m_Inertia * V);
@@ -527,7 +544,7 @@ void updateFuncTestSensor()
 	ftsensor = dse3toVector(Ftsensor + Fr_busbar);
 	
 
-	cout << "q: " << jointVal.transpose() << endl;
+	cout << "q: " << homePosRobot2.transpose() << endl;
 	cout << "a: " << rManager1->getJointAcc().transpose() << endl;
 	cout << "f: " << ftsensor.transpose() << endl;
 	cout << "busbar: " << endl << busbar[0]->GetBaseLink()->GetFrame() << endl;
@@ -535,6 +552,84 @@ void updateFuncTestSensor()
 	cout << "A: " << Vdot << endl;
 }
 
+void updateFuncVision()
+{
+	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
+	// robot to homePos
+	rManager2->setJointVal(homePosRobot1);
+	rManager1->setJointVal(homePosRobot1);
+	cout << "Vision Update func called" << endl;
+}
+
+void updateFuncHYUPlanning()
+{
+	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
+
+	static int cnt = 0;
+
+
+	static int trjIdx = 0;
+	static int taskIdx = 0;
+
+	int idx = taskIdx % traj.size();
+	if (idx == 0 && cnt > 0)
+		cnt = 0;
+
+	// Calculate acc
+	if (trjIdx == traj[idx].size() - 1)
+		jointAcc = (traj[idx][trjIdx] - 2.0*traj[idx][trjIdx - 1] + traj[idx][trjIdx - 2]) / (gSpace.m_Timestep_dyn_fixed*gSpace.m_Timestep_dyn_fixed);
+	else if (trjIdx == traj[idx].size() - 2)
+		jointAcc = (traj[idx][trjIdx + 1] - 2.0*traj[idx][trjIdx] + traj[idx][trjIdx - 1]) / (gSpace.m_Timestep_dyn_fixed*gSpace.m_Timestep_dyn_fixed);
+	else
+		jointAcc = (traj[idx][trjIdx + 2] - 2.0*traj[idx][trjIdx + 1] + traj[idx][trjIdx]) / (gSpace.m_Timestep_dyn_fixed*gSpace.m_Timestep_dyn_fixed);
+
+	SE3 renderEndeff = rManager1->forwardKin(traj[idx][trjIdx], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
+
+	if (trjIdx < traj[idx].size() - 1)
+	{
+		jointVel = (traj[idx][trjIdx + 1] - traj[idx][trjIdx]) / gSpace.m_Timestep_dyn_fixed;
+		rManager1->setJointValVel(traj[idx][trjIdx], jointVel);
+	}
+	else
+		jointVel = (traj[idx][trjIdx] - traj[idx][trjIdx]) / gSpace.m_Timestep_dyn_fixed;
+
+	Eigen::VectorXd tau = rManager1->inverseDyn(traj[idx][trjIdx], jointVel, jointAcc);
+	rManager1->controlJointTorque(tau);
+
+	//busbar movement
+	if (attachObjRender[taskIdx % traj.size()])
+	{
+		busbar[0]->setBaseLinkFrame(rManager1->m_activeArmInfo->m_endeffector[0]->GetFrame() * Inv(Tbusbar2gripper));
+		busbar[0]->setBaseLinkFrame(renderEndeff * Inv(Tbusbar2gripper));
+	}
+
+	trjIdx++;
+
+
+	if (trjIdx == traj[idx].size())
+	{
+		trjIdx = 0;
+
+		taskIdx++;
+		cout << "taskIdx: " << taskIdx % traj.size() << endl;
+	}
+	if (gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP())
+	{
+		/*cout << taskIdx << endl;
+		cout << traj[idx][trjIdx].transpose() << endl;*/
+	}
+	cout << gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP() << endl;
+
+
+}
+
+void updateFuncRobotState()
+{
+	//gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
+	// robot to homePos
+	//rManager2->setJointVal(homePosRobot1);
+	//rManager1->setJointVal(homePosRobot1);
+}
 void environmentSetting_HYU2(bool connect)
 {
 	//SE3 Tbase = SE3(Vec3(0.025, 1.095, 1.176));		// when stage attached
@@ -800,7 +895,6 @@ void setEnviromentFromVision(const vision_data & skku_dataset)
 	// set object
 	if (skku_dataset.objPos[0].size() > 0)
 	{
-		busbar[0] = new BusBar_HYU;
 		busbar[0]->GetBaseLink()->SetFrame(Trobotbase * SKKUtoSE3(skku_dataset.objOri[0], skku_dataset.objPos[0]));
 		busbar[0]->SetBaseLinkType(srSystem::FIXED);
 	}
@@ -812,16 +906,15 @@ void setEnviromentFromVision(const vision_data & skku_dataset)
 
 
 	// set obstacle
-	vector<srLink*> obstacle(skku_dataset.obsInfo.size());
-	for (unsigned int i = 0; i < obstacle.size(); i++)
+	for (unsigned int i = 0; i < skku_dataset.obsInfo.size(); i++)
 	{
-		obstacle[i] = new srLink();
-		srWeldJoint* wJoint = new srWeldJoint;
+
 		obstacle[i]->GetGeomInfo().SetDimension(skku_dataset.obsInfo[i][3], skku_dataset.obsInfo[i][4], skku_dataset.obsInfo[i][5]);
-		wJoint->SetParentLink(workCell->GetBaseLink());
-		wJoint->SetParentLinkFrame(robot1->GetBaseLink()->GetFrame()*SE3(Vec3(skku_dataset.obsInfo[i][0], skku_dataset.obsInfo[i][1], skku_dataset.obsInfo[i][2])));
-		wJoint->SetChildLink(obstacle[i]);
-		wJoint->SetChildLinkFrame(SE3());
+		wJoint[i]->SetParentLink(workCell->GetBaseLink());
+		wJoint[i]->SetParentLinkFrame(robot1->GetBaseLink()->GetFrame()*SE3(Vec3(skku_dataset.obsInfo[i][0], skku_dataset.obsInfo[i][1], skku_dataset.obsInfo[i][2])));
+		wJoint[i]->SetChildLink(obstacle[i]);
+		wJoint[i]->SetChildLinkFrame(SE3());
+		obstacle[i]->GetGeomInfo().SetColor(0.2, 0.2, 0.2);
 	}
 
 }
@@ -920,10 +1013,13 @@ void RRT_problemSettingFromRobotCommand(const desired_dataset & hyu_desired_data
 	RRT_problemSetting(init, wayPoints, includeOri, attachObject, waypointFlag);
 }
 
-void communicationFunc()
+void communicationFunc(int argc, char **argv)
 {
 	//m.lock();
 	while (TRUE) {
+
+		isVision = false;
+		isHYUPlanning = false;
 		//Receiving data from HYU client
 		hyu_data = serv.RecevData();
 		hyu_data_flag = hyu_data[0];
@@ -931,6 +1027,8 @@ void communicationFunc()
 		// 데이터 전송
 		if (hyu_data_flag == 'V')
 		{
+			cout << "Vision communicate called" << endl;
+			
 			// vision data
 			char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
 			for (int p = 0; p <= strlen(hyu_data); p++)
@@ -939,8 +1037,36 @@ void communicationFunc()
 
 			readSKKUvision(hyu_data, skku_dataset);
 
+		/*	cout << skku_dataset.obsInfo[0][0] << endl;
+			cout << skku_dataset.objOri[0][0] << endl;
+			cout << skku_dataset.objPos[0][0] << endl;
+			*/
+
+
 			setEnviromentFromVision(skku_dataset);		// should be called later than robotSetting
 
+
+			initDynamics();								// initialize srLib
+
+														// robot manager setting
+			robotManagerSetting();
+
+			// workcell robot initial config
+			homePosRobot2.setZero();
+			homePosRobot2[0] = 0.0; homePosRobot2[1] = -SR_PI_HALF; homePosRobot2[2] = 80.0 / 90.0*SR_PI_HALF; homePosRobot2[3] = SR_PI_HALF;
+			rManager2->setJointVal(homePosRobot2);
+			rManager1->setJointVal(homePosRobot1);
+			Eigen::VectorXd gripInput(2);
+			gripInput[0] = -0.009;
+			gripInput[1] = 0.009;
+			rManager1->setGripperPosition(gripInput);
+			rManager2->setGripperPosition(gripInput);
+
+			// rrt
+			rrtSetting();
+
+			rendering(argc, argv);
+			
 
 		}
 		else if (hyu_data_flag == 'G') {
@@ -971,6 +1097,7 @@ void communicationFunc()
 			{
 				// do planning... output is vector<vector<Eigen::VectorXd>>
 				vector<bool> attachObject(0);
+
 				vector<bool> waypointFlag(0);
 				RRT_problemSettingFromRobotCommand(hyu_desired_dataset, attachObject, homePos, waypointFlag);		// change homepos later to read current joint values of robot
 				vector<double> stepsize(0);
@@ -1022,6 +1149,7 @@ void communicationFunc()
 					saveDataToText(saveAttach, dir_temp.append("/attachTraj").append(".txt"));
 					printf("planned trajectory saved!!!\n");
 				}
+				isHYUPlanning = true;
 			}
 		}
 		hyu_data[0] = '\0';
@@ -1036,3 +1164,5 @@ void renderFunc()
 	//renderer->setUpdateFunc(updateFunc);
 	renderer->RunRendering();
 }
+
+
