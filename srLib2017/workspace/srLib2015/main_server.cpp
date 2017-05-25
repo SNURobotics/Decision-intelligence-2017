@@ -175,7 +175,7 @@ int main(int argc, char **argv)
 
 	srand(time(NULL));
 	// Robot home position
-	homePosRobot1[1] = -SR_PI_HALF; homePosRobot1[3] = SR_PI_HALF; homePosRobot1[4] = 1.5 * SR_PI;
+	homePosRobot1[1] = -SR_PI_HALF; homePosRobot1[3] = SR_PI_HALF; homePosRobot1[4] = -0.5 * SR_PI;
 
 	// environment
 	workspaceSetting();
@@ -1045,7 +1045,7 @@ void communicationFunc(int argc, char **argv)
 
 			setEnviromentFromVision(skku_dataset);		// should be called later than robotSetting
 
-
+			/////////////////////////////////////// after setting environment
 			initDynamics();								// initialize srLib
 
 														// robot manager setting
@@ -1064,7 +1064,7 @@ void communicationFunc(int argc, char **argv)
 
 			// rrt
 			rrtSetting();
-
+			//////////////////////////////////////////////////////////////////////
 			rendering(argc, argv);
 			
 
@@ -1099,7 +1099,7 @@ void communicationFunc(int argc, char **argv)
 				vector<bool> attachObject(0);
 
 				vector<bool> waypointFlag(0);
-				RRT_problemSettingFromRobotCommand(hyu_desired_dataset, attachObject, homePos, waypointFlag);		// change homepos later to read current joint values of robot
+				RRT_problemSettingFromRobotCommand(hyu_desired_dataset, attachObject, homePosRobot1, waypointFlag);		// change homepos later to read current joint values of robot
 				vector<double> stepsize(0);
 				vector<double> attachobject(0);
 				for (unsigned int i = 0; i < waypointFlag.size(); i++)
