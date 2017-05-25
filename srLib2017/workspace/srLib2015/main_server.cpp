@@ -20,14 +20,12 @@
 #include <mutex>
 
 #include "../VS2013/tcp_ip_server/stdafx.h"
-//#include <Winsock2.h>
+#include <Winsock2.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "../VS2013/tcp_ip_server/Server.h"
 #include "tcp_ip_communication.h"
 #include "Eigen/Dense"
-#define BUFSIZE 512
-#define BUFFER_SIZE 4096
 //static int sendValue;
 //static char sendBuf[BUFSIZE];
 

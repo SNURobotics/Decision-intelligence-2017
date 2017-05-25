@@ -101,14 +101,14 @@ send_data = ['S'; num2str(3); char_robot_pos1; char_robot_rot1; char_robot_gripp
 client = tcpip('localhost',9000);
 fopen(client);
 
-fwrite(client,send_data);
+
 
 % pause;
 
 % receive robot traj from server
 
 while (1)
-    
+    fwrite(client,send_data);
     if client.BytesAvailable ~= 0
         curr_data = fread(client, client.BytesAvailable);
         char_data = char(curr_data);

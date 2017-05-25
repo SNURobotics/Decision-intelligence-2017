@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <thread>
 
-#define BUFSIZE 512
+#define BUFSIZE 4096
 #define BUFFER_SIZE 4096
 
 static int sendValue;
