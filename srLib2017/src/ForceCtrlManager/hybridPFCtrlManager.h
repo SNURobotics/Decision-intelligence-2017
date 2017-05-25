@@ -13,6 +13,7 @@ public:
 	};
 
 	bool								setSystem(robotManager* _robotManager, srLink* endeffector, SE3 offset = SE3(), srLink* contactLink = NULL);
+	bool								setSystem(robotManager* _robotManager, srLink* endeffector, SE3 offset, vector<srLink*> contactLinks);
 	bool								setTimeStep(double _timeStep);
 	bool								setDesiredTraj(vector<SE3> T_trj, vector<dse3> Fext_trj);
 	bool								setDesiredJointVal(const Eigen::VectorXd& q0);
@@ -25,7 +26,7 @@ public:
 public:
 	robotManager*						m_robotManager;
 	srLink*								m_endeffector;
-	srLink*								m_contactLink;
+	vector<srLink*>						m_contactLinks;
 	SE3									m_offset;
 	Eigen::MatrixXd						Kv_v;				// velocity feedback gain for position tracking
 	Eigen::MatrixXd						Kp_v;				// position feedback gain for position tracking

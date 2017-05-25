@@ -217,7 +217,7 @@ void IndyRobot::AssembleModel()
 	// GIMATIC MPLM1630N GRIPPER MODEL
 	gWeldJoint[Indy_Index::WELDJOINT_SENSOR]->SetParentLink(&gLink[Indy_Index::ENDEFFECTOR]);
 	gWeldJoint[Indy_Index::WELDJOINT_SENSOR]->SetChildLink(&gLink[Indy_Index::SENSOR]);
-	gWeldJoint[Indy_Index::WELDJOINT_SENSOR]->SetParentLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.4155 + 0.1089, 0.0, 0.7884 + 0.1529)));
+	gWeldJoint[Indy_Index::WELDJOINT_SENSOR]->SetParentLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.4155 + 0.1089 - 0.01, 0.0, 0.7884 + 0.1529)));
 	gWeldJoint[Indy_Index::WELDJOINT_SENSOR]->SetChildLinkFrame(SE3());
 	gWeldJoint[Indy_Index::WELDJOINT_SENSOR]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 
@@ -228,7 +228,7 @@ void IndyRobot::AssembleModel()
 	gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->SetParentLink(&gLink[Indy_Index::SENSOR]);
 	gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->SetChildLink(&gLink[Indy_Index::GRIPPER]);
 	gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, -0.0355, 0.0)));
-	gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, -0.0355, 0.0)));
+	gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->SetChildLinkFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(0.0, -0.0355, 0.0)));
 	gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 
 	gLink[Indy_Index::GRIPPER].GetGeomInfo().SetShape(srGeometryInfo::TDS);
@@ -295,7 +295,7 @@ void IndyRobot::AssembleModel()
 	gMarkerLink[Indy_Index::MLINK_GRIP].SetInertia(Inertia(0.001));
 
 	gWeldJoint[Indy_Index::WELDJOINT_GRIP_MARKER]->SetActType(srJoint::PASSIVE);
-	gWeldJoint[Indy_Index::WELDJOINT_GRIP_MARKER]->SetParentLink(&gLink[Indy_Index::GRIPPER]);
+	gWeldJoint[Indy_Index::WELDJOINT_GRIP_MARKER]->SetParentLink(&gLink[Indy_Index::SENSOR]);
 	gWeldJoint[Indy_Index::WELDJOINT_GRIP_MARKER]->SetChildLink(&gMarkerLink[Indy_Index::MLINK_GRIP]);
 	gWeldJoint[Indy_Index::WELDJOINT_GRIP_MARKER]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 	gWeldJoint[Indy_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, -SR_PI_HALF), Vec3(0.0, 0.0, -0.128)));
@@ -451,8 +451,8 @@ void IndyRobot::AssembleCollision()
 	// Cylinder1 size: H = 74.9-79/2 , D = 73
 	// Center1 position = (344.5+71 , 0, H/2 + 788.4+156/2)
 
-	// Cylinder2 size: H = 210.4 , D = 79
-	// Center2 position = (344.5+71 + (108.9-101.5)/2 , 0, H + 788.4+156/2+79/2)
+	// Cylinder2 size: H = 210.4 - 10, D = 79
+	// Center2 position = (344.5+71 + (108.9-101.5)/2 - 5, 0, H + 788.4+156/2+79/2)
 
 	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.3445 + 0.071, 0.0, (0.0749 - 0.0790*0.5)*0.5+0.7884+0.156*0.5)), 0.073*0.5, (0.0749 - 0.0790*0.5), thickness*0.25, space, numBox);
 	for (int i = 0; i < numBox; i++)
@@ -463,7 +463,7 @@ void IndyRobot::AssembleCollision()
 		gCollision[m_numCollision++].SetLocalFrame(boxSet[i].second);
 	}
 
-	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(0.3445 + 0.071+ (0.1089 - 0.1015) *0.5, 0.0, (0.0749 - 0.0790*0.5)+ 0.7884 + 0.156*0.5+0.079*0.5)), 0.079*0.5, 0.2104, thickness*0.25, space, numBox);
+	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(0.3445 + 0.071+ (0.1089 - 0.1015) *0.5 - 0.005, 0.0, (0.0749 - 0.0790*0.5)+ 0.7884 + 0.156*0.5+0.079*0.5)), 0.079*0.5, 0.2104 - 0.01, thickness*0.25, space, numBox);
 	for (int i = 0; i < numBox; i++)
 	{
 		gLink[Indy_Index::LINK_6].AddCollision(&gCollision[m_numCollision]);

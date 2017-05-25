@@ -8,7 +8,7 @@ hybridPFCtrlManager_6dof::hybridPFCtrlManager_6dof()
 	V_des_trj.resize(0);
 	Vdot_des_trj.resize(0);
 	Fext_des_trj.resize(0);
-
+	m_contactLinks.resize(0);
 	isDesTrjSet = false;
 	isSystemSet = false;
 	isICSet = false;
@@ -27,10 +27,25 @@ bool hybridPFCtrlManager_6dof::setSystem(robotManager * _robotManager, srLink * 
 		if (endeffector = m_robotManager->m_activeArmInfo->m_endeffector[i])
 		{
 			m_endeffector = endeffector;
+			m_contactLinks.resize(1);
 			if (contactLink == NULL)
-				m_contactLink = endeffector;
+				m_contactLinks[0] = endeffector;
 			else
-				m_contactLink = contactLink;
+				m_contactLinks[0] = contactLink;
+			return true;
+		}
+	return false;
+}
+
+bool hybridPFCtrlManager_6dof::setSystem(robotManager * _robotManager, srLink * endeffector, SE3 offset, vector<srLink*> contactLinks)
+{
+	m_robotManager = _robotManager;
+	m_offset = offset;
+	for (unsigned int i = 0; i < m_robotManager->m_activeArmInfo->m_endeffector.size(); i++)
+		if (endeffector = m_robotManager->m_activeArmInfo->m_endeffector[i])
+		{
+			m_endeffector = endeffector;
+			m_contactLinks = contactLinks;
 			return true;
 		}
 	return false;
@@ -130,7 +145,11 @@ void hybridPFCtrlManager_6dof::hybridPFControl(int metric)
 	// get current state
 	SE3 T = m_endeffector->GetFrame() * m_offset;
 	se3 V = InvAd(m_offset, m_endeffector->GetVel());
-	dse3 Fext = - InvdAd(T % m_contactLink->GetFrame(), m_contactLink->m_ConstraintImpulse) * (1.0 / m_timeStep);
+	dse3 Fext = dse3(0.0);
+	for (unsigned int i = 0; i < m_contactLinks.size(); i++)
+	{
+		Fext += -InvdAd(T % m_contactLinks[i]->GetFrame(), m_contactLinks[i]->m_ConstraintImpulse) * (1.0 / m_timeStep);
+	}
 
 	// get desired state
 	unsigned int t = min(controlStep, T_des_trj.size() - 1);

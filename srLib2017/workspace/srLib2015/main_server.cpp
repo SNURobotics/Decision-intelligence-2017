@@ -205,108 +205,13 @@ int main(int argc, char **argv)
 	///////////////////////////////////////////////////////////
 
 
+
 	thread commuThread(communicationFunc);
 	
 	thread rendThread(rendering, argc, argv);
 	commuThread.join();
 	rendThread.join();
 
-	//while (TRUE) {
-	//	//Receiving data from HYU client
-	//	hyu_data = serv.RecevData();
-	//	hyu_data_flag = hyu_data[0];
-
-	//	// 데이터 전송
-	//	if (hyu_data_flag == 'V')
-	//	{
-	//		// vision data
-	//		char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
-	//		for (int p = 0; p <= strlen(hyu_data); p++)
-	//			copy[p] = hyu_data[p];
-	//		serv.SendMessageToClient(copy);
-
-	//		readSKKUvision(hyu_data, skku_dataset);
-
-	//		setEnviromentFromVision(skku_dataset);		// should be called later than robotSetting
-	//				
-	//		
-	//	}
-	//	else if (hyu_data_flag == 'G') {
-	//		
-	//		char* send_data;
-	//		send_data = getSimulationState(objects);
-	//		serv.SendMessageToClient(send_data);
-	//		//serv.SendMessageToClient(hyu_data);
-	//	}
-	//	else if (hyu_data_flag == 'R')
-	//	{
-	//		// robot to SNU? 
-	//		// READ CURRENT ROBOT STATE
-	//		serv.SendMessageToClient(hyu_data);
-	//	}
-	//	else if (hyu_data_flag == 'S') {
-	//		char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
-	//		for (int p = 0; p <= strlen(hyu_data); p++)
-	//			copy[p] = hyu_data[p];
-
-	//		double normFT = readRobotCommand(hyu_data, hyu_desired_dataset);
-	//		if (normFT > 0.0)
-	//		{
-	//			// send to robot
-	//			serv.SendMessageToClient(copy);
-	//		}
-	//		else
-	//		{
-	//			// do planning... output is vector<vector<Eigen::VectorXd>>
-	//			vector<bool> attachObject(0);
-	//			RRT_problemSettingFromRobotCommand(hyu_desired_dataset, attachObject, homePos);		// change homepos later to read current joint values of robot
-	//			nway = hyu_desired_dataset.robot_pos.size() / 3;
-	//			vector<double> stepsize(nway, 0.1);
-
-	//			busbar[0]->setBaseLinkFrame(initBusbar);								// change initial busbar SE3 later 
-	//			RRTSolve_HYU(attachObject, stepsize);
-	//			attachObjRender = attachObject;
-	//			
-	//			char* send_data = makeJointCommand(traj, hyu_desired_dataset);
-	//			serv.SendMessageToClient(send_data);
-
-	//			if (attachObject[attachObject.size() - 1])
-	//				gripState = 1;
-	//			else
-	//				gripState = 0;
-
-	//			if (saveTraj)
-	//			{
-	//				vector<Eigen::VectorXd> saveTrj(0);
-	//				vector<Eigen::VectorXd> saveAttach(0);
-	//				Eigen::VectorXd truevec(1);
-	//				truevec[0] = 1;
-	//				Eigen::VectorXd falsevec(1);
-	//				falsevec[0] = 0;
-	//				for (unsigned int i = 0; i < traj.size(); i++)
-	//				{
-	//					for (unsigned int j = 0; j < traj[i].size(); j++)
-	//					{
-	//						saveTrj.push_back(traj[i][j]);
-	//						if (attachObject[i])
-	//							saveAttach.push_back(truevec);
-	//						else
-	//							saveAttach.push_back(falsevec);
-	//					}
-	//				}
-	//				string dir_folder = "../../../data/communication_test";
-	//				// save
-	//				string dir_temp = dir_folder;
-	//				saveDataToText(saveTrj, dir_temp.append("/jointValTraj").append(".txt"));
-	//				dir_temp = dir_folder;
-	//				saveDataToText(saveAttach, dir_temp.append("/attachTraj").append(".txt"));
-	//			}
-	//		}
-	//	}
-	//	hyu_data[0] = '\0';
-	//	hyu_data_flag = ' ';
-	//	Sleep(100);
-	//}
 
 	//rendering(argc, argv);
 
