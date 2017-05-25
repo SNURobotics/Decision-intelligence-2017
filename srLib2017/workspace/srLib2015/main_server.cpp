@@ -35,11 +35,12 @@
 #include <vector>
 
 
-mutex m;
+static mutex m;
 
 // Environment
 JigAssem_QB* jigAssem = new JigAssem_QB;
 vector<BusBar_HYU*> busbar(1);
+
 vector<SE3>	initSE3(2);
 vector<SE3>	goalSE3(2);
 
@@ -118,7 +119,7 @@ void RRTSolve();
 void RRTSolve_HYU(vector<bool> attachObject, vector<double> stepsize);
 void rrtSetting();
 
-void communicationFunc();
+void communicationFunc(int argc, char **argv);
 
 void renderFunc();
 bool renderNow;
@@ -154,8 +155,24 @@ int nway = 0;
 
 vector<srSystem*> objects(2);
 
+
+vector<srLink*> obstacle(10);
+vector<srWeldJoint*> wJoint(10);
+
+
 int main(int argc, char **argv)
 {
+
+	busbar[0] = new BusBar_HYU;
+
+	for (int i = 0; i < obstacle.size(); i++)
+	{
+		obstacle[i] = new srLink();
+		wJoint[i] = new srWeldJoint;
+	}
+	
+
+
 
 	srand(time(NULL));
 	// Robot home position
@@ -175,44 +192,44 @@ int main(int argc, char **argv)
 	busbar[0]->setBaseLinkFrame(initBusbar);
 
 	////////////////////////////////////////////// setting srLib
-	initDynamics();								// initialize srLib
+	//initDynamics();								// initialize srLib
 
-												// robot manager setting
-	robotManagerSetting();
+	//											// robot manager setting
+	//robotManagerSetting();
 
-	// workcell robot initial config
-	homePosRobot2.setZero();
-	homePosRobot2[0] = 0.0; homePosRobot2[1] = -SR_PI_HALF; homePosRobot2[2] = 80.0 / 90.0*SR_PI_HALF; homePosRobot2[3] = SR_PI_HALF;
-	rManager2->setJointVal(homePosRobot2);
-	rManager1->setJointVal(homePosRobot1);
-	Eigen::VectorXd gripInput(2);
-	gripInput[0] = -0.009;
-	gripInput[1] = 0.009;
-	rManager1->setGripperPosition(gripInput);
-	rManager2->setGripperPosition(gripInput);
+	//// workcell robot initial config
+	//homePosRobot2.setZero();
+	//homePosRobot2[0] = 0.0; homePosRobot2[1] = -SR_PI_HALF; homePosRobot2[2] = 80.0 / 90.0*SR_PI_HALF; homePosRobot2[3] = SR_PI_HALF;
+	//rManager2->setJointVal(homePosRobot2);
+	//rManager1->setJointVal(homePosRobot1);
+	//Eigen::VectorXd gripInput(2);
+	//gripInput[0] = -0.009;
+	//gripInput[1] = 0.009;
+	//rManager1->setGripperPosition(gripInput);
+	//rManager2->setGripperPosition(gripInput);
 
-	// rrt
-	rrtSetting();
+	//// rrt
+	//rrtSetting();
 	///////////////////////////////////////////////////////////
 
 
 	///////////////////////////////////////////////////////////
-	cout << Trobotbase % initBusbar << endl;
-	cout << jigAssem->GetBaseLink()->GetFrame() << endl;
-	char* send_data;
-	send_data = getSimulationState(objects);
+	//cout << Trobotbase % initBusbar << endl;
+	//cout << jigAssem->GetBaseLink()->GetFrame() << endl;
+	//char* send_data;
+	//send_data = getSimulationState(objects);
 	///////////////////////////////////////////////////////////
 
 	//rendering(argc, argv);
 
-	thread commuThread(communicationFunc);
+	thread commuThread(communicationFunc, argc, argv);
 
-	thread rendThread(rendering, argc, argv);
+	//thread rendThread(rendering, argc, argv);
 
 	if (commuThread.joinable())
 		commuThread.join();
-	if (rendThread.joinable())
-		rendThread.join();
+	/*if (rendThread.joinable())
+		rendThread.join();*/
 
 
 
@@ -607,10 +624,10 @@ void updateFuncHYUPlanning()
 
 void updateFuncRobotState()
 {
-	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
+	//gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 	// robot to homePos
-	rManager2->setJointVal(homePosRobot1);
-	rManager1->setJointVal(homePosRobot1);
+	//rManager2->setJointVal(homePosRobot1);
+	//rManager1->setJointVal(homePosRobot1);
 }
 void environmentSetting_HYU2(bool connect)
 {
@@ -875,7 +892,6 @@ void setEnviromentFromVision(const vision_data & skku_dataset)
 	// set object
 	if (skku_dataset.objPos[0].size() > 0)
 	{
-		busbar[0] = new BusBar_HYU;
 		busbar[0]->GetBaseLink()->SetFrame(Trobotbase * SKKUtoSE3(skku_dataset.objOri[0], skku_dataset.objPos[0]));
 		busbar[0]->SetBaseLinkType(srSystem::FIXED);
 	}
@@ -887,16 +903,15 @@ void setEnviromentFromVision(const vision_data & skku_dataset)
 
 
 	// set obstacle
-	vector<srLink*> obstacle(skku_dataset.obsInfo.size());
-	for (unsigned int i = 0; i < obstacle.size(); i++)
+	for (unsigned int i = 0; i < skku_dataset.obsInfo.size(); i++)
 	{
-		obstacle[i] = new srLink();
-		srWeldJoint* wJoint = new srWeldJoint;
+
 		obstacle[i]->GetGeomInfo().SetDimension(skku_dataset.obsInfo[i][3], skku_dataset.obsInfo[i][4], skku_dataset.obsInfo[i][5]);
-		wJoint->SetParentLink(workCell->GetBaseLink());
-		wJoint->SetParentLinkFrame(robot1->GetBaseLink()->GetFrame()*SE3(Vec3(skku_dataset.obsInfo[i][0], skku_dataset.obsInfo[i][1], skku_dataset.obsInfo[i][2])));
-		wJoint->SetChildLink(obstacle[i]);
-		wJoint->SetChildLinkFrame(SE3());
+		wJoint[i]->SetParentLink(workCell->GetBaseLink());
+		wJoint[i]->SetParentLinkFrame(robot1->GetBaseLink()->GetFrame()*SE3(Vec3(skku_dataset.obsInfo[i][0], skku_dataset.obsInfo[i][1], skku_dataset.obsInfo[i][2])));
+		wJoint[i]->SetChildLink(obstacle[i]);
+		wJoint[i]->SetChildLinkFrame(SE3());
+		obstacle[i]->GetGeomInfo().SetColor(0.2, 0.2, 0.2);
 	}
 
 }
@@ -995,9 +1010,9 @@ void RRT_problemSettingFromRobotCommand(const desired_dataset & hyu_desired_data
 	RRT_problemSetting(init, wayPoints, includeOri, attachObject, waypointFlag);
 }
 
-void communicationFunc()
+void communicationFunc(int argc, char **argv)
 {
-	m.lock();
+	//m.lock();
 	while (TRUE) {
 
 		isVision = false;
@@ -1019,15 +1034,36 @@ void communicationFunc()
 
 			readSKKUvision(hyu_data, skku_dataset);
 
-			cout << skku_dataset.obsInfo[0][0] << endl;
+		/*	cout << skku_dataset.obsInfo[0][0] << endl;
 			cout << skku_dataset.objOri[0][0] << endl;
 			cout << skku_dataset.objPos[0][0] << endl;
-			
+			*/
 
 
 			setEnviromentFromVision(skku_dataset);		// should be called later than robotSetting
 
-			isVision = true;
+
+			initDynamics();								// initialize srLib
+
+														// robot manager setting
+			robotManagerSetting();
+
+			// workcell robot initial config
+			homePosRobot2.setZero();
+			homePosRobot2[0] = 0.0; homePosRobot2[1] = -SR_PI_HALF; homePosRobot2[2] = 80.0 / 90.0*SR_PI_HALF; homePosRobot2[3] = SR_PI_HALF;
+			rManager2->setJointVal(homePosRobot2);
+			rManager1->setJointVal(homePosRobot1);
+			Eigen::VectorXd gripInput(2);
+			gripInput[0] = -0.009;
+			gripInput[1] = 0.009;
+			rManager1->setGripperPosition(gripInput);
+			rManager2->setGripperPosition(gripInput);
+
+			// rrt
+			rrtSetting();
+
+			rendering(argc, argv);
+			
 
 		}
 		else if (hyu_data_flag == 'G') {
@@ -1060,7 +1096,7 @@ void communicationFunc()
 				vector<bool> attachObject(0);
 
 				vector<bool> waypointFlag(0);
-				RRT_problemSettingFromRobotCommand(hyu_desired_dataset, attachObject, homePos, waypointFlag);		// change homepos later to read current joint values of robot
+				RRT_problemSettingFromRobotCommand(hyu_desired_dataset, attachObject, homePosRobot1, waypointFlag);		// change homepos later to read current joint values of robot
 
 				nway = hyu_desired_dataset.robot_pos.size() / 3;
 				vector<double> stepsize(nway, 0.1);
@@ -1110,7 +1146,7 @@ void communicationFunc()
 		hyu_data_flag = ' ';
 		Sleep(100);
 	}
-	m.unlock();
+	//m.unlock();
 }
 
 void renderFunc()
