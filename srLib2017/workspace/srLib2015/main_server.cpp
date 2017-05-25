@@ -56,6 +56,7 @@ Eigen::VectorXd jointVel(6);
 srSpace gSpace;
 myRenderer* renderer;
 SE3 Tbusbar2gripper = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
+SE3 Tbusbar2gripper_new = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
 SE3 Thole2busbar = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
 SE3 Trobotbase;
 
@@ -178,7 +179,7 @@ int main(int argc, char **argv)
 	//vector<srSystem*> objects(2);
 	objects[0] = busbar[0];
 	objects[1] = jigAssem;
-	initBusbar = SE3(Vec3(0.0, -0.4, 0.05)) * jigAssem->GetBaseLink()->GetFrame();
+	//initBusbar = SE3(Vec3(0.0, -0.4, 0.05)) * jigAssem->GetBaseLink()->GetFrame();
 	busbar[0]->setBaseLinkFrame(initBusbar);
 
 	////////////////////////////////////////////// setting srLib
@@ -216,12 +217,14 @@ int main(int argc, char **argv)
 	//commuThread.detach();
 	
 	
-	thread rendThread(rendering, argc, argv);
+	//thread rendThread(rendering, argc, argv);
+	rendering(argc, argv);
+	//thread rendThread(renderFunc);
 	//rendThread.detach();
 	if (commuThread.joinable())
 		commuThread.join();
-	if (rendThread.joinable())
-		rendThread.join();
+	//if (rendThread.joinable())
+	//	rendThread.join();
 
 
 	
@@ -253,7 +256,7 @@ void rendering(int argc, char **argv)
 	//else
 	//	renderer->setUpdateFunc(updateFuncInput);
 	renderer->setUpdateFunc(updateFunc);
-	renderer->RunRendering();
+	//renderer->RunRendering();
 	//m.unlock();
 }
 
@@ -742,6 +745,8 @@ void RRT_problemSetting(Eigen::VectorXd init, vector<SE3> wayPoints, vector<bool
 				printf("final waypoint not feasible!!!\n");
 			else
 				printf("%d-th waypoint not feasible!!!\n", i + 1);
+			if (i > 0 && attachObject[i] != attachObject[i - 1])
+				printf("grasp point is not feasible!!!\n");
 		}
 	}
 }
@@ -752,8 +757,8 @@ void RRTSolve_HYU(vector<bool> attachObject, vector<double> stepsize)
 	vector<Eigen::VectorXd> tempTraj;
 	//vector<int> tempIdxTraj(0);
 	//vector<SE3> tempTtraj(0);
-	int start = 0;		//  >= 0
-	int end = stepsize.size(); 		// <= 15
+	int start = 0;
+	int end = goalPos.size();
 	vector<bool> feas(2);
 
 	traj.resize(0);
@@ -919,7 +924,7 @@ void RRT_problemSettingFromRobotCommand(const desired_dataset & hyu_desired_data
 
 void communicationFunc()
 {
-	m.lock();
+	//m.lock();
 	while (TRUE) {
 		//Receiving data from HYU client
 		hyu_data = serv.RecevData();
@@ -943,8 +948,9 @@ void communicationFunc()
 		else if (hyu_data_flag == 'G') {
 
 			char* send_data;
-			send_data = getSimulationState(objects);
-			serv.SendMessageToClient(send_data);		
+			//send_data = getSimulationState(objects);
+			//serv.SendMessageToClient(send_data);	
+			serv.SendMessageToClient(hyu_data);
 		}
 		else if (hyu_data_flag == 'R')
 		{
@@ -969,9 +975,16 @@ void communicationFunc()
 				vector<bool> attachObject(0);
 				vector<bool> waypointFlag(0);
 				RRT_problemSettingFromRobotCommand(hyu_desired_dataset, attachObject, homePos, waypointFlag);		// change homepos later to read current joint values of robot
-				nway = hyu_desired_dataset.robot_pos.size() / 3;
-				vector<double> stepsize(nway, 0.1);
-
+				vector<double> stepsize(0);
+				vector<double> attachobject(0);
+				for (unsigned int i = 0; i < waypointFlag.size(); i++)
+				{
+					if (waypointFlag[i])
+					{
+						stepsize.push_back(0.1);
+						attachobject.push_back(attachObject[i]);
+					}
+				}
 				busbar[0]->setBaseLinkFrame(initBusbar);								// change initial busbar SE3 later 
 				RRTSolve_HYU(attachObject, stepsize);
 				attachObjRender = attachObject;
@@ -1009,6 +1022,7 @@ void communicationFunc()
 					saveDataToText(saveTrj, dir_temp.append("/jointValTraj").append(".txt"));
 					dir_temp = dir_folder;
 					saveDataToText(saveAttach, dir_temp.append("/attachTraj").append(".txt"));
+					printf("planned trajectory saved!!!\n");
 				}
 			}
 		}
@@ -1016,11 +1030,11 @@ void communicationFunc()
 		hyu_data_flag = ' ';
 		Sleep(100);
 	}
-	m.unlock();
+	//m.unlock();
 }
 
 void renderFunc()
 {
-	renderer->setUpdateFunc(updateFunc);
+	//renderer->setUpdateFunc(updateFunc);
 	renderer->RunRendering();
 }

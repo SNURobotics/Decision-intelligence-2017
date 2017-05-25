@@ -47,6 +47,7 @@ Eigen::VectorXd jointVel(6);
 srSpace gSpace;
 myRenderer* renderer;
 SE3 Tbusbar2gripper = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
+SE3 Tbusbar2gripper_new = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
 SE3 Thole2busbar = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
 
 // Planning
@@ -573,7 +574,7 @@ int main(int argc, char **argv)
 	qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
 	testjointvalue = rManager1->inverseKin(Trobotbase * Twaypoint, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit2);
 	cout << flag << endl;
-	busbar[0]->setBaseLinkFrame(Trobotbase * Twaypoint*Inv(Tbusbar2gripper));
+	busbar[0]->setBaseLinkFrame(Trobotbase * Twaypoint*Inv(Tbusbar2gripper_new));
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
 
