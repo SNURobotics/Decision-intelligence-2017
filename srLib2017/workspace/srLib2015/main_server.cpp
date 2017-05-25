@@ -17,6 +17,8 @@
 #include <iostream>
 #include <thread>
 
+#include <mutex>
+
 #include "../VS2013/tcp_ip_server/stdafx.h"
 //#include <Winsock2.h>
 #include <stdlib.h>
@@ -31,6 +33,9 @@
 
 #include <stdlib.h>
 #include <vector>
+
+
+mutex m;
 
 // Environment
 JigAssem_QB* jigAssem = new JigAssem_QB;
@@ -101,7 +106,7 @@ void environmentSetting_HYU2(bool connect);
 // communication function
 void setEnviromentFromVision(const vision_data& skku_dataset);
 char* getSimulationState(vector<srSystem*> objects);
-void RRT_problemSettingFromRobotCommand(const desired_dataset& hyu_desired_dataset, vector<bool>& attachObject, Eigen::VectorXd init);
+void RRT_problemSettingFromRobotCommand(const desired_dataset& hyu_desired_dataset, vector<bool>& attachObject, Eigen::VectorXd init, vector<bool>& waypointFlag);
 
 void workspaceSetting();
 void robotSetting();
@@ -114,6 +119,9 @@ void RRTSolve_HYU(vector<bool> attachObject, vector<double> stepsize);
 void rrtSetting();
 
 void communicationFunc();
+
+void renderFunc();
+bool renderNow;
 
 // Rendering flags
 bool isVision;
@@ -195,12 +203,17 @@ int main(int argc, char **argv)
 	send_data = getSimulationState(objects);
 	///////////////////////////////////////////////////////////
 
-
+	//rendering(argc, argv);
 
 	thread commuThread(communicationFunc);
+
 	thread rendThread(rendering, argc, argv);
-	commuThread.join();
-	rendThread.join();
+
+	if (commuThread.joinable())
+		commuThread.join();
+	if (rendThread.joinable())
+		rendThread.join();
+
 
 
 	//만약 while 루프를 돌리지 않을 경우 무한정 서버를 기다리는 함수, 실제 사용하지는 않는다.
@@ -214,6 +227,7 @@ int main(int argc, char **argv)
 
 void rendering(int argc, char **argv)
 {
+	//m.lock();
 	renderer = new myRenderer();
 
 	SceneGraphRenderer::NUM_WINDOWS windows;
@@ -240,6 +254,7 @@ void rendering(int argc, char **argv)
 	//renderer->setUpdateFunc(updateFunc);
 
 	renderer->RunRendering();
+	//m.unlock();
 }
 
 void initDynamics()
@@ -631,7 +646,7 @@ void robotSetting()
 {
 	gSpace.AddSystem((srSystem*)robot1);
 	gSpace.AddSystem((srSystem*)robot2);
-	robot1->GetBaseLink()->SetFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 0.4005 - 0.12 - 0.026, 1.972)));
+	robot1->GetBaseLink()->SetFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 0.4005 - 0.12, 1.972)));
 	robot2->GetBaseLink()->SetFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 1.6005 + 0.12, 1.972)));
 	robot1->SetActType(srJoint::ACTTYPE::TORQUE);
 	robot2->SetActType(srJoint::ACTTYPE::TORQUE);
@@ -750,7 +765,7 @@ void RRTSolve()
 }
 
 
-void RRT_problemSetting(Eigen::VectorXd init, vector<SE3> wayPoints, vector<bool> includeOri, vector<bool> attachObject)
+void RRT_problemSetting(Eigen::VectorXd init, vector<SE3> wayPoints, vector<bool> includeOri, vector<bool> attachObject, vector<bool>& waypointFlag)
 {
 	Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
 	// elbow up
@@ -769,28 +784,43 @@ void RRT_problemSetting(Eigen::VectorXd init, vector<SE3> wayPoints, vector<bool
 	initPos.resize(0);
 	goalPos.resize(0);
 	initPos.push_back(init);
-	vector<bool> feas(2);
+	bool feas = RRTManager->checkFeasibility(init);
+	if (feas != 0)
+		printf("initial point not feasible!!!\n");
+	Eigen::VectorXd qtemp;
+	waypointFlag.resize(wayPoints.size());
 	for (unsigned int i = 0; i < wayPoints.size(); i++)
 	{
-		//qInit = initPos[i];
-		goalPos.push_back(rManager1->inverseKin(wayPoints[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, qInit2));
-		//goalPos.push_back(rManager1->inverseKin(wayPoints[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, qInit)); // ONLY END-EFFECTOR POS/ORI
+		qtemp = rManager1->inverseKin(Trobotbase * wayPoints[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, qInit2);
 		if (flag != 0)
-			goalPos[i] = rManager1->inverseKin(wayPoints[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, qInit);
+			qtemp = rManager1->inverseKin(Trobotbase * wayPoints[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, qInit);
 		if (flag != 0)
-			goalPos[i] = rManager1->inverseKin(wayPoints[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, initPos[i]);
+			qtemp = rManager1->inverseKin(Trobotbase * wayPoints[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, initPos[initPos.size() - 1]);
 		printf("%d-th init inv kin flag: %d\n", i, flag);
-		cout << goalPos[i].transpose() << endl;
-		if (i < wayPoints.size() - 1)
-			initPos.push_back(goalPos[i]);
+		
 		if (attachObject[i])
 			RRTManager->attachObject(busbar[0], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper));
 		else
 			RRTManager->detachObject();
 
 
-		feas = RRTManager->checkFeasibility(initPos[i], goalPos[i]);
-		cout << feas[0] << feas[1] << endl;
+		feas = RRTManager->checkFeasibility(qtemp);
+
+		if (feas == 0 && flag == 0)
+		{
+			waypointFlag[i] = true;
+			goalPos.push_back(qtemp);
+			if (i < wayPoints.size() - 1)
+				initPos.push_back(goalPos[goalPos.size() - 1]);
+		}
+		else
+		{
+			waypointFlag[i] = false;
+			if (i == wayPoints.size() - 1)
+				printf("final waypoint not feasible!!!\n");
+			else
+				printf("%d-th waypoint not feasible!!!\n", i + 1);
+		}
 	}
 }
 
@@ -939,7 +969,7 @@ char * getSimulationState(vector<srSystem*> objects)
 	return send_data;
 }
 
-void RRT_problemSettingFromRobotCommand(const desired_dataset & hyu_desired_dataset, vector<bool>& attachObject, Eigen::VectorXd init)
+void RRT_problemSettingFromRobotCommand(const desired_dataset & hyu_desired_dataset, vector<bool>& attachObject, Eigen::VectorXd init, vector<bool>& waypointFlag)
 {
 	unsigned int nWay = hyu_desired_dataset.robot_pos.size() / 3;
 	attachObject.resize(nWay);
@@ -955,18 +985,19 @@ void RRT_problemSettingFromRobotCommand(const desired_dataset & hyu_desired_data
 			for (int k = 0; k < 3; k++)
 				ori[3 * j + k] = hyu_desired_dataset.robot_rot[3 * j + k + 9 * i];
 		}
-		wayPoints[i] = Trobotbase * SKKUtoSE3(ori, pos);
+		wayPoints[i] = SKKUtoSE3(ori, pos);
 		if (abs(hyu_desired_dataset.robot_gripper[i] - 1.0) < DBL_EPSILON)
 			attachObject[i] = true;
 		else
 			attachObject[i] = false;
 	}
 		
-	RRT_problemSetting(init, wayPoints, includeOri, attachObject);
+	RRT_problemSetting(init, wayPoints, includeOri, attachObject, waypointFlag);
 }
 
 void communicationFunc()
 {
+	m.lock();
 	while (TRUE) {
 
 		isVision = false;
@@ -1027,7 +1058,10 @@ void communicationFunc()
 			{
 				// do planning... output is vector<vector<Eigen::VectorXd>>
 				vector<bool> attachObject(0);
-				RRT_problemSettingFromRobotCommand(hyu_desired_dataset, attachObject, homePosRobot1);		// change homepos later to read current joint values of robot
+
+				vector<bool> waypointFlag(0);
+				RRT_problemSettingFromRobotCommand(hyu_desired_dataset, attachObject, homePos, waypointFlag);		// change homepos later to read current joint values of robot
+
 				nway = hyu_desired_dataset.robot_pos.size() / 3;
 				vector<double> stepsize(nway, 0.1);
 
@@ -1076,7 +1110,13 @@ void communicationFunc()
 		hyu_data_flag = ' ';
 		Sleep(100);
 	}
+	m.unlock();
+}
 
+void renderFunc()
+{
+	renderer->setUpdateFunc(updateFunc);
+	renderer->RunRendering();
 }
 
 

@@ -22,6 +22,11 @@ void robotRRTManager::detachObject()
 	m_offset = SE3();
 }
 
+bool robotRRTManager::checkFeasibility(Eigen::VectorXd & curPos)
+{
+	return setState(curPos);
+}
+
 vector<bool> robotRRTManager::checkFeasibility(Eigen::VectorXd& initPos, Eigen::VectorXd& goalPos)
 {
 	vector<bool> result(2);
