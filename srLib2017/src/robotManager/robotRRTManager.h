@@ -9,6 +9,7 @@ public:
 
 	void				attachObject(srSystem* object, srLink* link, SE3 offset);
 	void				detachObject();
+	bool				checkFeasibility(Eigen::VectorXd& curPos);
 	vector<bool>		checkFeasibility(Eigen::VectorXd& initPos, Eigen::VectorXd& goalPos);
 
 	virtual bool		setState(const Eigen::VectorXd& state);

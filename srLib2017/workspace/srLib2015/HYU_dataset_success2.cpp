@@ -538,34 +538,42 @@ int main(int argc, char **argv)
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////////////////////// 170524 test robot HW matching
-	double x1 = 0.75 - 0.49;
-	double x2 = x1 - 0.48;
-	SE3 Twayconv1 = SE3(Vec3(0.5*(x1 + x2), 0.5*2.068 - 0.29972 - 0.05 - 0.15, 0.5*(0.1511) + 1.03555 - 0.03));
+	//double x1 = 0.75 - 0.49;
+	//double x2 = x1 - 0.48;
+	//SE3 Twayconv1 = SE3(Vec3(0.5*(x1 + x2), 0.5*2.068 - 0.29972 - 0.05 - 0.15, 0.5*(0.1511) + 1.03555 - 0.03));
+	//Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
+	//qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
+	//int flag;
+	//testjointvalue = rManager1->inverseKin(Twayconv1 * Tbusbar2gripper, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit2);
+	//cout << flag << endl;
+	//cout << Twayconv1 * Tbusbar2gripper << endl;
+	//rManager1->setJointVal(testjointvalue);
+	//vector<SE3> Tdestrj(1);
+	//vector<dse3> fdestrj(1);
+	//Tdestrj[0] = SE3(Vec3(0.0, 0.0, -0.009 - 0.001))*Twayconv1 * Tbusbar2gripper;	// -0.009: when contact start
+	//fdestrj[0] = dse3(0.0);
+	//setHybridPFCtrl();
+	//hctrl->setDesiredTraj(Tdestrj, fdestrj);
+
+
+
+
+	///////////////////////////////////////////////////////////////////////////////////////////////// 170525 test waypoint
+	SE3 Twaypoint;
+	//Twaypoint[9] = -0.593602; Twaypoint[10] = -0.150047; Twaypoint[11] = 0.779937;
+	//Twaypoint[0] = -0.064028; Twaypoint[3] = 0.645112; Twaypoint[6] = -0.761401;
+	//Twaypoint[1] = -0.951107; Twaypoint[4] = -0.270455; Twaypoint[7] = -0.149167;
+	//Twaypoint[2] = -0.302153; Twaypoint[5] = 0.714622; Twaypoint[8] = 0.630887;
+	Twaypoint[9] = -0.461765; Twaypoint[10] = -0.004162; Twaypoint[11] = 0.788315;
+	Twaypoint[0] = -0.124107; Twaypoint[3] = 0.990070; Twaypoint[6] = -0.066026;
+	Twaypoint[1] = -0.992242; Twaypoint[4] = -0.124315; Twaypoint[7] = 0.000964;
+	Twaypoint[2] = -0.007254; Twaypoint[5] = 0.065634; Twaypoint[8] = 0.997817;
+	int flag;
 	Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
 	qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
-	int flag;
-	testjointvalue = rManager1->inverseKin(Twayconv1 * Tbusbar2gripper, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit2);
+	testjointvalue = rManager1->inverseKin(Trobotbase * Twaypoint, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit2);
 	cout << flag << endl;
-	cout << Twayconv1 * Tbusbar2gripper << endl;
-	rManager1->setJointVal(testjointvalue);
-	vector<SE3> Tdestrj(1);
-	vector<dse3> fdestrj(1);
-	Tdestrj[0] = SE3(Vec3(0.0, 0.0, -0.009 - 0.001))*Twayconv1 * Tbusbar2gripper;	// -0.009: when contact start
-	fdestrj[0] = dse3(0.0);
-	setHybridPFCtrl();
-	hctrl->setDesiredTraj(Tdestrj, fdestrj);
-
-
-
-
-	/////////////////////////////////////////////////////////////////////////////////////////////////
-	//testjointvalue[0] = -45.469; testjointvalue[1] = -98.083; testjointvalue[2] = 16.538; testjointvalue[3] = 90.0; testjointvalue[4] = 10.566; testjointvalue[5] = 44.116;
-	//testjointvalue *= SR_PI / 180.0;
-	//rManager1->setJointVal(testjointvalue);
-	/////////////////////////////////////////////////////////////////////////////////////////////////
-	//testjointvalue[0] = -51.876; testjointvalue[1] = -91.79; testjointvalue[2] = -15.676; testjointvalue[3] = 90.0; testjointvalue[4] = -14.205; testjointvalue[5] = 44.251;
-	//testjointvalue *= SR_PI / 180.0;
-	//rManager1->setJointVal(testjointvalue);
+	busbar[0]->setBaseLinkFrame(Trobotbase * Twaypoint*Inv(Tbusbar2gripper));
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -588,7 +596,7 @@ void rendering(int argc, char **argv)
 
 	renderer->InitializeRenderer(argc, argv, windows, false);
 	renderer->InitializeNode(&gSpace);
-	renderer->setUpdateFunc(updateFuncTestSensorToRobot);
+	renderer->setUpdateFunc(updateFunc);
 	//if (planning)
 	//	renderer->setUpdateFunc(updateFuncPlanning);
 	//else
