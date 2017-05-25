@@ -102,8 +102,8 @@ public:
 
 };
 
-#include <Windows.h>
-#include <gdiplus.h>
-
-bool CaptureScreenShot( int nWidth, int nHeight, const std::wstring& szDestFile, const std::wstring& szEncoderString);
-int GetEncoderClsid(const WCHAR* format, CLSID* pClsid);
+//#include <Windows.h>
+//#include <gdiplus.h>
+//
+//bool CaptureScreenShot( int nWidth, int nHeight, const std::wstring& szDestFile, const std::wstring& szEncoderString);
+//int GetEncoderClsid(const WCHAR* format, CLSID* pClsid);

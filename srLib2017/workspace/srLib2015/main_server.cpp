@@ -1,6 +1,6 @@
 #include <cstdio>
 
-//#include "myRenderer.h"
+#include "myRenderer.h"
 //#include "2ndRenderer.h"
 
 #include "common\dataIO.h"
@@ -15,6 +15,7 @@
 #include "robotManager\robotRRTManager.h"
 #include <fstream>
 #include <iostream>
+#include <thread>
 
 #include "../VS2013/tcp_ip_server/stdafx.h"
 //#include <Winsock2.h>
@@ -48,7 +49,7 @@ Eigen::VectorXd jointVal(6);
 Eigen::VectorXd jointAcc(6);
 Eigen::VectorXd jointVel(6);
 srSpace gSpace;
-//myRenderer* renderer;
+myRenderer* renderer;
 SE3 Tbusbar2gripper = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
 SE3 Thole2busbar = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
 SE3 Trobotbase;
@@ -106,6 +107,8 @@ void RRTSolve();
 void RRTSolve_HYU(vector<bool> attachObject, vector<double> stepsize);
 void rrtSetting();
 
+void communicationFunc();
+bool renderNow;
 
 
 vector<int> flags(0);
@@ -114,24 +117,44 @@ double planning = 0;
 // save last gripper state
 int gripState = 0;
 vector<bool> attachObjRender(0);
+
+// 서버 초기화
+Server serv = Server::Server();
+dataset hyu_dataset;
+desired_dataset hyu_desired_dataset;
+vision_data skku_dataset;
+
+char *hyu_data;
+char *copy;
+char *pbuffer;
+
+char hyu_data_flag;
+char tmp_buffer[255];
+char divChar= 'd';
+
+int digit_num = 5;
+int nway = 0;
+
+vector<srSystem*> objects(2);
+
 int main(int argc, char **argv)
 {
-	// 서버 초기화
-	Server serv = Server::Server();
-	dataset hyu_dataset;
-	desired_dataset hyu_desired_dataset;
-	vision_data skku_dataset;
+	//// 서버 초기화
+	//Server serv = Server::Server();
+	//dataset hyu_dataset;
+	//desired_dataset hyu_desired_dataset;
+	//vision_data skku_dataset;
 
-	char *hyu_data;
-	char *copy;
-	char *pbuffer;
+	//char *hyu_data;
+	//char *copy;
+	//char *pbuffer;
 
-	char hyu_data_flag;
-	char tmp_buffer[255];
-	char div = 'd';
+	//char hyu_data_flag;
+	//char tmp_buffer[255];
+	//char divChar = 'd';
 
-	int digit_num = 5;
-	int nway = 0;
+	//int digit_num = 5;
+	//int nway = 0;
 
 	
 
@@ -146,7 +169,7 @@ int main(int argc, char **argv)
 	Trobotbase = robot1->GetBaseLink()->GetFrame();
 
 	
-	vector<srSystem*> objects(2);
+	//vector<srSystem*> objects(2);
 	objects[0] = busbar[0];
 	objects[1] = jigAssem;
 	initBusbar = SE3(Vec3(0.0, -0.4, 0.05)) * jigAssem->GetBaseLink()->GetFrame();
@@ -182,101 +205,108 @@ int main(int argc, char **argv)
 	///////////////////////////////////////////////////////////
 
 
+	thread commuThread(communicationFunc);
+	
+	thread rendThread(rendering, argc, argv);
+	commuThread.join();
+	rendThread.join();
 
-	while (TRUE) {
-		//Receiving data from HYU client
-		hyu_data = serv.RecevData();
-		hyu_data_flag = hyu_data[0];
+	//while (TRUE) {
+	//	//Receiving data from HYU client
+	//	hyu_data = serv.RecevData();
+	//	hyu_data_flag = hyu_data[0];
 
-		// 데이터 전송
-		if (hyu_data_flag == 'V')
-		{
-			// vision data
-			char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
-			for (int p = 0; p <= strlen(hyu_data); p++)
-				copy[p] = hyu_data[p];
-			serv.SendMessageToClient(copy);
+	//	// 데이터 전송
+	//	if (hyu_data_flag == 'V')
+	//	{
+	//		// vision data
+	//		char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
+	//		for (int p = 0; p <= strlen(hyu_data); p++)
+	//			copy[p] = hyu_data[p];
+	//		serv.SendMessageToClient(copy);
 
-			readSKKUvision(hyu_data, skku_dataset);
+	//		readSKKUvision(hyu_data, skku_dataset);
 
-			setEnviromentFromVision(skku_dataset);		// should be called later than robotSetting
-					
-			
-		}
-		else if (hyu_data_flag == 'G') {
-			
-			char* send_data;
-			//send_data = getSimulationState(objects);
-			//serv.SendMessageToClient(send_data);
-			serv.SendMessageToClient(hyu_data);
-		}
-		else if (hyu_data_flag == 'R')
-		{
-			serv.SendMessageToClient(hyu_data);
-		}
-		else if (hyu_data_flag == 'S') {
-			char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
-			for (int p = 0; p <= strlen(hyu_data); p++)
-				copy[p] = hyu_data[p];
+	//		setEnviromentFromVision(skku_dataset);		// should be called later than robotSetting
+	//				
+	//		
+	//	}
+	//	else if (hyu_data_flag == 'G') {
+	//		
+	//		char* send_data;
+	//		send_data = getSimulationState(objects);
+	//		serv.SendMessageToClient(send_data);
+	//		//serv.SendMessageToClient(hyu_data);
+	//	}
+	//	else if (hyu_data_flag == 'R')
+	//	{
+	//		// robot to SNU? 
+	//		// READ CURRENT ROBOT STATE
+	//		serv.SendMessageToClient(hyu_data);
+	//	}
+	//	else if (hyu_data_flag == 'S') {
+	//		char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
+	//		for (int p = 0; p <= strlen(hyu_data); p++)
+	//			copy[p] = hyu_data[p];
 
-			double normFT = readRobotCommand(hyu_data, hyu_desired_dataset);
-			if (normFT > 0.0)
-			{
-				// send to robot
-				serv.SendMessageToClient(copy);
-			}
-			else
-			{
-				// do planning... output is vector<vector<Eigen::VectorXd>>
-				vector<bool> attachObject(0);
-				RRT_problemSettingFromRobotCommand(hyu_desired_dataset, attachObject, homePos);		// change homepos later to read current joint values of robot
-				nway = hyu_desired_dataset.robot_pos.size() / 3;
-				vector<double> stepsize(nway, 0.1);
+	//		double normFT = readRobotCommand(hyu_data, hyu_desired_dataset);
+	//		if (normFT > 0.0)
+	//		{
+	//			// send to robot
+	//			serv.SendMessageToClient(copy);
+	//		}
+	//		else
+	//		{
+	//			// do planning... output is vector<vector<Eigen::VectorXd>>
+	//			vector<bool> attachObject(0);
+	//			RRT_problemSettingFromRobotCommand(hyu_desired_dataset, attachObject, homePos);		// change homepos later to read current joint values of robot
+	//			nway = hyu_desired_dataset.robot_pos.size() / 3;
+	//			vector<double> stepsize(nway, 0.1);
 
-				busbar[0]->setBaseLinkFrame(initBusbar);								// change initial busbar SE3 later 
-				RRTSolve_HYU(attachObject, stepsize);
-				attachObjRender = attachObject;
-				
-				char* send_data = makeJointCommand(traj, hyu_desired_dataset);
-				serv.SendMessageToClient(send_data);
+	//			busbar[0]->setBaseLinkFrame(initBusbar);								// change initial busbar SE3 later 
+	//			RRTSolve_HYU(attachObject, stepsize);
+	//			attachObjRender = attachObject;
+	//			
+	//			char* send_data = makeJointCommand(traj, hyu_desired_dataset);
+	//			serv.SendMessageToClient(send_data);
 
-				if (attachObject[attachObject.size() - 1])
-					gripState = 1;
-				else
-					gripState = 0;
+	//			if (attachObject[attachObject.size() - 1])
+	//				gripState = 1;
+	//			else
+	//				gripState = 0;
 
-				if (saveTraj)
-				{
-					vector<Eigen::VectorXd> saveTrj(0);
-					vector<Eigen::VectorXd> saveAttach(0);
-					Eigen::VectorXd truevec(1);
-					truevec[0] = 1;
-					Eigen::VectorXd falsevec(1);
-					falsevec[0] = 0;
-					for (unsigned int i = 0; i < traj.size(); i++)
-					{
-						for (unsigned int j = 0; j < traj[i].size(); j++)
-						{
-							saveTrj.push_back(traj[i][j]);
-							if (attachObject[i])
-								saveAttach.push_back(truevec);
-							else
-								saveAttach.push_back(falsevec);
-						}
-					}
-					string dir_folder = "../../../data/communication_test";
-					// save
-					string dir_temp = dir_folder;
-					saveDataToText(saveTrj, dir_temp.append("/jointValTraj").append(".txt"));
-					dir_temp = dir_folder;
-					saveDataToText(saveAttach, dir_temp.append("/attachTraj").append(".txt"));
-				}
-			}
-		}
-		hyu_data[0] = '\0';
-		hyu_data_flag = ' ';
-		Sleep(100);
-	}
+	//			if (saveTraj)
+	//			{
+	//				vector<Eigen::VectorXd> saveTrj(0);
+	//				vector<Eigen::VectorXd> saveAttach(0);
+	//				Eigen::VectorXd truevec(1);
+	//				truevec[0] = 1;
+	//				Eigen::VectorXd falsevec(1);
+	//				falsevec[0] = 0;
+	//				for (unsigned int i = 0; i < traj.size(); i++)
+	//				{
+	//					for (unsigned int j = 0; j < traj[i].size(); j++)
+	//					{
+	//						saveTrj.push_back(traj[i][j]);
+	//						if (attachObject[i])
+	//							saveAttach.push_back(truevec);
+	//						else
+	//							saveAttach.push_back(falsevec);
+	//					}
+	//				}
+	//				string dir_folder = "../../../data/communication_test";
+	//				// save
+	//				string dir_temp = dir_folder;
+	//				saveDataToText(saveTrj, dir_temp.append("/jointValTraj").append(".txt"));
+	//				dir_temp = dir_folder;
+	//				saveDataToText(saveAttach, dir_temp.append("/attachTraj").append(".txt"));
+	//			}
+	//		}
+	//	}
+	//	hyu_data[0] = '\0';
+	//	hyu_data_flag = ' ';
+	//	Sleep(100);
+	//}
 
 	//rendering(argc, argv);
 
@@ -293,20 +323,20 @@ int main(int argc, char **argv)
 
 void rendering(int argc, char **argv)
 {
-	//renderer = new myRenderer();
+	renderer = new myRenderer();
 
-	//SceneGraphRenderer::NUM_WINDOWS windows;
+	SceneGraphRenderer::NUM_WINDOWS windows;
 
-	//windows = SceneGraphRenderer::SINGLE_WINDOWS;
+	windows = SceneGraphRenderer::SINGLE_WINDOWS;
 
-	//renderer->InitializeRenderer(argc, argv, windows, false);
-	//renderer->InitializeNode(&gSpace);
+	renderer->InitializeRenderer(argc, argv, windows, false);
+	renderer->InitializeNode(&gSpace);
 	//if (planning)
 	//	renderer->setUpdateFunc(updateFuncPlanning);
 	//else
 	//	renderer->setUpdateFunc(updateFuncInput);
-
-	//renderer->RunRendering();
+	renderer->setUpdateFunc(updateFunc);
+	renderer->RunRendering();
 }
 
 void initDynamics()
@@ -320,7 +350,8 @@ void initDynamics()
 void updateFunc()
 {
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
-	rManager1->setJointVal(jointVal);
+	rManager2->setJointVal(jointVal);
+	rManager1->setJointVal(homePos);
 
 }
 
@@ -865,7 +896,7 @@ char * getSimulationState(vector<srSystem*> objects)
 	char *pbuffer;
 
 	char tmp_buffer[255];
-	char div = 'd';
+	char divChar = 'd';
 	int digit_num = 5;
 	
 	//Robot EE Position (3x1)
@@ -875,7 +906,7 @@ char * getSimulationState(vector<srSystem*> objects)
 		pbuffer = _gcvt(T[9 + i], digit_num, tmp_buffer);
 
 		tmp_data = tmp_data + pbuffer;
-		tmp_data = tmp_data + div;
+		tmp_data = tmp_data + divChar;
 	}
 
 	//Robot EE Rotation (3x3)
@@ -883,14 +914,14 @@ char * getSimulationState(vector<srSystem*> objects)
 		pbuffer = _gcvt(T[i], digit_num, tmp_buffer);
 
 		tmp_data = tmp_data + pbuffer;
-		tmp_data = tmp_data + div;
+		tmp_data = tmp_data + divChar;
 	}
 
 	//Robot Gripper (1x1)
 	pbuffer = _gcvt(gripState, digit_num, tmp_buffer);
 
 	tmp_data = tmp_data + pbuffer;
-	tmp_data = tmp_data + div;
+	tmp_data = tmp_data + divChar;
 
 	//Robot FTsensor (6x1)
 	dse3 ftsensor = rManager1->readSensorValue();
@@ -898,7 +929,7 @@ char * getSimulationState(vector<srSystem*> objects)
 		pbuffer = _gcvt(ftsensor[i], digit_num, tmp_buffer);
 
 		tmp_data = tmp_data + pbuffer;
-		tmp_data = tmp_data + div;
+		tmp_data = tmp_data + divChar;
 	}
 	for (unsigned int i = 0; i < objects.size(); i++)
 	{
@@ -909,7 +940,7 @@ char * getSimulationState(vector<srSystem*> objects)
 			pbuffer = _gcvt(Ttemp[9+i], digit_num, tmp_buffer);
 
 			tmp_data = tmp_data + pbuffer;
-			tmp_data = tmp_data + div;
+			tmp_data = tmp_data + divChar;
 		}
 
 		//Object1 Rotation (3x3)
@@ -917,7 +948,7 @@ char * getSimulationState(vector<srSystem*> objects)
 			pbuffer = _gcvt(Ttemp[i], digit_num, tmp_buffer);
 
 			tmp_data = tmp_data + pbuffer;
-			tmp_data = tmp_data + div;
+			tmp_data = tmp_data + divChar;
 		}
 	}
 	
@@ -951,4 +982,104 @@ void RRT_problemSettingFromRobotCommand(const desired_dataset & hyu_desired_data
 	}
 		
 	RRT_problemSetting(init, wayPoints, includeOri, attachObject);
+}
+
+void communicationFunc()
+{
+	while (TRUE) {
+		//Receiving data from HYU client
+		hyu_data = serv.RecevData();
+		hyu_data_flag = hyu_data[0];
+
+		// 데이터 전송
+		if (hyu_data_flag == 'V')
+		{
+			// vision data
+			char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
+			for (int p = 0; p <= strlen(hyu_data); p++)
+				copy[p] = hyu_data[p];
+			serv.SendMessageToClient(copy);
+
+			readSKKUvision(hyu_data, skku_dataset);
+
+			setEnviromentFromVision(skku_dataset);		// should be called later than robotSetting
+
+
+		}
+		else if (hyu_data_flag == 'G') {
+
+			char* send_data;
+			send_data = getSimulationState(objects);
+			serv.SendMessageToClient(send_data);		
+		}
+		else if (hyu_data_flag == 'R')
+		{
+			// robot to SNU? 
+			// READ CURRENT ROBOT STATE
+			serv.SendMessageToClient(hyu_data);
+		}
+		else if (hyu_data_flag == 'S') {
+			char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
+			for (int p = 0; p <= strlen(hyu_data); p++)
+				copy[p] = hyu_data[p];
+
+			double normFT = readRobotCommand(hyu_data, hyu_desired_dataset);
+			if (normFT > 0.0)
+			{
+				// send to robot
+				serv.SendMessageToClient(copy);
+			}
+			else
+			{
+				// do planning... output is vector<vector<Eigen::VectorXd>>
+				vector<bool> attachObject(0);
+				RRT_problemSettingFromRobotCommand(hyu_desired_dataset, attachObject, homePos);		// change homepos later to read current joint values of robot
+				nway = hyu_desired_dataset.robot_pos.size() / 3;
+				vector<double> stepsize(nway, 0.1);
+
+				busbar[0]->setBaseLinkFrame(initBusbar);								// change initial busbar SE3 later 
+				RRTSolve_HYU(attachObject, stepsize);
+				attachObjRender = attachObject;
+
+				char* send_data = makeJointCommand(traj, hyu_desired_dataset);
+				serv.SendMessageToClient(send_data);
+
+				if (attachObject[attachObject.size() - 1])
+					gripState = 1;
+				else
+					gripState = 0;
+
+				if (saveTraj)
+				{
+					vector<Eigen::VectorXd> saveTrj(0);
+					vector<Eigen::VectorXd> saveAttach(0);
+					Eigen::VectorXd truevec(1);
+					truevec[0] = 1;
+					Eigen::VectorXd falsevec(1);
+					falsevec[0] = 0;
+					for (unsigned int i = 0; i < traj.size(); i++)
+					{
+						for (unsigned int j = 0; j < traj[i].size(); j++)
+						{
+							saveTrj.push_back(traj[i][j]);
+							if (attachObject[i])
+								saveAttach.push_back(truevec);
+							else
+								saveAttach.push_back(falsevec);
+						}
+					}
+					string dir_folder = "../../../data/communication_test";
+					// save
+					string dir_temp = dir_folder;
+					saveDataToText(saveTrj, dir_temp.append("/jointValTraj").append(".txt"));
+					dir_temp = dir_folder;
+					saveDataToText(saveAttach, dir_temp.append("/attachTraj").append(".txt"));
+				}
+			}
+		}
+		hyu_data[0] = '\0';
+		hyu_data_flag = ' ';
+		Sleep(100);
+	}
+
 }

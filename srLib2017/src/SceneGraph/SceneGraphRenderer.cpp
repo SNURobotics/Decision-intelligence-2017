@@ -240,34 +240,34 @@ void  SceneGraphRenderer::updateRenderState()
 
 void SceneGraphRenderer::screenShot()
 {
-	char numChar[4];
-	itoa(screenShotNum++,numChar,10);
+	//char numChar[4];
+	//itoa(screenShotNum++,numChar,10);
 
-	if (window1){
-		string modelSnap = "model_image_";
+	//if (window1){
+	//	string modelSnap = "model_image_";
 
-		modelSnap += numChar;
-		modelSnap += ".png";
+	//	modelSnap += numChar;
+	//	modelSnap += ".png";
 
-		wstring	wstr = L"";
-		wstr.assign(modelSnap.begin(),modelSnap.end());
+	//	wstring	wstr = L"";
+	//	wstr.assign(modelSnap.begin(),modelSnap.end());
 
-		glutSetWindow(window1);
-		CaptureScreenShot(w1,h1,wstr,L"image/png");
-	}
+	//	glutSetWindow(window1);
+	//	CaptureScreenShot(w1,h1,wstr,L"image/png");
+	//}
 
 
-	if (window2){
+	//if (window2){
 
-		string latentSnap = "latentCapture_";
-		latentSnap += numChar;
-		latentSnap += ".png";
-		wstring wstr2 = L"";
-		wstr2.assign(latentSnap.begin(),latentSnap.end());
+	//	string latentSnap = "latentCapture_";
+	//	latentSnap += numChar;
+	//	latentSnap += ".png";
+	//	wstring wstr2 = L"";
+	//	wstr2.assign(latentSnap.begin(),latentSnap.end());
 
-		glutSetWindow(window2);
-		CaptureScreenShot(w2,h2,wstr2,L"image/png");
-	}
+	//	glutSetWindow(window2);
+	//	CaptureScreenShot(w2,h2,wstr2,L"image/png");
+	//}
 }
 
 
@@ -364,108 +364,108 @@ void SceneGraphRenderer::SWITCH_GROUP_RENDER(unsigned n)
 	 } 
 }
 
-
-bool CaptureScreenShot(	int nWidth, 	int nHeight, 	const std::wstring& szDestFile, 	const std::wstring& szEncoderString)
-{
-	UINT *pixels=new UINT[nWidth * nHeight];
-	memset(pixels, 0, sizeof(UINT)*nWidth*nHeight);
-
-	glFlush(); 
-	//glFinish();
-
-	glReadPixels(0,0,nWidth,nHeight,GL_BGRA_EXT,GL_UNSIGNED_BYTE,pixels);
-
-	if(NULL==pixels)
-		return false;
-
-	// Initialize GDI+
-	static Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-	static ULONG_PTR gdiplusToken;
-	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-
-	{
-		// Create the dest image
-		Gdiplus::Bitmap DestBmp(nWidth,nHeight,PixelFormat32bppARGB);
-
-		Gdiplus::Rect rect1(0, 0, nWidth, nHeight);
-
-		Gdiplus::BitmapData bitmapData;
-		memset( &bitmapData, 0, sizeof(bitmapData));
-		DestBmp.LockBits( 
-			&rect1, 
-			Gdiplus::ImageLockModeRead,
-			PixelFormat32bppARGB,
-			&bitmapData );
-
-		int nStride1 = bitmapData.Stride;
-		if( nStride1 < 0 )
-			nStride1 = -nStride1;
-
-		UINT* DestPixels = (UINT*)bitmapData.Scan0;
-
-		if( !DestPixels )
-		{
-			delete [] pixels;
-			return false;
-		}
-
-		for(UINT row = 0; row < bitmapData.Height; ++row)
-		{
-			for(UINT col = 0; col < bitmapData.Width; ++col)
-			{
-				DestPixels[row * nStride1 / 4 + col] = pixels[row * nWidth + col];
-			}
-		}
-
-		DestBmp.UnlockBits( 
-			&bitmapData );
-
-		delete [] pixels;
-		pixels = NULL;
-
-		DestBmp.RotateFlip( Gdiplus::RotateNoneFlipY );
-
-		CLSID Clsid;
-		int result = GetEncoderClsid(szEncoderString.c_str(), &Clsid);
-
-		if( result < 0 )
-			return false;
-
-		Gdiplus::Status status = DestBmp.Save( szDestFile.c_str(), &Clsid );
-	}
-	// Shutdown GDI+
-	//GdiplusShutdown(gdiplusToken);
-
-	return true;
-}
-
-int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
-{
-	UINT  num = 0;          // number of image encoders
-	UINT  size = 0;         // size of the image encoder array in bytes
-
-	Gdiplus::ImageCodecInfo* pImageCodecInfo = NULL;
-
-	Gdiplus::GetImageEncodersSize(&num, &size);
-	if(size == 0)
-		return -1;  // Failure
-
-	pImageCodecInfo = (Gdiplus::ImageCodecInfo*)(malloc(size));
-	if(pImageCodecInfo == NULL)
-		return -1;  // Failure
-
-	GetImageEncoders(num, size, pImageCodecInfo);
-
-	for(UINT j = 0; j < num; ++j)
-	{
-		if( wcscmp(pImageCodecInfo[j].MimeType, format) == 0 )
-		{
-			*pClsid = pImageCodecInfo[j].Clsid;
-			free(pImageCodecInfo);
-			return j;  // Success
-		}    
-	}
-
-	free(pImageCodecInfo);
-	return -1;  // Failure
-}
+//
+//bool CaptureScreenShot(	int nWidth, 	int nHeight, 	const std::wstring& szDestFile, 	const std::wstring& szEncoderString)
+//{
+//	UINT *pixels=new UINT[nWidth * nHeight];
+//	memset(pixels, 0, sizeof(UINT)*nWidth*nHeight);
+//
+//	glFlush(); 
+//	//glFinish();
+//
+//	glReadPixels(0,0,nWidth,nHeight,GL_BGRA_EXT,GL_UNSIGNED_BYTE,pixels);
+//
+//	if(NULL==pixels)
+//		return false;
+//
+//	// Initialize GDI+
+//	static Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+//	static ULONG_PTR gdiplusToken;
+//	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+//
+//	{
+//		// Create the dest image
+//		Gdiplus::Bitmap DestBmp(nWidth,nHeight,PixelFormat32bppARGB);
+//
+//		Gdiplus::Rect rect1(0, 0, nWidth, nHeight);
+//
+//		Gdiplus::BitmapData bitmapData;
+//		memset( &bitmapData, 0, sizeof(bitmapData));
+//		DestBmp.LockBits( 
+//			&rect1, 
+//			Gdiplus::ImageLockModeRead,
+//			PixelFormat32bppARGB,
+//			&bitmapData );
+//
+//		int nStride1 = bitmapData.Stride;
+//		if( nStride1 < 0 )
+//			nStride1 = -nStride1;
+//
+//		UINT* DestPixels = (UINT*)bitmapData.Scan0;
+//
+//		if( !DestPixels )
+//		{
+//			delete [] pixels;
+//			return false;
+//		}
+//
+//		for(UINT row = 0; row < bitmapData.Height; ++row)
+//		{
+//			for(UINT col = 0; col < bitmapData.Width; ++col)
+//			{
+//				DestPixels[row * nStride1 / 4 + col] = pixels[row * nWidth + col];
+//			}
+//		}
+//
+//		DestBmp.UnlockBits( 
+//			&bitmapData );
+//
+//		delete [] pixels;
+//		pixels = NULL;
+//
+//		DestBmp.RotateFlip( Gdiplus::RotateNoneFlipY );
+//
+//		CLSID Clsid;
+//		int result = GetEncoderClsid(szEncoderString.c_str(), &Clsid);
+//
+//		if( result < 0 )
+//			return false;
+//
+//		Gdiplus::Status status = DestBmp.Save( szDestFile.c_str(), &Clsid );
+//	}
+//	// Shutdown GDI+
+//	//GdiplusShutdown(gdiplusToken);
+//
+//	return true;
+//}
+//
+//int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
+//{
+//	UINT  num = 0;          // number of image encoders
+//	UINT  size = 0;         // size of the image encoder array in bytes
+//
+//	Gdiplus::ImageCodecInfo* pImageCodecInfo = NULL;
+//
+//	Gdiplus::GetImageEncodersSize(&num, &size);
+//	if(size == 0)
+//		return -1;  // Failure
+//
+//	pImageCodecInfo = (Gdiplus::ImageCodecInfo*)(malloc(size));
+//	if(pImageCodecInfo == NULL)
+//		return -1;  // Failure
+//
+//	GetImageEncoders(num, size, pImageCodecInfo);
+//
+//	for(UINT j = 0; j < num; ++j)
+//	{
+//		if( wcscmp(pImageCodecInfo[j].MimeType, format) == 0 )
+//		{
+//			*pClsid = pImageCodecInfo[j].Clsid;
+//			free(pImageCodecInfo);
+//			return j;  // Success
+//		}    
+//	}
+//
+//	free(pImageCodecInfo);
+//	return -1;  // Failure
+//}
