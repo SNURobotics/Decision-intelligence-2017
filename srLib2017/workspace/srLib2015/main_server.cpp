@@ -221,12 +221,12 @@ int main(int argc, char **argv)
 
 	//rendering(argc, argv);
 
-	thread commuThread(communicationFunc);
+	thread commuThread(communicationFunc, argc, argv);
 	//commuThread.detach();
 	
 	
 	//thread rendThread(rendering, argc, argv);
-	rendering(argc, argv);
+	
 	//thread rendThread(renderFunc);
 	//rendThread.detach();
 	if (commuThread.joinable())
@@ -234,7 +234,7 @@ int main(int argc, char **argv)
 	//if (rendThread.joinable())
 	//	rendThread.join();
 
-
+	rendering(argc, argv);
 
 	//만약 while 루프를 돌리지 않을 경우 무한정 서버를 기다리는 함수, 실제 사용하지는 않는다.
 	//serv.WaitServer(); 
