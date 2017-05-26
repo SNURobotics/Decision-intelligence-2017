@@ -1055,7 +1055,8 @@ void environmentSetting_HYU2(bool connect)
 	else
 	{
 		srWeldJoint* wJoint = new srWeldJoint;
-		wJoint->SetParentLink(workCell->getStagePlate());
+		wJoint->SetParentLink(workCell->GetBaseLink()); // removed stage
+		//wJoint->SetParentLink(workCell->getStagePlate());
 		wJoint->SetChildLink(jigAssem->GetBaseLink());
 		wJoint->SetParentLinkFrame(Tbase*Tbase2jigbase);
 		wJoint->SetChildLinkFrame(SE3());

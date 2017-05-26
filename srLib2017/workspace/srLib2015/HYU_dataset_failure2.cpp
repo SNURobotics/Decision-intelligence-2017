@@ -25,6 +25,7 @@ srSystem* targetObj = new srSystem;
 int holeNum = 4;		// from 0 ~ 7
 SE3 Tbusbar2gripper = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
 SE3 Thole2busbar = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
+SE3 Tbusbar2gripper_new = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
 
 // Workspace
 WorkCell* workCell = new WorkCell;
@@ -183,7 +184,7 @@ void rendering(int argc, char **argv)
 
 	renderer->InitializeRenderer(argc, argv, windows, false);
 	renderer->InitializeNode(&gSpace);
-	renderer->setUpdateFunc(updateFuncDefault);
+	renderer->setUpdateFunc(updateFunc);
 
 	renderer->RunRendering();
 }
@@ -420,7 +421,9 @@ void workspaceSetting()
 
 void environmentSetting_HYU2(srSystem* object, bool connect)
 {
-	SE3 Tbase = SE3(Vec3(0.025, 1.095, 1.176));
+	/*SE3 Tbase = SE3(Vec3(0.025, 1.095, 1.176));*/
+	SE3 Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.009));		// when stage removed
+
 	//double z_angle = (double)rand() / RAND_MAX * 0.1;
 	//double x_trans = -(double)rand() / RAND_MAX * 0.1;
 	//double y_trans = (double)rand() / RAND_MAX * 0.1;
@@ -432,7 +435,7 @@ void environmentSetting_HYU2(srSystem* object, bool connect)
 		wobjJoint->SetParentLink(&robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
 		wobjJoint->SetChildLink(object->GetBaseLink());
 		wobjJoint->SetParentLinkFrame(SE3());
-		wobjJoint->SetChildLinkFrame(Tbusbar2gripper);
+		wobjJoint->SetChildLinkFrame(Tbusbar2gripper_new);
 		busbarlink = object->GetBaseLink();
 	}
 	else
@@ -451,7 +454,8 @@ void environmentSetting_HYU2(srSystem* object, bool connect)
 	else
 	{
 		srWeldJoint* wJoint = new srWeldJoint;
-		wJoint->SetParentLink(workCell->getStagePlate());
+		wJoint->SetParentLink(workCell->GetBaseLink()); // removed stage
+		//wJoint->SetParentLink(workCell->getStagePlate()); 
 		wJoint->SetChildLink(jigAssem->GetBaseLink());
 		wJoint->SetParentLinkFrame(Tbase*Tbase2jigbase);
 		wJoint->SetChildLinkFrame(SE3());

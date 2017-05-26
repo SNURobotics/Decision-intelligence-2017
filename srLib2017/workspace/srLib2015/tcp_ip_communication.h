@@ -37,6 +37,16 @@ struct desired_dataset
 	vector<double> robot_ft;
 };
 
+struct robot_current_data
+{
+	Eigen::VectorXd robot_joint;
+	vector<double> robot_pos;
+	vector<double> robot_rot;
+	vector<double> robot_gripper;
+	vector<double> robot_ft;
+
+};
+
 void Eliminate(char *str, char ch)
 {
 	for (; *str != '\0'; str++)//종료 문자를 만날 때까지 반복
@@ -49,6 +59,7 @@ void Eliminate(char *str, char ch)
 	}
 }
 void readSKKUvision(char* hyu_data, vision_data& skku_dataset);
+void readRobotCurState(char *hyu_data, robot_current_data& robot_state);
 double readRobotCommand(char* hyu_data, desired_dataset& hyu_desired_dataset);
 char* makeJointCommand(vector<vector<Eigen::VectorXd>>& jointTraj, desired_dataset& hyu_desired_dataset);
 
@@ -107,7 +118,43 @@ void readSKKUvision(char* hyu_data, vision_data& skku_dataset)
 		if (!obsData && recv_cnt == 13)
 			recv_cnt = 0;
 	}
-};
+}
+void readRobotCurState(char * hyu_data, robot_current_data & robot_state)
+{
+	Eliminate(hyu_data, hyu_data[0]);
+	char* recv_data = hyu_data;
+
+	int recv_cnt = 0;
+
+	robot_state.robot_joint.resize(6);
+	robot_state.robot_pos.resize(3);
+	robot_state.robot_rot.resize(9);
+	robot_state.robot_ft.resize(6);
+	robot_state.robot_gripper.resize(1);
+
+
+	int dataNum = 6 + 3 + 9  + 6 + 1;
+
+	while (recv_data = NULL)
+	{
+		if (recv_cnt < 6)
+			robot_state.robot_joint[recv_cnt] = atof(recv_data);
+		else if (recv_cnt < 6 + 3)
+			robot_state.robot_pos[recv_cnt - 6] = atof(recv_data);
+		else if (recv_cnt < 6 + 3 + 9)
+			robot_state.robot_rot[recv_cnt - 6 - 3] = atof(recv_data);
+		else if (recv_cnt < 6 + 3 + 9 + 6)
+			robot_state.robot_ft[recv_cnt - 6 - 3 - 9] = atof(recv_data);
+		else
+			robot_state.robot_gripper[recv_cnt - 6 - 3 - 9 - 1] = atof(recv_data);
+
+		recv_cnt += 1;
+	}
+
+}
+
+
+
 
 double readRobotCommand(char* hyu_data, desired_dataset& hyu_desired_dataset)
 {
