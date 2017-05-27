@@ -86,7 +86,7 @@ void RRTSolve_HYU();
 void rrtSetting();
 
 
-vector<Eigen::VectorXd> loadJointVal = loadDataFromText("../../../data/communication_test/jointValTraj.txt", 6);
+vector<Eigen::VectorXd> loadJointVal = loadDataFromText("../../../data/workcell_test_data3/jointValTraj2.txt", 6);
 //vector<Eigen::VectorXd> loadBusbarVec = loadDataFromText("../../../data/HYU_data/task1/busbarTraj0.txt", 12);
 
 

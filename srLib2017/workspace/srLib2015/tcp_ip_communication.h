@@ -84,7 +84,7 @@ void readSKKUvision(char* hyu_data, vision_data& skku_dataset)
 		if (!obsData && recv_cnt < 1)
 		{
 			objID = atoi(recv_data);
-			if (objID == 100)
+			if (objID == -1)
 				obsData = true;
 			else
 			{
@@ -122,7 +122,7 @@ void readSKKUvision(char* hyu_data, vision_data& skku_dataset)
 void readRobotCurState(char * hyu_data, robot_current_data & robot_state)
 {
 	Eliminate(hyu_data, hyu_data[0]);
-	char* recv_data = hyu_data;
+	char *recv_data = strtok(hyu_data, "d");
 
 	int recv_cnt = 0;
 
@@ -133,21 +133,20 @@ void readRobotCurState(char * hyu_data, robot_current_data & robot_state)
 	robot_state.robot_gripper.resize(1);
 
 
-	int dataNum = 6 + 3 + 9  + 6 + 1;
-
-	while (recv_data = NULL)
+	while (recv_data != NULL)
 	{
-		if (recv_cnt < 6)
-			robot_state.robot_joint[recv_cnt] = atof(recv_data);
-		else if (recv_cnt < 6 + 3)
-			robot_state.robot_pos[recv_cnt - 6] = atof(recv_data);
-		else if (recv_cnt < 6 + 3 + 9)
-			robot_state.robot_rot[recv_cnt - 6 - 3] = atof(recv_data);
-		else if (recv_cnt < 6 + 3 + 9 + 6)
-			robot_state.robot_ft[recv_cnt - 6 - 3 - 9] = atof(recv_data);
+		if (recv_cnt < 3)
+			robot_state.robot_pos[recv_cnt] = atof(recv_data);
+		else if (recv_cnt < 3 + 9)
+			robot_state.robot_rot[recv_cnt - 3] = atof(recv_data);
+		else if (recv_cnt < 1 + 3 + 9)
+			robot_state.robot_gripper[recv_cnt - 3 - 9] = atof(recv_data);
+		else if (recv_cnt < 1 + 3 + 9 + 6)
+			robot_state.robot_ft[recv_cnt - 1 - 3 - 9] = atof(recv_data);
 		else
-			robot_state.robot_gripper[recv_cnt - 6 - 3 - 9 - 1] = atof(recv_data);
-
+			robot_state.robot_joint[recv_cnt - 1 - 3 - 9 - 6] = atof(recv_data);
+			
+		recv_data = strtok(NULL, "d");
 		recv_cnt += 1;
 	}
 
@@ -213,7 +212,12 @@ char* makeJointCommand(vector<vector<Eigen::VectorXd>>& jointTraj, desired_datas
 	char div = 'd';
 
 	int digit_num = 5;
-	string tmp_data = "J";
+	unsigned int totalNum = 0;
+	for (unsigned int i = 0; i < jointTraj.size(); i++)
+	{
+		totalNum += jointTraj[i].size();
+	}
+	string tmp_data = "J" + to_string(totalNum) + "d";
 
 	//Robot joint trajectory
 	for (unsigned int i = 0; i < jointTraj.size(); i++)

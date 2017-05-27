@@ -148,6 +148,8 @@ char *hyu_data;
 char *copy;
 char *pbuffer;
 
+
+
 char hyu_data_flag;
 char tmp_buffer[255];
 char divChar= 'd';
@@ -194,24 +196,24 @@ int main(int argc, char **argv)
 	busbar[0]->setBaseLinkFrame(initBusbar);
 
 	////////////////////////////////////////////// setting srLib
-	//initDynamics();								// initialize srLib
+	initDynamics();								// initialize srLib
 
-	//											// robot manager setting
-	//robotManagerSetting();
+												// robot manager setting
+	robotManagerSetting();
 
-	//// workcell robot initial config
-	//homePosRobot2.setZero();
-	//homePosRobot2[0] = 0.0; homePosRobot2[1] = -SR_PI_HALF; homePosRobot2[2] = 80.0 / 90.0*SR_PI_HALF; homePosRobot2[3] = SR_PI_HALF;
-	//rManager2->setJointVal(homePosRobot2);
-	//rManager1->setJointVal(homePosRobot1);
-	//Eigen::VectorXd gripInput(2);
-	//gripInput[0] = -0.009;
-	//gripInput[1] = 0.009;
-	//rManager1->setGripperPosition(gripInput);
-	//rManager2->setGripperPosition(gripInput);
+	// workcell robot initial config
+	homePosRobot2.setZero();
+	homePosRobot2[0] = 0.0; homePosRobot2[1] = -SR_PI_HALF; homePosRobot2[2] = 80.0 / 90.0*SR_PI_HALF; homePosRobot2[3] = SR_PI_HALF;
+	rManager2->setJointVal(homePosRobot2);
+	rManager1->setJointVal(homePosRobot1);
+	Eigen::VectorXd gripInput(2);
+	gripInput[0] = -0.009;
+	gripInput[1] = 0.009;
+	rManager1->setGripperPosition(gripInput);
+	rManager2->setGripperPosition(gripInput);
 
-	//// rrt
-	//rrtSetting();
+	// rrt
+	rrtSetting();
 	///////////////////////////////////////////////////////////
 
 
@@ -224,16 +226,181 @@ int main(int argc, char **argv)
 
 	//rendering(argc, argv);
 
-	thread commuThread(communicationFunc, argc, argv);
+	//thread commuThread(communicationFunc, argc, argv);
 	//commuThread.detach();
 	
-	
+	//m.lock();
+	while (TRUE) {
+
+		isVision = false;
+		isHYUPlanning = false;
+		//Receiving data from HYU client
+		//recv_data = serv.RecevData();
+		hyu_data = serv.RecevData();
+		hyu_data_flag = hyu_data[0];
+		//serv.SendMessageToClient("G");
+
+		// 데이터 전송
+		if (hyu_data_flag == 'I')
+		{
+			serv.SendMessageToClient("I");
+		}
+		else if (hyu_data_flag == 'V')
+		{
+			//cout << "Vision communicate called" << endl;
+
+			// vision data
+			char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
+			for (int p = 0; p <= strlen(hyu_data); p++)
+				copy[p] = hyu_data[p];
+			serv.SendMessageToClient(copy);
+			printf("%s\n", hyu_data);
+			readSKKUvision(hyu_data, skku_dataset);
+
+			/*	cout << skku_dataset.obsInfo[0][0] << endl;
+			cout << skku_dataset.objOri[0][0] << endl;
+			cout << skku_dataset.objPos[0][0] << endl;
+			*/
+
+
+			setEnviromentFromVision(skku_dataset);		// should be called later than robotSetting
+
+														/////////////////////////////////////// after setting environment
+			initDynamics();								// initialize srLib
+
+														// robot manager setting
+			robotManagerSetting();
+
+			// workcell robot initial config
+			homePosRobot2.setZero();
+			homePosRobot2[0] = 0.0; homePosRobot2[1] = -SR_PI_HALF; homePosRobot2[2] = 80.0 / 90.0*SR_PI_HALF; homePosRobot2[3] = SR_PI_HALF;
+			rManager2->setJointVal(homePosRobot2);
+			rManager1->setJointVal(homePosRobot1);
+			Eigen::VectorXd gripInput(2);
+			gripInput[0] = -0.009;
+			gripInput[1] = 0.009;
+			rManager1->setGripperPosition(gripInput);
+			rManager2->setGripperPosition(gripInput);
+
+			// rrt
+			rrtSetting();
+			//////////////////////////////////////////////////////////////////////
+			//rendering(argc, argv);
+
+
+		}
+		else if (hyu_data_flag == 'G') {
+
+			char* send_data;
+			//send_data = getSimulationState(objects);
+			//serv.SendMessageToClient(send_data);	
+			serv.SendMessageToClient(hyu_data);
+		}
+		else if (hyu_data_flag == 'R')
+		{
+			// Robot cur data
+			char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
+			for (int p = 0; p <= strlen(hyu_data); p++)
+				copy[p] = hyu_data[p];
+			serv.SendMessageToClient(copy);
+			printf("%s\n", hyu_data);
+			readRobotCurState(hyu_data, robot_state);
+
+			cout << robot_state.robot_joint.transpose() << endl;
+			rManager1->setJointVal(robot_state.robot_joint);
+
+			//rendering(argc, argv);
+
+		}
+		else if (hyu_data_flag == 'S') {
+			char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
+			for (int p = 0; p <= strlen(hyu_data); p++)
+				copy[p] = hyu_data[p];
+
+			double normFT = readRobotCommand(hyu_data, hyu_desired_dataset);
+			if (normFT > 0.0)
+			{
+				// send to robot
+				serv.SendMessageToClient(copy);
+			}
+			else
+			{
+				serv.SendMessageToClient("P");				
+			}
+
+		}
+		else if (hyu_data_flag == 'P') {
+			vector<bool> attachObject(0);
+
+			vector<bool> waypointFlag(0);
+
+			readRobotCurState(hyu_data, robot_state);
+			cout << robot_state.robot_joint.transpose() << endl;
+			RRT_problemSettingFromRobotCommand(hyu_desired_dataset, attachObject, robot_state.robot_joint, waypointFlag);		// change homepos later to read current joint values of robot
+			vector<double> stepsize(0);
+			vector<double> attachobject(0);
+			for (unsigned int i = 0; i < waypointFlag.size(); i++)
+			{
+				if (waypointFlag[i])
+				{
+					stepsize.push_back(0.1);
+					attachobject.push_back(attachObject[i]);
+				}
+			}
+			busbar[0]->setBaseLinkFrame(initBusbar);								// change initial busbar SE3 later 
+			RRTSolve_HYU(attachObject, stepsize);
+			attachObjRender = attachObject;
+
+			char* send_data = makeJointCommand(traj, hyu_desired_dataset);
+			serv.SendMessageToClient(send_data);
+			printf("%s\n", send_data);
+			if (attachObject[attachObject.size() - 1])
+				gripState = 1;
+			else
+				gripState = 0;
+
+			if (saveTraj)
+			{
+				vector<Eigen::VectorXd> saveTrj(0);
+				vector<Eigen::VectorXd> saveAttach(0);
+				Eigen::VectorXd truevec(1);
+				truevec[0] = 1;
+				Eigen::VectorXd falsevec(1);
+				falsevec[0] = 0;
+				for (unsigned int i = 0; i < traj.size(); i++)
+				{
+					for (unsigned int j = 0; j < traj[i].size(); j++)
+					{
+						saveTrj.push_back(traj[i][j]);
+						if (attachObject[i])
+							saveAttach.push_back(truevec);
+						else
+							saveAttach.push_back(falsevec);
+					}
+				}
+				string dir_folder = "../../../data/communication_test";
+				// save
+				string dir_temp = dir_folder;
+				saveDataToText(saveTrj, dir_temp.append("/jointValTraj").append(".txt"));
+				dir_temp = dir_folder;
+				saveDataToText(saveAttach, dir_temp.append("/attachTraj").append(".txt"));
+
+				printf("planned trajectory saved!!!\n");
+			}
+			isHYUPlanning = true;
+
+			rendering(argc, argv);
+		}
+		hyu_data[0] = '\0';
+		hyu_data_flag = ' ';
+		Sleep(100);
+	}
 	//thread rendThread(rendering, argc, argv);
 	
 	//thread rendThread(renderFunc);
 	//rendThread.detach();
-	if (commuThread.joinable())
-		commuThread.join();
+	//if (commuThread.joinable())
+	//	commuThread.join();
 	//if (rendThread.joinable())
 	//	rendThread.join();
 
@@ -260,12 +427,12 @@ void rendering(int argc, char **argv)
 	renderer->InitializeRenderer(argc, argv, windows, false);
 	renderer->InitializeNode(&gSpace);
 
-	if (isVision)
-		renderer->setUpdateFunc(updateFuncVision);
-	else if (isHYUPlanning)
-		renderer->setUpdateFunc(updateFuncHYUPlanning);
-	else
-		renderer->setUpdateFunc(updateFuncRobotState);
+	//if (isVision)
+	//	renderer->setUpdateFunc(updateFuncVision);
+	//else if (isHYUPlanning)
+	//	renderer->setUpdateFunc(updateFuncHYUPlanning);
+	//else
+	//	renderer->setUpdateFunc(updateFuncRobotState);
 		
 
 
@@ -273,8 +440,8 @@ void rendering(int argc, char **argv)
 	//	renderer->setUpdateFunc(updateFuncPlanning);
 	//else
 	//	renderer->setUpdateFunc(updateFuncInput);
-	renderer->setUpdateFunc(updateFunc);
-	//renderer->RunRendering();
+	renderer->setUpdateFunc(updateFuncHYUPlanning);
+	renderer->RunRendering();
 	//m.unlock();
 }
 
@@ -895,15 +1062,15 @@ void RRTSolve_HYU(vector<bool> attachObject, vector<double> stepsize)
 
 void setEnviromentFromVision(const vision_data & skku_dataset)
 {
-	// set object
-	if (skku_dataset.objPos[0].size() > 0)
-	{
-		busbar[0]->GetBaseLink()->SetFrame(Trobotbase * SKKUtoSE3(skku_dataset.objOri[0], skku_dataset.objPos[0]));
-		busbar[0]->SetBaseLinkType(srSystem::FIXED);
-	}
+	// set object (id:1 - busbar, id:2 - jig) 
 	if (skku_dataset.objPos[1].size() > 0)
 	{
-		jigAssem->GetBaseLink()->SetFrame(Trobotbase * SKKUtoSE3(skku_dataset.objOri[1], skku_dataset.objPos[1]));
+		busbar[0]->GetBaseLink()->SetFrame(Trobotbase * SKKUtoSE3(skku_dataset.objOri[1], skku_dataset.objPos[1]));
+		busbar[0]->SetBaseLinkType(srSystem::FIXED);
+	}
+	if (skku_dataset.objPos[2].size() > 0)
+	{
+		jigAssem->GetBaseLink()->SetFrame(Trobotbase * SKKUtoSE3(skku_dataset.objOri[2], skku_dataset.objPos[2]));
 		jigAssem->SetBaseLinkType(srSystem::FIXED);
 	}
 
@@ -1023,236 +1190,225 @@ void RRT_problemSettingFromRobotCommand(const desired_dataset & hyu_desired_data
 
 void communicationFunc(int argc, char **argv)
 {
-	//m.lock();
-	while (TRUE) {
+	////m.lock();
+	//while (TRUE) {
 
-		isVision = false;
-		isHYUPlanning = false;
-		//Receiving data from HYU client
-		hyu_data = serv.RecevData();
-		hyu_data_flag = hyu_data[0];
+	//	isVision = false;
+	//	isHYUPlanning = false;
+	//	//Receiving data from HYU client
+	//	//recv_data = serv.RecevData();
+	//	hyu_data = serv.RecevData();
+	//	hyu_data_flag = hyu_data[0];
+	//	serv.SendMessageToClient("G");
+	//	
+	//	// 데이터 전송
+	//	if (hyu_data_flag == 'I')
+	//	{
+	//		serv.SendMessageToClient("G");
+	//	}
+	//	else if (hyu_data_flag == 'V')
+	//	{
+	//		//cout << "Vision communicate called" << endl;
+	//		
+	//		// vision data
+	//		char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
+	//		for (int p = 0; p <= strlen(hyu_data); p++)
+	//			copy[p] = hyu_data[p];
+	//		serv.SendMessageToClient(copy);
+	//		printf("%s\n", hyu_data);
+	//		readSKKUvision(hyu_data, skku_dataset);
 
-		// 데이터 전송
-		if (hyu_data_flag == 'V')
-		{
-			//cout << "Vision communicate called" << endl;
-			
-			// vision data
-			char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
-			for (int p = 0; p <= strlen(hyu_data); p++)
-				copy[p] = hyu_data[p];
-			serv.SendMessageToClient(copy);
-
-			readSKKUvision(hyu_data, skku_dataset);
-
-		/*	cout << skku_dataset.obsInfo[0][0] << endl;
-			cout << skku_dataset.objOri[0][0] << endl;
-			cout << skku_dataset.objPos[0][0] << endl;
-			*/
+	//	/*	cout << skku_dataset.obsInfo[0][0] << endl;
+	//		cout << skku_dataset.objOri[0][0] << endl;
+	//		cout << skku_dataset.objPos[0][0] << endl;
+	//		*/
 
 
-			setEnviromentFromVision(skku_dataset);		// should be called later than robotSetting
+	//		setEnviromentFromVision(skku_dataset);		// should be called later than robotSetting
 
-			/////////////////////////////////////// after setting environment
-			initDynamics();								// initialize srLib
+	//		/////////////////////////////////////// after setting environment
+	//		initDynamics();								// initialize srLib
 
-														// robot manager setting
-			robotManagerSetting();
+	//													// robot manager setting
+	//		robotManagerSetting();
 
-			// workcell robot initial config
-			homePosRobot2.setZero();
-			homePosRobot2[0] = 0.0; homePosRobot2[1] = -SR_PI_HALF; homePosRobot2[2] = 80.0 / 90.0*SR_PI_HALF; homePosRobot2[3] = SR_PI_HALF;
-			rManager2->setJointVal(homePosRobot2);
-			rManager1->setJointVal(homePosRobot1);
-			Eigen::VectorXd gripInput(2);
-			gripInput[0] = -0.009;
-			gripInput[1] = 0.009;
-			rManager1->setGripperPosition(gripInput);
-			rManager2->setGripperPosition(gripInput);
+	//		// workcell robot initial config
+	//		homePosRobot2.setZero();
+	//		homePosRobot2[0] = 0.0; homePosRobot2[1] = -SR_PI_HALF; homePosRobot2[2] = 80.0 / 90.0*SR_PI_HALF; homePosRobot2[3] = SR_PI_HALF;
+	//		rManager2->setJointVal(homePosRobot2);
+	//		rManager1->setJointVal(homePosRobot1);
+	//		Eigen::VectorXd gripInput(2);
+	//		gripInput[0] = -0.009;
+	//		gripInput[1] = 0.009;
+	//		rManager1->setGripperPosition(gripInput);
+	//		rManager2->setGripperPosition(gripInput);
 
-			// rrt
-			rrtSetting();
-			//////////////////////////////////////////////////////////////////////
-			rendering(argc, argv);
-			
+	//		// rrt
+	//		rrtSetting();
+	//		//////////////////////////////////////////////////////////////////////
+	//		rendering(argc, argv);
+	//		
 
-		}
-		else if (hyu_data_flag == 'G') {
+	//	}
+	//	else if (hyu_data_flag == 'G') {
 
-			char* send_data;
-			send_data = getSimulationState(objects);
-			serv.SendMessageToClient(send_data);	
-			//serv.SendMessageToClient(hyu_data);
-		}
-		else if (hyu_data_flag == 'R')
-		{
-			// Robot cur data
-			char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
-			for (int p = 0; p <= strlen(hyu_data); p++)
-				copy[p] = hyu_data[p];
-			serv.SendMessageToClient(copy);
+	//		char* send_data;
+	//		//send_data = getSimulationState(objects);
+	//		//serv.SendMessageToClient(send_data);	
+	//		serv.SendMessageToClient(hyu_data);
+	//	}
+	//	else if (hyu_data_flag == 'R')
+	//	{
+	//		// Robot cur data
+	//		char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
+	//		for (int p = 0; p <= strlen(hyu_data); p++)
+	//			copy[p] = hyu_data[p];
+	//		serv.SendMessageToClient(copy);
+	//		printf("%s\n", hyu_data);
+	//		readRobotCurState(hyu_data, robot_state);
 
-			readRobotCurState(hyu_data, robot_state);
+	//		
+	//		rManager1->setJointVal(robot_state.robot_joint);
+	//		
+	//		rendering(argc, argv);
 
-			initDynamics();								// initialize srLib
+	//	}
+	//	else if (hyu_data_flag == 'S') {
+	//		char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
+	//		for (int p = 0; p <= strlen(hyu_data); p++)
+	//			copy[p] = hyu_data[p];
+	//		
+	//		double normFT = readRobotCommand(hyu_data, hyu_desired_dataset);
+	//		if (normFT > 0.0)
+	//		{
+	//			// send to robot
+	//			serv.SendMessageToClient(copy);
+	//		}
+	//		else
+	//		{
+	//			serv.SendMessageToClient("P");				// do planning... output is vector<vector<Eigen::VectorXd>>
+	//			//vector<bool> attachObject(0);
 
-														
-			robotManagerSetting();// robot manager setting
-			
-			// workcell robot initial config
-			homePosRobot2.setZero();
-			homePosRobot2[0] = 0.0; homePosRobot2[1] = -SR_PI_HALF; homePosRobot2[2] = 80.0 / 90.0*SR_PI_HALF; homePosRobot2[3] = SR_PI_HALF;
-			rManager2->setJointVal(homePosRobot2);
+	//			//vector<bool> waypointFlag(0);
+	//			//RRT_problemSettingFromRobotCommand(hyu_desired_dataset, attachObject, homePosRobot1, waypointFlag);		// change homepos later to read current joint values of robot
+	//			//vector<double> stepsize(0);
+	//			//vector<double> attachobject(0);
+	//			//for (unsigned int i = 0; i < waypointFlag.size(); i++)
+	//			//{
+	//			//	if (waypointFlag[i])
+	//			//	{
+	//			//		stepsize.push_back(0.1);
+	//			//		attachobject.push_back(attachObject[i]);
+	//			//	}
+	//			//}
+	//			//busbar[0]->setBaseLinkFrame(initBusbar);								// change initial busbar SE3 later 
+	//			//RRTSolve_HYU(attachObject, stepsize);
+	//			//attachObjRender = attachObject;
 
-			rManager1->setJointVal(robot_state.robot_joint);
-			Eigen::VectorXd gripInput(2);
-			gripInput[0] = -0.009;
-			gripInput[1] = 0.009;
-			rManager1->setGripperPosition(gripInput);
-			rManager2->setGripperPosition(gripInput);
+	//			//char* send_data = makeJointCommand(traj, hyu_desired_dataset);
+	//			//serv.SendMessageToClient(send_data);
 
-			// rrt
-			rrtSetting();
-			//////////////////////////////////////////////////////////////////////
-			rendering(argc, argv);
+	//			//if (attachObject[attachObject.size() - 1])
+	//			//	gripState = 1;
+	//			//else
+	//			//	gripState = 0;
 
-		}
-		else if (hyu_data_flag == 'S') {
-			char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
-			for (int p = 0; p <= strlen(hyu_data); p++)
-				copy[p] = hyu_data[p];
-			
-			double normFT = readRobotCommand(hyu_data, hyu_desired_dataset);
-			if (normFT > 0.0)
-			{
-				// send to robot
-				serv.SendMessageToClient(copy);
-			}
-			else
-			{
-				serv.SendMessageToClient("P");				// do planning... output is vector<vector<Eigen::VectorXd>>
-				//vector<bool> attachObject(0);
+	//			//if (saveTraj)
+	//			//{
+	//			//	vector<Eigen::VectorXd> saveTrj(0);
+	//			//	vector<Eigen::VectorXd> saveAttach(0);
+	//			//	Eigen::VectorXd truevec(1);
+	//			//	truevec[0] = 1;
+	//			//	Eigen::VectorXd falsevec(1);
+	//			//	falsevec[0] = 0;
+	//			//	for (unsigned int i = 0; i < traj.size(); i++)
+	//			//	{
+	//			//		for (unsigned int j = 0; j < traj[i].size(); j++)
+	//			//		{
+	//			//			saveTrj.push_back(traj[i][j]);
+	//			//			if (attachObject[i])
+	//			//				saveAttach.push_back(truevec);
+	//			//			else
+	//			//				saveAttach.push_back(falsevec);
+	//			//		}
+	//			//	}
+	//			//	string dir_folder = "../../../data/communication_test";
+	//			//	// save
+	//			//	string dir_temp = dir_folder;
+	//			//	saveDataToText(saveTrj, dir_temp.append("/jointValTraj").append(".txt"));
+	//			//	dir_temp = dir_folder;
+	//			//	saveDataToText(saveAttach, dir_temp.append("/attachTraj").append(".txt"));
 
-				//vector<bool> waypointFlag(0);
-				//RRT_problemSettingFromRobotCommand(hyu_desired_dataset, attachObject, homePosRobot1, waypointFlag);		// change homepos later to read current joint values of robot
-				//vector<double> stepsize(0);
-				//vector<double> attachobject(0);
-				//for (unsigned int i = 0; i < waypointFlag.size(); i++)
-				//{
-				//	if (waypointFlag[i])
-				//	{
-				//		stepsize.push_back(0.1);
-				//		attachobject.push_back(attachObject[i]);
-				//	}
-				//}
-				//busbar[0]->setBaseLinkFrame(initBusbar);								// change initial busbar SE3 later 
-				//RRTSolve_HYU(attachObject, stepsize);
-				//attachObjRender = attachObject;
+	//			//	printf("planned trajectory saved!!!\n");
+	//			//}
+	//			//isHYUPlanning = true;
+	//		}
 
-				//char* send_data = makeJointCommand(traj, hyu_desired_dataset);
-				//serv.SendMessageToClient(send_data);
+	//	}
+	//	else if (hyu_data_flag == 'P'){
+	//		vector<bool> attachObject(0);
 
-				//if (attachObject[attachObject.size() - 1])
-				//	gripState = 1;
-				//else
-				//	gripState = 0;
+	//		vector<bool> waypointFlag(0);
 
-				//if (saveTraj)
-				//{
-				//	vector<Eigen::VectorXd> saveTrj(0);
-				//	vector<Eigen::VectorXd> saveAttach(0);
-				//	Eigen::VectorXd truevec(1);
-				//	truevec[0] = 1;
-				//	Eigen::VectorXd falsevec(1);
-				//	falsevec[0] = 0;
-				//	for (unsigned int i = 0; i < traj.size(); i++)
-				//	{
-				//		for (unsigned int j = 0; j < traj[i].size(); j++)
-				//		{
-				//			saveTrj.push_back(traj[i][j]);
-				//			if (attachObject[i])
-				//				saveAttach.push_back(truevec);
-				//			else
-				//				saveAttach.push_back(falsevec);
-				//		}
-				//	}
-				//	string dir_folder = "../../../data/communication_test";
-				//	// save
-				//	string dir_temp = dir_folder;
-				//	saveDataToText(saveTrj, dir_temp.append("/jointValTraj").append(".txt"));
-				//	dir_temp = dir_folder;
-				//	saveDataToText(saveAttach, dir_temp.append("/attachTraj").append(".txt"));
+	//		readRobotCurState(hyu_data, robot_state);
 
-				//	printf("planned trajectory saved!!!\n");
-				//}
-				//isHYUPlanning = true;
-			}
+	//		RRT_problemSettingFromRobotCommand(hyu_desired_dataset, attachObject, robot_state.robot_joint, waypointFlag);		// change homepos later to read current joint values of robot
+	//		vector<double> stepsize(0);
+	//		vector<double> attachobject(0);
+	//		for (unsigned int i = 0; i < waypointFlag.size(); i++)
+	//		{
+	//			if (waypointFlag[i])
+	//			{
+	//				stepsize.push_back(0.1);
+	//				attachobject.push_back(attachObject[i]);
+	//			}
+	//		}
+	//		busbar[0]->setBaseLinkFrame(initBusbar);								// change initial busbar SE3 later 
+	//		RRTSolve_HYU(attachObject, stepsize);
+	//		attachObjRender = attachObject;
 
-		}
-		else if (hyu_data_flag == 'P'){
-			vector<bool> attachObject(0);
+	//		char* send_data = makeJointCommand(traj, hyu_desired_dataset);
+	//		serv.SendMessageToClient(send_data);
 
-			vector<bool> waypointFlag(0);
+	//		if (attachObject[attachObject.size() - 1])
+	//			gripState = 1;
+	//		else
+	//			gripState = 0;
 
-			readRobotCurState(hyu_data, robot_state);
+	//		if (saveTraj)
+	//		{
+	//			vector<Eigen::VectorXd> saveTrj(0);
+	//			vector<Eigen::VectorXd> saveAttach(0);
+	//			Eigen::VectorXd truevec(1);
+	//			truevec[0] = 1;
+	//			Eigen::VectorXd falsevec(1);
+	//			falsevec[0] = 0;
+	//			for (unsigned int i = 0; i < traj.size(); i++)
+	//			{
+	//				for (unsigned int j = 0; j < traj[i].size(); j++)
+	//				{
+	//					saveTrj.push_back(traj[i][j]);
+	//					if (attachObject[i])
+	//						saveAttach.push_back(truevec);
+	//					else
+	//						saveAttach.push_back(falsevec);
+	//				}
+	//			}
+	//			string dir_folder = "../../../data/communication_test";
+	//			// save
+	//			string dir_temp = dir_folder;
+	//			saveDataToText(saveTrj, dir_temp.append("/jointValTraj").append(".txt"));
+	//			dir_temp = dir_folder;
+	//			saveDataToText(saveAttach, dir_temp.append("/attachTraj").append(".txt"));
 
-			RRT_problemSettingFromRobotCommand(hyu_desired_dataset, attachObject, robot_state.robot_joint, waypointFlag);		// change homepos later to read current joint values of robot
-			vector<double> stepsize(0);
-			vector<double> attachobject(0);
-			for (unsigned int i = 0; i < waypointFlag.size(); i++)
-			{
-				if (waypointFlag[i])
-				{
-					stepsize.push_back(0.1);
-					attachobject.push_back(attachObject[i]);
-				}
-			}
-			busbar[0]->setBaseLinkFrame(initBusbar);								// change initial busbar SE3 later 
-			RRTSolve_HYU(attachObject, stepsize);
-			attachObjRender = attachObject;
-
-			char* send_data = makeJointCommand(traj, hyu_desired_dataset);
-			serv.SendMessageToClient(send_data);
-
-			if (attachObject[attachObject.size() - 1])
-				gripState = 1;
-			else
-				gripState = 0;
-
-			if (saveTraj)
-			{
-				vector<Eigen::VectorXd> saveTrj(0);
-				vector<Eigen::VectorXd> saveAttach(0);
-				Eigen::VectorXd truevec(1);
-				truevec[0] = 1;
-				Eigen::VectorXd falsevec(1);
-				falsevec[0] = 0;
-				for (unsigned int i = 0; i < traj.size(); i++)
-				{
-					for (unsigned int j = 0; j < traj[i].size(); j++)
-					{
-						saveTrj.push_back(traj[i][j]);
-						if (attachObject[i])
-							saveAttach.push_back(truevec);
-						else
-							saveAttach.push_back(falsevec);
-					}
-				}
-				string dir_folder = "../../../data/communication_test";
-				// save
-				string dir_temp = dir_folder;
-				saveDataToText(saveTrj, dir_temp.append("/jointValTraj").append(".txt"));
-				dir_temp = dir_folder;
-				saveDataToText(saveAttach, dir_temp.append("/attachTraj").append(".txt"));
-
-				printf("planned trajectory saved!!!\n");
-			}
-			isHYUPlanning = true;
-		}
-		hyu_data[0] = '\0';
-		hyu_data_flag = ' ';
-		Sleep(100);
-	}
+	//			printf("planned trajectory saved!!!\n");
+	//		}
+	//		isHYUPlanning = true;
+	//	}
+	//	hyu_data[0] = '\0';
+	//	hyu_data_flag = ' ';
+	//	Sleep(100);
+	//}
 	//m.unlock();
 }
 
