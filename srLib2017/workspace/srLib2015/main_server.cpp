@@ -1409,6 +1409,7 @@ void communicationFunc(int argc, char **argv)
 	//	hyu_data_flag = ' ';
 	//	Sleep(100);
 	//}
+
 	//m.unlock();
 }
 

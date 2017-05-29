@@ -227,8 +227,8 @@ void IndyRobot::AssembleModel()
 
 	gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->SetParentLink(&gLink[Indy_Index::SENSOR]);
 	gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->SetChildLink(&gLink[Indy_Index::GRIPPER]);
-	gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, -0.0355, 0.0)));
-	gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->SetChildLinkFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(0.0, -0.0355, 0.0)));
+	gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->SetParentLinkFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, SR_PI_HALF), Vec3(0.0, -0.0355, 0.0)));
+	gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->SetChildLinkFrame(EulerZYX(Vec3(SR_PI, 0.0, -SR_PI_HALF), Vec3(0.0, -0.0355, 0.0)));
 	gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 
 	gLink[Indy_Index::GRIPPER].GetGeomInfo().SetShape(srGeometryInfo::TDS);

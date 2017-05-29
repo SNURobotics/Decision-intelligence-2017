@@ -24,6 +24,7 @@ srLink* busbarlink = new srLink;
 srSystem* targetObj = new srSystem;
 int holeNum = 4;		// from 0 ~ 7
 SE3 Tbusbar2gripper = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
+SE3 Tbusbar2gripper_new = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
 SE3 Thole2busbar = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
 SE3 Tbusbar2gripper_new = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
 
@@ -63,6 +64,7 @@ myRenderer* renderer;
 void initDynamics();
 void rendering(int argc, char **argv);
 void updateFunc();
+void updateFuncRandom();
 void updateFuncTest();
 void updateFuncTest2();
 void updateFuncDefault();
@@ -92,7 +94,7 @@ int main(int argc, char **argv)
 	//gSpace.AddSystem((srSystem*)busbar[1]);
 	targetObj = busbar[0];
 	busbarlink = targetObj->GetBaseLink();
-	environmentSetting_HYU2(targetObj, true);		// targetObj is assumed to be rigidly attached to robot end-effector
+	environmentSetting_HYU2(targetObj, false);		// targetObj is assumed to be rigidly attached to robot end-effector
 	robotSetting();
 	//setObject(obs, Vec3(0.5, 0.5, 0.5));
 
@@ -123,8 +125,8 @@ int main(int argc, char **argv)
 	double xrot = (double)0.05*rand() / RAND_MAX - 0.025;
 	double yrot = (double)0.05*rand() / RAND_MAX - 0.025;
 	double zrot = (double)0.05*rand() / RAND_MAX - 0.025;
-	SE3 initPosOffset = SE3(Vec3(0.0, -0.01, 0.0));
-	SE3 TbusbarInit = initPosOffset * TgoalPos * EulerZYX(Vec3(-0.1, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
+	SE3 initPosOffset = SE3(Vec3(0.0, -0.01, 0.01));
+	SE3 TbusbarInit = initPosOffset * TgoalPos * EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
 	
 	//obs->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -0.25))*TbusbarInit);
 
@@ -134,7 +136,7 @@ int main(int argc, char **argv)
 	qInit[1] = -0.65*SR_PI;
 	qInit[2] = 0.3*SR_PI;
 	qInit[3] = 0.5*SR_PI_HALF;
-	Eigen::VectorXd q_config = rManager1->inverseKin(TbusbarInit * Tbusbar2gripper, rManager1->m_activeArmInfo->m_endeffector[0], true, SE3(), flag, qInit, 1000);
+	Eigen::VectorXd q_config = rManager1->inverseKin(TbusbarInit * Tbusbar2gripper_new, rManager1->m_activeArmInfo->m_endeffector[0], true, SE3(), flag, qInit, 1000);
 	cout << flag << endl;
 	rManager1->setJointVal(q_config);
 	
@@ -360,7 +362,7 @@ void setHybridPFCtrl()
 {
 	// initial config should be aligned to the contact plane
 	// assume target object is rigidly attached to robot end-effector
-	hctrl->isSystemSet = hctrl->setSystem((robotManager*) rManager1, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper), targetObj->GetBaseLink());
+	hctrl->isSystemSet = hctrl->setSystem((robotManager*) rManager1, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new), targetObj->GetBaseLink());
 	hctrl->setTimeStep(rManager1->m_space->m_Timestep_dyn_fixed);
 	double kv_v = 0.25e2, kp_v = 0.25*kv_v*kv_v, ki_v = 0.25e3, kp_f = 1.0e-1, ki_f = 1.0e-1;
 	hctrl->setGain(kv_v, kp_v, ki_v, kp_f, ki_f);
@@ -421,7 +423,8 @@ void workspaceSetting()
 
 void environmentSetting_HYU2(srSystem* object, bool connect)
 {
-	/*SE3 Tbase = SE3(Vec3(0.025, 1.095, 1.176));*/
+
+	//SE3 Tbase = SE3(Vec3(0.025, 1.095, 1.176));		// when stage attached
 	SE3 Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.009));		// when stage removed
 
 	//double z_angle = (double)rand() / RAND_MAX * 0.1;
@@ -460,6 +463,18 @@ void environmentSetting_HYU2(srSystem* object, bool connect)
 		wJoint->SetParentLinkFrame(Tbase*Tbase2jigbase);
 		wJoint->SetChildLinkFrame(SE3());
 	}
+}
+
+void updateFuncRandom()
+{
+	static int cnt = 0;
+	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
+	cnt++;
+
+
+
+
+
 }
 
 void updateFuncTest2()
