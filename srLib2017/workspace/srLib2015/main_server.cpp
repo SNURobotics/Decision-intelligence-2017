@@ -1023,7 +1023,7 @@ void communicationFunc(int argc, char **argv)
 		//Receiving data from HYU client
 		hyu_data = serv.RecevData();
 		hyu_data_flag = hyu_data[0];
-
+		serv.SendMessageToClient("G");
 		// 데이터 전송
 		if (hyu_data_flag == 'V')
 		{

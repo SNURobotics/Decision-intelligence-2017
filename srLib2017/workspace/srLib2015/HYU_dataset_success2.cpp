@@ -539,49 +539,55 @@ int main(int argc, char **argv)
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////////////////////// 170524 test robot HW matching
-	//double x1 = 0.75 - 0.49;
-	//double x2 = x1 - 0.48;
-	//SE3 Twayconv1 = SE3(Vec3(0.5*(x1 + x2), 0.5*2.068 - 0.29972 - 0.05 - 0.15, 0.5*(0.1511) + 1.03555 - 0.03));
-	//Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
-	//qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
-	//int flag;
-	//testjointvalue = rManager1->inverseKin(Twayconv1 * Tbusbar2gripper, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit2);
-	//cout << flag << endl;
-	//cout << Twayconv1 * Tbusbar2gripper << endl;
-	//rManager1->setJointVal(testjointvalue);
-	//vector<SE3> Tdestrj(1);
-	//vector<dse3> fdestrj(1);
-	//Tdestrj[0] = SE3(Vec3(0.0, 0.0, -0.009 - 0.001))*Twayconv1 * Tbusbar2gripper;	// -0.009: when contact start
-	//fdestrj[0] = dse3(0.0);
-	//setHybridPFCtrl();
-	//hctrl->setDesiredTraj(Tdestrj, fdestrj);
+	double x1 = 0.75 - 0.49;
+	double x2 = x1 - 0.48;
+	SE3 Twayconv1 = SE3(Vec3(0.5*(x1 + x2), 0.5*2.068 - 0.29972 - 0.05 - 0.15, 0.5*(0.1511) + 1.03555 - 0.03));
+	Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
+	qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
+	int flag;
+	testjointvalue = rManager1->inverseKin(Twayconv1 * Tbusbar2gripper, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit2);
+	cout << flag << endl;
+	cout << Twayconv1 * Tbusbar2gripper << endl;
+	rManager1->setJointVal(testjointvalue);
+	vector<SE3> Tdestrj(1);
+	vector<dse3> fdestrj(1);
+	Tdestrj[0] = SE3(Vec3(0.0, 0.0, -0.0095 - 0.01))*Twayconv1 * Tbusbar2gripper;	// -0.0095: when contact start
+	fdestrj[0] = dse3(0.0);
+	setHybridPFCtrl();
+	hctrl->setDesiredTraj(Tdestrj, fdestrj);
 
 
 
 
 	///////////////////////////////////////////////////////////////////////////////////////////////// 170525 test waypoint
-	SE3 Twaypoint;
-	//Twaypoint[9] = -0.593602; Twaypoint[10] = -0.150047; Twaypoint[11] = 0.779937;
-	//Twaypoint[0] = -0.064028; Twaypoint[3] = 0.645112; Twaypoint[6] = -0.761401;
-	//Twaypoint[1] = -0.951107; Twaypoint[4] = -0.270455; Twaypoint[7] = -0.149167;
-	//Twaypoint[2] = -0.302153; Twaypoint[5] = 0.714622; Twaypoint[8] = 0.630887;
-	Twaypoint[9] = -0.461765; Twaypoint[10] = -0.004162; Twaypoint[11] = 0.788315;
-	Twaypoint[0] = -0.124107; Twaypoint[3] = 0.990070; Twaypoint[6] = -0.066026;
-	Twaypoint[1] = -0.992242; Twaypoint[4] = -0.124315; Twaypoint[7] = 0.000964;
-	Twaypoint[2] = -0.007254; Twaypoint[5] = 0.065634; Twaypoint[8] = 0.997817;
-	int flag;
-	Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
-	qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
-	testjointvalue = rManager1->inverseKin(Trobotbase * Twaypoint, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit2);
-	cout << flag << endl;
-	busbar[0]->setBaseLinkFrame(Trobotbase * Twaypoint*Inv(Tbusbar2gripper_new));
+	//SE3 Twaypoint;
+	////Twaypoint[9] = -0.593602; Twaypoint[10] = -0.150047; Twaypoint[11] = 0.779937;
+	////Twaypoint[0] = -0.064028; Twaypoint[3] = 0.645112; Twaypoint[6] = -0.761401;
+	////Twaypoint[1] = -0.951107; Twaypoint[4] = -0.270455; Twaypoint[7] = -0.149167;
+	////Twaypoint[2] = -0.302153; Twaypoint[5] = 0.714622; Twaypoint[8] = 0.630887;
+	//Twaypoint[9] = -0.461765; Twaypoint[10] = -0.004162; Twaypoint[11] = 0.788315;
+	//Twaypoint[0] = -0.124107; Twaypoint[3] = 0.990070; Twaypoint[6] = -0.066026;
+	//Twaypoint[1] = -0.992242; Twaypoint[4] = -0.124315; Twaypoint[7] = 0.000964;
+	//Twaypoint[2] = -0.007254; Twaypoint[5] = 0.065634; Twaypoint[8] = 0.997817;
+	//int flag;
+	//Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
+	//qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
+	//testjointvalue = rManager1->inverseKin(Trobotbase * Twaypoint, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit2);
+	//cout << flag << endl;
+	//busbar[0]->setBaseLinkFrame(Trobotbase * Twaypoint*Inv(Tbusbar2gripper_new));
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
-	cout << Trobotbase % robot1->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() << endl;
-
-
+	//////////////////////////////////////////////////////////////////////////// 170526 change ftsensor weld joint location
+	//for (int i = 0; i < 10; i++)
+	//{
+	//	//cout << Trobotbase % robot1->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() << endl;
+	//	Eigen::VectorXd random = Eigen::VectorXd::Random(6);
+	//	rManager1->setJointVal(random);
+	//	cout << robot1->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() << endl;
+	//	cout << rManager1->m_ftSensorInfo[0]->m_sensorLocJoint->GetFrame() << endl << endl;
+	//}
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 	rendering(argc, argv);
 
 	return 0;
@@ -597,7 +603,7 @@ void rendering(int argc, char **argv)
 
 	renderer->InitializeRenderer(argc, argv, windows, false);
 	renderer->InitializeNode(&gSpace);
-	renderer->setUpdateFunc(updateFunc);
+	renderer->setUpdateFunc(updateFuncTestSensorToRobot);
 	//if (planning)
 	//	renderer->setUpdateFunc(updateFuncPlanning);
 	//else
@@ -620,7 +626,8 @@ void updateFunc()
 	
 	rManager2->setJointVal(jointVal);
 	static int cnt = 0;
-	rManager1->setJointVal(testjointvalue);
+	rManager1->setJointVal(homePos);
+	//rManager1->setJointVal(testjointvalue);
 	//rManager1->setJointVal(testWaypoint);
 	//rManager1->setJointVal(traj[0][cnt%(traj[0].size()-1)]);
 	cnt++;
@@ -1391,8 +1398,14 @@ void updateFuncTestSensorToRobot()
 	cout << "q: " << rManager1->getJointVal().transpose() << endl;
 	cout << "F: " << rManager1->readSensorValue() << endl;
 	//cout << rManager1->m_ftSensorInfo[0]->m_sensorLocJoint->GetFrame() << endl;
-	cout << rManager1->m_activeArmInfo->m_endeffector[0]->GetFrame() << endl;
-	cout << hctrl->T_des_trj[0] << endl;
+	cout << "Trob: " << endl << Trobotbase % rManager1->m_activeArmInfo->m_endeffector[0]->GetFrame() << endl;
+	SE3 Tdes = Trobotbase % hctrl->T_des_trj[0];
+	cout << "Tdes: " << endl << Trobotbase % hctrl->T_des_trj[0] << endl;
+
+
+	SE3 Toffset = rManager1->m_activeArmInfo->m_endeffector[0]->GetFrame() % hctrl->T_des_trj[0];
+	cout << "off: " <<  Toffset[11] << endl;
+	cout << "des: " << Tdes[11] << endl;
 	int stop = 1;
 }
 
