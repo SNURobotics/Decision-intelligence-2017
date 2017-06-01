@@ -1148,6 +1148,7 @@ void communicationFunc(int argc, char **argv)
 
 		}
 		else if (hyu_data_flag == 'P') {
+			isHYUPlanning = false;		// to turn off rendering
 			vector<bool> attachObject(0);
 
 			vector<bool> waypointFlag(0);
@@ -1171,7 +1172,7 @@ void communicationFunc(int argc, char **argv)
 			m.lock();
 			RRTSolve_HYU(attachObject, stepsize);
 			attachObjRender = attachObject;
-			//isHYUPlanning = true;
+			isHYUPlanning = true;
 			isVision = false;
 			isRobotState = false;
 			m.unlock();
