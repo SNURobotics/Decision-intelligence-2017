@@ -36,7 +36,7 @@
     <ClInclude Include="..\..\..\workspace\srLib2015\workspaceSetting.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\workspace\srLib2015\srLibSetting.h">
+    <ClInclude Include="..\..\..\workspace\srLib2015\vrepConnect.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
@@ -126,6 +126,9 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\Retargetting_time_check.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\vrep_server_render.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
