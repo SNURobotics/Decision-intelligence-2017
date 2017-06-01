@@ -2,10 +2,6 @@
 #include "../../VS2013/tcp_ip_server/Server.h"
 
 #include "Eigen/Dense"
-#define BUFSIZE 512
-#define BUFFER_SIZE 4096
-//static int sendValue;
-//static char sendBuf[BUFSIZE];
 
 #include <stdlib.h>
 #include <vector>
@@ -319,7 +315,6 @@ char* makeJointCommand(vector<vector<Eigen::VectorXd>>& jointTraj, desired_datas
 {
 	char *pbuffer;
 
-	char hyu_data_flag;
 	char tmp_buffer[255];
 	char div = 'd';
 

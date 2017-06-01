@@ -26,8 +26,6 @@
 #include "../VS2013/tcp_ip_server/Server.h"
 #include "tcp_ip_communication.h"
 #include "Eigen/Dense"
-//static int sendValue;
-//static char sendBuf[BUFSIZE];
 
 #include <stdlib.h>
 #include <vector>
@@ -173,7 +171,7 @@ int main(int argc, char **argv)
 
 	busbar[0] = new BusBar_HYU;
 
-	for (int i = 0; i < obstacle.size(); i++)
+	for (unsigned int i = 0; i < obstacle.size(); i++)
 	{
 		obstacle[i] = new srLink();
 		wJoint[i] = new srWeldJoint;
@@ -301,10 +299,10 @@ void updateFuncPlanning()
 	rManager2->setJointVal(homePosRobot2);
 
 	static int cnt = 0;
-	static int writeCnt = 0;
-	static int writeTaskCnt = 0;
+	static unsigned int writeCnt = 0;
+	static unsigned int writeTaskCnt = 0;
 
-	static int trjIdx = 0;
+	static unsigned int trjIdx = 0;
 	static int taskIdx = 0;
 
 	int idx = taskIdx % renderTraj.size();
@@ -563,7 +561,7 @@ void updateFuncHYUPlanning()
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 
 	static int cnt = 0;
-	static int trjIdx = 0;
+	static unsigned int trjIdx = 0;
 	static int taskIdx = 0;
 
 	// variable for restart rendering when planning result is updated
@@ -1062,7 +1060,7 @@ void communicationFunc(int argc, char **argv)
 
 			// vision data
 			char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
-			for (int p = 0; p <= strlen(hyu_data); p++)
+			for (unsigned int p = 0; p <= strlen(hyu_data); p++)
 				copy[p] = hyu_data[p];
 			serv.SendMessageToClient(copy);
 			printf("%s\n", hyu_data);
@@ -1105,7 +1103,7 @@ void communicationFunc(int argc, char **argv)
 		}
 		else if (hyu_data_flag == 'G') {
 
-			char* send_data;
+			//char* send_data;
 			//send_data = getSimulationState(objects);
 			//serv.SendMessageToClient(send_data);	
 			serv.SendMessageToClient(hyu_data);
@@ -1114,7 +1112,7 @@ void communicationFunc(int argc, char **argv)
 		{
 			// Robot cur data
 			char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
-			for (int p = 0; p <= strlen(hyu_data); p++)
+			for (unsigned int p = 0; p <= strlen(hyu_data); p++)
 				copy[p] = hyu_data[p];
 			serv.SendMessageToClient(copy);
 			printf("%s\n", hyu_data);
@@ -1132,7 +1130,7 @@ void communicationFunc(int argc, char **argv)
 		}
 		else if (hyu_data_flag == 'S') {
 			char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
-			for (int p = 0; p <= strlen(hyu_data); p++)
+			for (unsigned int p = 0; p <= strlen(hyu_data); p++)
 				copy[p] = hyu_data[p];
 
 			double normFT = readRobotCommand(hyu_data, hyu_desired_dataset);
