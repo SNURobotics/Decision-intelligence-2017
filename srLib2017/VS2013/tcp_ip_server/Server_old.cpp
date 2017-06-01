@@ -1,11 +1,7 @@
 #include "stdafx.h"
 #include "Server.h"
 
-#define SEOUL "192.168.137.102"
-#define HANYANG "192.168.137.103"
-#define SUNGGEUN "192.168.137.104"
-#define ROBOT01 "192.168.137.100"
-#define ROBOT02 "192.168.137.101"
+
 /**
 	메세지 전송을 테스트 하기 위한 terminal 형태의 메세지 전송 commandline
 	쓸 필요는 없다.
@@ -67,10 +63,6 @@ DWORD WINAPI SendClient(LPVOID arg)
 {
 	SOCKET client_sock = (SOCKET)arg;
 	int sendClient = sendValue;
-	SOCKADDR_IN clientaddr;
-	int addrlen;
-	addrlen = sizeof(clientaddr);
-	getpeername(client_sock, (SOCKADDR*)&clientaddr, &addrlen);
 
 	// 클라이언트와 데이터 통신
 	while (1)
@@ -85,14 +77,7 @@ DWORD WINAPI SendClient(LPVOID arg)
 				여기에 코드를 수정해서 결정할 수도 있다.
 			
 			*/
-			if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT01) == 0 && (sendBuf[0] == 'I' || sendBuf[0] == 'V' || sendBuf[0] == 'R'))
-				continue;
-			else if (strcmp(inet_ntoa(clientaddr.sin_addr), HANYANG) == 0 && (sendBuf[0] == 'G' || sendBuf[0] == 'I' || sendBuf[0] == 'P' || sendBuf[0] == 'S' || sendBuf[0] == 'J'))
-				continue;
-			else if (strcmp(inet_ntoa(clientaddr.sin_addr), SUNGGEUN) == 0 && (sendBuf[0] == 'V' || sendBuf[0] == 'G' || sendBuf[0] == 'R' || sendBuf[0] == 'S' || sendBuf[0] == 'P' || sendBuf[0] == 'J'))
-				continue;
-			else
-				SendMessageToClient(sendBuf, &client_sock);
+			SendMessageToClient(sendBuf, &client_sock);
 		}
 
 	}
@@ -111,17 +96,11 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 {
 	SOCKET client_sock = (SOCKET)arg;
 	char buf[BUFSIZE + 1];
+	SOCKADDR_IN clientaddr;
 	int addrlen;
 	int retval;
-	SOCKADDR_IN clientaddr;
 	addrlen = sizeof(clientaddr);
 	getpeername(client_sock, (SOCKADDR*)&clientaddr, &addrlen);
-	int testIndex = 0;
-	for (int i = 0; i < 10; i++) {
-		testIndex = i;
-		if (strcmp(test_str[i], "\n\n\0") == 0)
-			break;
-	}
 
 
 
@@ -140,7 +119,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 			break;
 		}
 		else if (retval == 0) {
-			test_str[testIndex][retval] =  '\0';
+			test_str[retval] =  '\0';
 			break;
 		}
 
@@ -153,16 +132,15 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 		*/
 		
 		//
-		strcpy(test_str[testIndex], buf);
+		strcpy(test_str, buf);
 				
-		printf("%d[%s] \n> ", retval, inet_ntoa(clientaddr.sin_addr));
+		printf("%d \n> ", retval);
 		//printf("[TCP /%s:%d] %s\n> ", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port), recvBuf);
 	}
 	closesocket(client_sock);
 
 	TerminateThread(hServerThread, 0);
 	CloseHandle(hServerThread);
-	strcpy(test_str[testIndex], "\n\n\0");
 
 	printf("TCP 서버, 클라이언트 종료 : IP 주소 = %s, 포트번호 = %d\n> ", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
 	return 0;
@@ -252,9 +230,6 @@ Server::Server()
 
 	printf("> ");
 
-	for (int i = 0; i < 10; i++) {
-		strcpy(test_str[i], "\n\n\0");
-	}
 	//std::thread control(&Server::ControlTower, this);
 
 	
@@ -293,23 +268,8 @@ void Server::MakeSendCommandLine()
 
 char *Server::RecevData()
 {
-	for (int i = 0; i < 10; i++) {
-		int index = (receiveIndex + 1 + i) % 10;
-		if (strcmp(test_str[index], "") == 0 || strcmp(test_str[index], "\0") == 0 || strcmp(test_str[index], "\n\n\0") == 0)
-			continue;
-		else {
-			char *name = (char *)malloc(sizeof(char)*BUFFER_SIZE);
-			strcpy(name, test_str[index]);
-			int len = strlen(name);
-			if (name[len - 1] == '\n')
-				name[len - 1] = '\0';
-			receiveIndex = index;
-			strcpy(test_str[index], "\0");
-			return name;
-		}
-
-	}
-	return "\0";
+	char *name = test_str;
+	return name;
 }
 
 Server::~Server()

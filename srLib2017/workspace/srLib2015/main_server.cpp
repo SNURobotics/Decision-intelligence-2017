@@ -391,7 +391,7 @@ int main(int argc, char **argv)
 
 			rendering(argc, argv);
 		}
-		hyu_data[0] = '\0';
+		/*hyu_data[0] = '\0';*/
 		hyu_data_flag = ' ';
 		Sleep(100);
 	}
