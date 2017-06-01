@@ -118,14 +118,13 @@ int main(int argc, char **argv)
 {
 	srand(time(NULL));
 	// Robot home position
-	homePos[1] = -SR_PI_HALF; homePos[3] = SR_PI_HALF; homePos[4] = SR_PI; 
-	homePos[4] = -0.5 * SR_PI;		// match to robot workcell
-
+	homePos[1] = -SR_PI_HALF; homePos[3] = SR_PI_HALF; homePos[4] = -0.5 * SR_PI;
+	//homePos[4] = -0.5 * SR_PI;		// match to robot workcell
 	// environment
 	workspaceSetting();
 	int startLocation =0;
 	goalLocation = Vec2(1, 1);
-	environmentSetting_HYU2(false);
+	environmentSetting_HYU2(true);
 	//jigAssem->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -0.5)));
 	////////////////////////////////////////////// for testing workspace
 	//SE3 Tbase = SE3(Vec3(0.025, 1.095, 1.176));		// when stage attached
@@ -172,6 +171,16 @@ int main(int argc, char **argv)
 
 	robotSetting();
 	Trobotbase = robot1->GetBaseLink()->GetFrame();
+
+	//////////////// SKKU 요청자료
+	//SE3 T_robot1_to_robot2;
+	//T_robot1_to_robot2 = Inv(robot1->GetBaseLink()->GetFrame()) * robot2->GetBaseLink()->GetFrame();
+	//Eigen::VectorXd TR1R2_vec = SE3toVectorXd(T_robot1_to_robot2);
+	//saveSingleDataToText(TR1R2_vec, "../../../data/SKKU_robot_frame/robot1_to_robot2.txt");
+
+	//cout << TR1R2_vec.transpose() << endl;
+	////////////////
+
 
 
 	// initialize srLib
@@ -367,10 +376,16 @@ int main(int argc, char **argv)
 	vector<bool> includeOri(nWay, true);
 	wayPoints.resize(nWay);
 	int holeNum = 4;
-	double tran_x = (double)rand() / RAND_MAX * 0.15;
-	double tran_y = -(double)rand() / RAND_MAX * 0.15;
-	double tran_z = (double)rand() / RAND_MAX * 0.05;
-	initBusbar = SE3(Vec3(0.0 + tran_x, -0.4 + tran_y,  0.06+tran_z)) * jigAssem->GetBaseLink()->GetFrame();
+	double tran_x = -(double)rand() / RAND_MAX * 0.3;
+	double tran_y = (double)rand() / RAND_MAX * 0.12;
+	double tran_z = (double)rand() / RAND_MAX * 0.01;
+	double z_angle = -(double)rand() / RAND_MAX * 0.2;
+	double y_angle = -(double)rand() / RAND_MAX * 0.2;
+	double x_angle = -(double)rand() / RAND_MAX * 0.2;
+
+	initBusbar = EulerZYX(Vec3(z_angle, y_angle, x_angle), Vec3(0.0 + tran_x, -0.4 + tran_y, 0.06 + tran_z))* jigAssem->GetBaseLink()->GetFrame();
+	
+	//initBusbar = SE3(Vec3(0.0 + tran_x, -0.4 + tran_y,  0.06+tran_z)) * jigAssem->GetBaseLink()->GetFrame();
 	initSE3[0] = initBusbar;
 	busbar[0]->GetBaseLink()->SetFrame(initBusbar);
 	wayPoints[0] = initBusbar;
@@ -543,22 +558,22 @@ int main(int argc, char **argv)
 
 	//////////////////////////////////////////////////////////////////////////////// 170524 test robot HW matching
 
-	double x1 = 0.75 - 0.49;
-	double x2 = x1 - 0.48;
-	SE3 Twayconv1 = SE3(Vec3(0.5*(x1 + x2), 0.5*2.068 - 0.29972 - 0.05 - 0.15, 0.5*(0.1511) + 1.03555 - 0.03));
-	Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
-	qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
-	int flag;
-	testjointvalue = rManager1->inverseKin(Twayconv1 * Tbusbar2gripper, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit2);
-	cout << flag << endl;
-	cout << Twayconv1 * Tbusbar2gripper << endl;
-	rManager1->setJointVal(testjointvalue);
-	vector<SE3> Tdestrj(1);
-	vector<dse3> fdestrj(1);
-	Tdestrj[0] = SE3(Vec3(0.0, 0.0, -0.0095 - 0.01))*Twayconv1 * Tbusbar2gripper;	// -0.0095: when contact start
-	fdestrj[0] = dse3(0.0);
-	setHybridPFCtrl();
-	hctrl->setDesiredTraj(Tdestrj, fdestrj);
+	//double x1 = 0.75 - 0.49;
+	//double x2 = x1 - 0.48;
+	//SE3 Twayconv1 = SE3(Vec3(0.5*(x1 + x2), 0.5*2.068 - 0.29972 - 0.05 - 0.15, 0.5*(0.1511) + 1.03555 - 0.03));
+	//Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
+	//qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
+	//int flag;
+	//testjointvalue = rManager1->inverseKin(Twayconv1 * Tbusbar2gripper, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit2);
+	//cout << flag << endl;
+	//cout << Twayconv1 * Tbusbar2gripper << endl;
+	//rManager1->setJointVal(testjointvalue);
+	//vector<SE3> Tdestrj(1);
+	//vector<dse3> fdestrj(1);
+	//Tdestrj[0] = SE3(Vec3(0.0, 0.0, -0.0095 - 0.01))*Twayconv1 * Tbusbar2gripper;	// -0.0095: when contact start
+	//fdestrj[0] = dse3(0.0);
+	//setHybridPFCtrl();
+	//hctrl->setDesiredTraj(Tdestrj, fdestrj);
 
 
 
@@ -607,11 +622,12 @@ void rendering(int argc, char **argv)
 	renderer->InitializeRenderer(argc, argv, windows, false);
 	renderer->InitializeNode(&gSpace);
 
-	renderer->setUpdateFunc(updateFuncTestSensorToRobot);
-	//if (planning)
-	//	renderer->setUpdateFunc(updateFuncPlanning);
-	//else
-	//	renderer->setUpdateFunc(updateFuncInput);
+	//renderer->setUpdateFunc(updateFuncTestSensorToRobot);
+	//renderer->setUpdateFunc(updateFunc);
+	if (planning)
+		renderer->setUpdateFunc(updateFuncPlanning);
+	else
+		renderer->setUpdateFunc(updateFuncInput);
 
 	renderer->RunRendering();
 }
@@ -855,7 +871,7 @@ void updateFuncPlanning()
 		}
 		if (writeCnt == traj[idx].size())
 		{
-			string dir_folder = "../../../data/HYU_success3";
+			string dir_folder = "../../../data/HYU_success7";
 			// save
 			string dir_temp = dir_folder;
 			saveDataToText(traj[idx], dir_temp.append("/jointValTraj").append(to_string(idx)).append(".txt"));

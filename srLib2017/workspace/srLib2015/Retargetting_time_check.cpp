@@ -116,7 +116,7 @@ vector<Eigen::VectorXd> testJointVal(0);
 Eigen::VectorXd testjointvalue(6);
 
 int num_task = 0;
-int num_sucess_task = 0;
+int num_success_task = 0;
 
 
 int main(int argc, char **argv)
@@ -372,7 +372,7 @@ int main(int argc, char **argv)
 	vector<bool> includeOri(nWay, true);
 	wayPoints.resize(nWay);
 	int holeNum = 4;
-	int experiment_num = 100;
+	int experiment_num = 5000;
 	for (int i = 0; i < experiment_num; i++)
 	{
 		double tran_x = (double)rand() / RAND_MAX * 0.15;
@@ -393,7 +393,7 @@ int main(int argc, char **argv)
 		attachObject[2] = true;
 		//attachObject[3] = true;
 
-		vector<double> stepsize(nWay, 0.1);
+		vector<double> stepsize(nWay, 0.8);
 		//stepsize[2] = 0.005;
 
 		RRT_problemSetting(homePos, wayPoints, includeOri, attachObject);
@@ -414,10 +414,20 @@ int main(int argc, char **argv)
 		//cin >> planning;
 		//if (planning)
 		//	RRTSolve_HYU(attachObject, stepsize);
+		cout << "Experiment number: " << i << endl;
 	}
 
 	cout << "Number of task: " << num_task << endl;
-	cout << "Number of success task: " << num_sucess_task << endl;
+	cout << "Number of success task: " << num_success_task << endl;
+
+	string dir_save_result = "../../../data/success_rate/retarget_step08.txt";
+
+
+	std::ofstream fout;
+	fout.open(dir_save_result);
+	fout << "Number of task: " << num_task << '\t' << '\n';
+	fout << "Number of success task: " << num_success_task;
+	fout.close();
 	//double tran_x = (double)rand() / RAND_MAX * 0.15;
 	//double tran_y = -(double)rand() / RAND_MAX * 0.15;
 	//double tran_z = (double)rand() / RAND_MAX * 0.05;
@@ -469,13 +479,13 @@ int main(int argc, char **argv)
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-	FTtraj.resize(initPos.size());
-	TtrajVec.resize(initPos.size());
-	busbarTraj.resize(initPos.size());
-	for (unsigned int i = 0; i < traj.size(); i++)
-	{
-		printf("%d-th traj length: %d\n", i, traj[i].size());
-	}
+	//FTtraj.resize(initPos.size());
+	//TtrajVec.resize(initPos.size());
+	//busbarTraj.resize(initPos.size());
+	//for (unsigned int i = 0; i < traj.size(); i++)
+	//{
+	//	printf("%d-th traj length: %d\n", i, traj[i].size());
+	//}
 	
 	///////////////////////////// read from text
 	//string dir_folder = "../../../data/workcell_test_data3";
@@ -1462,7 +1472,7 @@ void RRTSolve_HYU(vector<bool> attachObject, vector<double> stepsize)
 			num_task += 1;
 			if (end_time - begin_time <= 1000)
 			{
-				num_sucess_task += 1;
+				num_success_task += 1;
 			}
 		}
 		//begin_time = clock();

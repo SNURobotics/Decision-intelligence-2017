@@ -1,0 +1,56 @@
+task 1
+	double tran_x = (double)rand() / RAND_MAX * 0.25;
+	double tran_y = -(double)rand() / RAND_MAX * 0.25;
+	double tran_z = (double)rand() / RAND_MAX * 0.05;
+	double z_angle = (double)rand() / RAND_MAX * 0.15;
+	double y_angle = (double)rand() / RAND_MAX * 0.15;
+	double x_angle = (double)rand() / RAND_MAX * 0.15;
+
+task 2
+	double tran_x = -(double)rand() / RAND_MAX * 0.25;
+	double tran_y = -(double)rand() / RAND_MAX * 0.25;
+	double tran_z = (double)rand() / RAND_MAX * 0.05;
+	double z_angle = (double)rand() / RAND_MAX * 0.15;
+	double y_angle = (double)rand() / RAND_MAX * 0.15;
+	double x_angle = (double)rand() / RAND_MAX * 0.15;
+
+task 3
+	double tran_x = -(double)rand() / RAND_MAX * 0.15;
+	double tran_y = -(double)rand() / RAND_MAX * 0.1;
+	double tran_z = (double)rand() / RAND_MAX * 0.05;
+	double z_angle = -(double)rand() / RAND_MAX * 0.15;
+	double y_angle = (double)rand() / RAND_MAX * 0.15;
+	double x_angle = -(double)rand() / RAND_MAX * 0.15;
+
+task 4
+	double tran_x = (double)rand() / RAND_MAX * 0.15;
+	double tran_y = (double)rand() / RAND_MAX * 0.1;
+	double tran_z = (double)rand() / RAND_MAX * 0.03;
+	double z_angle = (double)rand() / RAND_MAX * 0.15;
+	double y_angle = -(double)rand() / RAND_MAX * 0.15;
+	double x_angle = -(double)rand() / RAND_MAX * 0.15;
+
+task 5
+	double tran_x = -(double)rand() / RAND_MAX * 0.15;
+	double tran_y = (double)rand() / RAND_MAX * 0.1;
+	double tran_z = (double)rand() / RAND_MAX * 0.05;
+	double z_angle = -(double)rand() / RAND_MAX * 0.15;
+	double y_angle = -(double)rand() / RAND_MAX * 0.15;
+	double x_angle = (double)rand() / RAND_MAX * 0.15;
+
+task 6
+	double tran_x = (double)rand() / RAND_MAX * 0.3;
+	double tran_y = (double)rand() / RAND_MAX * 0.15;
+	double tran_z = (double)rand() / RAND_MAX * 0.02;
+	double z_angle = -(double)rand() / RAND_MAX * 0.15;
+	double y_angle = -(double)rand() / RAND_MAX * 0.15;
+	double x_angle = -(double)rand() / RAND_MAX * 0.15;
+
+
+task 7
+	double tran_x = -(double)rand() / RAND_MAX * 0.3;
+	double tran_y = (double)rand() / RAND_MAX * 0.12;
+	double tran_z = (double)rand() / RAND_MAX * 0.01;
+	double z_angle = -(double)rand() / RAND_MAX * 0.25;
+	double y_angle = -(double)rand() / RAND_MAX * 0.25;
+	double x_angle = -(double)rand() / RAND_MAX * 0.25;

@@ -25,6 +25,22 @@ static void saveDataToText(std::vector<Eigen::VectorXd> data, std::string str)
 	fout.close();
 }
 
+static void saveSingleDataToText(Eigen::VectorXd data, std::string str)
+{
+	std::ofstream fout;
+	fout.open(str);
+
+
+		for (int j = 0; j < data.rows(); j++)
+		{
+			fout << data(j) << '\t';
+		}
+		fout << std::endl;
+
+	fout.close();
+}
+
+
 static std::vector<Eigen::VectorXd> loadDataFromText(std::string str, int colNum)
 {
 	std::ifstream fin;

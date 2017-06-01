@@ -41,33 +41,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\workspace\srLib2015\test.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\test_impede.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\ModelingTest.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\test_planning.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\test_retargetting.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\test_grasping.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\test_grasp_planning.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\test_retargetting2.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\test_peginhole.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\vrep_objmovetest.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -83,18 +56,6 @@
     <ClCompile Include="..\..\..\workspace\srLib2015\vrep_objmovetest2.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\ModelingTest_workcell.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\test_planning_workcell.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\test_peginhole2.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\test_peginhole3.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\HYU_dataset_success.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -102,12 +63,6 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\HYU_dataset_failure.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\test_hybrid_old.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\test_hybrid.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\tcp_ip_server.cpp">
@@ -123,6 +78,9 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\Retargetting_time_check.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\two_robot_planning.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

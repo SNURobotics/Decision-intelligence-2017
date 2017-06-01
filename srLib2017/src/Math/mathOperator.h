@@ -257,6 +257,15 @@ static Eigen::VectorXd concatenateVec3(const Vec3& vec1, const Vec3& vec2)
 	return vec;
 }
 
+static Eigen::VectorXd concatenateVec6(const Eigen::VectorXd& vec1, const Eigen::VectorXd& vec2)
+{
+	Eigen::VectorXd vec(12);
+	for (int i = 0; i < 6; i++) {
+		vec(i) = vec1[i];
+		vec(i +6) = vec2[i];
+	}
+	return vec;
+}
 static Eigen::VectorXd SE3toVector(const SE3& T)
 {
 	SO3 R = T.GetOrientation();
