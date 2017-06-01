@@ -77,13 +77,13 @@
     <ClCompile Include="..\..\..\workspace\srLib2015\main_server.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\main_server_render.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\Retargetting_time_check.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\two_robot_planning.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\main_server_two_arm.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

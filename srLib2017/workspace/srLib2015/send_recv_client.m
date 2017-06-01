@@ -98,7 +98,7 @@ end
 client = tcpip('localhost',9000);
 fopen(client);
 
-send_data = ['S'; num2str(3); char_robot_pos1; char_robot_rot1; char_robot_gripper; char_robot_ft; 
+send_data = ['S';'1'; 'd';num2str(3); 'd';char_robot_pos1; char_robot_rot1; char_robot_gripper; char_robot_ft; 
     char_robot_pos2; char_robot_rot2; char_robot_gripper; char_robot_ft;
     char_robot_pos3; char_robot_rot3; char_robot_gripper; char_robot_ft];
 

@@ -78,7 +78,7 @@ vector<Eigen::VectorXd> goalJigLocation(1);
 
 indyRobotManager* rManager1;
 indyRobotManager* rManager2;
-robotRRTManager* RRTManager = new robotRRTManager;
+robotRRTManager* RRTManager1 = new robotRRTManager;
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::HYBRID;
 hybridPFCtrlManager_6dof* hctrl = new hybridPFCtrlManager_6dof;
 void initDynamics();
@@ -110,7 +110,7 @@ double planning = 0;
 vector<Eigen::VectorXd> loadJointVal(0);
 vector<Eigen::VectorXd> loadAttachStatus(0);
 SE3 Twaypoint;
-SE3 Trobotbase;
+SE3 Trobotbase1;
 Eigen::VectorXd testWaypoint;
 vector<Eigen::VectorXd> testJointVal(0);
 Eigen::VectorXd testjointvalue(6);
@@ -170,7 +170,7 @@ int main(int argc, char **argv)
 	///////////////////////////////////////////////////////////////////
 
 	robotSetting();
-	Trobotbase = robot1->GetBaseLink()->GetFrame();
+	Trobotbase1 = robot1->GetBaseLink()->GetFrame();
 
 	//////////////// SKKU 요청자료
 	//SE3 T_robot1_to_robot2;
@@ -1131,9 +1131,9 @@ void rrtSetting()
 	vector<srStateJoint*> planningJoints(6);
 	for (unsigned int i = 0; i < planningJoints.size(); i++)
 		planningJoints[i] = (srStateJoint*)robot1->gJoint[i];
-	RRTManager->setSystem(planningJoints);
-	RRTManager->setSpace(&gSpace);
-	RRTManager->setStateBound(robot1->getLowerJointLimit(), robot1->getUpperJointLimit());
+	RRTManager1->setSystem(planningJoints);
+	RRTManager1->setSpace(&gSpace);
+	RRTManager1->setStateBound(robot1->getLowerJointLimit(), robot1->getUpperJointLimit());
 }
 
 
@@ -1260,7 +1260,7 @@ void RRTSolve()
 	for (int i = start; i < end; i++)
 	{
 		objNum = i / 2;
-		RRTManager->setStartandGoal(initPos[i], goalPos[i]);
+		RRTManager1->setStartandGoal(initPos[i], goalPos[i]);
 
 		for (unsigned int j = 0; j < goalSE3.size(); j++)
 		{
@@ -1272,25 +1272,25 @@ void RRTSolve()
 		if (i % 2 == 0)
 		{
 			isAttached = true;
-			RRTManager->attachObject(busbar[objNum], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper));
+			RRTManager1->attachObject(busbar[objNum], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper));
 			printf("%d-th busbar moving...\n", objNum);
 		}
 		else
 		{
 			isAttached = false;
-			RRTManager->detachObject();
+			RRTManager1->detachObject();
 			busbar[objNum]->setBaseLinkFrame(goalSE3[objNum]);
 			printf("%d-th busbar moved, reaching to next one...\n", objNum);
 		}
 
-		feas = RRTManager->checkFeasibility(initPos[i], goalPos[i]);
+		feas = RRTManager1->checkFeasibility(initPos[i], goalPos[i]);
 		cout << feas[0] << feas[1] << endl;
-		RRTManager->execute(0.05);
-		tempTraj = RRTManager->extractPath();
+		RRTManager1->execute(0.05);
+		tempTraj = RRTManager1->extractPath();
 
 		// check collision
 		for (unsigned int j = 0; j < tempTraj.size(); j++)
-			if (RRTManager->setState(tempTraj[j]))
+			if (RRTManager1->setState(tempTraj[j]))
 				cout << "collide at " << j << "th point!!!" << endl;
 
 		traj.push_back(tempTraj);
@@ -1355,12 +1355,12 @@ void RRT_problemSetting(Eigen::VectorXd init, vector<SE3> wayPoints, vector<bool
 		if (i < wayPoints.size() - 1)
 			initPos.push_back(goalPos[i]);
 		if (attachObject[i])
-			RRTManager->attachObject(busbar[0], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new));
+			RRTManager1->attachObject(busbar[0], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new));
 		else
-			RRTManager->detachObject();
+			RRTManager1->detachObject();
 
 
-		feas = RRTManager->checkFeasibility(initPos[i], goalPos[i]);
+		feas = RRTManager1->checkFeasibility(initPos[i], goalPos[i]);
 		cout << feas[0] << feas[1] << endl;
 	}
 }
@@ -1385,28 +1385,28 @@ void RRTSolve_HYU(vector<bool> attachObject, vector<double> stepsize)
 	for (int i = start; i < end; i++)
 	{
 		begin_time = clock();
-		RRTManager->setStartandGoal(initPos[i], goalPos[i]);
+		RRTManager1->setStartandGoal(initPos[i], goalPos[i]);
 		
 		cout << "initpos:  " << initPos[i].transpose() << endl;
 		cout << "goalPos:  " << goalPos[i].transpose() << endl << endl;;
 		
 		if (attachObject[i])
-			RRTManager->attachObject(busbar[0], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new));
+			RRTManager1->attachObject(busbar[0], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new));
 		else
-			RRTManager->detachObject();
+			RRTManager1->detachObject();
 
 
-		feas = RRTManager->checkFeasibility(initPos[i], goalPos[i]);
+		feas = RRTManager1->checkFeasibility(initPos[i], goalPos[i]);
 		cout << feas[0] << feas[1] << endl;
-		RRTManager->execute(stepsize[i]);
-		tempTraj = RRTManager->extractPath();
+		RRTManager1->execute(stepsize[i]);
+		tempTraj = RRTManager1->extractPath();
 		end_time = clock();
 		
 		cout << "way point RRT time: " << end_time - begin_time << endl;
 
 		// check collision
 		for (unsigned int j = 0; j < tempTraj.size(); j++)
-			if (RRTManager->setState(tempTraj[j]))
+			if (RRTManager1->setState(tempTraj[j]))
 				cout << "collide at " << j << "th point!!!" << endl;
 
 		traj.push_back(tempTraj);
@@ -1429,9 +1429,9 @@ void updateFuncTestSensorToRobot()
 	cout << "q: " << rManager1->getJointVal().transpose() << endl;
 	cout << "F: " << rManager1->readSensorValue() << endl;
 	//cout << rManager1->m_ftSensorInfo[0]->m_sensorLocJoint->GetFrame() << endl;
-	cout << "Trob: " << endl << Trobotbase % rManager1->m_activeArmInfo->m_endeffector[0]->GetFrame() << endl;
-	SE3 Tdes = Trobotbase % hctrl->T_des_trj[0];
-	cout << "Tdes: " << endl << Trobotbase % hctrl->T_des_trj[0] << endl;
+	cout << "Trob: " << endl << Trobotbase1 % rManager1->m_activeArmInfo->m_endeffector[0]->GetFrame() << endl;
+	SE3 Tdes = Trobotbase1 % hctrl->T_des_trj[0];
+	cout << "Tdes: " << endl << Trobotbase1 % hctrl->T_des_trj[0] << endl;
 
 
 	SE3 Toffset = rManager1->m_activeArmInfo->m_endeffector[0]->GetFrame() % hctrl->T_des_trj[0];
