@@ -95,3 +95,13 @@ public:
 	void AssembleModel();
 	vector<SE3> holeCenter;
 };
+
+class JigAssem_QB_bar : public Object
+{
+public:
+	JigAssem_QB_bar(bool add);
+	~JigAssem_QB_bar();
+	void AssembleModel();
+	vector<SE3> holeCenter;
+	bool m_add;
+};
