@@ -153,7 +153,7 @@ int readRobotCurState(char * hyu_data, robot_current_data & robot_state)
 			recv_cnt += 1;
 		}
 	}
-	else if (robotFlag == 12)
+	/*else if (robotFlag == 3)
 	{
 		robot_state.robot_joint.resize(6 * 2);
 		robot_state.robot_pos.resize(3 * 2);
@@ -181,7 +181,7 @@ int readRobotCurState(char * hyu_data, robot_current_data & robot_state)
 				nrobot_cnt += 1;
 			}
 		}
-	}
+	}*/
 	else
 		printf("Wrong robotFlag is given!!!!!!!!!!!!!!!1");
 	
@@ -213,29 +213,30 @@ pair<int,vector<double>> readRobotCommand(char* hyu_data, vector<desired_dataset
 	int nway_cnt = 0;
 	vector<double> normFT;
 
+	hyu_desired_dataset.resize(2);
+
 	if (robotFlag == 1 || robotFlag == 2)
 	{
 		nway1 = atoi(recv_data);
 		recv_data = strtok(NULL, "d");
-		hyu_desired_dataset.resize(1);
-		hyu_desired_dataset[0].robot_pos.resize(3 * nway1);
-		hyu_desired_dataset[0].robot_rot.resize(9 * nway1);
-		hyu_desired_dataset[0].robot_gripper.resize(1 * nway1);
-		hyu_desired_dataset[0].robot_ft.resize(6 * nway1);
+		hyu_desired_dataset[robotFlag-1].robot_pos.resize(3 * nway1);
+		hyu_desired_dataset[robotFlag-1].robot_rot.resize(9 * nway1);
+		hyu_desired_dataset[robotFlag-1].robot_gripper.resize(1 * nway1);
+		hyu_desired_dataset[robotFlag-1].robot_ft.resize(6 * nway1);
 
 		while (recv_data != NULL)
 		{
 			if (recv_cnt < 3) {
-				hyu_desired_dataset[0].robot_pos[recv_cnt + (nway_cnt * 3)] = atof(recv_data);
+				hyu_desired_dataset[robotFlag - 1].robot_pos[recv_cnt + (nway_cnt * 3)] = atof(recv_data);
 			}
 			else if (3 <= recv_cnt && recv_cnt < 12) {
-				hyu_desired_dataset[0].robot_rot[(recv_cnt - 3) + (nway_cnt * 9)] = atof(recv_data);
+				hyu_desired_dataset[robotFlag - 1].robot_rot[(recv_cnt - 3) + (nway_cnt * 9)] = atof(recv_data);
 			}
 			else if (recv_cnt == 12) {
-				hyu_desired_dataset[0].robot_gripper[(recv_cnt - 12) + (nway_cnt * 1)] = atof(recv_data);
+				hyu_desired_dataset[robotFlag - 1].robot_gripper[(recv_cnt - 12) + (nway_cnt * 1)] = atof(recv_data);
 			}
 			else if (recv_cnt >= 13) {
-				hyu_desired_dataset[0].robot_ft[(recv_cnt - 13) + (nway_cnt * 6)] = atof(recv_data);
+				hyu_desired_dataset[robotFlag - 1].robot_ft[(recv_cnt - 13) + (nway_cnt * 6)] = atof(recv_data);
 			}
 
 			recv_data = strtok(NULL, "d");
@@ -248,16 +249,15 @@ pair<int,vector<double>> readRobotCommand(char* hyu_data, vector<desired_dataset
 		}
 		normFT.resize(1);
 		normFT[0] = 0.0;
-		for (unsigned int i = 0; i < hyu_desired_dataset[0].robot_ft.size(); i++)
-			normFT[0] += hyu_desired_dataset[0].robot_ft[i] * hyu_desired_dataset[0].robot_ft[i];
+		for (unsigned int i = 0; i < hyu_desired_dataset[robotFlag - 1].robot_ft.size(); i++)
+			normFT[0] += hyu_desired_dataset[robotFlag - 1].robot_ft[i] * hyu_desired_dataset[robotFlag - 1].robot_ft[i];
 	}
-	else if (robotFlag == 12)
+	else if (robotFlag == 3)
 	{
 		nway1 = atoi(recv_data);
 		recv_data = strtok(NULL, "d");
 		nway2 = atoi(recv_data);
 		recv_data = strtok(NULL, "d");
-		hyu_desired_dataset.resize(2);
 		hyu_desired_dataset[0].robot_pos.resize(3 * nway1);
 		hyu_desired_dataset[0].robot_rot.resize(9 * nway1);
 		hyu_desired_dataset[0].robot_gripper.resize(1 * nway1);
@@ -385,46 +385,58 @@ char* makeJointCommand_SingleRobot(vector<vector<Eigen::VectorXd>>& jointTraj, d
 	return send_data;
 };
 
-
-char* makeJointCommand_MultiRobot(vector<vector<vector<Eigen::VectorXd>>>& jointTraj, vector<desired_dataset>& hyu_desired_dataset, int robotFlag)
-{
-	char *pbuffer;
-
-	char hyu_data_flag;
-	char tmp_buffer[255];
-	char div = 'd';
-
-	int digit_num = 5;
-	vector<unsigned int> totalNum(2);
-	totalNum[0] = 0;
-	totalNum[1] = 0;
-	for (int robotnum = 0; robotnum < 2; robotnum++)
-	{
-		for (unsigned int i = 0; i < jointTraj[robotnum].size(); i++)
-		{
-			totalNum[robotnum] += jointTraj[robotnum][i].size();
-		}
-	}
-
-	string tmp_data = "J" + to_string(robotFlag) + "d" + to_string(totalNum) + "d";
-
-	//Robot joint trajectory
-	for (unsigned int i = 0; i < jointTraj.size(); i++)
-	{
-		for (unsigned int j = 0; j < jointTraj[i].size(); j++)
-		{
-			for (int k = 0; k < jointTraj[i][j].size(); k++)
-			{
-				pbuffer = _gcvt(jointTraj[i][j][k], digit_num, tmp_buffer);
-				tmp_data = tmp_data + pbuffer;
-				tmp_data = tmp_data + div;
-			}
-			pbuffer = _gcvt(hyu_desired_dataset.robot_gripper[i], digit_num, tmp_buffer);
-			tmp_data = tmp_data + pbuffer;
-			tmp_data = tmp_data + div;
-		}
-	}
-	char *send_data = new char[tmp_data.length() + 1];
-	strcpy(send_data, tmp_data.c_str());
-	return send_data;
-};
+//
+//vector<char*> makeJointCommand_MultiRobot(vector<vector<vector<Eigen::VectorXd>>>& jointTraj, vector<desired_dataset>& hyu_desired_dataset, int robotFlag)
+//{
+//	char *pbuffer;
+//
+//	char hyu_data_flag;
+//	char tmp_buffer[255];
+//	char div = 'd';
+//	
+//	int digit_num = 5;
+//	vector<unsigned int> totalNum(2);
+//	totalNum[0] = 0;
+//	totalNum[1] = 0;
+//	for (int robotnum = 0; robotnum < 2; robotnum++)
+//	{
+//		for (unsigned int i = 0; i < jointTraj[robotnum].size(); i++)
+//		{
+//			totalNum[robotnum] += jointTraj[robotnum][i].size();
+//		}
+//	}
+//
+//	vector<char*> send_data(2);
+//
+//	string tmp_data;
+//	
+//	//tmp_data= "J" + to_string(robotFlag) + "d" + to_string(totalNum) + "d";
+//
+//	//Robot joint trajectory
+//	for (int robotnum = 0; robotnum < 2; robotnum++)
+//	{
+//		tmp_data = "J" + to_string(robotnum+1) + "d" + to_string(totalNum[robotnum]) + "d";
+//		for (unsigned int i = 0; i < jointTraj[robotnum].size(); i++)
+//		{
+//			for (unsigned int j = 0; j < jointTraj[robotnum][i].size(); j++)
+//			{
+//				for (int k = 0; k < jointTraj[robotnum][i][j].size(); k++)
+//				{
+//					pbuffer = _gcvt(jointTraj[robotnum][i][j][k], digit_num, tmp_buffer);
+//					tmp_data = tmp_data + pbuffer;
+//					tmp_data = tmp_data + div;
+//				}
+//				pbuffer = _gcvt(hyu_desired_dataset[robotnum].robot_gripper[i], digit_num, tmp_buffer);
+//				tmp_data = tmp_data + pbuffer;
+//				tmp_data = tmp_data + div;
+//			}
+//		}
+//		send_data[i] = new char[tmp_data.length() + 1];
+//		strcpy(send_data[robotnum], tmp_data.c_str());
+//	}
+//	return send_data;
+//	
+//	//char *send_data = new char[tmp_data.length() + 1];
+//	strcpy(send_data, tmp_data.c_str());
+//	return send_data;
+//};
