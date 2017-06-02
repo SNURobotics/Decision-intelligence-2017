@@ -251,7 +251,7 @@ pair<int,vector<double>> readRobotCommand(char* hyu_data, vector<desired_dataset
 		for (unsigned int i = 0; i < hyu_desired_dataset[0].robot_ft.size(); i++)
 			normFT[0] += hyu_desired_dataset[0].robot_ft[i] * hyu_desired_dataset[0].robot_ft[i];
 	}
-	else if (robotFlag == 12)
+	else if (robotFlag == 3)
 	{
 		nway1 = atoi(recv_data);
 		recv_data = strtok(NULL, "d");
@@ -307,6 +307,10 @@ pair<int,vector<double>> readRobotCommand(char* hyu_data, vector<desired_dataset
 				 normFT[i] += hyu_desired_dataset[i].robot_ft[j] * hyu_desired_dataset[i].robot_ft[j];
 			}
 		}
+
+
+
+
 	}
 	return std::make_pair(robotFlag, normFT);
 };
@@ -386,45 +390,45 @@ char* makeJointCommand_SingleRobot(vector<vector<Eigen::VectorXd>>& jointTraj, d
 };
 
 
-char* makeJointCommand_MultiRobot(vector<vector<vector<Eigen::VectorXd>>>& jointTraj, vector<desired_dataset>& hyu_desired_dataset, int robotFlag)
-{
-	char *pbuffer;
-
-	char hyu_data_flag;
-	char tmp_buffer[255];
-	char div = 'd';
-
-	int digit_num = 5;
-	vector<unsigned int> totalNum(2);
-	totalNum[0] = 0;
-	totalNum[1] = 0;
-	for (int robotnum = 0; robotnum < 2; robotnum++)
-	{
-		for (unsigned int i = 0; i < jointTraj[robotnum].size(); i++)
-		{
-			totalNum[robotnum] += jointTraj[robotnum][i].size();
-		}
-	}
-
-	string tmp_data = "J" + to_string(robotFlag) + "d" + to_string(totalNum) + "d";
-
-	//Robot joint trajectory
-	for (unsigned int i = 0; i < jointTraj.size(); i++)
-	{
-		for (unsigned int j = 0; j < jointTraj[i].size(); j++)
-		{
-			for (int k = 0; k < jointTraj[i][j].size(); k++)
-			{
-				pbuffer = _gcvt(jointTraj[i][j][k], digit_num, tmp_buffer);
-				tmp_data = tmp_data + pbuffer;
-				tmp_data = tmp_data + div;
-			}
-			pbuffer = _gcvt(hyu_desired_dataset.robot_gripper[i], digit_num, tmp_buffer);
-			tmp_data = tmp_data + pbuffer;
-			tmp_data = tmp_data + div;
-		}
-	}
-	char *send_data = new char[tmp_data.length() + 1];
-	strcpy(send_data, tmp_data.c_str());
-	return send_data;
-};
+//char* makeJointCommand_MultiRobot(vector<vector<vector<Eigen::VectorXd>>>& jointTraj, vector<desired_dataset>& hyu_desired_dataset, int robotFlag)
+//{
+//	char *pbuffer;
+//
+//	char hyu_data_flag;
+//	char tmp_buffer[255];
+//	char div = 'd';
+//
+//	int digit_num = 5;
+//	vector<unsigned int> totalNum(2);
+//	totalNum[0] = 0;
+//	totalNum[1] = 0;
+//	for (int robotnum = 0; robotnum < 2; robotnum++)
+//	{
+//		for (unsigned int i = 0; i < jointTraj[robotnum].size(); i++)
+//		{
+//			totalNum[robotnum] += jointTraj[robotnum][i].size();
+//		}
+//	}
+//
+//	string tmp_data = "J" + to_string(robotFlag) + "d" + to_string(totalNum) + "d";
+//
+//	//Robot joint trajectory
+//	for (unsigned int i = 0; i < jointTraj.size(); i++)
+//	{
+//		for (unsigned int j = 0; j < jointTraj[i].size(); j++)
+//		{
+//			for (int k = 0; k < jointTraj[i][j].size(); k++)
+//			{
+//				pbuffer = _gcvt(jointTraj[i][j][k], digit_num, tmp_buffer);
+//				tmp_data = tmp_data + pbuffer;
+//				tmp_data = tmp_data + div;
+//			}
+//			pbuffer = _gcvt(hyu_desired_dataset.robot_gripper[i], digit_num, tmp_buffer);
+//			tmp_data = tmp_data + pbuffer;
+//			tmp_data = tmp_data + div;
+//		}
+//	}
+//	char *send_data = new char[tmp_data.length() + 1];
+//	strcpy(send_data, tmp_data.c_str());
+//	return send_data;
+//};

@@ -1512,24 +1512,55 @@ void communicationFunc(int argc, char **argv)
 			}
 			else if (hyu_data_output.first == 3)
 			{
-				if (hyu_data_output.second[0]==0 && hyu_data_output.second[1] == 0)
-					serv.SendMessageToClient("P3");
-				else if (hyu_data_output.second[0] == 0 && hyu_data_output.second[1] != 0)
-				{
-					serv.SendMessageToClient(copy);
+				char div = 'd';
+				char* div_data;
+				int nway1;
+				int nway;
+				int iter = 0;
+				int n_inside_way = 19;
+				if (hyu_data_output.second[0] == 0)
 					serv.SendMessageToClient("P1");
-				}
-				else if (hyu_data_output.second[0] != 0 && hyu_data_output.second[1] == 0)
-				{
-					serv.SendMessageToClient(copy);
-					serv.SendMessageToClient("P2");
-				}
 				else
 				{
-					serv.SendMessageToClient(copy);
+					string tmp_data1 = "S" + to_string(1) + "d";
+					div_data = strtok(copy, "d");		// disregard
+					nway = atoi(strtok(NULL, "d"));
+					tmp_data1 = tmp_data1 + to_string(nway) + "d";
+					div_data = strtok(NULL, "d");		// disregard
+					iter = 0;
+					while (iter < nway * n_inside_way)
+					{
+						div_data = strtok(NULL, "d");
+						tmp_data1 = tmp_data1 + div_data + "d";
+						iter++;
+					}
+					char* copy1 = (char*)malloc(sizeof(char)*strlen(hyu_data));
+					strcpy(copy1, tmp_data1.c_str());
+					serv.SendMessageToClient(copy1);
+				}
+
+				if (hyu_data_output.second[1] == 0)
+					serv.SendMessageToClient("P2");
+				else
+				{
+					string tmp_data2 = "S" + to_string(2) + "d";
+					
+					div_data = strtok(copy, "d");		// disregard
+					nway1 = atoi(strtok(NULL, "d"));		// disregard
+					nway = atoi(strtok(NULL, "d"));
+					tmp_data2 = tmp_data2 + to_string(nway) + "d";
+					iter = 0;
+					while (iter < nway * n_inside_way && iter > nway1 * n_inside_way - 1)
+					{
+						div_data = strtok(NULL, "d");
+						tmp_data2 = tmp_data2 + div_data + "d";
+						iter++;
+					}
+					char* copy2 = (char*)malloc(sizeof(char)*strlen(hyu_data));
+					strcpy(copy2, tmp_data2.c_str());
+					serv.SendMessageToClient(copy2);
 				}
 			}
-
 		}
 		else if (hyu_data_flag == 'P') {
 			isHYUPlanning = false;		// to turn off rendering
@@ -1577,61 +1608,61 @@ void communicationFunc(int argc, char **argv)
 				else
 					gripState = 0;
 			}
-			else if (robotFlag == 3)
-			{
-				Eigen::VectorXd robot1Joint(6), robot2Joint(6);
-				for (int i = 0; i < 6; i++)
-				{
-					robot1Joint[i] = robot_state.robot_joint[i];
-					robot2Joint[i] = robot_state.robot_joint[i + 6];
-				}
-				vector<Eigen::VectorXd> robotJointVector(2);
-				robotJointVector[0] = robot1Joint;
-				robotJointVector[1] = robot2Joint;
+			//else if (robotFlag == 3)
+			//{
+			//	Eigen::VectorXd robot1Joint(6), robot2Joint(6);
+			//	for (int i = 0; i < 6; i++)
+			//	{
+			//		robot1Joint[i] = robot_state.robot_joint[i];
+			//		robot2Joint[i] = robot_state.robot_joint[i + 6];
+			//	}
+			//	vector<Eigen::VectorXd> robotJointVector(2);
+			//	robotJointVector[0] = robot1Joint;
+			//	robotJointVector[1] = robot2Joint;
 
-				attachObject.resize(2);
-				waypointFlag.resize(2);
-				stepsize.resize(2);
-				attachobject.resize(2);
-				for (int i = 0; i < 2 ;i++)
-				{
-					attachObject[i].resize(0);
-					waypointFlag[i].resize(0);
-					stepsize[i].resize(0);
-					attachobject[i].resize(0);
-				}
+			//	attachObject.resize(2);
+			//	waypointFlag.resize(2);
+			//	stepsize.resize(2);
+			//	attachobject.resize(2);
+			//	for (int i = 0; i < 2 ;i++)
+			//	{
+			//		attachObject[i].resize(0);
+			//		waypointFlag[i].resize(0);
+			//		stepsize[i].resize(0);
+			//		attachobject[i].resize(0);
+			//	}
 
-				RRT_problemSettingFromMultiRobotCommand(hyu_desired_dataset, attachObject, robotJointVector, waypointFlag, robotFlag);
-				for (int robotnum = 0; robotnum < 2; robotnum++)
-				{
-					for (unsigned int i = 0; i < waypointFlag[robotnum].size(); i++)
-					{
-						if (waypointFlag[robotnum][i])
-						{
-							stepsize[robotnum].push_back(0.1);
-							attachobject[robotnum].push_back(attachObject[robotnum][i]);
-						}
-					}
-				}
-				busbar[0]->setBaseLinkFrame(initBusbar);
+			//	RRT_problemSettingFromMultiRobotCommand(hyu_desired_dataset, attachObject, robotJointVector, waypointFlag, robotFlag);
+			//	for (int robotnum = 0; robotnum < 2; robotnum++)
+			//	{
+			//		for (unsigned int i = 0; i < waypointFlag[robotnum].size(); i++)
+			//		{
+			//			if (waypointFlag[robotnum][i])
+			//			{
+			//				stepsize[robotnum].push_back(0.1);
+			//				attachobject[robotnum].push_back(attachObject[robotnum][i]);
+			//			}
+			//		}
+			//	}
+			//	busbar[0]->setBaseLinkFrame(initBusbar);
 
-				m.lock();
-				RRTSolve_HYU_multiRobot(attachObject, stepsize);
-				attachObjRender_multi = attachObject;
-				isHYUPlanning = true;
-				isVision = false;
-				isRobotState = false;
-				m.unlock();
-				char* send_data = makeJointCommand_MultiRobot(renderTraj_multi, hyu_desired_dataset, robotFlag);
-				
-				serv.SendMessageToClient(send_data);
-				printf("%s\n", send_data);
-				if (attachObject[0][attachObject[0].size() - 1])
-					gripState = 1;
-				else
-					gripState = 0;
+			//	m.lock();
+			//	RRTSolve_HYU_multiRobot(attachObject, stepsize);
+			//	attachObjRender_multi = attachObject;
+			//	isHYUPlanning = true;
+			//	isVision = false;
+			//	isRobotState = false;
+			//	m.unlock();
+			//	char* send_data = makeJointCommand_MultiRobot(renderTraj_multi, hyu_desired_dataset, robotFlag);
+			//	
+			//	serv.SendMessageToClient(send_data);
+			//	printf("%s\n", send_data);
+			//	if (attachObject[0][attachObject[0].size() - 1])
+			//		gripState = 1;
+			//	else
+			//		gripState = 0;
 
-			}
+			//}
 
 		}
 		/*hyu_data[0] = '\0';*/
