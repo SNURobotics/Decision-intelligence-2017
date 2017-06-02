@@ -63,12 +63,17 @@ SE3 Trobotbase2;
 vector<SE3> TrobotbaseVector(2);
 // Planning
 vector<vector<Eigen::VectorXd>> renderTraj(0);
+vector<vector<vector<Eigen::VectorXd>>> renderTraj_multi(2);
 vector<vector<SE3>>	Ttraj(0);
 
 vector<vector<int>> idxTraj(0);
 vector<vector<int>> totalFlag(0);
 vector<Eigen::VectorXd> initPos(0);
 vector<Eigen::VectorXd> goalPos(0);
+
+vector<vector<Eigen::VectorXd>> initPos_multiRobot(2);
+vector<vector<Eigen::VectorXd>> goalPos_multiRobot(2);
+
 vector<SE3> wayPoints(0);
 
 Eigen::VectorXd homePosRobot1 = Eigen::VectorXd::Zero(6);
@@ -124,6 +129,10 @@ void RRT_problemSettingFromRobotCommand(const desired_dataset& hyu_desired_datas
 void RRT_problemSettingFromSingleRobotCommand(const desired_dataset & hyu_desired_dataset, vector<bool>& attachObject, Eigen::VectorXd init, vector<bool>& waypointFlag, int robotFlag);
 void RRT_problemSetting_SingleRobot(Eigen::VectorXd init, vector<SE3> wayPoints, vector<bool> includeOri, vector<bool> attachObject, vector<bool>& waypointFlag, int robotFlag);
 void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize, int robotFlag);
+void RRT_problemSettingFromMultiRobotCommand(const vector<desired_dataset> & hyu_desired_dataset, vector<vector<bool>>& attachObject, vector<Eigen::VectorXd> init, vector<vector<bool>>& waypointFlag, int robotFlag);
+void RRT_problemSetting_MultiRobot(vector<Eigen::VectorXd> init, vector<vector<SE3>> wayPoints, vector<vector<bool>> includeOri, vector<vector<bool>> attachObject, vector<vector<bool>>& waypointFlag, int robotFlag);
+void RRTSolve_HYU_multiRobot(vector<vector<bool>> attachObject, vector<vector<double>> stepsize);
+
 
 void workspaceSetting();
 void robotSetting();
@@ -151,6 +160,7 @@ double planning = 0;
 // save last gripper state
 int gripState = 0;
 vector<bool> attachObjRender(0);
+vector<vector<bool>> attachObjRender_multi(2);
 
 // 서버 초기화
 Server serv = Server::Server();
@@ -946,6 +956,80 @@ void RRT_problemSetting_SingleRobot(Eigen::VectorXd init, vector<SE3> wayPoints,
 	}
 }
 
+
+void RRT_problemSetting_MultiRobot(vector<Eigen::VectorXd> init, vector<vector<SE3>> wayPoints, vector<vector<bool>> includeOri, vector<vector<bool>> attachObject, vector<vector<bool>>& waypointFlag, int robotFlag)
+{
+
+	Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
+	// elbow up
+	qInit[1] = -0.65*SR_PI;
+	qInit[2] = 0.3*SR_PI;
+	qInit[3] = 0.5*SR_PI_HALF;
+	// elbow down
+	//qInit[2] = 0.6*SR_PI_HALF;
+	//qInit[4] = 0.6*SR_PI_HALF;
+	//qInit[3] = SR_PI_HALF;
+
+	Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
+	qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
+	
+	bool feas;
+	
+	for (int robotnum = 0; robotnum < 2; robotnum++)
+	{
+		initPos_multiRobot[robotnum].resize(0);
+		goalPos_multiRobot[robotnum].resize(0);
+		initPos_multiRobot[robotnum].push_back(init[robotnum]);
+		waypointFlag[robotnum].resize(wayPoints[robotnum].size());
+		feas = RRTManagerVector[robotnum]->checkFeasibility(init[robotnum]);
+		if (feas != 0)
+			printf("robot %d's initial point not feasible!!!!\n", robotnum);
+	}
+
+	Eigen::VectorXd qtemp;
+	int flag;
+	for (unsigned int robotnum = 0; robotnum < 2; robotnum++)
+	{
+		for (unsigned int i = 0; i < wayPoints[robotnum].size(); i++)
+		{
+			qtemp = rManagerVector[robotnum]->inverseKin(TrobotbaseVector[robotnum] * wayPoints[robotnum][i], &robotVector[robotnum]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[robotnum][i], SE3(), flag, qInit2);
+			if (flag != 0)
+				qtemp = rManagerVector[robotnum]->inverseKin(TrobotbaseVector[robotnum] * wayPoints[robotnum][i], &robotVector[robotnum]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[robotnum][i], SE3(), flag, qInit);
+			if (flag != 0)
+				qtemp = rManagerVector[robotnum]->inverseKin(TrobotbaseVector[robotnum] * wayPoints[robotnum][i], &robotVector[robotnum]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[robotnum][i], SE3(), flag, initPos_multiRobot[robotnum][initPos_multiRobot[robotnum].size() - 1]);
+			printf("%d-th init inv kin flag: %d\n", i, flag);
+
+			if (attachObject[robotnum][i])
+				RRTManagerVector[robotnum]->attachObject(busbar[0], &robotVector[robotnum]->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper));
+			else
+				RRTManagerVector[robotnum]->detachObject();
+
+
+			feas = RRTManagerVector[robotnum]->checkFeasibility(qtemp);
+
+			if (feas == 0 && flag == 0)
+			{
+				waypointFlag[robotnum][i] = true;
+				goalPos_multiRobot[robotnum].push_back(qtemp);
+				if (i < wayPoints[robotnum].size() - 1)
+					initPos_multiRobot[robotnum].push_back(goalPos_multiRobot[robotnum][goalPos_multiRobot[robotnum].size() - 1]);
+			}
+			else
+			{
+				waypointFlag[robotnum][i] = false;
+				if (i == wayPoints[robotnum].size() - 1)
+					printf("robot %d's final waypoint not feasible!!!\n", robotnum);
+				else
+					printf("robot %d's %d-th waypoint not feasible!!!\n", robotnum, i + 1);
+				if (i > 0 && attachObject[robotnum][i] != attachObject[robotnum][i - 1])
+					printf("robot %d's grasp point is not feasible!!!\n", robotnum);
+			}
+		}
+	}
+	
+}
+
+
 void RRTSolve_HYU(vector<bool> attachObject, vector<double> stepsize)
 {
 	int nDim = 6;
@@ -1046,6 +1130,58 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 	}
 	renderTraj = traj;
 }
+
+
+
+void RRTSolve_HYU_multiRobot(vector<vector<bool>> attachObject, vector<vector<double>> stepsize)
+{
+	vector<Eigen::VectorXd> tempTraj;
+	//vector<int> tempIdxTraj(0);
+	//vector<SE3> tempTtraj(0);
+	int start = 0;
+	//int end = goalPos.size();
+	vector<bool> feas(2);
+	vector<vector<vector<Eigen::VectorXd>>> traj(2);
+	traj[0].resize(0);
+	traj[1].resize(0);
+
+	//Ttraj.resize(0);
+	//idxTraj.resize(0);
+	printf("waypoints: \n");
+	//for (unsigned int i = 0; i < initPos.size(); i++)
+	//	cout << initPos[i].transpose() << endl;
+	//cout << goalPos[goalPos.size() - 1].transpose() << endl;
+	for (int robotnum = 0; robotnum < 2; robotnum++)
+	{
+		for (int i = start; i < goalPos_multiRobot[robotnum].size(); i++)
+		{
+			RRTManagerVector[robotnum]->setStartandGoal(initPos_multiRobot[robotnum][i], goalPos_multiRobot[robotnum][i]);
+
+			cout << "initpos:  " << initPos[i].transpose() << endl;
+			cout << "goalPos:  " << goalPos[i].transpose() << endl << endl;;
+
+			if (attachObject[robotnum][i])
+				RRTManagerVector[robotnum]->attachObject(busbar[0], &robotVector[robotnum]->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper));
+			else
+				RRTManagerVector[robotnum]->detachObject();
+
+
+			feas = RRTManagerVector[robotnum]->checkFeasibility(initPos_multiRobot[robotnum][i], goalPos_multiRobot[robotnum][i]);
+			cout << feas[0] << feas[1] << endl;
+			RRTManagerVector[robotnum]->execute(stepsize[robotnum][i]);
+			tempTraj = RRTManagerVector[robotnum]->extractPath();
+
+			// check collision
+			for (unsigned int j = 0; j < tempTraj.size(); j++)
+				if (RRTManagerVector[robotnum]->setState(tempTraj[j]))
+					printf("robot%d is collided at %d-th trj, %d-th point!!!\n", robotnum, i, j);
+
+			traj[robotnum].push_back(tempTraj);
+		}
+		renderTraj_multi[robotnum] = traj[robotnum];
+	}
+}
+
 
 void setEnviromentFromVision(const vision_data & skku_dataset)
 {
@@ -1203,6 +1339,47 @@ void RRT_problemSettingFromSingleRobotCommand(const desired_dataset & hyu_desire
 
 
 
+void RRT_problemSettingFromMultiRobotCommand(const vector<desired_dataset> & hyu_desired_dataset, vector<vector<bool>>& attachObject, vector<Eigen::VectorXd> init, vector<vector<bool>>& waypointFlag, int robotFlag)
+{
+	vector<int> nWayVector(2);
+	vector<vector<SE3>> wayPoints(2);
+	vector<vector<bool>> includeOri(2);
+	vector<double> pos(3);
+	vector<double> ori(9);
+
+	for (int i = 0; i < 2; i++)
+	{
+		nWayVector[i] = hyu_desired_dataset[i].robot_pos.size() / 3;
+		attachObject[i].resize(nWayVector[i]);
+		wayPoints[i].resize(nWayVector[i]);
+		includeOri[i].resize(nWayVector[i]);
+		for (int j = 0; j < nWayVector[i]; j++)
+			includeOri[i][j] = true;
+	}
+	
+	for (int robotnum = 0; robotnum < 2; robotnum++)
+	{
+		for (unsigned int i = 0; i < nWayVector[robotnum]; i++)
+		{
+			for (int j = 0; j < 3; j++)
+			{
+				pos[j] = hyu_desired_dataset[robotnum].robot_pos[i * 3 + j];
+				for (int k = 0; k < 3; k++)
+					ori[3 * j + k] = hyu_desired_dataset[robotnum].robot_rot[3 * j + k + 9 * i];
+			}
+			wayPoints[robotnum][i] = SKKUtoSE3(ori, pos);
+			if (abs(hyu_desired_dataset[robotnum].robot_gripper[i] - 1.0) < DBL_EPSILON)
+				attachObject[robotnum][i] = true;
+			else
+				attachObject[robotnum][i] = false;
+		}
+	}
+
+
+	RRT_problemSetting_MultiRobot(init, wayPoints, includeOri, attachObject, waypointFlag, robotFlag);
+}
+
+
 void communicationFunc(int argc, char **argv)
 {
 	while (TRUE) {
@@ -1286,7 +1463,7 @@ void communicationFunc(int argc, char **argv)
 				rManager1->setJointVal(robot_state.robot_joint);
 			else if (robotFlag == 2)
 				rManager2->setJointVal(robot_state.robot_joint);
-			else
+			else if (robotFlag == 3)
 			{
 				Eigen::VectorXd robot1Joint(6), robot2Joint(6);
 				for (int i = 0; i < 6; i++)
@@ -1333,10 +1510,10 @@ void communicationFunc(int argc, char **argv)
 				else
 					serv.SendMessageToClient("P2");
 			}
-			else if (hyu_data_output.first == 12)
+			else if (hyu_data_output.first == 3)
 			{
 				if (hyu_data_output.second[0]==0 && hyu_data_output.second[1] == 0)
-					serv.SendMessageToClient("P12");
+					serv.SendMessageToClient("P3");
 				else if (hyu_data_output.second[0] == 0 && hyu_data_output.second[1] != 0)
 				{
 					serv.SendMessageToClient(copy);
@@ -1400,9 +1577,60 @@ void communicationFunc(int argc, char **argv)
 				else
 					gripState = 0;
 			}
-			else if (robotFlag == 12)
+			else if (robotFlag == 3)
 			{
-				// TO DO
+				Eigen::VectorXd robot1Joint(6), robot2Joint(6);
+				for (int i = 0; i < 6; i++)
+				{
+					robot1Joint[i] = robot_state.robot_joint[i];
+					robot2Joint[i] = robot_state.robot_joint[i + 6];
+				}
+				vector<Eigen::VectorXd> robotJointVector(2);
+				robotJointVector[0] = robot1Joint;
+				robotJointVector[1] = robot2Joint;
+
+				attachObject.resize(2);
+				waypointFlag.resize(2);
+				stepsize.resize(2);
+				attachobject.resize(2);
+				for (int i = 0; i < 2 ;i++)
+				{
+					attachObject[i].resize(0);
+					waypointFlag[i].resize(0);
+					stepsize[i].resize(0);
+					attachobject[i].resize(0);
+				}
+
+				RRT_problemSettingFromMultiRobotCommand(hyu_desired_dataset, attachObject, robotJointVector, waypointFlag, robotFlag);
+				for (int robotnum = 0; robotnum < 2; robotnum++)
+				{
+					for (unsigned int i = 0; i < waypointFlag[robotnum].size(); i++)
+					{
+						if (waypointFlag[robotnum][i])
+						{
+							stepsize[robotnum].push_back(0.1);
+							attachobject[robotnum].push_back(attachObject[robotnum][i]);
+						}
+					}
+				}
+				busbar[0]->setBaseLinkFrame(initBusbar);
+
+				m.lock();
+				RRTSolve_HYU_multiRobot(attachObject, stepsize);
+				attachObjRender_multi = attachObject;
+				isHYUPlanning = true;
+				isVision = false;
+				isRobotState = false;
+				m.unlock();
+				char* send_data = makeJointCommand_MultiRobot(renderTraj_multi, hyu_desired_dataset, robotFlag);
+				
+				serv.SendMessageToClient(send_data);
+				printf("%s\n", send_data);
+				if (attachObject[0][attachObject[0].size() - 1])
+					gripState = 1;
+				else
+					gripState = 0;
+
 			}
 
 		}
