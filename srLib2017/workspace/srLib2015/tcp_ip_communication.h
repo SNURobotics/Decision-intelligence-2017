@@ -197,7 +197,7 @@ pair<int,vector<double>> readRobotCommand(char* hyu_data, vector<desired_dataset
 	int nway1 = 0;
 	int nway2 = 0;
 	Eliminate(hyu_data, 'S');
-	printf(hyu_data);
+	//printf(hyu_data);
 	char *recv_data = strtok(hyu_data, "d");
 	//nway = int(hyu_data[0]) - 48;
 	//hyu_data[0] = ' ';

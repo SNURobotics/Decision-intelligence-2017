@@ -1387,6 +1387,10 @@ void communicationFunc(int argc, char **argv)
 		//Receiving data from HYU client
 		//recv_data = serv.RecevData();
 		hyu_data = serv.RecevData();
+
+		printf(hyu_data);
+		cout << endl;
+
 		hyu_data_flag = hyu_data[0];
 		//serv.SendMessageToClient("G");
 
@@ -1513,6 +1517,9 @@ void communicationFunc(int argc, char **argv)
 			}
 			else if (hyu_data_output.first == 3)
 			{
+				char* copy2 = (char*)malloc(sizeof(char)*strlen(copy));
+				for (int p = 0; p <= strlen(copy); p++)
+					copy2[p] = copy[p];
 				char div = 'd';
 				char* div_data;
 				int nway1;
@@ -1535,9 +1542,9 @@ void communicationFunc(int argc, char **argv)
 						tmp_data1 = tmp_data1 + div_data + "d";
 						iter++;
 					}
-					char* copy1 = (char*)malloc(sizeof(char)*strlen(hyu_data));
-					strcpy(copy1, tmp_data1.c_str());
-					serv.SendMessageToClient(copy1);
+					char* send_data1 = (char*)malloc(sizeof(char)*strlen(hyu_data));
+					strcpy(send_data1, tmp_data1.c_str());
+					serv.SendMessageToClient(send_data1);
 				}
 
 				if (hyu_data_output.second[1] == 0)
@@ -1546,20 +1553,21 @@ void communicationFunc(int argc, char **argv)
 				{
 					string tmp_data2 = "S" + to_string(2) + "d";
 					
-					div_data = strtok(copy, "d");		// disregard
+					div_data = strtok(copy2, "d");		// disregard
 					nway1 = atoi(strtok(NULL, "d"));		// disregard
 					nway = atoi(strtok(NULL, "d"));
 					tmp_data2 = tmp_data2 + to_string(nway) + "d";
 					iter = 0;
-					while (iter < nway * n_inside_way && iter > nway1 * n_inside_way - 1)
+					while (iter < (nway + nway1) * n_inside_way)
 					{
 						div_data = strtok(NULL, "d");
-						tmp_data2 = tmp_data2 + div_data + "d";
+						if (iter > nway1 * n_inside_way - 1)
+							tmp_data2 = tmp_data2 + div_data + "d";
 						iter++;
 					}
-					char* copy2 = (char*)malloc(sizeof(char)*strlen(hyu_data));
-					strcpy(copy2, tmp_data2.c_str());
-					serv.SendMessageToClient(copy2);
+					char* send_data2 = (char*)malloc(sizeof(char)*strlen(hyu_data));
+					strcpy(send_data2, tmp_data2.c_str());
+					serv.SendMessageToClient(send_data2);
 				}
 			}
 		}

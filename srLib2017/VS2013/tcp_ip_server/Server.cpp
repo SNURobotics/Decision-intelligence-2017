@@ -85,14 +85,14 @@ DWORD WINAPI SendClient(LPVOID arg)
 				여기에 코드를 수정해서 결정할 수도 있다.
 			
 			*/
-			if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT01) == 0 && (sendBuf[0] == 'I' || sendBuf[0] == 'V' || sendBuf[0] == 'R'))
-				continue;
-			else if (strcmp(inet_ntoa(clientaddr.sin_addr), HANYANG) == 0 && (sendBuf[0] == 'G' || sendBuf[0] == 'I' || sendBuf[0] == 'P' || sendBuf[0] == 'S' || sendBuf[0] == 'J'))
-				continue;
-			else if (strcmp(inet_ntoa(clientaddr.sin_addr), SUNGGEUN) == 0 && (sendBuf[0] == 'V' || sendBuf[0] == 'G' || sendBuf[0] == 'R' || sendBuf[0] == 'S' || sendBuf[0] == 'P' || sendBuf[0] == 'J'))
-				continue;
-			else
-				SendMessageToClient(sendBuf, &client_sock);
+			//if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT01) == 0 && (sendBuf[0] == 'I' || sendBuf[0] == 'V' || sendBuf[0] == 'R'))
+			//	continue;
+			//else if (strcmp(inet_ntoa(clientaddr.sin_addr), HANYANG) == 0 && (sendBuf[0] == 'G' || sendBuf[0] == 'I' || sendBuf[0] == 'P' || sendBuf[0] == 'S' || sendBuf[0] == 'J'))
+			//	continue;
+			//else if (strcmp(inet_ntoa(clientaddr.sin_addr), SUNGGEUN) == 0 && (sendBuf[0] == 'V' || sendBuf[0] == 'G' || sendBuf[0] == 'R' || sendBuf[0] == 'S' || sendBuf[0] == 'P' || sendBuf[0] == 'J'))
+			//	continue;
+			//else
+			SendMessageToClient(sendBuf, &client_sock);
 		}
 
 	}
@@ -153,7 +153,10 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 		*/
 		
 		//
+		test_str[testIndex][0] = '\0';
 		strcpy(test_str[testIndex], buf);
+		int len = strlen(buf);
+		test_str[testIndex][len] = '\0';
 				
 		printf("%d[%s] \n> ", retval, inet_ntoa(clientaddr.sin_addr));
 		//printf("[TCP /%s:%d] %s\n> ", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port), recvBuf);
@@ -299,6 +302,8 @@ char *Server::RecevData()
 			continue;
 		else {
 			char *name = (char *)malloc(sizeof(char)*BUFFER_SIZE);
+			printf(test_str[index]);
+			printf("             asfda\n");
 			strcpy(name, test_str[index]);
 			int len = strlen(name);
 			if (name[len - 1] == '\n')
