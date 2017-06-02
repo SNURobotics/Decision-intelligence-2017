@@ -1128,7 +1128,7 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 		//	tempTtraj[j] = rManager1->forwardKin(traj[i][j], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
 		//Ttraj.push_back(tempTtraj);
 	}
-	renderTraj = traj;
+	renderTraj_multi[robotFlag-1] = traj;
 }
 
 
@@ -1459,21 +1459,22 @@ void communicationFunc(int argc, char **argv)
 			printf("%s\n", hyu_data);
 			int robotFlag = 0;
 			robotFlag = readRobotCurState(hyu_data, robot_state);
-			if (robotFlag == 1)
-				rManager1->setJointVal(robot_state.robot_joint);
-			else if (robotFlag == 2)
-				rManager2->setJointVal(robot_state.robot_joint);
-			else if (robotFlag == 3)
-			{
-				Eigen::VectorXd robot1Joint(6), robot2Joint(6);
-				for (int i = 0; i < 6; i++)
-				{
-					robot1Joint[i] = robot_state.robot_joint[i];
-					robot2Joint[i] = robot_state.robot_joint[i + 6];
-				}
-				rManager1->setJointVal(robot1Joint);
-				rManager2->setJointVal(robot2Joint);
-			}
+
+			if (robotFlag == 1 || robotFlag == 2)
+				rManagerVector[robotFlag - 1]->setJointVal(robot_state.robot_joint);
+			else
+				printf("Wrong robot flag is given!!!!!!\n");
+			//else if (robotFlag == 3)
+			//{
+			//	Eigen::VectorXd robot1Joint(6), robot2Joint(6);
+			//	for (int i = 0; i < 6; i++)
+			//	{
+			//		robot1Joint[i] = robot_state.robot_joint[i];
+			//		robot2Joint[i] = robot_state.robot_joint[i + 6];
+			//	}
+			//	rManager1->setJointVal(robot1Joint);
+			//	rManager2->setJointVal(robot2Joint);
+			//}
 
 			//cout << robot_state.robot_joint.transpose() << endl;
 			
@@ -1582,7 +1583,7 @@ void communicationFunc(int argc, char **argv)
 				attachobject.resize(1);
 				attachobject[0].resize(0);
 
-				RRT_problemSettingFromSingleRobotCommand(hyu_desired_dataset[0], attachObject[0], robot_state.robot_joint, waypointFlag[0], robotFlag);
+				RRT_problemSettingFromSingleRobotCommand(hyu_desired_dataset[robotFlag-1], attachObject[0], robot_state.robot_joint, waypointFlag[0], robotFlag);
 				for (unsigned int i = 0; i < waypointFlag[0].size(); i++)
 				{
 					if (waypointFlag[0][i])
@@ -1600,14 +1601,16 @@ void communicationFunc(int argc, char **argv)
 				isVision = false;
 				isRobotState = false;
 				m.unlock();
-				char* send_data = makeJointCommand_SingleRobot(renderTraj, hyu_desired_dataset[0], robotFlag);
+				char* send_data = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
 				serv.SendMessageToClient(send_data);
 				printf("%s\n", send_data);
 				if (attachObject[0][attachObject[0].size() - 1])
 					gripState = 1;
 				else
 					gripState = 0;
+
 			}
+<<<<<<< HEAD
 			//else if (robotFlag == 3)
 			//{
 			//	Eigen::VectorXd robot1Joint(6), robot2Joint(6);
@@ -1663,6 +1666,68 @@ void communicationFunc(int argc, char **argv)
 			//		gripState = 0;
 
 			//}
+=======
+			else
+				printf("wrong robot Flag is given!!!\n");
+/*
+			else if (robotFlag == 3)
+			{
+				Eigen::VectorXd robot1Joint(6), robot2Joint(6);
+				for (int i = 0; i < 6; i++)
+				{
+					robot1Joint[i] = robot_state.robot_joint[i];
+					robot2Joint[i] = robot_state.robot_joint[i + 6];
+				}
+				vector<Eigen::VectorXd> robotJointVector(2);
+				robotJointVector[0] = robot1Joint;
+				robotJointVector[1] = robot2Joint;
+
+				attachObject.resize(2);
+				waypointFlag.resize(2);
+				stepsize.resize(2);
+				attachobject.resize(2);
+				for (int i = 0; i < 2 ;i++)
+				{
+					attachObject[i].resize(0);
+					waypointFlag[i].resize(0);
+					stepsize[i].resize(0);
+					attachobject[i].resize(0);
+				}
+
+				RRT_problemSettingFromMultiRobotCommand(hyu_desired_dataset, attachObject, robotJointVector, waypointFlag, robotFlag);
+				for (int robotnum = 0; robotnum < 2; robotnum++)
+				{
+					for (unsigned int i = 0; i < waypointFlag[robotnum].size(); i++)
+					{
+						if (waypointFlag[robotnum][i])
+						{
+							stepsize[robotnum].push_back(0.1);
+							attachobject[robotnum].push_back(attachObject[robotnum][i]);
+						}
+					}
+				}
+				busbar[0]->setBaseLinkFrame(initBusbar);
+
+				m.lock();
+				RRTSolve_HYU_multiRobot(attachObject, stepsize);
+				attachObjRender_multi = attachObject;
+				isHYUPlanning = true;
+				isVision = false;
+				isRobotState = false;
+				m.unlock();
+				vector<char*> send_data(2);
+
+				char* send_data = makeJointCommand_MultiRobot(renderTraj_multi, hyu_desired_dataset, robotFlag);
+				
+				serv.SendMessageToClient(send_data);
+				printf("%s\n", send_data);
+				if (attachObject[0][attachObject[0].size() - 1])
+					gripState = 1;
+				else
+					gripState = 0;
+
+			}*/
+>>>>>>> 3bad195ed016435cf75bad2c77ed35e937852e79
 
 		}
 		/*hyu_data[0] = '\0';*/
