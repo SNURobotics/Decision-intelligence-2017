@@ -1388,6 +1388,7 @@ void communicationFunc(int argc, char **argv)
 		//recv_data = serv.RecevData();
 		hyu_data = serv.RecevData();
 		hyu_data_flag = hyu_data[0];
+		printf(hyu_data);
 		//serv.SendMessageToClient("G");
 
 		// 데이터 전송
