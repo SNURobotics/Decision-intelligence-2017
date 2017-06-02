@@ -95,6 +95,7 @@ DWORD WINAPI SendClient(LPVOID arg)
 				continue;
 			else
 				SendMessageToClient(sendBuf, &client_sock);
+
 		}
 
 	}
@@ -185,6 +186,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 		//
 		else
 			strcpy(test_str[testIndex], buf);
+
 				
 		printf("%d[%s] \n> ", retval, inet_ntoa(clientaddr.sin_addr));
 		//printf("[TCP /%s:%d] %s\n> ", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port), recvBuf);
@@ -330,6 +332,8 @@ char *Server::RecevData()
 			continue;
 		else {
 			char *name = (char *)malloc(sizeof(char)*BUFFER_SIZE);
+			printf(test_str[index]);
+			printf("             asfda\n");
 			strcpy(name, test_str[index]);
 			int len = strlen(name);
 			if (name[len - 1] == '\n')
