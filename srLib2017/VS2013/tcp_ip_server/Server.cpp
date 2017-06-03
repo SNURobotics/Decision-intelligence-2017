@@ -41,7 +41,7 @@ int SendMessageToClient(char *buffer, void *value) {
 		buffer[len - 1] = '\0';
 
 	// 데이터 보내기
-	int retval = send(*client_sock, buffer, strlen(buffer), 0);
+	int retval = send(*client_sock, buffer, BUFFER_SIZE, 0);
 
 	if (retval == SOCKET_ERROR)
 	{
@@ -89,9 +89,9 @@ DWORD WINAPI SendClient(LPVOID arg)
 				continue;
 			if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT02) == 0 && (sendBuf[0] == 'I' || sendBuf[0] == 'V' || sendBuf[0] == 'R' || sendBuf[1] == '1'))
 				continue;
-			else if (strcmp(inet_ntoa(clientaddr.sin_addr), HANYANG) == 0 && (sendBuf[0] == 'G' || sendBuf[0] == 'I' || sendBuf[0] == 'P' || sendBuf[0] == 'S' || sendBuf[0] == 'J'))
+			else if (strcmp(inet_ntoa(clientaddr.sin_addr), HANYANG) == 0 && (sendBuf[0] == 'G' || sendBuf[0] == 'I' || sendBuf[0] == 'P' || sendBuf[0] == 'S' || sendBuf[0] == 'J' || sendBuf[0] == 'T'))
 				continue;
-			else if (strcmp(inet_ntoa(clientaddr.sin_addr), SUNGGEUN) == 0 && (sendBuf[0] == 'V' || sendBuf[0] == 'G' || sendBuf[0] == 'R' || sendBuf[0] == 'S' || sendBuf[0] == 'P' || sendBuf[0] == 'J'))
+			else if (strcmp(inet_ntoa(clientaddr.sin_addr), SUNGGEUN) == 0 && (sendBuf[0] == 'V' || sendBuf[0] == 'G' || sendBuf[0] == 'R' || sendBuf[0] == 'S' || sendBuf[0] == 'P' || sendBuf[0] == 'J' || sendBuf[0] == 'T'))
 				continue;
 			else
 				SendMessageToClient(sendBuf, &client_sock);
@@ -155,7 +155,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 			buf 변수에 받은 데이터가 저장되어 있다.
 		*/
 		char newBuf[BUFSIZE + 1] = "";
-		if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT02) == 0 && buf[0] == 'R') {
+		if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT01) == 0 && buf[0] == 'R') {
 			int len = strlen(buf);
 			strcat(newBuf, "R1");
 			strncpy(buf, buf + 1, len - 1);
@@ -169,8 +169,9 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 			strcat(newBuf, buf);
 			strcpy(test_str[testIndex], newBuf);
 		}
-		else if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT02) == 0 && buf[0] == 'P') {
+		else if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT01) == 0 && buf[0] == 'P') {
 			int len = strlen(buf);
+			printf("receive p1");
 			strcat(newBuf, "P1");
 			strncpy(buf, buf + 1, len - 1);
 			strcat(newBuf, buf);
@@ -179,6 +180,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 		else if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT02) == 0 && buf[0] == 'P') {
 			int len = strlen(buf);
 			strcat(newBuf, "P2");
+			printf("receive p2");
 			strncpy(buf, buf + 1, len - 1);
 			strcat(newBuf, buf);
 			strcpy(test_str[testIndex], newBuf);
