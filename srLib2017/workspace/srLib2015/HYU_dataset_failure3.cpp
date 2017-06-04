@@ -14,7 +14,7 @@
 #include "Math\Spline.h"
 #include "common\dataIO.h"
 #include <time.h>
-
+#include <direct.h>
 
 // Environment
 Base_HYU* busbarBase = new Base_HYU;
@@ -75,6 +75,7 @@ void environmentSetting_HYU2(srSystem* object, bool connectStageBusbarBase = fal
 void workspaceSetting();
 void robotSetting();
 void robotManagerSetting();
+void setInitialConfig();
 SE3 setRandomDesSE3(SE3 holeSE3, double xrange = 0.04, double yrange = 0.04, double zrotrange = 1.0);
 
 SE3 busbar_holeSE3;
@@ -119,62 +120,66 @@ int main(int argc, char **argv)
 
 	
 	busbar_holeSE3 = jigAssem->GetBaseLink()->GetFrame() * jigAssem->holeCenter[holeNum] * Thole2busbar;
-	SE3 TgoalPos = jigAssem->GetBaseLink()->GetFrame() * jigAssem->holeCenter[holeNum] * Thole2busbar;
-	
-	// set initial config
-	double xpos = (double)0.04*rand() / RAND_MAX-0.02;
-	double ypos = (double)0.04*rand() / RAND_MAX-0.02;
-	double zpos = (double)0.1*rand() / RAND_MAX;
-	double xrot = (double)0.05*rand() / RAND_MAX - 0.025;
-	double yrot = (double)0.05*rand() / RAND_MAX - 0.025;
-	double zrot = (double)0.05*rand() / RAND_MAX - 0.025;
-	SE3 initPosOffset = SE3(Vec3(xpos, ypos, 0.01));
-	SE3 TbusbarInit = initPosOffset * TgoalPos * EulerZYX(Vec3(zrot, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
-	
-	//obs->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -0.25))*TbusbarInit);
 
-	finalOffset[0] = SE3(Vec3(0.01, 0.0, 0.0));
-	finalOffset[1] = SE3(Vec3(0.0, 0.01, 0.0));
-	finalOffset[2] = SE3(Vec3(-0.01, 0.0, 0.0));
-	finalOffset[3] = SE3(Vec3(0.0, -0.01, 0.0));
+	setInitialConfig();
 
-	int flag;
-	
-	// initial condition 1
-	Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
-	// elbow up
-	qInit[1] = -0.65*SR_PI;
-	qInit[2] = 0.3*SR_PI;
-	qInit[3] = 0.5*SR_PI_HALF;
-	// initial condition 2
-	Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
-	qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
-	Eigen::VectorXd q_config = rManager1->inverseKin(TbusbarInit * Tbusbar2gripper_new, rManager1->m_activeArmInfo->m_endeffector[0], true, SE3(), flag, qInit2, 1000);
-	cout << flag << endl;
-	rManager1->setJointVal(q_config);
-	
-	setHybridPFCtrl();
 
-	// set desired trajectory (trajectory of the busbar)
-	//generateRefTraj(TbusbarInit, TgoalPos.GetPosition());
-	Tdes.resize(1);
-	TgoalPos = SE3(Vec3(initPosOffset.GetPosition()[0], initPosOffset.GetPosition()[1], 0.0)) * TgoalPos;
-	Tdes[0] = TgoalPos;
+	//SE3 TgoalPos = jigAssem->GetBaseLink()->GetFrame() * jigAssem->holeCenter[holeNum] * Thole2busbar;
+	//
+	//// set initial config
+	//double xpos = (double)0.04*rand() / RAND_MAX-0.02;
+	//double ypos = (double)0.04*rand() / RAND_MAX-0.02;
+	//double zpos = (double)0.1*rand() / RAND_MAX;
+	//double xrot = (double)0.05*rand() / RAND_MAX - 0.025;
+	//double yrot = (double)0.05*rand() / RAND_MAX - 0.025;
+	//double zrot = (double)0.05*rand() / RAND_MAX - 0.025;
+	//SE3 initPosOffset = SE3(Vec3(xpos, ypos, 0.01));
+	//SE3 TbusbarInit = initPosOffset * TgoalPos * EulerZYX(Vec3(zrot, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
+	//
+	////obs->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -0.25))*TbusbarInit);
 
-	vector<dse3> Fdes(1, dse3(0.0));		// expressed in end-effector frame
-	Fdes[0][0] = 0.00;
-	Fdes[0][1] = 0.0;
-	Fdes[0][5] = -1.0;
-	
+	//finalOffset[0] = SE3(Vec3(0.01, 0.0, 0.0));
+	//finalOffset[1] = SE3(Vec3(0.0, 0.01, 0.0));
+	//finalOffset[2] = SE3(Vec3(-0.01, 0.0, 0.0));
+	//finalOffset[3] = SE3(Vec3(0.0, -0.01, 0.0));
 
-	hctrl->isDesTrjSet = hctrl->setDesiredTraj(Tdes, Fdes);
-	hctrl->setDesiredJointVal(q_config);
-	rManager1->setJointValVel(q_config, Eigen::VectorXd::Zero(q_config.size()));
+	//int flag;
+	//
+	//// initial condition 1
+	//Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
+	//// elbow up
+	//qInit[1] = -0.65*SR_PI;
+	//qInit[2] = 0.3*SR_PI;
+	//qInit[3] = 0.5*SR_PI_HALF;
+	//// initial condition 2
+	//Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
+	//qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
+	//Eigen::VectorXd q_config = rManager1->inverseKin(TbusbarInit * Tbusbar2gripper_new, rManager1->m_activeArmInfo->m_endeffector[0], true, SE3(), flag, qInit2, 1000);
+	//cout << flag << endl;
+	//rManager1->setJointVal(q_config);
+	//
+	//setHybridPFCtrl();
 
-	// saving setting
-	goalJigSE3 = jigAssem->GetBaseLink()->GetFrame();
-	holeSE3 = jigAssem->GetBaseLink()->GetFrame() * jigAssem->holeCenter[holeNum];
-	initOffsetSE3fromHole = holeSE3 % TbusbarInit;
+	//// set desired trajectory (trajectory of the busbar)
+	////generateRefTraj(TbusbarInit, TgoalPos.GetPosition());
+	//Tdes.resize(1);
+	//TgoalPos = SE3(Vec3(initPosOffset.GetPosition()[0], initPosOffset.GetPosition()[1], 0.0)) * TgoalPos;
+	//Tdes[0] = TgoalPos;
+
+	//vector<dse3> Fdes(1, dse3(0.0));		// expressed in end-effector frame
+	//Fdes[0][0] = 0.00;
+	//Fdes[0][1] = 0.0;
+	//Fdes[0][5] = -1.0;
+	//
+
+	//hctrl->isDesTrjSet = hctrl->setDesiredTraj(Tdes, Fdes);
+	//hctrl->setDesiredJointVal(q_config);
+	//rManager1->setJointValVel(q_config, Eigen::VectorXd::Zero(q_config.size()));
+
+	//// saving setting
+	//goalJigSE3 = jigAssem->GetBaseLink()->GetFrame();
+	//holeSE3 = jigAssem->GetBaseLink()->GetFrame() * jigAssem->holeCenter[holeNum];
+	//initOffsetSE3fromHole = holeSE3 % TbusbarInit;
 
 	/////////////////////////////// read from text
 	//string dir_folder = "../../../data/HYU_data2/failure_data16";
@@ -214,6 +219,7 @@ void initDynamics()
 
 void updateFunc()
 {
+	static int folder_num = 23;
 	static unsigned int taskIdx = 0;
 	static bool isDataSaved = false;
 	static bool collideStarted = false;
@@ -249,7 +255,7 @@ void updateFunc()
 		S2(2, 5) = 1.0;
 		hctrl->setSelectionMatrix(S2);
 	}
-	if (taskIdx == 1 && abs(targetObj->GetBaseLink()->m_ConstraintImpulse[5] * (1.0 / gSpace.m_Timestep_dyn_fixed) + hctrl->Fext_des_trj[0][5]) < 0.03)
+	if (taskIdx == 1 && abs(targetObj->GetBaseLink()->m_ConstraintImpulse[5] * (1.0 / gSpace.m_Timestep_dyn_fixed) + hctrl->Fext_des_trj[0][5]) < 0.3*abs(hctrl->Fext_des_trj[0][5]))
 	{
 		collideStarted = true;
 	}
@@ -335,22 +341,40 @@ void updateFunc()
 		setting_robotbase.push_back(SE3toVectorXd(robot1->GetBaseLink()->GetFrame() % goalJigSE3));
 		setting_robotbase.push_back(SE3toVectorXd(robot1->GetBaseLink()->GetFrame() % holeSE3));
 		setting_robotbase.push_back(SE3toVectorXd(initOffsetSE3fromHole));
-		string dir_folder = "../../../data/HYU_data2/failure_data";
-		string dir_temp = dir_folder;
-		saveDataToText(setting_robotbase, dir_temp.append("/setting_robotbase").append(".txt"));
-		dir_temp = dir_folder;
-		saveDataToText(sensorFTrj, dir_temp.append("/sensorValTraj").append(".txt"));
-		dir_temp = dir_folder;
-		saveDataToText(contactFTrj, dir_temp.append("/contactFValTraj").append(".txt"));
-		dir_temp = dir_folder;
-		saveDataToText(jointTrj, dir_temp.append("/jointValTraj").append(".txt"));
-		dir_temp = dir_folder;
-		saveDataToText(robotEndSE3Trj_robotbase, dir_temp.append("/robotEndTraj_robotbase").append(".txt"));
-		dir_temp = dir_folder;
-		saveDataToText(busbarSE3Trj_robotbase, dir_temp.append("/busbarTraj_robotbase").append(".txt"));
-		isDataSaved = true;
+		string dir_folder = "../../../data/HYU_data2/failure_data" + to_string(folder_num);
+		if (_mkdir(dir_folder.c_str()) == 0)
+		{
+			string dir_temp = dir_folder;
+			saveDataToText(setting_robotbase, dir_temp.append("/setting_robotbase").append(".txt"));
+			dir_temp = dir_folder;
+			saveDataToText(sensorFTrj, dir_temp.append("/sensorValTraj").append(".txt"));
+			dir_temp = dir_folder;
+			saveDataToText(contactFTrj, dir_temp.append("/contactFValTraj").append(".txt"));
+			dir_temp = dir_folder;
+			saveDataToText(jointTrj, dir_temp.append("/jointValTraj").append(".txt"));
+			dir_temp = dir_folder;
+			saveDataToText(robotEndSE3Trj_robotbase, dir_temp.append("/robotEndTraj_robotbase").append(".txt"));
+			dir_temp = dir_folder;
+			saveDataToText(busbarSE3Trj_robotbase, dir_temp.append("/busbarTraj_robotbase").append(".txt"));
+			isDataSaved = true;
+		}
+		
 	}
-
+	if (isDataSaved)
+	{
+		setInitialConfig();
+		rManager1->controlJointTorque(Eigen::VectorXd::Zero(6));
+		taskIdx = 0;
+		isDataSaved = false;
+		collideStarted = false;
+		cnt = 0;
+		cnt_f = 0;
+		cnt_f_temp = 0;
+		randomIdx = 0;
+		cnt_random = 0;
+		insertInitiated = false;
+		folder_num++;
+	}
 }
 
 void setObject(srSystem* system, Vec3 dim, SE3 T, srSystem::BASELINKTYPE basetype)
@@ -583,6 +607,58 @@ void generateRefTraj(SE3 init, Vec3 goal)
 		temp = cspline->getPosition(tspan[i]);
 		Tdes[i] = SE3(init.GetOrientation(), Vec3(temp[0], temp[1], temp[2]));
 	}
+}
+
+void setInitialConfig()
+{
+	SE3 TgoalPos = jigAssem->GetBaseLink()->GetFrame() * jigAssem->holeCenter[holeNum] * Thole2busbar;
+
+	// set initial config
+	double xpos = (double)0.04*rand() / RAND_MAX - 0.02;
+	double ypos = (double)0.04*rand() / RAND_MAX - 0.02;
+	double zpos = (double)0.1*rand() / RAND_MAX;
+	double xrot = (double)0.05*rand() / RAND_MAX - 0.025;
+	double yrot = (double)0.05*rand() / RAND_MAX - 0.025;
+	double zrot = (double)0.05*rand() / RAND_MAX - 0.025;
+	SE3 initPosOffset = SE3(Vec3(xpos, ypos, 0.01));
+	SE3 TbusbarInit = initPosOffset * TgoalPos * EulerZYX(Vec3(zrot, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
+	int flag;
+
+	// initial condition 1
+	Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
+	// elbow up
+	qInit[1] = -0.65*SR_PI; 	qInit[2] = 0.3*SR_PI; 	qInit[3] = 0.5*SR_PI_HALF;
+	// initial condition 2
+	Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
+	qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
+	Eigen::VectorXd q_config = rManager1->inverseKin(TbusbarInit * Tbusbar2gripper_new, rManager1->m_activeArmInfo->m_endeffector[0], true, SE3(), flag, qInit2, 1000);
+	cout << flag << endl;
+	rManager1->setJointVal(q_config);
+
+	setHybridPFCtrl();
+
+	// set desired trajectory (trajectory of the busbar)
+	//generateRefTraj(TbusbarInit, TgoalPos.GetPosition());
+	Tdes.resize(1);
+	TgoalPos = SE3(Vec3(initPosOffset.GetPosition()[0], initPosOffset.GetPosition()[1], 0.0)) * TgoalPos;
+	Tdes[0] = TgoalPos;
+
+	vector<dse3> Fdes(1, dse3(0.0));		// expressed in end-effector frame
+	Fdes[0][0] = 0.00;
+	Fdes[0][1] = 0.0;
+	Fdes[0][5] = -1.0;
+
+
+	hctrl->isDesTrjSet = hctrl->setDesiredTraj(Tdes, Fdes);
+	hctrl->setDesiredJointVal(q_config);
+	hctrl->F_int = dse3(0.0);
+	hctrl->X_int = se3(0.0);
+	rManager1->setJointValVelAcc(q_config, Eigen::VectorXd::Zero(q_config.size()), Eigen::VectorXd::Zero(q_config.size()));
+
+	// saving setting
+	goalJigSE3 = jigAssem->GetBaseLink()->GetFrame();
+	holeSE3 = jigAssem->GetBaseLink()->GetFrame() * jigAssem->holeCenter[holeNum];
+	initOffsetSE3fromHole = holeSE3 % TbusbarInit;
 }
 
 SE3 setRandomDesSE3(SE3 holeSE3, double xrange, double yrange, double zrotrange)
