@@ -289,8 +289,9 @@ void BusBar_HYU::AssembleModel()
 
 
 	double m = 0.29718;
+	double ratio = 0.3;		// adjust mass parameter
 	Vec3 r = Vec3(0.0, 0.0, 15.95e-3);
-	Inertia busbarInertia(84440.59e-9, 121063.91e-9, 90554.97e-9, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, m);
+	Inertia busbarInertia(84440.59e-9*ratio, 121063.91e-9*ratio, 90554.97e-9*ratio, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, m*ratio);
 	m_ObjLink[0].SetInertia(busbarInertia.Transform(SE3(-r)));
 
 	this->SetBaseLink(&m_ObjLink[0]);

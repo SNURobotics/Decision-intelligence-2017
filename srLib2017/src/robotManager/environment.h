@@ -25,6 +25,7 @@ public:
 	std::vector<srLink>					m_ObjLink;
 	std::vector<srCollision>			m_ObjCollision;
 	std::vector<srWeldJoint>			m_ObjWeldJoint;
+	SE3									m_visionOffset;		// SE3 from vision ref frame to baselink frame
 
 	int									m_numLink;
 	int									m_numCollision;

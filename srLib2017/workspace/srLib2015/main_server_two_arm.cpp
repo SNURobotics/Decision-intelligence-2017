@@ -1144,12 +1144,12 @@ void setEnviromentFromVision(const vision_data & skku_dataset)
 	// set object (id:1 - busbar, id:2 - jig) 
 	if (skku_dataset.objPos[1].size() > 0)
 	{
-		busbar[0]->GetBaseLink()->SetFrame(Trobotbase1 * SKKUtoSE3(skku_dataset.objOri[1], skku_dataset.objPos[1]));
+		busbar[0]->GetBaseLink()->SetFrame(Trobotbase1 * SKKUtoSE3(skku_dataset.objOri[1], skku_dataset.objPos[1]) * busbar[0]->m_visionOffset);
 		busbar[0]->SetBaseLinkType(srSystem::FIXED);
 	}
 	if (skku_dataset.objPos[2].size() > 0)
 	{
-		jigAssem->GetBaseLink()->SetFrame(Trobotbase1 * SKKUtoSE3(skku_dataset.objOri[2], skku_dataset.objPos[2]));
+		jigAssem->GetBaseLink()->SetFrame(Trobotbase1 * SKKUtoSE3(skku_dataset.objOri[2], skku_dataset.objPos[2]) * jigAssem->m_visionOffset);
 		jigAssem->SetBaseLinkType(srSystem::FIXED);
 	}
 

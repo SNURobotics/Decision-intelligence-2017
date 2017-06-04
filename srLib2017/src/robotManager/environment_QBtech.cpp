@@ -1121,6 +1121,8 @@ JigAssem_QB::~JigAssem_QB()
 
 void JigAssem_QB::AssembleModel()
 {
+	m_visionOffset = SE3(Vec3(-0.02725, 0.0, 0.0));		//-(0.15 - 0.0955)*0.5
+
 	holeCenter.resize(8);
 	for (unsigned int i = 0; i < holeCenter.size(); i++)
 		holeCenter[i] = SE3();
