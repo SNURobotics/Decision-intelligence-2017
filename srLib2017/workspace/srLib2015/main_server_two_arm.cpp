@@ -216,7 +216,7 @@ int main(int argc, char **argv)
 	homePosRobotVector[1] = homePosRobot2;
 	// environment
 	workspaceSetting();
-	environmentSetting_HYU2(false);			// temporary environment setting
+	environmentSetting_HYU2(true);			// temporary environment setting
 	robotSetting();
 	robotVector[0] = robot1;
 	robotVector[1] = robot2;
@@ -256,6 +256,31 @@ int main(int argc, char **argv)
 	RRTManagerVector[1] = RRTManager2;
 	///////////////////////////////////////////////////////////
 
+	////////////////////////// Generate test waypoints
+	int nWay = 3;
+	vector<bool> includeOri(nWay, true);
+	wayPoints.resize(nWay);
+
+	// ------------ Robot 1
+	//int holeNum = 4;
+	//double tran_x = -(double)rand() / RAND_MAX * 0.3;
+	//double tran_y = (double)rand() / RAND_MAX * 0.12;
+	//double tran_z = (double)rand() / RAND_MAX * 0.01;
+	//double z_angle = -(double)rand() / RAND_MAX * 0.2;
+	//double y_angle = -(double)rand() / RAND_MAX * 0.2;
+	//double x_angle = -(double)rand() / RAND_MAX * 0.2;
+
+	////initBusbar = EulerZYX(Vec3(z_angle, y_angle, x_angle), Vec3(0.0 + tran_x, -0.4 + tran_y, 0.06 + tran_z))* jigAssem->GetBaseLink()->GetFrame();
+
+	//initBusbar = SE3(Vec3(0.0 + tran_x, -0.4 + tran_y, 0.06 + tran_z)) * jigAssem->GetBaseLink()->GetFrame();
+	//wayPoints[0] = initBusbar;
+	//wayPoints[1] = SE3(Vec3(0.0, 0.0, 0.02)) * jigAssem->GetBaseLink()->GetFrame() * jigAssem->holeCenter[holeNum] * Thole2busbar;
+	//wayPoints[2] = SE3(Vec3(0.0, 0.0, -0.025)) * wayPoints[1];
+
+	//cout << "Fisrt waypoint: "<< wayPoints[0] << endl;
+	//cout << "Second waypoint: " << wayPoints[1] << endl;
+	//cout << "Third waypoint: " << wayPoints[2] << endl;
+	// ------------ Robot 2
 
 
 	thread commuThread(communicationFunc, argc, argv);
@@ -1440,7 +1465,7 @@ void communicationFunc(int argc, char **argv)
 				
 
 			else
-				printf("Wrong robot flag is given!!!!!!\n");
+				printf("Wrong robot flag is given (Flag = 'R')!!!!!!\n");
 			//else if (robotFlag == 3)
 			//{
 			//	Eigen::VectorXd robot1Joint(6), robot2Joint(6);
@@ -1578,7 +1603,7 @@ void communicationFunc(int argc, char **argv)
 					planningInit = robot_state.robot_joint;
 				else
 					planningInit = lastJointVal_multi[robotFlag - 1];
-				RRT_problemSettingFromSingleRobotCommand(hyu_desired_dataset[robotFlag-1], attachObject, robot_state.robot_joint, waypointFlag, robotFlag);
+				RRT_problemSettingFromSingleRobotCommand(hyu_desired_dataset[robotFlag-1], attachObject, planningInit, waypointFlag, robotFlag);
 				for (unsigned int i = 0; i < waypointFlag.size(); i++)
 				{
 					if (waypointFlag[i])
@@ -1608,7 +1633,7 @@ void communicationFunc(int argc, char **argv)
 				initialPlanning[robotFlag - 1] = false;
 			}
 			else
-				printf("wrong robot Flag is given!!!\n");
+				printf("Wrong robot Flag is given (Flag = 'P')!!!\n");
 /*
 			else if (robotFlag == 3)
 			{
@@ -1734,6 +1759,8 @@ void updateFuncPlanning_multi()
 			idx[j] = 0;
 			trjIdx[j] = 0;
 		}
+		else if (renderTraj_multi[j].size()==0)
+			idx[j] = 0;
 		else 
 			idx[j] = taskIdx[j] % renderTraj_multi[j].size();
 	}
@@ -1741,7 +1768,7 @@ void updateFuncPlanning_multi()
 	
 	for (unsigned int i = 0; i < num_robot; i++)
 	{		
-		if (initialPlanning[i])
+		if (renderTraj_multi[i].size() == 0)
 		{
 			// render homepos when planning is not done
 			rManagerVector[i]->setJointVal(homePosRobotVector[i]);

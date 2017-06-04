@@ -96,6 +96,8 @@ DWORD WINAPI SendClient(LPVOID arg)
 			else
 				SendMessageToClient(sendBuf, &client_sock);
 
+			SendMessageToClient(sendBuf, &client_sock);
+
 		}
 
 	}
