@@ -105,3 +105,13 @@ public:
 	vector<SE3> holeCenter;
 	bool m_add;
 };
+
+class JigOnly_QB_bar : public Object
+{
+public:
+	JigOnly_QB_bar(bool add);
+	~JigOnly_QB_bar();
+	void AssembleModel();
+	vector<SE3> holeCenter;
+	bool m_add;
+};

@@ -1331,3 +1331,110 @@ void JigAssem_QB_bar::AssembleModel()
 	this->SetBaseLinkType(srSystem::KINEMATIC);
 	this->SetSelfCollision(false);
 }
+
+JigOnly_QB_bar::JigOnly_QB_bar(bool add)
+{
+	m_add = add;
+	AssembleModel();
+}
+
+JigOnly_QB_bar::~JigOnly_QB_bar()
+{
+}
+
+void JigOnly_QB_bar::AssembleModel()
+{
+	holeCenter.resize(8);
+	for (unsigned int i = 0; i < holeCenter.size(); i++)
+		holeCenter[i] = SE3();
+	holeCenter[0] = SE3(Vec3(0.0021 - 0.025, 0.1628 - 0.0225, 0.0));
+	holeCenter[1] = SE3(Vec3(0.0736 + 0.025, 0.16375 - 0.0225, 0.0));
+	holeCenter[2] = SE3(Vec3(0.002 - 0.025, 0.0701 - 0.0225, 0.0));
+	holeCenter[3] = SE3(Vec3(0.0737 + 0.025, 0.06845 - 0.0225, 0.0));
+	holeCenter[4] = SE3(Vec3(0.002 - 0.025, -0.0701 + 0.0225, 0.0));
+	holeCenter[5] = SE3(Vec3(0.0735 + 0.025, -0.06925 + 0.0225, 0.0));
+	holeCenter[6] = SE3(Vec3(0.002 - 0.025, -0.1629 + 0.0225, 0.0));
+	holeCenter[7] = SE3(Vec3(0.0733 + 0.025, -0.16375 + 0.0225, 0.0));
+
+	m_numLink = 1;
+	m_numCollision = 2 + 4 * 8 * 2;
+	int collisionCount = 0;
+	int cnt_tmp = 0;
+	vector<pair<Vec3, SE3>> holeGeomInfo;
+
+	for (int i = 0; i < m_numLink; i++)
+	{
+		srLink* temp = new srLink;
+		m_ObjLink.push_back(*temp);
+	}
+	for (int i = 0; i < m_numCollision; i++)
+	{
+		srCollision* temp = new srCollision;
+		m_ObjCollision.push_back(*temp);
+	}
+
+	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/QBtech_env_modeling/jigonly.3ds");
+
+
+	m_ObjLink[0].GetGeomInfo().SetColor(0.3f, 0.3f, 0.3f, 1.0f);
+
+	
+	// Collision from top right
+
+	// hole infos
+
+	Vec3 rectangleDim1(0.2455*0.5, 0.409*0.25, 0.01);
+	//Vec3 rectangleDim2(0.2455*0.5, 0.409*0.25, 0.015);
+	Vec3 holeDim1(0.052, 0.047, 0.01);
+	//Vec3 holeDim2(0.1, 0.08, 0.015);
+	SE3 rectangleCenter;
+
+	vector<double> rcx(2);
+	rcx[0] = -0.0955 + 0.5*0.2455 - 0.25*0.2455;
+	rcx[1] = -0.0955 + 0.5*0.2455 + 0.25*0.2455;
+	vector<double> rcy(4);
+	rcy[0] = 0.375*0.409;
+	rcy[1] = 0.125*0.409;
+	rcy[2] = -0.125*0.409;
+	rcy[3] = -0.375*0.409;
+
+	for (unsigned int j = 0; j < holeCenter.size(); j++)
+	{
+
+		cnt_tmp = 0;
+		rectangleCenter = Vec3(rcx[j % 2], rcy[j / 2], -0.005);
+		holeGeomInfo = makeRectangleHole(rectangleCenter, rectangleDim1, Vec3(holeCenter[j].GetPosition()[0] - rectangleCenter.GetPosition()[0], holeCenter[j].GetPosition()[1] - rectangleCenter.GetPosition()[1], 0.0), holeDim1);
+		for (unsigned int i = 0; i < holeGeomInfo.size(); i++)
+		{
+			m_ObjCollision[i + collisionCount].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+			m_ObjCollision[i + collisionCount].GetGeomInfo().SetDimension(holeGeomInfo[i].first);
+			m_ObjCollision[i + collisionCount].SetLocalFrame(holeGeomInfo[i].second);
+			m_ObjLink[0].AddCollision(&m_ObjCollision[i + collisionCount]);
+			cnt_tmp++;
+		}
+		collisionCount += cnt_tmp;
+	}
+
+
+
+	if (m_add)
+	{
+		// add virtual collision to separate workspace
+		m_numCollision += 1;
+		srCollision* temp = new srCollision;
+		m_ObjCollision.push_back(*temp);
+		unsigned int colnum = m_ObjCollision.size() - 1;
+		m_ObjCollision[colnum].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+		double height = 0.8;
+		m_ObjCollision[colnum].GetGeomInfo().SetDimension(Vec3(0.8, 0.0010, height));
+		m_ObjCollision[colnum].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.5*height)));
+		m_ObjLink[0].AddCollision(&m_ObjCollision[colnum]);
+	}
+
+
+	this->SetBaseLink(&m_ObjLink[0]);
+	this->SetBaseLinkType(srSystem::KINEMATIC);
+	this->SetSelfCollision(false);
+}

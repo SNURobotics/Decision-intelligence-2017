@@ -219,7 +219,7 @@ void initDynamics()
 
 void updateFunc()
 {
-	static int folder_num = 23;
+	static int folder_num = 17;
 	static unsigned int taskIdx = 0;
 	static bool isDataSaved = false;
 	static bool collideStarted = false;
@@ -268,6 +268,7 @@ void updateFunc()
 		{
 			randomIdx++;
 			hctrl->T_des_trj[0] = setRandomDesSE3(busbar_holeSE3, 0.01, 0.01, 0.25);
+			hctrl->X_int = se3(0.0);
 			Eigen::MatrixXd S2 = Eigen::MatrixXd::Zero(1, 6);
 			S2(0, 5) = 1.0;
 			Eigen::MatrixXd S = Eigen::MatrixXd::Zero(3, 6);
@@ -342,7 +343,7 @@ void updateFunc()
 		setting_robotbase.push_back(SE3toVectorXd(robot1->GetBaseLink()->GetFrame() % holeSE3));
 		setting_robotbase.push_back(SE3toVectorXd(initOffsetSE3fromHole));
 		string dir_folder = "../../../data/HYU_data2/failure_data" + to_string(folder_num);
-		if (_mkdir(dir_folder.c_str()) == 0)
+		if (folder_num < 51 && _mkdir(dir_folder.c_str()) == 0)
 		{
 			string dir_temp = dir_folder;
 			saveDataToText(setting_robotbase, dir_temp.append("/setting_robotbase").append(".txt"));
@@ -374,6 +375,11 @@ void updateFunc()
 		cnt_random = 0;
 		insertInitiated = false;
 		folder_num++;
+		sensorFTrj.resize(0);
+		contactFTrj.resize(0);
+		jointTrj.resize(0);
+		robotEndSE3Trj_robotbase.resize(0);
+		busbarSE3Trj_robotbase.resize(0);
 	}
 }
 
