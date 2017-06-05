@@ -32,6 +32,7 @@ struct desired_dataset
 	vector<double> robot_rot;
 	vector<double> robot_gripper;
 	vector<double> robot_ft;
+	int command_flag;
 };
 
 struct robot_current_data
@@ -57,7 +58,7 @@ void Eliminate(char *str, char ch)
 }
 void readSKKUvision(char* hyu_data, vision_data& skku_dataset);
 int readRobotCurState(char *hyu_data, robot_current_data& robot_state);
-pair<int,vector<double>> readRobotCommand(char* hyu_data, vector<desired_dataset>& hyu_desired_dataset);
+pair<int,vector<int>> readRobotCommand(char* hyu_data, vector<desired_dataset>& hyu_desired_dataset);
 char* makeJointCommand(vector<vector<Eigen::VectorXd>>& jointTraj, desired_dataset& hyu_desired_dataset);
 
 
@@ -201,7 +202,7 @@ int readRobotCurState(char * hyu_data, robot_current_data & robot_state)
 		}
 	}*/
 	else
-		printf("Wrong robotFlag is given!!!!!!!!!!!!!!!1");
+		printf("Wrong robotFlag is given!!!!!!! (readRobotCurState())");
 	
 
 	return robotFlag;
@@ -210,10 +211,11 @@ int readRobotCurState(char * hyu_data, robot_current_data & robot_state)
 
 
 
-pair<int,vector<double>> readRobotCommand(char* hyu_data, vector<desired_dataset>& hyu_desired_dataset)
+pair<int,vector<int>> readRobotCommand(char* hyu_data, vector<desired_dataset>& hyu_desired_dataset)
 {
 	int nway1 = 0;
 	int nway2 = 0;
+	vector<int> nway_vec(2);
 	Eliminate(hyu_data, 'S');
 	//printf(hyu_data);
 	char *recv_data = strtok(hyu_data, "d");
@@ -229,7 +231,8 @@ pair<int,vector<double>> readRobotCommand(char* hyu_data, vector<desired_dataset
 
 	int recv_cnt = 0;
 	int nway_cnt = 0;
-	vector<double> normFT;
+	//vector<double> normFT;
+	vector<int> commandFlag;
 
 	hyu_desired_dataset.resize(2);
 
@@ -263,18 +266,27 @@ pair<int,vector<double>> readRobotCommand(char* hyu_data, vector<desired_dataset
 			if (recv_cnt == 19) {
 				recv_cnt = 0;
 				nway_cnt += 1;
+				if (nway_cnt == nway1)
+				{
+					hyu_desired_dataset[robotFlag - 1].command_flag = atoi(recv_data);
+				}
 			}
 		}
-		normFT.resize(1);
-		normFT[0] = 0.0;
-		for (unsigned int i = 0; i < hyu_desired_dataset[robotFlag - 1].robot_ft.size(); i++)
-			normFT[0] += hyu_desired_dataset[robotFlag - 1].robot_ft[i] * hyu_desired_dataset[robotFlag - 1].robot_ft[i];
+		commandFlag.resize(1);
+		commandFlag[0] = hyu_desired_dataset[robotFlag - 1].command_flag;
+		//normFT.resize(1);
+		//normFT[0] = 0.0;
+		//for (unsigned int i = 0; i < hyu_desired_dataset[robotFlag - 1].robot_ft.size(); i++)
+		//	normFT[0] += hyu_desired_dataset[robotFlag - 1].robot_ft[i] * hyu_desired_dataset[robotFlag - 1].robot_ft[i];
 	}
 	else if (robotFlag == 3)
 	{
 		nway1 = atoi(recv_data);
 		recv_data = strtok(NULL, "d");
 		nway2 = atoi(recv_data);
+		nway_vec[0] = nway1;
+		nway_vec[1] = nway2;
+
 		recv_data = strtok(NULL, "d");
 		hyu_desired_dataset[0].robot_pos.resize(3 * nway1);
 		hyu_desired_dataset[0].robot_rot.resize(9 * nway1);
@@ -307,30 +319,38 @@ pair<int,vector<double>> readRobotCommand(char* hyu_data, vector<desired_dataset
 			{
 				recv_cnt = 0;
 				nway_cnt += 1;
-				if (nway_cnt == nway1)
+				if (nway_cnt == nway_vec[robot_cnt])
 				{
+					hyu_desired_dataset[robot_cnt].command_flag = atoi(recv_data);
+					recv_data = strtok(NULL, "d");
 					nway_cnt = 0;
 					robot_cnt += 1;
 				}
 					
 			}
 		}
-		normFT.resize(2);
-		normFT[0] = 0.0;
-		normFT[1] = 0.0;
+		commandFlag.resize(2);
 		for (unsigned int i = 0; i < hyu_desired_dataset.size(); i++)
 		{
-			for (unsigned int j = 0; j < hyu_desired_dataset[i].robot_ft.size(); j++)
-			{
-				 normFT[i] += hyu_desired_dataset[i].robot_ft[j] * hyu_desired_dataset[i].robot_ft[j];
-			}
+			commandFlag[i] = hyu_desired_dataset[i].command_flag;
 		}
+		
+		//normFT.resize(2);
+		//normFT[0] = 0.0;
+		//normFT[1] = 0.0;
+		//for (unsigned int i = 0; i < hyu_desired_dataset.size(); i++)
+		//{
+		//	for (unsigned int j = 0; j < hyu_desired_dataset[i].robot_ft.size(); j++)
+		//	{
+		//		 normFT[i] += hyu_desired_dataset[i].robot_ft[j] * hyu_desired_dataset[i].robot_ft[j];
+		//	}
+		//}
 
 
 
 
 	}
-	return std::make_pair(robotFlag, normFT);
+	return std::make_pair(robotFlag, commandFlag);
 };
 
 char* makeJointCommand(vector<vector<Eigen::VectorXd>>& jointTraj, desired_dataset& hyu_desired_dataset)
@@ -397,9 +417,9 @@ char* makeJointCommand_SingleRobot(vector<vector<Eigen::VectorXd>>& jointTraj, d
 				tmp_data = tmp_data + pbuffer;
 				tmp_data = tmp_data + div;
 			}
-			pbuffer = _gcvt(hyu_desired_dataset.robot_gripper[i], digit_num, tmp_buffer);
-			tmp_data = tmp_data + pbuffer;
-			tmp_data = tmp_data + div;
+			//pbuffer = _gcvt(hyu_desired_dataset.robot_gripper[i], digit_num, tmp_buffer);
+			//tmp_data = tmp_data + pbuffer;
+			//tmp_data = tmp_data + div;
 		}
 	}
 	char *send_data = new char[tmp_data.length() + 1];

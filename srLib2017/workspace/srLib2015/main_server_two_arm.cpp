@@ -1534,10 +1534,10 @@ void communicationFunc(int argc, char **argv)
 			for (unsigned int p = 0; p <= strlen(hyu_data); p++)
 				copy[p] = hyu_data[p];
 
-			pair<int,vector<double>> hyu_data_output = readRobotCommand(hyu_data, hyu_desired_dataset);
+			pair<int,vector<int>> hyu_data_output = readRobotCommand(hyu_data, hyu_desired_dataset);
 			if (hyu_data_output.first == 1)
 			{
-				if (hyu_data_output.second[0] > 0.0)
+				if (hyu_data_output.second[0] == 1 || hyu_data_output.second[0] == 2)
 				{
 					// send to robot
 					serv.SendMessageToClient(copy);
@@ -1547,7 +1547,7 @@ void communicationFunc(int argc, char **argv)
 			}
 			else if (hyu_data_output.first == 2)
 			{
-				if (hyu_data_output.second[0] > 0.0)
+				if (hyu_data_output.second[0] == 1 || hyu_data_output.second[0] == 2)
 				{
 					// send to robot
 					serv.SendMessageToClient(copy);
@@ -1571,7 +1571,6 @@ void communicationFunc(int argc, char **argv)
 					serv.SendMessageToClient("P1");
 					Sleep(50);
 				}
-					
 				else
 				{
 					string tmp_data1 = "S" + to_string(1) + "d";
@@ -1585,8 +1584,16 @@ void communicationFunc(int argc, char **argv)
 						div_data = strtok(NULL, "d");
 						tmp_data1 = tmp_data1 + div_data + "d";
 						iter++;
+						if (iter == nway*n_inside_way)
+						{
+							div_data = strtok(NULL, "d");
+							tmp_data1 = tmp_data1 + div_data + "d";
+						}		
 					}
-					char* send_data1 = (char*)malloc(sizeof(char)*strlen(hyu_data));
+					//printf("\n\n\n");
+					//printf(tmp_data1.c_str());
+					//char* send_data1 = (char*)malloc(sizeof(char)*strlen(hyu_data));
+					char* send_data1 = (char*)malloc(sizeof(char)*strlen(tmp_data1.c_str()));
 					strcpy(send_data1, tmp_data1.c_str());
 					serv.SendMessageToClient(send_data1);
 				}
@@ -1606,14 +1613,26 @@ void communicationFunc(int argc, char **argv)
 					nway = atoi(strtok(NULL, "d"));
 					tmp_data2 = tmp_data2 + to_string(nway) + "d";
 					iter = 0;
-					while (iter < (nway + nway1) * n_inside_way)
+					while (iter < (nway + nway1) * n_inside_way+2)
 					{
 						div_data = strtok(NULL, "d");
-						if (iter > nway1 * n_inside_way - 1)
+						if (iter > nway1 * n_inside_way)
 							tmp_data2 = tmp_data2 + div_data + "d";
 						iter++;
+						//printf("\n\n\n");
+						//printf(tmp_data2.c_str());
+						//if (iter == (nway + nway1) * n_inside_way+1)
+						//{
+						//	div_data = strtok(NULL, "d");
+						//	tmp_data2 = tmp_data2 + div_data + "d";
+						//}
+						//printf("\n\n\n");
+						//printf(tmp_data2.c_str());
 					}
-					char* send_data2 = (char*)malloc(sizeof(char)*strlen(hyu_data));
+					//printf("\n\n\n");
+					//printf(tmp_data2.c_str());
+					//char* send_data2 = (char*)malloc(sizeof(char)*strlen(hyu_data));
+					char* send_data2 = (char*)malloc(sizeof(char)*strlen(tmp_data2.c_str()));
 					strcpy(send_data2, tmp_data2.c_str());
 					serv.SendMessageToClient(send_data2);
 				}
