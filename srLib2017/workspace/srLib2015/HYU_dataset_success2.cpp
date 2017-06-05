@@ -894,8 +894,8 @@ void updateFuncPlanning()
 			// make vector<> format
      		FTtraj[idx].push_back(ftsensor);
 			// See from the robot base like frame
-			// TtrajVec[idx].push_back(SE3toVectorXd(Inv(robot1->GetBaseLink()->GetFrame())*Ttraj[idx][trjIdx]));
-			TtrajVec[idx].push_back(SE3toVectorXd(Ttraj[idx][trjIdx]));
+			TtrajVec[idx].push_back(SE3toVectorXd(Inv(robot1->GetBaseLink()->GetFrame())*Ttraj[idx][trjIdx]));
+			//TtrajVec[idx].push_back(SE3toVectorXd(Ttraj[idx][trjIdx]));
      		busbarTraj[idx].push_back(SE3toVectorXd(Inv(robot1->GetBaseLink()->GetFrame())*(busbar[0]->GetBaseLink()->GetFrame())));
 			goalJigLocation[0] = SE3toVectorXd(Inv(robot1->GetBaseLink()->GetFrame())*jigAssem->GetBaseLink()->GetFrame());
 			

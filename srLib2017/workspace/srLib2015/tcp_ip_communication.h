@@ -20,6 +20,7 @@ struct dataset
 
 struct vision_data
 {
+	vector<int>	objID;
 	vector<vector<double>> objPos;		//id, (x, y, z)
 	vector<vector<double>> objOri;		//id, (R_x, R_y, R_z)
 	vector<vector<double>> obsInfo;		//id, (center, size)
@@ -68,10 +69,13 @@ void readSKKUvision(char* hyu_data, vision_data& skku_dataset)
 	char *recv_data = strtok(hyu_data, "d");
 	int recv_cnt = 0;
 	int nway_cnt = 0;
-
-	skku_dataset.objPos.resize(100);
-	skku_dataset.objOri.resize(100);
+	skku_dataset.objID.resize(0);
+	skku_dataset.objPos.resize(0);
+	skku_dataset.objOri.resize(0);
 	skku_dataset.obsInfo.resize(0);
+	vector<double> zeropos(3, 0.0);
+	vector<double> zeroori(9, 0.0);
+	int objIdx = 0;
 	int objID;
 	int obsID = 0;
 	bool obsData = false;
@@ -84,34 +88,48 @@ void readSKKUvision(char* hyu_data, vision_data& skku_dataset)
 				obsData = true;
 			else
 			{
-				skku_dataset.objPos[objID].resize(3);
-				skku_dataset.objOri[objID].resize(9);
+				skku_dataset.objID.push_back(objID);
+				skku_dataset.objPos.push_back(zeropos);
+				skku_dataset.objOri.push_back(zeroori);
+			}
+		}
+		if (obsData && recv_cnt < 1)
+		{
+			objID = atoi(recv_data);
+			if (objID == 0)
+				break;
+			else
+			{
+				vector<double> temp(0);
+				skku_dataset.obsInfo.push_back(temp);
 			}
 		}
 
 		if (!obsData)
 		{
 			if (1 <= recv_cnt && recv_cnt < 10)
-				skku_dataset.objOri[objID][recv_cnt - 1] = atof(recv_data);
-			else if (10 <= recv_cnt && recv_cnt<13)
-				skku_dataset.objPos[objID][recv_cnt - 10] = atof(recv_data);
-		}
-		else
-		{
-			if (recv_cnt % 6 == 1)
 			{
-				vector<double> temp(0);
-				skku_dataset.obsInfo.push_back(temp);
-				skku_dataset.obsInfo[skku_dataset.obsInfo.size() - 1].push_back(atof(recv_data));
+				int temp = recv_cnt - 1;
+				int idx = (temp % 3) * 3 + temp / 3;
+				skku_dataset.objOri[objIdx][idx] = atof(recv_data);
 			}
-			else if (recv_cnt > 0)
-				skku_dataset.obsInfo[skku_dataset.obsInfo.size() - 1].push_back(atof(recv_data));
+			else if (10 <= recv_cnt && recv_cnt<13)
+				skku_dataset.objPos[objIdx][recv_cnt - 10] = atof(recv_data);
+		}
+		else if (recv_cnt > 0)
+		{
+			skku_dataset.obsInfo[skku_dataset.obsInfo.size() - 1].push_back(atof(recv_data));
 		}
 
 		recv_data = strtok(NULL, "d");
 		recv_cnt += 1;
 
 		if (!obsData && recv_cnt == 13)
+		{
+			recv_cnt = 0;
+			objIdx++;
+		}
+		if (obsData && recv_cnt == 7)
 			recv_cnt = 0;
 	}
 }
@@ -356,7 +374,7 @@ char* makeJointCommand_SingleRobot(vector<vector<Eigen::VectorXd>>& jointTraj, d
 {
 	char *pbuffer;
 
-	char hyu_data_flag;
+	//char hyu_data_flag;
 	char tmp_buffer[255];
 	char div = 'd';
 

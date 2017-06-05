@@ -1226,6 +1226,8 @@ JigAssem_QB_bar::~JigAssem_QB_bar()
 
 void JigAssem_QB_bar::AssembleModel()
 {
+	m_visionOffset = SE3(Vec3(-0.02725, 0.0, 0.0));		//-(0.15 - 0.0955)*0.5
+
 	holeCenter.resize(8);
 	for (unsigned int i = 0; i < holeCenter.size(); i++)
 		holeCenter[i] = SE3();
@@ -1344,6 +1346,8 @@ JigOnly_QB_bar::~JigOnly_QB_bar()
 
 void JigOnly_QB_bar::AssembleModel()
 {
+	m_visionOffset = SE3(Vec3(-0.02725, 0.0, 0.0));		//-(0.15 - 0.0955)*0.5
+
 	holeCenter.resize(8);
 	for (unsigned int i = 0; i < holeCenter.size(); i++)
 		holeCenter[i] = SE3();

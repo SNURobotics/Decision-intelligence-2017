@@ -37,8 +37,8 @@ static mutex m;
 
 // Environment
 JigAssem_QB* jigAssem = new JigAssem_QB;
-vector<BusBar_HYU*> busbar(1);
-
+vector<BusBar_HYU*> busbar(8);
+bool isJigConnectedToWorkCell = true;
 vector<SE3>	initSE3(2);
 vector<SE3>	goalSE3(2);
 
@@ -81,7 +81,7 @@ Eigen::VectorXd homePosRobot2 = Eigen::VectorXd::Zero(6);
 Eigen::VectorXd lastRobot1Joint;
 Eigen::VectorXd lastRobot2Joint;
 
-SE3 initBusbar = SE3(Vec3(0.0, 0.0, -0.5));
+SE3 initBusbar = SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.5)));
 
 // Measure F/T sensor
 dse3 Ftsensor;
@@ -121,6 +121,7 @@ void environmentSetting_HYU2(bool connect);
 
 // communication function
 void setEnviromentFromVision(const vision_data& skku_dataset);
+void connectJigToWorkCell();
 void setRobotFromRealRobot(const robot_current_data& robot_state);
 char* getSimulationState(vector<srSystem*> objects);
 void RRT_problemSettingFromRobotCommand(const desired_dataset& hyu_desired_dataset, vector<bool>& attachObject, Eigen::VectorXd init, vector<bool>& waypointFlag);
@@ -153,6 +154,7 @@ bool renderNow;
 static bool isVision = false;
 static bool isHYUPlanning = false;
 static bool isRobotState = true;
+
 
 vector<int> flags(0);
 
@@ -187,27 +189,22 @@ char divChar = 'd';
 int digit_num = 5;
 int nway = 0;
 
-vector<srSystem*> objects(2);
-
-
-vector<srLink*> obstacle(10);
-vector<srWeldJoint*> wJoint(10);
+vector<srLink*> obstacle(0);
+vector<srWeldJoint*> wJoint(0);
 
 
 int main(int argc, char **argv)
 {
-
-	busbar[0] = new BusBar_HYU;
-
-	for (int i = 0; i < obstacle.size(); i++)
+	bool useVision = true;
+	for (unsigned int i = 0; i < busbar.size(); i++)
 	{
-		obstacle[i] = new srLink();
-		wJoint[i] = new srWeldJoint;
+		busbar[i] = new BusBar_HYU;
+		busbar[i]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -(double)0.1*i)) * initBusbar);
+		gSpace.AddSystem(busbar[i]);
+		busbar[i]->SetBaseLinkType(srSystem::FIXED);
 	}
-
-
-
-
+	//busbar[4]->GetBaseLink()->GetGeomInfo().SetColor(0.0, 0.0, 1.0);
+	
 	srand(time(NULL));
 	// Robot home position
 	homePosRobot1[1] = -SR_PI_HALF; homePosRobot1[3] = SR_PI_HALF; homePosRobot1[4] = -0.5 * SR_PI;
@@ -216,50 +213,47 @@ int main(int argc, char **argv)
 	homePosRobotVector[1] = homePosRobot2;
 	// environment
 	workspaceSetting();
-	environmentSetting_HYU2(true);			// temporary environment setting
+	
 	robotSetting();
-	robotVector[0] = robot1;
-	robotVector[1] = robot2;
-	Trobotbase1 = robot1->GetBaseLink()->GetFrame();
-	Trobotbase2 = robot2->GetBaseLink()->GetFrame();
-	TrobotbaseVector[0] = Trobotbase1;
-	TrobotbaseVector[1] = Trobotbase2;
 
-	//vector<srSystem*> objects(2);
-	objects[0] = busbar[0];
-	objects[1] = jigAssem;
 	//initBusbar = SE3(Vec3(0.0, -0.4, 0.05)) * jigAssem->GetBaseLink()->GetFrame();
-	busbar[0]->setBaseLinkFrame(initBusbar);
+	//busbar[4]->GetBaseLink()->SetFrame(Trobotbase1 * SE3(1.0000, 0.0074, 0, -0.0074, 1.0000, 0, 0, 0, 1.0000, -0.0002, 0.0037, 0.7014));
 
-	////////////////////////////////////////////// setting srLib
-	initDynamics();								// initialize srLib
 
-												// robot manager setting
-	robotManagerSetting();
-	rManagerVector[0] = rManager1;
-	rManagerVector[1] = rManager2;
+	////////////////////////////////////////////// setting environment (replacable from vision data)
+	if (!useVision)
+	{
+		environmentSetting_HYU2(true);			// temporary environment setting
+		initDynamics();								// initialize srLib
 
-	// workcell robot initial config
-	//homePosRobot2.setZero();
-	//homePosRobot2[0] = 0.0; homePosRobot2[1] = -SR_PI_HALF; homePosRobot2[2] = 80.0 / 90.0*SR_PI_HALF; homePosRobot2[3] = SR_PI_HALF;
-	rManager1->setJointVal(homePosRobot1);
-	rManager2->setJointVal(homePosRobot2);
-	Eigen::VectorXd gripInput(2);
-	gripInput[0] = -0.009;
-	gripInput[1] = 0.009;
-	rManager1->setGripperPosition(gripInput);
-	rManager2->setGripperPosition(gripInput);
+													
+		robotManagerSetting();						// robot manager setting
 
-	// rrt
-	rrtSetting();
-	RRTManagerVector[0] = RRTManager1;
-	RRTManagerVector[1] = RRTManager2;
+		// workcell robot initial config
+		//homePosRobot2.setZero();
+		//homePosRobot2[0] = 0.0; homePosRobot2[1] = -SR_PI_HALF; homePosRobot2[2] = 80.0 / 90.0*SR_PI_HALF; homePosRobot2[3] = SR_PI_HALF;
+		rManager1->setJointVal(homePosRobot1);
+		rManager2->setJointVal(homePosRobot2);
+		Eigen::VectorXd gripInput(2);
+		gripInput[0] = -0.009;
+		gripInput[1] = 0.009;
+		rManager1->setGripperPosition(gripInput);
+		rManager2->setGripperPosition(gripInput);
+
+		// rrt
+		rrtSetting();
+		
+		cout << Trobotbase1 % jigAssem->GetBaseLink()->GetFrame() << endl;
+		cout << Trobotbase1 % busbar[0]->GetBaseLink()->GetFrame() << endl;
+		cout << busbar[4]->GetBaseLink()->GetFrame() << endl;
+	}
+
 	///////////////////////////////////////////////////////////
 
 	////////////////////////// Generate test waypoints
-	int nWay = 3;
-	vector<bool> includeOri(nWay, true);
-	wayPoints.resize(nWay);
+	//int nWay = 3;
+	//vector<bool> includeOri(nWay, true);
+	//wayPoints.resize(nWay);
 
 	// ------------ Robot 1
 	//int holeNum = 4;
@@ -286,18 +280,32 @@ int main(int argc, char **argv)
 	thread commuThread(communicationFunc, argc, argv);
 	commuThread.detach();
 
-	//m.lock();
+	////m.lock();
 
-	//thread rendThread(rendering);
+	////thread rendThread(rendering);
 
-	//thread rendThread(renderFunc);
-	//rendThread.detach();
+	////thread rendThread(renderFunc);
+	////rendThread.detach();
 	if (commuThread.joinable())
 		commuThread.join();
 	//if (rendThread.joinable())
 	//	rendThread.join();
 
-	rendering(argc, argv);
+	if (useVision)
+	{
+		renderer = new myRenderer();
+		while (1)
+		{
+			if (isVision)
+				break;
+		}
+		static int renderCall = 0;
+		renderCall++;
+		printf("rendering called: %d\n", renderCall);
+		renderer->RunRendering();
+	}
+	else
+		rendering(argc, argv);
 
 	//만약 while 루프를 돌리지 않을 경우 무한정 서버를 기다리는 함수, 실제 사용하지는 않는다.
 	//serv.WaitServer(); 
@@ -319,6 +327,7 @@ void rendering(int argc, char **argv)
 	renderer->InitializeRenderer(argc, argv, windows, false);
 	renderer->InitializeNode(&gSpace);
 	renderer->setUpdateFunc(updateFuncTotal);
+	//renderer->setUpdateFunc(updateFuncVision);
 	static int renderCall = 0;
 	renderCall++;
 	printf("rendering called: %d\n", renderCall);
@@ -354,10 +363,10 @@ void updateFuncPlanning()
 	rManager2->setJointVal(homePosRobot2);
 
 	static int cnt = 0;
-	static int writeCnt = 0;
-	static int writeTaskCnt = 0;
+	static unsigned int writeCnt = 0;
+	static unsigned int writeTaskCnt = 0;
 
-	static int trjIdx = 0;
+	static unsigned int trjIdx = 0;
 	static int taskIdx = 0;
 
 	int idx = taskIdx % renderTraj.size();
@@ -554,9 +563,12 @@ void updateFuncVision()
 {
 	//gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 	// robot to homePos
-	rManager2->setJointVal(homePosRobot1);
+	rManager2->setJointVal(homePosRobot2);
 	rManager1->setJointVal(homePosRobot1);
-	//cout << "Vision Update func called" << endl;
+	printf("Vision Update func called\n");
+	cout << Trobotbase1 % jigAssem->GetBaseLink()->GetFrame() << endl;
+	cout << Trobotbase1 % busbar[0]->GetBaseLink()->GetFrame() << endl;
+	int stop = 0;
 }
 
 void updateFuncHYUPlanning()
@@ -564,7 +576,7 @@ void updateFuncHYUPlanning()
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 
 	static int cnt = 0;
-	static int trjIdx = 0;
+	static unsigned int trjIdx = 0;
 	static int taskIdx = 0;
 
 	// variable for restart rendering when planning result is updated
@@ -654,17 +666,17 @@ void environmentSetting_HYU2(bool connect)
 {
 	//SE3 Tbase = SE3(Vec3(0.025, 1.095, 1.176));		// when stage attached
 	SE3 Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.009));		// when stage removed
-	double z_angle = (double)rand() / RAND_MAX * 0.1;
+	double z_angle = (double)rand() / RAND_MAX * 1.0;
 	double x_trans = -(double)rand() / RAND_MAX * 0.1;
 	double y_trans = (double)rand() / RAND_MAX * 0.1;
 	//SE3 Tbase2jigbase = EulerZYX(Vec3(z_angle, 0.0, 0.0), Vec3(x_trans, y_trans, 0.184));
 	SE3 Tbase2jigbase = EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.184));
-	for (unsigned int i = 0; i < busbar.size(); i++)
-	{
-		busbar[i] = new BusBar_HYU;
-		busbar[i]->SetBaseLinkType(srSystem::FIXED);
-		gSpace.AddSystem(busbar[i]);
-	}
+	//for (unsigned int i = 0; i < busbar.size(); i++)
+	//{
+	//	busbar[i] = new BusBar_HYU;
+	//	busbar[i]->SetBaseLinkType(srSystem::FIXED);
+	//	gSpace.AddSystem(busbar[i]);
+	//}
 	jigAssem->SetBaseLinkType(srSystem::FIXED);
 	jigAssem->setBaseLinkFrame(Tbase*Tbase2jigbase);
 	if (!connect)
@@ -672,10 +684,11 @@ void environmentSetting_HYU2(bool connect)
 	else
 	{
 		srWeldJoint* wJoint = new srWeldJoint;
-		wJoint->SetParentLink(workCell->getStagePlate());
-		wJoint->SetChildLink(jigAssem->GetBaseLink());
-		wJoint->SetParentLinkFrame(Tbase*Tbase2jigbase);
-		wJoint->SetChildLinkFrame(SE3());
+		//wJoint->SetParentLink(workCell->GetBaseLink()); // removed stage
+		////wJoint->SetParentLink(workCell->getStagePlate());
+		//wJoint->SetChildLink(jigAssem->GetBaseLink());
+		//wJoint->SetParentLinkFrame(Tbase*Tbase2jigbase);
+		//wJoint->SetChildLinkFrame(SE3());
 	}
 }
 
@@ -697,6 +710,13 @@ void robotSetting()
 	gpIdx[1] = 3;
 	robot1->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
 	robot2->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
+
+	robotVector[0] = robot1;
+	robotVector[1] = robot2;
+	Trobotbase1 = robot1->GetBaseLink()->GetFrame();
+	Trobotbase2 = robot2->GetBaseLink()->GetFrame();
+	TrobotbaseVector[0] = Trobotbase1;
+	TrobotbaseVector[1] = Trobotbase2;
 }
 
 void robotManagerSetting()
@@ -706,6 +726,10 @@ void robotManagerSetting()
 
 	// robot 2
 	rManager2 = new indyRobotManager(robot2, &gSpace);
+
+
+	rManagerVector[0] = rManager1;
+	rManagerVector[1] = rManager2;
 }
 
 void workspaceSetting()
@@ -730,6 +754,9 @@ void rrtSetting()
 	RRTManager2->setSystem(planningJoints2);
 	RRTManager2->setSpace(&gSpace);
 	RRTManager2->setStateBound(robot2->getLowerJointLimit(), robot2->getUpperJointLimit());
+
+	RRTManagerVector[0] = RRTManager1;
+	RRTManagerVector[1] = RRTManager2;
 }
 
 
@@ -1134,7 +1161,7 @@ void RRTSolve_HYU_multiRobot(vector<vector<bool>> attachObject, vector<vector<do
 	//cout << goalPos[goalPos.size() - 1].transpose() << endl;
 	for (int robotnum = 0; robotnum < 2; robotnum++)
 	{
-		for (int i = start; i < goalPos_multiRobot[robotnum].size(); i++)
+		for (unsigned int i = start; i < goalPos_multiRobot[robotnum].size(); i++)
 		{
 			RRTManagerVector[robotnum]->setStartandGoal(initPos_multiRobot[robotnum][i], goalPos_multiRobot[robotnum][i]);
 
@@ -1166,23 +1193,32 @@ void RRTSolve_HYU_multiRobot(vector<vector<bool>> attachObject, vector<vector<do
 
 void setEnviromentFromVision(const vision_data & skku_dataset)
 {
-	// set object (id:1 - busbar, id:2 - jig) 
-	if (skku_dataset.objPos[1].size() > 0)
+	// set object (id:1 - busbar, id:2 - jig),   objects start from 0, objPos start from 1 
+	int bIdx = 0;
+	for (unsigned int i = 0; i < skku_dataset.objID.size(); i++)
 	{
-		busbar[0]->GetBaseLink()->SetFrame(Trobotbase1 * SKKUtoSE3(skku_dataset.objOri[1], skku_dataset.objPos[1]) * busbar[0]->m_visionOffset);
-		busbar[0]->SetBaseLinkType(srSystem::FIXED);
+		if (skku_dataset.objID[i] == 1)
+		{
+			busbar[bIdx]->GetBaseLink()->SetFrame(Trobotbase1 * SKKUtoSE3(skku_dataset.objOri[i], skku_dataset.objPos[i]) * busbar[bIdx]->m_visionOffset);
+			busbar[bIdx]->SetBaseLinkType(srSystem::FIXED);
+			bIdx++;
+		}
+		else if (skku_dataset.objID[i] == 2)
+		{
+			jigAssem->GetBaseLink()->SetFrame(Trobotbase1 * SKKUtoSE3(skku_dataset.objOri[i], skku_dataset.objPos[i]) * jigAssem->m_visionOffset);
+			jigAssem->SetBaseLinkType(srSystem::FIXED);
+		}
+		else
+			printf("object ID is outside range!!!\n");
 	}
-	if (skku_dataset.objPos[2].size() > 0)
-	{
-		jigAssem->GetBaseLink()->SetFrame(Trobotbase1 * SKKUtoSE3(skku_dataset.objOri[2], skku_dataset.objPos[2]) * jigAssem->m_visionOffset);
-		jigAssem->SetBaseLinkType(srSystem::FIXED);
-	}
-
 
 	// set obstacle
+	obstacle.resize(skku_dataset.obsInfo.size());
+	wJoint.resize(skku_dataset.obsInfo.size());
 	for (unsigned int i = 0; i < skku_dataset.obsInfo.size(); i++)
 	{
-
+		obstacle[i] = new srLink();
+		wJoint[i] = new srWeldJoint;
 		obstacle[i]->GetGeomInfo().SetDimension(skku_dataset.obsInfo[i][3], skku_dataset.obsInfo[i][4], skku_dataset.obsInfo[i][5]);
 		wJoint[i]->SetParentLink(workCell->GetBaseLink());
 		wJoint[i]->SetParentLinkFrame(robot1->GetBaseLink()->GetFrame()*SE3(Vec3(skku_dataset.obsInfo[i][0], skku_dataset.obsInfo[i][1], skku_dataset.obsInfo[i][2])));
@@ -1190,7 +1226,6 @@ void setEnviromentFromVision(const vision_data & skku_dataset)
 		wJoint[i]->SetChildLinkFrame(SE3());
 		obstacle[i]->GetGeomInfo().SetColor(0.2, 0.2, 0.2);
 	}
-
 }
 
 void setRobotFromRealRobot(const robot_current_data & robot_state)
@@ -1340,7 +1375,7 @@ void RRT_problemSettingFromMultiRobotCommand(const vector<desired_dataset> & hyu
 	
 	for (int robotnum = 0; robotnum < 2; robotnum++)
 	{
-		for (unsigned int i = 0; i < nWayVector[robotnum]; i++)
+		for (int i = 0; i < nWayVector[robotnum]; i++)
 		{
 			for (int j = 0; j < 3; j++)
 			{
@@ -1392,7 +1427,7 @@ void communicationFunc(int argc, char **argv)
 
 			// vision data
 			char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
-			for (int p = 0; p <= strlen(hyu_data); p++)
+			for (unsigned int p = 0; p <= strlen(hyu_data); p++)
 				copy[p] = hyu_data[p];
 			serv.SendMessageToClient(copy);
 			printf("%s\n", hyu_data);
@@ -1406,15 +1441,15 @@ void communicationFunc(int argc, char **argv)
 
 			setEnviromentFromVision(skku_dataset);		// should be called later than robotSetting
 
-														/////////////////////////////////////// after setting environment
-			initDynamics();								// initialize srLib
 
-														// robot manager setting
-			robotManagerSetting();
+			if (isJigConnectedToWorkCell)
+				connectJigToWorkCell();
+
+			/////////////////////////////////////// after setting environment
+			initDynamics();								// initialize srLib
+			robotManagerSetting();						// robot manager setting
 
 			// workcell robot initial config
-			homePosRobot2.setZero();
-			homePosRobot2[0] = 0.0; homePosRobot2[1] = -SR_PI_HALF; homePosRobot2[2] = 80.0 / 90.0*SR_PI_HALF; homePosRobot2[3] = SR_PI_HALF;
 			rManager2->setJointVal(homePosRobot2);
 			rManager1->setJointVal(homePosRobot1);
 			Eigen::VectorXd gripInput(2);
@@ -1425,8 +1460,15 @@ void communicationFunc(int argc, char **argv)
 
 			// rrt
 			rrtSetting();
+			// generate renderer
+			
+			//SceneGraphRenderer::NUM_WINDOWS windows;
+			//windows = SceneGraphRenderer::SINGLE_WINDOWS;
+			//renderer->InitializeRenderer(argc, argv, windows, false);
+			//renderer->InitializeNode(&gSpace);
+			//renderer->setUpdateFunc(updateFuncTotal);
 			//////////////////////////////////////////////////////////////////////
-			//rendering(argc, argv);
+			rendering(argc, argv);
 			m.lock();
 			isVision = true;
 			isHYUPlanning = false;
@@ -1435,7 +1477,7 @@ void communicationFunc(int argc, char **argv)
 		}
 		else if (hyu_data_flag == 'G') {
 
-			char* send_data;
+			//char* send_data;
 			//send_data = getSimulationState(objects);
 			//serv.SendMessageToClient(send_data);	
 			serv.SendMessageToClient(hyu_data);
@@ -1444,7 +1486,7 @@ void communicationFunc(int argc, char **argv)
 		{
 			// Robot cur data
 			char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
-			for (int p = 0; p <= strlen(hyu_data); p++)
+			for (unsigned int p = 0; p <= strlen(hyu_data); p++)
 				copy[p] = hyu_data[p];
 			serv.SendMessageToClient(copy);
 			Sleep(100);
@@ -1489,7 +1531,7 @@ void communicationFunc(int argc, char **argv)
 		}
 		else if (hyu_data_flag == 'S') {
 			char* copy = (char*)malloc(sizeof(char)*strlen(hyu_data));
-			for (int p = 0; p <= strlen(hyu_data); p++)
+			for (unsigned int p = 0; p <= strlen(hyu_data); p++)
 				copy[p] = hyu_data[p];
 
 			pair<int,vector<double>> hyu_data_output = readRobotCommand(hyu_data, hyu_desired_dataset);
@@ -1516,7 +1558,7 @@ void communicationFunc(int argc, char **argv)
 			else if (hyu_data_output.first == 3)
 			{
 				char* copy2 = (char*)malloc(sizeof(char)*strlen(copy));
-				for (int p = 0; p <= strlen(copy); p++)
+				for (unsigned int p = 0; p <= strlen(copy); p++)
 					copy2[p] = copy[p];
 				char div = 'd';
 				char* div_data;
@@ -1800,4 +1842,13 @@ void updateFuncPlanning_multi()
 			}
 		}		
 	}
+}
+
+void connectJigToWorkCell()
+{
+	srWeldJoint* wJoint = new srWeldJoint;
+	wJoint->SetParentLink(workCell->GetBaseLink());
+	wJoint->SetChildLink(jigAssem->GetBaseLink());
+	wJoint->SetParentLinkFrame(jigAssem->GetBaseLink()->GetFrame());
+	wJoint->SetChildLinkFrame(SE3());
 }
