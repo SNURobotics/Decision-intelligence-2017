@@ -198,8 +198,8 @@ end
 for i = 1:6
     send_data2 = [send_data2; num2str(joint(i))'; 'd'];
 end
-fwrite(client,send_data);
-% fwrite(client,send_data2);
+% fwrite(client,send_data);
+fwrite(client,send_data2);
 % receive robot traj from server
 
 % while (1)
