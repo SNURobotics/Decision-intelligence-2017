@@ -1435,7 +1435,7 @@ void communicationFunc(int argc, char **argv)
 		}
 		else if (hyu_data_flag == 'G') {
 
-			char* send_data;
+			//char* send_data;
 			//send_data = getSimulationState(objects);
 			//serv.SendMessageToClient(send_data);	
 			serv.SendMessageToClient(hyu_data);
@@ -1548,8 +1548,8 @@ void communicationFunc(int argc, char **argv)
 							tmp_data1 = tmp_data1 + div_data + "d";
 						}		
 					}
-					printf("\n\n\n");
-					printf(tmp_data1.c_str());
+					//printf("\n\n\n");
+					//printf(tmp_data1.c_str());
 					//char* send_data1 = (char*)malloc(sizeof(char)*strlen(hyu_data));
 					char* send_data1 = (char*)malloc(sizeof(char)*strlen(tmp_data1.c_str()));
 					strcpy(send_data1, tmp_data1.c_str());
@@ -1577,8 +1577,8 @@ void communicationFunc(int argc, char **argv)
 						if (iter > nway1 * n_inside_way)
 							tmp_data2 = tmp_data2 + div_data + "d";
 						iter++;
-						printf("\n\n\n");
-						printf(tmp_data2.c_str());
+						//printf("\n\n\n");
+						//printf(tmp_data2.c_str());
 						//if (iter == (nway + nway1) * n_inside_way+1)
 						//{
 						//	div_data = strtok(NULL, "d");
@@ -1587,8 +1587,8 @@ void communicationFunc(int argc, char **argv)
 						//printf("\n\n\n");
 						//printf(tmp_data2.c_str());
 					}
-					printf("\n\n\n");
-					printf(tmp_data2.c_str());
+					//printf("\n\n\n");
+					//printf(tmp_data2.c_str());
 					//char* send_data2 = (char*)malloc(sizeof(char)*strlen(hyu_data));
 					char* send_data2 = (char*)malloc(sizeof(char)*strlen(tmp_data2.c_str()));
 					strcpy(send_data2, tmp_data2.c_str());

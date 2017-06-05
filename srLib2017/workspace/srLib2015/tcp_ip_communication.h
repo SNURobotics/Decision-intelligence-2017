@@ -184,7 +184,7 @@ int readRobotCurState(char * hyu_data, robot_current_data & robot_state)
 		}
 	}*/
 	else
-		printf("Wrong robotFlag is given!!!!!!!!!!!!!!!1");
+		printf("Wrong robotFlag is given!!!!!!! (readRobotCurState())");
 	
 
 	return robotFlag;
