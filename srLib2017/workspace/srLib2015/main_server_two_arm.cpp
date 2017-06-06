@@ -1,7 +1,7 @@
 #include <cstdio>
 
-#include "myRenderer.h"
-//#include "2ndRenderer.h"
+//#include "myRenderer.h"
+#include "serverRenderer.h"
 
 #include "common\dataIO.h"
 #include "srDyn/srDYN.h"
@@ -54,7 +54,7 @@ vector<IndyRobot*> robotVector(2);
 Eigen::VectorXd jointAcc(6);
 Eigen::VectorXd jointVel(6);
 srSpace gSpace;
-myRenderer* renderer;
+serverRenderer* renderer;
 SE3 Tbusbar2gripper = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
 SE3 Tbusbar2gripper_new = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
 SE3 Thole2busbar = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
@@ -297,11 +297,11 @@ int main(int argc, char **argv)
 
 	if (useVision)
 	{
-		renderer = new myRenderer();
+		renderer = new serverRenderer();
 		SceneGraphRenderer::NUM_WINDOWS windows;
 		windows = SceneGraphRenderer::SINGLE_WINDOWS;
 		renderer->InitializeRenderer(argc, argv, windows, false);
-		renderer->InitializeNode(&gSpace);
+		renderer->InitializeNode_1st(&gSpace);
 		while (1)
 		{
 			if (isVision)
@@ -326,14 +326,15 @@ int main(int argc, char **argv)
 
 void rendering(int argc, char **argv)
 {
-	renderer = new myRenderer();
+	renderer = new serverRenderer();
 
 	SceneGraphRenderer::NUM_WINDOWS windows;
 
 	windows = SceneGraphRenderer::SINGLE_WINDOWS;
 
 	renderer->InitializeRenderer(argc, argv, windows, false);
-	renderer->InitializeNode(&gSpace);
+	renderer->InitializeNode_1st(&gSpace);
+	renderer->InitializeNode_2nd();
 	renderer->setUpdateFunc(updateFuncTotal);
 	//renderer->setUpdateFunc(updateFuncVision);
 	static int renderCall = 0;
@@ -692,11 +693,11 @@ void environmentSetting_HYU2(bool connect)
 	else
 	{
 		srWeldJoint* wJoint = new srWeldJoint;
-		//wJoint->SetParentLink(workCell->GetBaseLink()); // removed stage
-		////wJoint->SetParentLink(workCell->getStagePlate());
-		//wJoint->SetChildLink(jigAssem->GetBaseLink());
-		//wJoint->SetParentLinkFrame(Tbase*Tbase2jigbase);
-		//wJoint->SetChildLinkFrame(SE3());
+		wJoint->SetParentLink(workCell->GetBaseLink()); // removed stage
+		//wJoint->SetParentLink(workCell->getStagePlate());
+		wJoint->SetChildLink(jigAssem->GetBaseLink());
+		wJoint->SetParentLinkFrame(Tbase*Tbase2jigbase);
+		wJoint->SetChildLinkFrame(SE3());
 	}
 }
 
@@ -1469,7 +1470,7 @@ void communicationFunc(int argc, char **argv)
 			// rrt
 			rrtSetting();
 			// generate renderer
-			renderer->InitializeNode(&gSpace);
+			renderer->InitializeNode_2nd();
 			renderer->setUpdateFunc(updateFuncTotal);
 			//////////////////////////////////////////////////////////////////////
 			//rendering(argc, argv);

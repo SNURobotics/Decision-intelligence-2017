@@ -160,6 +160,7 @@
     <ClInclude Include="..\..\..\workspace\srLib2015\extApiInternal.h" />
     <ClInclude Include="..\..\..\workspace\srLib2015\extApiPlatform.h" />
     <ClInclude Include="..\..\..\workspace\srLib2015\myRenderer.h" />
+    <ClInclude Include="..\..\..\workspace\srLib2015\serverRenderer.h" />
     <ClInclude Include="..\..\..\workspace\srLib2015\srLibSetting.h" />
     <ClInclude Include="..\..\..\workspace\srLib2015\tcp_ip_communication.h" />
     <ClInclude Include="..\..\..\workspace\srLib2015\workspaceSetting.h" />

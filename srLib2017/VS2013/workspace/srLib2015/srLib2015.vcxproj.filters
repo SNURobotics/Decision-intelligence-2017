@@ -39,6 +39,9 @@
     <ClInclude Include="..\..\..\workspace\srLib2015\srLibSetting.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\workspace\srLib2015\serverRenderer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\workspace\srLib2015\vrep_objmovetest.cpp">
