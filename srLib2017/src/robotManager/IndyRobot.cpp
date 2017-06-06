@@ -2,7 +2,7 @@
 #include "common\utils.h"
 #include "makeSpecialCol.h"
 
-IndyRobot::IndyRobot()
+IndyRobot::IndyRobot(double gripperRot)
 {
 	for (int i = 0; i < NUM_OF_RJOINT_INDY; i++)
 		gJoint[i] = new srRevoluteJoint;
@@ -13,7 +13,7 @@ IndyRobot::IndyRobot()
 	for (int i = 0; i < NUM_OF_WJOINT_INDY; i++)
 		gWeldJoint[i] = new srWeldJoint;
 
-	AssembleModel();
+	AssembleModel(gripperRot);
 	AssembleCollision();
 	SetJointLimit();
 	SetInitialConfiguration();
@@ -120,7 +120,7 @@ void IndyRobot::SetInitialConfiguration()
 	KIN_UpdateFrame_All_The_Entity();
 }
 
-void IndyRobot::AssembleModel()
+void IndyRobot::AssembleModel(double gripperRot)
 {
 	// default color
 	for (int i = 0; i < NUM_OF_LINK_INDY; i++)
@@ -228,7 +228,8 @@ void IndyRobot::AssembleModel()
 	gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->SetParentLink(&gLink[Indy_Index::SENSOR]);
 	gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->SetChildLink(&gLink[Indy_Index::GRIPPER]);
 	gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->SetParentLinkFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, SR_PI_HALF), Vec3(0.0, -0.0355, 0.0)));
-	gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->SetChildLinkFrame(EulerZYX(Vec3(SR_PI, 0.0, -SR_PI_HALF), Vec3(0.0, -0.0355, 0.0)));
+	//gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->SetChildLinkFrame(EulerZYX(Vec3(SR_PI, 0.0, -SR_PI_HALF), Vec3(0.0, -0.0355, 0.0)));
+	gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->SetChildLinkFrame(EulerZYX(Vec3(0.0, gripperRot, SR_PI_HALF), Vec3(0.0, -0.0355, 0.0)) * EulerZYX(Vec3(SR_PI, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));		// consider offset for gripper assembly
 	gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 
 	gLink[Indy_Index::GRIPPER].GetGeomInfo().SetShape(srGeometryInfo::TDS);
@@ -298,7 +299,7 @@ void IndyRobot::AssembleModel()
 	gWeldJoint[Indy_Index::WELDJOINT_GRIP_MARKER]->SetParentLink(&gLink[Indy_Index::SENSOR]);
 	gWeldJoint[Indy_Index::WELDJOINT_GRIP_MARKER]->SetChildLink(&gMarkerLink[Indy_Index::MLINK_GRIP]);
 	gWeldJoint[Indy_Index::WELDJOINT_GRIP_MARKER]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
-	gWeldJoint[Indy_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, -SR_PI_HALF), Vec3(0.0, 0.0, -0.128)));
+	gWeldJoint[Indy_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(EulerZYX(Vec3(SR_PI_HALF - gripperRot, 0.0, -SR_PI_HALF), Vec3(0.0, 0.0, -0.128)));		// consider offset for gripper assembly
 
 	////// old model
 	//gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->SetParentLink(&gLink[Indy_Index::ENDEFFECTOR]);

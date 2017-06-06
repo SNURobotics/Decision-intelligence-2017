@@ -45,7 +45,7 @@ public:
 class IndyRobot : public srSystem
 {
 public:
-	IndyRobot();
+	IndyRobot(double gripperRot = 0.0);
 	~IndyRobot();
 
 public:
@@ -80,7 +80,7 @@ public:
 
 	void	SetInitialConfiguration();
 
-	void	AssembleModel();
+	void	AssembleModel(double gripperRot = 0.0);
 	void	AssembleCollision();
 	void	SetInertia();
 	void	SetTorqueLimit();

@@ -134,9 +134,9 @@ for i = 1:size(robot_ft,2)
     char_robot_ft = [char_robot_ft; 'd'];
 end
 % 
-client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
-
-fopen(client);
+% client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
+% 
+% fopen(client);
 
 send_data = ['S';'1'; 'd';num2str(3); 'd';char_robot_pos1; char_robot_rot1; char_robot_gripper; char_robot_ft; 
     char_robot_pos2; char_robot_rot2; char_robot_gripper; char_robot_ft;
@@ -314,7 +314,7 @@ for i = 1:9
     char_vision = [char_vision; num2str(0.)'; 'd'];
 end;
 send_data = ['V'; char_vision]; 
-client = tcpip('localhost',9000);
+client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
 fopen(client);
 
 

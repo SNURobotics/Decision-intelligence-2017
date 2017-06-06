@@ -36,7 +36,7 @@
 static mutex m;
 
 // Environment
-JigAssem_QB* jigAssem = new JigAssem_QB;
+JigAssem_QB_bar* jigAssem = new JigAssem_QB_bar(true);
 vector<BusBar_HYU*> busbar(8);
 bool isJigConnectedToWorkCell = true;
 vector<SE3>	initSE3(2);
@@ -145,6 +145,8 @@ void RRTSolve();
 void RRTSolve_HYU(vector<bool> attachObject, vector<double> stepsize);
 void rrtSetting();
 
+int getBusbarIdx(int robotIdx);
+
 void communicationFunc(int argc, char **argv);
 
 void renderFunc();
@@ -162,6 +164,8 @@ double planning = 0;
 // save last gripper state
 int gripState = 0;
 vector<int> gripState_multi(2);
+vector<int> gripBusbarIdx(2, -1);			// save which busbar is moving with each robot during planning
+vector<int> gripBusbarIdxRender(2, -1);		// save which busbar is moving with each robot during rendering
 // save last joint value
 vector<Eigen::VectorXd> lastJointVal_multi(2);
 vector<bool> initialPlanning(2, true);
@@ -195,7 +199,7 @@ vector<srWeldJoint*> wJoint(0);
 
 int main(int argc, char **argv)
 {
-	bool useVision = true;
+	bool useVision = false;
 	for (unsigned int i = 0; i < busbar.size(); i++)
 	{
 		busbar[i] = new BusBar_HYU;
@@ -217,7 +221,7 @@ int main(int argc, char **argv)
 	robotSetting();
 
 	//initBusbar = SE3(Vec3(0.0, -0.4, 0.05)) * jigAssem->GetBaseLink()->GetFrame();
-	//busbar[4]->GetBaseLink()->SetFrame(Trobotbase1 * SE3(1.0000, 0.0074, 0, -0.0074, 1.0000, 0, 0, 0, 1.0000, -0.0002, 0.0037, 0.7014));
+	//busbar[4]->GetBaseLink()->SetFrame(Trobotbase1 * SE3(1.0000, - 0.0074,         0, - 0.0074, - 1.0000,         0,         0,         0, - 1.0000, 0,		0,		0.5740));
 
 
 	////////////////////////////////////////////// setting environment (replacable from vision data)
@@ -294,6 +298,10 @@ int main(int argc, char **argv)
 	if (useVision)
 	{
 		renderer = new myRenderer();
+		SceneGraphRenderer::NUM_WINDOWS windows;
+		windows = SceneGraphRenderer::SINGLE_WINDOWS;
+		renderer->InitializeRenderer(argc, argv, windows, false);
+		renderer->InitializeNode(&gSpace);
 		while (1)
 		{
 			if (isVision)
@@ -565,9 +573,9 @@ void updateFuncVision()
 	// robot to homePos
 	rManager2->setJointVal(homePosRobot2);
 	rManager1->setJointVal(homePosRobot1);
-	printf("Vision Update func called\n");
-	cout << Trobotbase1 % jigAssem->GetBaseLink()->GetFrame() << endl;
-	cout << Trobotbase1 % busbar[0]->GetBaseLink()->GetFrame() << endl;
+	//printf("Vision Update func called\n");
+	//cout << Trobotbase1 % jigAssem->GetBaseLink()->GetFrame() << endl;
+	//cout << Trobotbase1 % busbar[0]->GetBaseLink()->GetFrame() << endl;
 	int stop = 0;
 }
 
@@ -934,8 +942,8 @@ void RRT_problemSetting_SingleRobot(Eigen::VectorXd init, vector<SE3> wayPoints,
 			qtemp = rManagerVector[robotFlag - 1]->inverseKin(TrobotbaseVector[0] * wayPoints[i], &robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, initPos[initPos.size() - 1]);
 		printf("%d-th init inv kin flag: %d\n", i, flag);
 
-		if (attachObject[i])
-			RRTManagerVector[robotFlag - 1]->attachObject(busbar[0], &robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new));
+		if (attachObject[i] && gripBusbarIdx[robotFlag - 1] != -1)
+			RRTManagerVector[robotFlag - 1]->attachObject(busbar[gripBusbarIdx[robotFlag - 1]], &robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new));
 		else
 			RRTManagerVector[robotFlag - 1]->detachObject();
 
@@ -1110,8 +1118,8 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 		cout << "initpos:  " << initPos[i].transpose() << endl;
 		cout << "goalPos:  " << goalPos[i].transpose() << endl << endl;;
 
-		if (attachObject[i])
-			RRTManagerVector[robotFlag - 1]->attachObject(busbar[0], &robotVector[robotFlag-1]->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper));
+		if (attachObject[i] && gripBusbarIdx[robotFlag - 1] != -1)
+			RRTManagerVector[robotFlag - 1]->attachObject(busbar[gripBusbarIdx[robotFlag - 1]], &robotVector[robotFlag-1]->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper));
 		else
 			RRTManagerVector[robotFlag - 1]->detachObject();
 
@@ -1461,14 +1469,10 @@ void communicationFunc(int argc, char **argv)
 			// rrt
 			rrtSetting();
 			// generate renderer
-			
-			//SceneGraphRenderer::NUM_WINDOWS windows;
-			//windows = SceneGraphRenderer::SINGLE_WINDOWS;
-			//renderer->InitializeRenderer(argc, argv, windows, false);
-			//renderer->InitializeNode(&gSpace);
-			//renderer->setUpdateFunc(updateFuncTotal);
+			renderer->InitializeNode(&gSpace);
+			renderer->setUpdateFunc(updateFuncTotal);
 			//////////////////////////////////////////////////////////////////////
-			rendering(argc, argv);
+			//rendering(argc, argv);
 			m.lock();
 			isVision = true;
 			isHYUPlanning = false;
@@ -1535,25 +1539,23 @@ void communicationFunc(int argc, char **argv)
 				copy[p] = hyu_data[p];
 
 			pair<int,vector<int>> hyu_data_output = readRobotCommand(hyu_data, hyu_desired_dataset);
-			if (hyu_data_output.first == 1)
+			if (hyu_data_output.first == 1 || hyu_data_output.first == 2)
 			{
 				if (hyu_data_output.second[0] == 1 || hyu_data_output.second[0] == 2)
 				{
 					// send to robot
 					serv.SendMessageToClient(copy);
+
+					if (hyu_data_output.second[0] == 1) // when gripper input comes
+						gripBusbarIdx[hyu_data_output.first - 1] = getBusbarIdx(hyu_data_output.first);
 				}
 				else
-					serv.SendMessageToClient("P1");
-			}
-			else if (hyu_data_output.first == 2)
-			{
-				if (hyu_data_output.second[0] == 1 || hyu_data_output.second[0] == 2)
 				{
-					// send to robot
-					serv.SendMessageToClient(copy);
+					string tempP = "P" + to_string(hyu_data_output.first);
+					char* tempPchar = (char*)malloc(sizeof(char)*2);
+					tempPchar = strcpy(tempPchar, tempP.c_str());
+					serv.SendMessageToClient(tempPchar);
 				}
-				else
-					serv.SendMessageToClient("P2");
 			}
 			else if (hyu_data_output.first == 3)
 			{
@@ -1596,6 +1598,8 @@ void communicationFunc(int argc, char **argv)
 					char* send_data1 = (char*)malloc(sizeof(char)*strlen(tmp_data1.c_str()));
 					strcpy(send_data1, tmp_data1.c_str());
 					serv.SendMessageToClient(send_data1);
+					if (hyu_data_output.second[0] == 1) // when gripper input comes
+						gripBusbarIdx[0] = getBusbarIdx(1);
 				}
 
 				if (hyu_data_output.second[1] == 0)
@@ -1635,6 +1639,8 @@ void communicationFunc(int argc, char **argv)
 					char* send_data2 = (char*)malloc(sizeof(char)*strlen(tmp_data2.c_str()));
 					strcpy(send_data2, tmp_data2.c_str());
 					serv.SendMessageToClient(send_data2);
+					if (hyu_data_output.second[1] == 1) // when gripper input comes
+						gripBusbarIdx[1] = getBusbarIdx(2);
 				}
 			}
 		}
@@ -1673,12 +1679,13 @@ void communicationFunc(int argc, char **argv)
 						attachobject.push_back(attachObject[i]);
 					}
 				}
-				busbar[0]->setBaseLinkFrame(initBusbar);
+				//busbar[0]->setBaseLinkFrame(initBusbar);
 
 				// Solve RRT
 				m.lock();
 				RRTSolve_HYU_SingleRobot(attachobject, stepsize, robotFlag);
 				attachObjRender_multi[robotFlag - 1] = attachobject;
+				gripBusbarIdxRender[robotFlag - 1] = gripBusbarIdx[robotFlag - 1];
 				isHYUPlanning = true;
 				isVision = false;
 				isRobotState = false;
@@ -1839,10 +1846,10 @@ void updateFuncPlanning_multi()
 			// set joint val
 			rManagerVector[i]->setJointVal(renderTraj_multi[i][idx[i]][trjIdx[i]]);
 			//busbar movement
-			if (attachObjRender_multi[i][idx[i]])
+			if (attachObjRender_multi[i][idx[i]] && gripBusbarIdxRender[i] != -1)
 			{
-				// to be fixed (change object later)
-				busbar[0]->setBaseLinkFrame(rManagerVector[i]->m_activeArmInfo->m_endeffector[0]->GetFrame() * Inv(Tbusbar2gripper_new));
+				// to be fixed (change object type later)			gripBusbarIdxRender do not consider task Idx ---- not perfect???
+				busbar[gripBusbarIdxRender[i]]->setBaseLinkFrame(rManagerVector[i]->m_activeArmInfo->m_endeffector[0]->GetFrame() * Inv(Tbusbar2gripper_new));
 			}
 		}
 	}
@@ -1870,4 +1877,26 @@ void connectJigToWorkCell()
 	wJoint->SetChildLink(jigAssem->GetBaseLink());
 	wJoint->SetParentLinkFrame(jigAssem->GetBaseLink()->GetFrame());
 	wJoint->SetChildLinkFrame(SE3());
+}
+
+int getBusbarIdx(int robotIdx)
+{
+	// robotIdx = 1: robot1, robotIdx = 2: robot2
+	if (robotIdx != 1 && robotIdx != 2)
+		return -1;
+	double mindist = 100.0;
+	unsigned int minIdx = 100;
+	double tempdist = 100.0;
+	for (unsigned int i = 0; i < busbar.size(); i++)
+	{
+		tempdist = Norm(robotVector[robotIdx - 1]->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame().GetPosition() - (busbar[i]->GetBaseLink()->GetFrame()*Tbusbar2gripper_new).GetPosition());
+		if (tempdist < mindist)
+		{
+			mindist = tempdist;
+			minIdx = i;
+		}
+	}
+	if (minIdx == -1 || mindist > 0.01)
+		printf("check if robot can grip object\n");
+	return minIdx;
 }
