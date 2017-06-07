@@ -64,7 +64,8 @@ vector<SE3> TrobotbaseVector(2);
 // Planning
 vector<vector<vector<Eigen::VectorXd>>> renderTraj_multi(2);
 vector<vector<SE3>>	Ttraj(0);
-
+vector<vector<Eigen::VectorXd>> qWaypoint(2);
+vector<vector<bool>> attachObjectWaypoint(2);
 vector<vector<int>> idxTraj(0);
 vector<Eigen::VectorXd> initPos(0);
 vector<Eigen::VectorXd> goalPos(0);
@@ -104,6 +105,7 @@ void updateFunc();
 
 void updateFuncVision();
 void updateFuncPlanning_multi();
+void updateFuncWaypoint();
 void updateFuncRobotState();
 
 void updateFuncTotal();
@@ -142,7 +144,7 @@ bool renderNow;
 static bool isVision = false;
 static bool isHYUPlanning = false;
 static bool isRobotState = true;
-
+static bool isWaypoint = false;
 
 vector<int> flags(0);
 
@@ -192,7 +194,7 @@ vector<srWeldJoint*> wJoint(0);
 
 int main(int argc, char **argv)
 {
-	bool useVision = true;
+	bool useVision = false;
 	objectSetting();
 	//busbar[4]->GetBaseLink()->GetGeomInfo().SetColor(0.0, 0.0, 1.0);
 	
@@ -480,6 +482,7 @@ void RRT_problemSetting_SingleRobot(Eigen::VectorXd init, vector<SE3> wayPoints,
 		printf("initial point not feasible!!!\n");
 	Eigen::VectorXd qtemp;
 	waypointFlag.resize(wayPoints.size());
+	qWaypoint[robotFlag - 1].resize(0);
 	for (unsigned int i = 0; i < wayPoints.size(); i++)
 	{
 		qtemp = rManagerVector[robotFlag - 1]->inverseKin(TrobotbaseVector[0] * wayPoints[i], &robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, qInit2);
@@ -496,7 +499,7 @@ void RRT_problemSetting_SingleRobot(Eigen::VectorXd init, vector<SE3> wayPoints,
 
 
 		feas = RRTManagerVector[robotFlag - 1]->checkFeasibility(qtemp);
-
+		qWaypoint[robotFlag - 1].push_back(qtemp);
 		if (feas == 0 && flag == 0)
 		{
 			waypointFlag[i] = true;
@@ -533,7 +536,8 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 	printf("waypoints: \n");
 	for (unsigned int i = 0; i < initPos.size(); i++)
 		cout << initPos[i].transpose() << endl;
-	cout << goalPos[goalPos.size() - 1].transpose() << endl;
+	if (goalPos.size() > 0)
+		cout << goalPos[goalPos.size() - 1].transpose() << endl;
 	initialObjectSaved[robotFlag - 1] = false;
 	for (int i = start; i < end; i++)
 	{
@@ -591,7 +595,10 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 	}
 	renderTraj_multi[robotFlag-1] = traj;
 	// save last joint val
-	lastJointVal_multi[robotFlag - 1] = traj[traj.size() - 1][traj[traj.size() - 1].size() - 1];
+	if (goalPos.size() > 0)
+		lastJointVal_multi[robotFlag - 1] = traj[traj.size() - 1][traj[traj.size() - 1].size() - 1];
+	else
+		lastJointVal_multi[robotFlag - 1] = initPos[0];
 }
 
 
@@ -610,7 +617,7 @@ void objectSetting()
 	{
 		ctCase[i] = new Insert;
 		ctCase[i]->SetBaseLinkType(srSystem::FIXED);
-		ctCase[i]->setBaseLinkFrame(SE3(Vec3(0.0, 1.0, -(double)0.1*i)) * initBusbar);
+		ctCase[i]->setBaseLinkFrame(SE3(Vec3(0.0, 10.0, -(double)0.1*i)) * initBusbar);
 		gSpace.AddSystem(ctCase[i]);
 	}
 	for (unsigned int i = 0; i < objects.size(); i++)
@@ -867,6 +874,7 @@ void communicationFunc(int argc, char **argv)
 			isVision = true;
 			isHYUPlanning = false;
 			isRobotState = false;
+			isWaypoint = false;
 			//m.unlock();
 		}
 		else if (hyu_data_flag == 'G') {
@@ -1157,28 +1165,40 @@ void communicationFunc(int argc, char **argv)
 						attachobject.push_back(attachObject[i]);
 					}
 				}
+				attachObjectWaypoint[robotFlag - 1] = attachObject;
 				//busbar[0]->setBaseLinkFrame(initBusbar);
 
 				// Solve RRT
 				//m.lock();
-				RRTSolve_HYU_SingleRobot(attachobject, stepsize, robotFlag);
-				attachObjRender_multi[robotFlag - 1] = attachobject;
-				gripObjectIdxRender[robotFlag - 1] = gripObjectIdx[robotFlag - 1];
-				TinitObjects_multiRender[robotFlag - 1] = TinitObjects_multi[robotFlag - 1];
-				initialObjectSavedRender[robotFlag - 1] = initialObjectSaved[robotFlag - 1];
-				isHYUPlanning = true;
-				isVision = false;
-				isRobotState = false;
-				//m.unlock();
-				char* send_data = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
-				serv.SendMessageToClient(send_data);
-				printf("%s\n", send_data);
-				if (attachobject[attachobject.size() - 1])
-					gripState_multi[robotFlag - 1] = 1;
+				if (goalPos.size() > 0)
+				{
+					RRTSolve_HYU_SingleRobot(attachobject, stepsize, robotFlag);
+					attachObjRender_multi[robotFlag - 1] = attachobject;
+					gripObjectIdxRender[robotFlag - 1] = gripObjectIdx[robotFlag - 1];
+					TinitObjects_multiRender[robotFlag - 1] = TinitObjects_multi[robotFlag - 1];
+					initialObjectSavedRender[robotFlag - 1] = initialObjectSaved[robotFlag - 1];
+					isHYUPlanning = true;
+					isVision = false;
+					isRobotState = false;
+					isWaypoint = false;
+					//m.unlock();
+					char* send_data = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
+					serv.SendMessageToClient(send_data);
+					printf("%s\n", send_data);
+					if (attachobject.size() > 0 && attachobject[attachobject.size() - 1])
+						gripState_multi[robotFlag - 1] = 1;
+					else
+						gripState_multi[robotFlag - 1] = 0;
+
+					initialPlanning[robotFlag - 1] = false;
+				}
 				else
-					gripState_multi[robotFlag - 1] = 0;
-				
-				initialPlanning[robotFlag - 1] = false;
+				{
+					isHYUPlanning = false;
+					isVision = false;
+					isRobotState = false;
+					isWaypoint = true;
+				}
 			}
 			else
 				printf("Wrong robot Flag is given (Flag = 'P')!!!\n");
@@ -1202,8 +1222,10 @@ void updateFuncTotal()
 		updateFuncVision();
 	else if (isHYUPlanning)
 		updateFuncPlanning_multi();
-	else
+	else if (isRobotState)
 		updateFuncRobotState();
+	else
+		updateFuncWaypoint();
 	//static int updateFuncCnt = 0;
 	//printf("update func cnt: %d\n", updateFuncCnt++);
 }
@@ -1332,3 +1354,24 @@ int getObjectIdx(int robotIdx)
 	return minIdx;
 }
 
+void updateFuncWaypoint()
+{
+	static int cntWay = 0;
+	static int cntPlot = 0;
+	cntWay++;
+	if (cntWay % 100 == 0)
+		cntPlot++;
+	for (unsigned int i = 0; i < robotVector.size(); i++)
+	{
+		if (qWaypoint[i].size() > 0)
+		{
+			rManagerVector[i]->setJointVal(qWaypoint[i][cntPlot % qWaypoint[i].size()]);
+			if (gripObjectIdx[i] != -1 && attachObjectWaypoint[i][cntPlot % qWaypoint[i].size()])
+			{
+				objects[gripObjectIdx[i]]->GetBaseLink()->SetFrame(robotVector[i]->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() * Inv(Tobject2gripper[gripObjectIdx[i]]));
+				objects[gripObjectIdx[i]]->KIN_UpdateFrame_All_The_Entity();
+			}
+		}
+			
+	}
+}
