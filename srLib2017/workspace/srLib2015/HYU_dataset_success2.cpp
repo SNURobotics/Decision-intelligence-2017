@@ -40,7 +40,7 @@ WorkCell* workCell = new WorkCell();
 Eigen::VectorXd stageVal(3);
 
 // Robot
-IndyRobot* robot1 = new IndyRobot(1.0);
+IndyRobot* robot1 = new IndyRobot(0.0);
 IndyRobot* robot2 = new IndyRobot;
 Eigen::VectorXd jointVal(6);
 Eigen::VectorXd jointAcc(6);

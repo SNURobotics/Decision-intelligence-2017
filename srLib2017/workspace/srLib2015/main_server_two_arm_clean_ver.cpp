@@ -266,6 +266,9 @@ int main(int argc, char **argv)
 			if (isVision)
 				break;
 		}
+		// generate renderer
+		renderer->InitializeNode_2nd();
+		renderer->setUpdateFunc(updateFuncTotal);
 		static int renderCall = 0;
 		renderCall++;
 		printf("rendering called: %d\n", renderCall);
@@ -761,9 +764,6 @@ void communicationFunc(int argc, char **argv)
 
 			// rrt
 			rrtSetting();
-			// generate renderer
-			renderer->InitializeNode_2nd();
-			renderer->setUpdateFunc(updateFuncTotal);
 			//////////////////////////////////////////////////////////////////////
 			//rendering(argc, argv);
 			m.lock();

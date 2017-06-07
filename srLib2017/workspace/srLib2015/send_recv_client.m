@@ -32,8 +32,8 @@ fopen(client);
 % use test data
 
 robot1_way1 = [2.33487e-16	1	6.12323e-17	-9.4698e-33	-6.12323e-17	1	1	-2.33487e-16	3.55679e-33	-0.2981	-0.1529	0.6789	];
-robot1_way2 = [-1	4.22061e-09	-5.71878e-09	-4.22061e-09	-1	8.48822e-09	-5.71878e-09	8.48822e-09	1	-0.45378	-0.153346	0.8509	];
-robot1_way3 = [-1	3.68822e-09	-4.44613e-09	-3.68822e-09	-1	6.90343e-09	-4.44613e-09	6.90343e-09	1	-0.45378	0.2405	0.8509	];
+robot1_way2 = [-1	4.22061e-09	-5.71878e-09	-4.22061e-09	-1	8.48822e-09	-5.71878e-09	8.48822e-09	1	-0.45378	-0.153346	0.8509	- 0.2];
+robot1_way3 = [-1	3.68822e-09	-4.44613e-09	-3.68822e-09	-1	6.90343e-09	-4.44613e-09	6.90343e-09	1	-0.45378	0.2405	0.8509	- 0.2];
 
 
 robot_pos1 =robot1_way1(10:12);
@@ -126,7 +126,9 @@ end
 robot_gripper = 0;
 char_robot_gripper = [num2str(robot_gripper)];
 char_robot_gripper = [char_robot_gripper; 'd']; 
-
+robot_gripper_on = 1;
+char_robot_gripper_on = [num2str(robot_gripper_on)];
+char_robot_gripper_on = [char_robot_gripper_on; 'd']; 
 % robot_ft = [0.2 0.33 0.54 1.22 30.22 20.5];
 robot_ft = zeros(1,6);
 char_robot_ft = [];
@@ -152,8 +154,8 @@ send_data3 = ['S';'3'; 'd';num2str(3); 'd';num2str(3);'d';char_robot_pos1; char_
     char_robot_pos2; char_robot_rot2; char_robot_gripper; char_robot_ft;
     char_robot_pos3; char_robot_rot3; char_robot_gripper; char_robot_ft;'1';'d';
     char_robot2_pos1; char_robot2_rot1; char_robot_gripper; char_robot_ft; 
-    char_robot2_pos2; char_robot2_rot2; char_robot_gripper; char_robot_ft;
-    char_robot2_pos3; char_robot2_rot3; char_robot_gripper; char_robot_ft;'1'];
+    char_robot2_pos2; char_robot2_rot2; char_robot_gripper_on; char_robot_ft;
+    char_robot2_pos3; char_robot2_rot3; char_robot_gripper_on; char_robot_ft;'1'];
 
 
 fwrite(client,send_data3);
@@ -276,7 +278,7 @@ Tbusbar1 = [ 0.000  -0.540   0.841   0.281  ;
 Tbusbar2 = Tx10 * Tbusbar1;
 Tbusbar3 = Tx10 * Tbusbar2;
 
-Trobot2_way2 = [-1	-1.80851e-07	-2.87912e-13	1.80851e-07	-1	-1.83166e-13	-2.8796e-13	-1.83196e-13	1	-0.75378	-0.2395	0.8509		];
+Trobot2_way2 = [-1	-1.80851e-07	-2.87912e-13	1.80851e-07	-1	-1.83166e-13	-2.8796e-13	-1.83196e-13	1	-0.75378	-0.2395	0.8509-0.2		];
 Trobot2_way2 = reshape(Trobot2_way2, 3,4);
 Trobot2_way2 = [Trobot2_way2; 0,0,0,1];
 Tbusbar2gripper = [0.000   1.000   0.000   0.000  ;
