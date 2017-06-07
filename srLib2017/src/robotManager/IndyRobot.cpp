@@ -299,7 +299,7 @@ void IndyRobot::AssembleModel(double gripperRot)
 	gWeldJoint[Indy_Index::WELDJOINT_GRIP_MARKER]->SetParentLink(&gLink[Indy_Index::SENSOR]);
 	gWeldJoint[Indy_Index::WELDJOINT_GRIP_MARKER]->SetChildLink(&gMarkerLink[Indy_Index::MLINK_GRIP]);
 	gWeldJoint[Indy_Index::WELDJOINT_GRIP_MARKER]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
-	gWeldJoint[Indy_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(EulerZYX(Vec3(SR_PI_HALF - gripperRot, 0.0, -SR_PI_HALF), Vec3(0.0, 0.0, -0.128)));		// consider offset for gripper assembly
+	gWeldJoint[Indy_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, -SR_PI_HALF), Vec3(0.0, 0.0, -0.128)));		// consider offset for gripper assembly
 
 	////// old model
 	//gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->SetParentLink(&gLink[Indy_Index::ENDEFFECTOR]);

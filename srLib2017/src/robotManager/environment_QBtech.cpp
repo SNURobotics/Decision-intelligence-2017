@@ -661,8 +661,10 @@ Insert::~Insert()
 
 void Insert::AssembleModel()
 {
-	m_numLink = 1;
+	m_visionOffset = SE3(Vec3(-0.006, 0.0, 0.0245*0.5));
+	m_numLink = 2;
 	m_numCollision =2+4;
+	m_numWeldJoint = 1;
 	int collisionCount = 0;
 
 	for (int i = 0; i < m_numLink; i++)
@@ -675,6 +677,12 @@ void Insert::AssembleModel()
 		srCollision* temp = new srCollision;
 		m_ObjCollision.push_back(*temp);
 	}
+	for (int i = 0; i < m_numWeldJoint; i++)
+	{
+		srWeldJoint* temp = new srWeldJoint;
+		m_ObjWeldJoint.push_back(*temp);
+	}
+
 
 	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
@@ -717,7 +725,12 @@ void Insert::AssembleModel()
 	collisionCount++;
 
 
-	this->SetBaseLink(&m_ObjLink[0]);
+	m_ObjLink[1].SetInertia(Inertia(0.00001));
+	m_ObjLink[1].GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	m_ObjWeldJoint[0].SetChildLink(&m_ObjLink[0]);
+	m_ObjWeldJoint[0].SetParentLink(&m_ObjLink[1]);
+
+	this->SetBaseLink(&m_ObjLink[1]);
 	this->SetBaseLinkType(srSystem::KINEMATIC);
 	this->SetSelfCollision(false);
 

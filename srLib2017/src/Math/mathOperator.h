@@ -360,6 +360,13 @@ static SE3 SKKUtoSE3(const vector<double>& ori, const vector<double>& pos)
 	return SE3(ori[0], ori[1], ori[2], ori[3], ori[4], ori[5], ori[6], ori[7], ori[8], pos[0], pos[1], pos[2]);
 }
 
+static double distSE3(const SE3 T1, const SE3 T2)
+{
+	double dist_p = Norm(T1.GetPosition() - T2.GetPosition());
+	double dist_R = Norm(Log(Inv(T1.GetOrientation()) * T2.GetOrientation()));
+	return dist_p + dist_R;
+}
+
 //
 //static std::vector<pair<Vec3, SE3>> makeCylinderWithBoxes(SE3 cylinderCenter, double cylinderRadius, double cylinderHeight, double thickness, double epsilon, int numBox)
 //{
