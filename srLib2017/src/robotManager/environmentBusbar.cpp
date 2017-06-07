@@ -255,9 +255,9 @@ void BusBar_HYU::AssembleModel()
 {
 
 
-	m_numLink = 1;
+	m_numLink = 2;
 	m_numCollision = 2; // to be modifed
-
+	m_numWeldJoint = 1;
 
 	for (int i = 0; i < m_numLink; i++)
 	{
@@ -268,6 +268,11 @@ void BusBar_HYU::AssembleModel()
 	{
 		srCollision* temp = new srCollision;
 		m_ObjCollision.push_back(*temp);
+	}
+	for (int i = 0; i < m_numWeldJoint; i++)
+	{
+		srWeldJoint* temp = new srWeldJoint;
+		m_ObjWeldJoint.push_back(*temp);
 	}
 
 	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
@@ -287,6 +292,10 @@ void BusBar_HYU::AssembleModel()
 	
 	m_ObjLink[0].GetGeomInfo().SetColor(0.3f, 0.3f, 0.3f, 1.0f);
 
+	m_ObjLink[1].SetInertia(Inertia(0.00000001));
+	m_ObjLink[1].GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	m_ObjWeldJoint[0].SetChildLink(&m_ObjLink[0]);
+	m_ObjWeldJoint[0].SetParentLink(&m_ObjLink[1]);
 
 	double m = 0.29718;
 	double ratio = 0.3;		// adjust mass parameter
@@ -294,8 +303,8 @@ void BusBar_HYU::AssembleModel()
 	Inertia busbarInertia(84440.59e-9*ratio, 121063.91e-9*ratio, 90554.97e-9*ratio, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, m*ratio);
 	m_ObjLink[0].SetInertia(busbarInertia.Transform(SE3(-r)));
 
-	this->SetBaseLink(&m_ObjLink[0]);
-	this->SetBaseLinkType(srSystem::DYNAMIC);
+	this->SetBaseLink(&m_ObjLink[1]);
+	this->SetBaseLinkType(srSystem::KINEMATIC);
 	this->SetSelfCollision(false);
 }
 

@@ -162,6 +162,13 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+<<<<<<< HEAD
+=======
+    <ClCompile Include="main_server_two_arm_forceCtrl.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+>>>>>>> 22f01e3d88b333425af533d8cfd04737e4fdf27a
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\workspace\srLib2015\2ndRenderer.h" />

@@ -337,7 +337,7 @@ char *Server::RecevData()
 		else {
 			char *name = (char *)malloc(sizeof(char)*BUFFER_SIZE);
 			printf(test_str[index]);
-			printf("             asfda\n");
+			printf("             ...receivedData\n");
 			strcpy(name, test_str[index]);
 			int len = strlen(name);
 			if (name[len - 1] == '\n')

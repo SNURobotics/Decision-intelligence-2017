@@ -173,9 +173,10 @@ void WorkCell::AssembleModel()
 
 	m_ObjCollision[1].GetGeomInfo().SetDimension(Vec3(0.51, 2.068, 0.1511));
 	m_ObjLink[1].AddCollision(&m_ObjCollision[1]);
-	m_ObjCollision[1].SetLocalFrame(SE3(Vec3(-0.005, -0.29972, 1.03555)));
+	double trans_x = 0.01;
+	m_ObjCollision[1].SetLocalFrame(SE3(Vec3(-0.005 + trans_x, -0.29972, 1.03555)));
 	m_ObjCollision[72].GetGeomInfo().SetDimension(Vec3(0.01, 0.02, 0.05));
-	m_ObjCollision[72].SetLocalFrame(SE3(Vec3(0.5*(0.44 - 0.01) - 0.005, 0.5*2.068 - 0.175 - 0.29972, 0.5*(0.1511 + 0.05)+ 1.03555)));
+	m_ObjCollision[72].SetLocalFrame(SE3(Vec3(0.5*(0.44 - 0.01) - 0.005 + trans_x, 0.5*2.068 - 0.175 - 0.29972, 0.5*(0.1511 + 0.05)+ 1.03555)));
 	m_ObjCollision[73].GetGeomInfo().SetDimension(Vec3(0.01, 0.02, 0.05));
 	m_ObjCollision[73].SetLocalFrame(SE3(Vec3(-0.5*(0.44 - 0.01) - 0.005, 0.5*2.068 - 0.175 - 0.29972, 0.5*(0.1511 + 0.05)+ 1.03555)));
 	m_ObjLink[1].AddCollision(&m_ObjCollision[72]);

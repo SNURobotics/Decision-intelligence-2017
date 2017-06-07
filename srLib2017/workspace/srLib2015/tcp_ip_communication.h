@@ -392,7 +392,7 @@ char* makeJointCommand(vector<vector<Eigen::VectorXd>>& jointTraj, desired_datas
 
 char* makeJointCommand_SingleRobot(vector<vector<Eigen::VectorXd>>& jointTraj, desired_dataset& hyu_desired_dataset, int robotFlag)
 {
-	char *pbuffer;
+	char pbuffer[100];
 
 	//char hyu_data_flag;
 	char tmp_buffer[255];
@@ -404,7 +404,15 @@ char* makeJointCommand_SingleRobot(vector<vector<Eigen::VectorXd>>& jointTraj, d
 	{
 		totalNum += jointTraj[i].size();
 	}
-	string tmp_data = "J" + to_string(robotFlag)+"d"+to_string(totalNum) + "d";
+
+
+	char tmp_data[30000] = "J";
+	char plus[256];
+	sprintf(plus, "%dd", robotFlag);
+	strcat(tmp_data, plus);
+	sprintf(plus, "%dd", totalNum);
+	strcat(tmp_data, plus);
+	//string tmp_data = "J" + to_string(robotFlag)+"d"+to_string(totalNum) + "d";
 
 	//Robot joint trajectory
 	for (unsigned int i = 0; i < jointTraj.size(); i++)
@@ -413,17 +421,28 @@ char* makeJointCommand_SingleRobot(vector<vector<Eigen::VectorXd>>& jointTraj, d
 		{
 			for (int k = 0; k < jointTraj[i][j].size(); k++)
 			{
-				pbuffer = _gcvt(jointTraj[i][j][k], digit_num, tmp_buffer);
-				tmp_data = tmp_data + pbuffer;
-				tmp_data = tmp_data + div;
+				strcpy(pbuffer, "");
+				strcat(pbuffer,_gcvt(jointTraj[i][j][k], digit_num, tmp_buffer));
+				//string add = string(pbuffer);
+				//tmp_data = tmp_data + add;
+				strcat(tmp_data, pbuffer);
+				sprintf(plus, "%c", div);
+				strcat(tmp_data, plus);
+
+				//tmp_data = tmp_data + div;
 			}
+			strcpy(pbuffer, "");
+			strcat(pbuffer, _gcvt(hyu_desired_dataset.robot_gripper[i], digit_num, tmp_buffer));
 			//pbuffer = _gcvt(hyu_desired_dataset.robot_gripper[i], digit_num, tmp_buffer);
-			//tmp_data = tmp_data + pbuffer;
+			strcat(tmp_data, pbuffer);
+			sprintf(plus, "%c", div);
+			strcat(tmp_data, plus);
+			//tmp_data = tmp_data + string(pbuffer);
 			//tmp_data = tmp_data + div;
 		}
 	}
-	char *send_data = new char[tmp_data.length() + 1];
-	strcpy(send_data, tmp_data.c_str());
+	char *send_data = new char[strlen(tmp_data) + 1];
+	strcpy(send_data, tmp_data);
 	return send_data;
 };
 
