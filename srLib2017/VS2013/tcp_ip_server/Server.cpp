@@ -89,9 +89,9 @@ DWORD WINAPI SendClient(LPVOID arg)
 				continue;
 			if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT02) == 0 && (sendBuf[0] == 'I' || sendBuf[0] == 'V' || sendBuf[0] == 'R' || sendBuf[1] == '1'))
 				continue;
-			else if (strcmp(inet_ntoa(clientaddr.sin_addr), HANYANG) == 0 && (sendBuf[0] == 'G' || sendBuf[0] == 'I' || sendBuf[0] == 'P' || sendBuf[0] == 'S' || sendBuf[0] == 'J' || sendBuf[0] == 'T'))
+			else if (strcmp(inet_ntoa(clientaddr.sin_addr), HANYANG) == 0 && (sendBuf[0] == 'G' || sendBuf[0] == 'I' || sendBuf[0] == 'P' || sendBuf[0] == 'S' || sendBuf[0] == 'J' || sendBuf[0] == 'T' || sendBuf[0] == 'D'))
 				continue;
-			else if (strcmp(inet_ntoa(clientaddr.sin_addr), SUNGGEUN) == 0 && (sendBuf[0] == 'V' || sendBuf[0] == 'G' || sendBuf[0] == 'R' || sendBuf[0] == 'S' || sendBuf[0] == 'P' || sendBuf[0] == 'J' || sendBuf[0] == 'T'))
+			else if (strcmp(inet_ntoa(clientaddr.sin_addr), SUNGGEUN) == 0 && (sendBuf[0] == 'V' || sendBuf[0] == 'G' || sendBuf[0] == 'R' || sendBuf[0] == 'S' || sendBuf[0] == 'P' || sendBuf[0] == 'J' || sendBuf[0] == 'T' || sendBuf[0] == 'D'))
 				continue;
 			else
 				SendMessageToClient(sendBuf, &client_sock);
