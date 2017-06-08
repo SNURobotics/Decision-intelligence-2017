@@ -44,11 +44,12 @@ bool isJigConnectedToWorkCell = true;
 
 
 // Workspace
-WorkCell* workCell = new WorkCell;
+int workcell_mode = 2;
+WorkCell* workCell = new WorkCell(workcell_mode);
 Eigen::VectorXd stageVal(3);
 
 // Robot
-IndyRobot* robot1 = new IndyRobot;
+IndyRobot* robot1 = new IndyRobot(false);
 IndyRobot* robot2 = new IndyRobot;
 vector<IndyRobot*> robotVector(2);
 
@@ -74,9 +75,6 @@ vector<Eigen::VectorXd> goalPos(0);
 
 
 vector<SE3> wayPoints(0);
-
-Eigen::VectorXd homePosRobot1 = Eigen::VectorXd::Zero(6);
-Eigen::VectorXd homePosRobot2 = Eigen::VectorXd::Zero(6);
 
 SE3 initBusbar = SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.5)));
 
@@ -203,15 +201,13 @@ int main(int argc, char **argv)
 	
 	srand(time(NULL));
 	// Robot home position
-	homePosRobot1[1] = -SR_PI_HALF; homePosRobot1[3] = SR_PI_HALF; homePosRobot1[4] = -0.5 * SR_PI;
-	homePosRobot2[1] = -SR_PI_HALF; homePosRobot2[3] = SR_PI_HALF; homePosRobot2[4] = -0.5 * SR_PI;
 	// workcell robot initial config
 	Eigen::VectorXd jointVal(6);
 	jointVal.setZero();
 	jointVal[0] = 0.0; jointVal[1] = -SR_PI_HALF; jointVal[2] = 80.0 / 90.0*SR_PI_HALF; jointVal[3] = SR_PI_HALF;
 	//homePosRobot1 = jointVal;
-	homePosRobotVector[0] = homePosRobot1;
-	homePosRobotVector[1] = homePosRobot2;
+	homePosRobotVector[0] = robot1->homePos;
+	homePosRobotVector[1] = robot2->homePos;
 	// environment
 	workspaceSetting();
 	
@@ -233,8 +229,8 @@ int main(int argc, char **argv)
 		// workcell robot initial config
 		//homePosRobot2.setZero();
 		//homePosRobot2[0] = 0.0; homePosRobot2[1] = -SR_PI_HALF; homePosRobot2[2] = 80.0 / 90.0*SR_PI_HALF; homePosRobot2[3] = SR_PI_HALF;
-		rManager1->setJointVal(homePosRobot1);
-		rManager2->setJointVal(homePosRobot2);
+		rManager1->setJointVal(robot1->homePos);
+		rManager2->setJointVal(robot2->homePos);
 		Eigen::VectorXd gripInput(2);
 		gripInput[0] = -0.005;
 		gripInput[1] = 0.005;
@@ -321,8 +317,8 @@ void initDynamics()
 void updateFunc()
 {
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
-	rManager2->setJointVal(homePosRobot2);
-	rManager1->setJointVal(homePosRobot1);
+	rManager2->setJointVal(robot2->homePos);
+	rManager1->setJointVal(robot1->homePos);
 	static double th = 0.0;
 	busbar[0]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, 2.0 * sin(th))));
 	th += 0.1;
@@ -334,8 +330,8 @@ void updateFuncVision()
 {
 	//gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 	// robot to homePos
-	rManager2->setJointVal(homePosRobot2);
-	rManager1->setJointVal(homePosRobot1);
+	rManager2->setJointVal(robot2->homePos);
+	rManager1->setJointVal(robot1->homePos);
 	//printf("Vision Update func called\n");
 	//cout << Trobotbase1 % jigAssem->GetBaseLink()->GetFrame() << endl;
 	//cout << Trobotbase1 % busbar[0]->GetBaseLink()->GetFrame() << endl;
@@ -360,8 +356,13 @@ void updateFuncRobotState()
 }
 void environmentSetting_HYU2(bool connect)
 {
-	//SE3 Tbase = SE3(Vec3(0.025, 1.095, 1.176));		// when stage attached
-	SE3 Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.009));		// when stage removed
+	SE3 Tbase;
+	if (workcell_mode == 1)
+		Tbase = SE3(Vec3(0.025, 1.095, 1.176));		// when stage attached
+	else if (workcell_mode == 2)
+		Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.099 + 0.009));	// when only stage4 is used
+	else
+		Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.009));		// when stage removed
 	double z_angle = (double)rand() / RAND_MAX * 1.0;
 	double x_trans = -(double)rand() / RAND_MAX * 0.1;
 	double y_trans = (double)rand() / RAND_MAX * 0.1;
@@ -463,18 +464,18 @@ void rrtSetting()
 
 void RRT_problemSetting_SingleRobot(Eigen::VectorXd init, vector<SE3> wayPoints, vector<bool> includeOri, vector<bool> attachObject, vector<bool>& waypointFlag, int robotFlag)
 {
-	Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
+	//Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
 	// elbow up
-	qInit[1] = -0.65*SR_PI;
-	qInit[2] = 0.3*SR_PI;
-	qInit[3] = 0.5*SR_PI_HALF;
+	//qInit[1] = -0.65*SR_PI;
+	//qInit[2] = 0.3*SR_PI;
+	//qInit[3] = 0.5*SR_PI_HALF;
 	// elbow down
 	//qInit[2] = 0.6*SR_PI_HALF;
 	//qInit[4] = 0.6*SR_PI_HALF;
 	//qInit[3] = SR_PI_HALF;
 
-	Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
-	qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
+	//Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
+	//qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
 
 	int flag;
 	initPos.resize(0);
@@ -488,9 +489,9 @@ void RRT_problemSetting_SingleRobot(Eigen::VectorXd init, vector<SE3> wayPoints,
 	qWaypoint[robotFlag - 1].resize(0);
 	for (unsigned int i = 0; i < wayPoints.size(); i++)
 	{
-		qtemp = rManagerVector[robotFlag - 1]->inverseKin(TrobotbaseVector[0] * wayPoints[i], &robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, qInit2);
-		if (flag != 0)
-			qtemp = rManagerVector[robotFlag - 1]->inverseKin(TrobotbaseVector[0] * wayPoints[i], &robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, qInit);
+		qtemp = rManagerVector[robotFlag - 1]->inverseKin(TrobotbaseVector[0] * wayPoints[i], &robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, robotVector[robotFlag - 1]->qInvKinInit);
+		//if (flag != 0)
+		//	qtemp = rManagerVector[robotFlag - 1]->inverseKin(TrobotbaseVector[0] * wayPoints[i], &robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, qInit);
 		if (flag != 0)
 			qtemp = rManagerVector[robotFlag - 1]->inverseKin(TrobotbaseVector[0] * wayPoints[i], &robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, initPos[initPos.size() - 1]);
 		printf("%d-th init inv kin flag: %d\n", i, flag);
@@ -874,8 +875,8 @@ void communicationFunc(int argc, char **argv)
 			robotManagerSetting();						// robot manager setting
 
 			// workcell robot initial config
-			rManager2->setJointVal(homePosRobot2);
-			rManager1->setJointVal(homePosRobot1);
+			rManager2->setJointVal(robot2->homePos);
+			rManager1->setJointVal(robot1->homePos);
 			Eigen::VectorXd gripInput(2);
 			gripInput[0] = -0.005;
 			gripInput[1] = 0.005;

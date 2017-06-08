@@ -12,7 +12,7 @@
 class WorkCell : public Object
 {
 public:
-	WorkCell();
+	WorkCell(int mode = 0);
 	~WorkCell();
 	void AssembleModel();
 	void setStageVal(const Eigen::VectorXd& stageVal);
@@ -20,4 +20,5 @@ public:
 
 	std::vector<srRevoluteJoint*> rJoint;
 	std::vector<srPrismaticJoint*> pJoint;
+	int m_mode;
 };

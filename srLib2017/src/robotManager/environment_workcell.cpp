@@ -2,8 +2,9 @@
 #include "common\utils.h"
 #include "environment_workcell.h"
 
-WorkCell::WorkCell()
+WorkCell::WorkCell(int mode)
 {
+	m_mode = mode;
 	AssembleModel();
 }
 
@@ -275,8 +276,7 @@ void WorkCell::AssembleModel()
 	pJoint.resize(0);
 	rJoint.resize(0);
 
-	bool includeStage = false;
-	if (includeStage)
+	if (m_mode == 1)
 	{
 		srPrismaticJoint* temp = new srPrismaticJoint;
 		pJoint.push_back(temp);
@@ -346,7 +346,25 @@ void WorkCell::AssembleModel()
 		rJoint[0]->SetChildLinkFrame(SE3(Vec3(0.025, 1.095, 0.0)));
 		rJoint[0]->SetActType(srJoint::ACTTYPE::HYBRID);
 	}
+	else if (m_mode == 2)
+	{
+		m_ObjWeldJoint[3].SetParentLink(&m_ObjLink[0]);
+		m_ObjWeldJoint[3].SetChildLink(&m_ObjLink[7]);
 
+
+		m_ObjLink[7].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+		m_ObjLink[7].GetGeomInfo().SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.91 + 0.099 + 0.008 - 1.176)) * TsrLib2cad);
+		m_ObjLink[7].GetGeomInfo().SetFileName("../../../workspace/robot/workcell_3ds/XYZ_stage_4.3ds");
+		m_ObjLink[7].GetGeomInfo().SetColor(0.25f, 0.25f, 0.25f, 1.0f);
+
+		m_ObjCollision[5].GetGeomInfo().SetDimension(Vec3(0.5, 0.5, 0.008));
+		m_ObjCollision[5].SetLocalFrame(SE3(Vec3(0.025, 1.095, 0.91 + 0.099 + 0.5*0.008)));
+		m_ObjLink[7].AddCollision(&m_ObjCollision[5]);
+
+		m_ObjCollision[6].GetGeomInfo().SetDimension(Vec3(0.135, 0.166, 0.099));
+		m_ObjCollision[6].SetLocalFrame(SE3(Vec3(0.025, 1.095, 0.91 + 0.5*0.099)));
+		m_ObjLink[7].AddCollision(&m_ObjCollision[6]);
+	}
 
 	this->SetBaseLink(&m_ObjLink[0]);
 	this->SetBaseLinkType(srSystem::KINEMATIC);
