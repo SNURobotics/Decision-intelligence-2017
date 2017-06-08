@@ -39,6 +39,7 @@ JigAssem_QB_bar* jigAssem = new JigAssem_QB_bar(false);
 vector<BusBar_HYU*> busbar(8);
 vector<Insert*> ctCase(1);
 vector<Object*> objects(busbar.size() + ctCase.size());
+vector<SE3> TobjectsInitSimul(objects.size());
 bool isJigConnectedToWorkCell = true;
 
 
@@ -157,6 +158,7 @@ vector<int> gripObjectIdxRender(2, -1);		// save which busbar is moving with eac
 // save last joint value
 vector<Eigen::VectorXd> lastJointVal_multi(2);
 // save initial and final busbar SE(3)
+
 vector<SE3> TinitObjects_multi(2);
 vector<SE3> TinitObjects_multiRender(2);
 vector<bool> initialObjectSaved(2, false);			// save if initial busbar location is saved (saved when busbar is moving)
@@ -632,8 +634,9 @@ void objectSetting()
 			objects[i] = ctCase[i - busbar.size()];
 			Tobject2gripper[i] = TctCase2gripper;
 		}
+		TobjectsInitSimul[i] = objects[i]->GetBaseLink()->GetFrame();
 	}
-
+	
 }
 
 void setEnviromentFromVision(const vision_data & skku_dataset, int& bNum, int& cNum)
@@ -794,6 +797,7 @@ void communicationFunc(int argc, char **argv)
 
 		//Receiving data from HYU client
 		//recv_data = serv.RecevData();
+
 		strcpy(hyu_data, "");
 		strcat(hyu_data, serv.RecevData());
 
@@ -1130,6 +1134,23 @@ void communicationFunc(int argc, char **argv)
 				}
 			}
 		}
+		else if (hyu_data_flag == 'A') 
+		{
+			char temp_char[2];
+			sprintf(temp_char, "%c", hyu_data[1]);
+			int robotFlag = atoi(temp_char);
+			initialPlanning[robotFlag - 1] = true;
+			for (unsigned int i = 0; i < objects.size(); i++)
+			{
+				objects[i]->setBaseLinkFrame(TobjectsInitSimul[i]);
+				objects[i]->KIN_UpdateFrame_All_The_Entity();
+			}
+			isHYUPlanning = false;
+			isVision = true;
+			isRobotState = false;
+			isWaypoint = false;
+		}
+
 		else if (hyu_data_flag == 'P') {
 			isHYUPlanning = false;		// to turn off rendering
 			vector<bool> attachObject(0);		// grip status from received data
