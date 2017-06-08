@@ -7,7 +7,7 @@ load('send_data.mat');
 
 client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
 fopen(client);
-idx = 5;
+idx = 1;
 fwrite(client,senddata_set{idx});
 
 I33 = reshape(eye(3),9,1);
@@ -29,6 +29,8 @@ send_data = [send_data; num2str(0)'; 'd'];
 for i = 1:6
     send_data = [send_data; num2str(ft(i))'; 'd'];
 end
+send_data = [send_data; num2str(0)'; 'd'];
+send_data = [send_data; num2str(0)'; 'd'];
 for i = 1:6
     send_data = [send_data; num2str(joint(i))'; 'd'];
 end
@@ -44,6 +46,8 @@ send_data2 = [send_data2; num2str(0)'; 'd'];
 for i = 1:6
     send_data2 = [send_data2; num2str(ft(i))'; 'd'];
 end
+send_data2 = [send_data2; num2str(0)'; 'd'];
+send_data2 = [send_data2; num2str(0)'; 'd'];
 for i = 1:6
     send_data2 = [send_data2; num2str(joint(i))'; 'd'];
 end

@@ -165,6 +165,7 @@ vector<bool> initialObjectSaved(2, false);			// save if initial busbar location 
 vector<bool> initialObjectSavedRender(2, false);
 vector<SE3>	TlastObjects_multi(2);
 vector<bool> initialPlanning(2, true);
+vector<bool> startPlanningFromCurRobotState(2, false);
 vector<bool> attachObjRender(0);
 vector<vector<bool>> attachObjRender_multi(2);
 vector<Eigen::VectorXd> homePosRobotVector(2);
@@ -192,7 +193,7 @@ int nway = 0;
 vector<srLink*> obstacle(0);
 vector<srWeldJoint*> wJoint(0);
 
-
+bool useSleep = false;
 
 int main(int argc, char **argv)
 {
@@ -669,7 +670,7 @@ void setEnviromentFromVision(const vision_data & skku_dataset, int& bNum, int& c
 			jigAssem->GetBaseLink()->SetFrame(Trobotbase1 * SKKUtoSE3(skku_dataset.objOri[i], skku_dataset.objPos[i]) * jigAssem->m_visionOffset);
 			jigAssem->SetBaseLinkType(srSystem::FIXED);
 		}
-		else
+		else if (skku_dataset.objID[i] != 0)
 			printf("object ID is outside range!!!\n");
 	}
 	bNum = bIdx;
@@ -797,7 +798,6 @@ void communicationFunc(int argc, char **argv)
 
 		//Receiving data from HYU client
 		//recv_data = serv.RecevData();
-
 		strcpy(hyu_data, "");
 		strcat(hyu_data, serv.RecevData());
 
@@ -811,17 +811,20 @@ void communicationFunc(int argc, char **argv)
 		if (hyu_data_flag == 'I')
 		{
 			serv.SendMessageToClient("I");
-			Sleep(50);
+			if (useSleep)
+				Sleep(50);
 		}
 		else if (hyu_data_flag == 'D')
 		{
 			serv.SendMessageToClient("D");
-			Sleep(50);
+			if (useSleep)
+				Sleep(50);
 		}
 		else if (hyu_data_flag == 'F')
 		{
 			serv.SendMessageToClient("F");
-			Sleep(50);
+			if (useSleep)
+				Sleep(50);
 		}
 
 		else if (hyu_data_flag == 'V')
@@ -833,7 +836,8 @@ void communicationFunc(int argc, char **argv)
 			for (unsigned int p = 0; p <= strlen(hyu_data); p++)
 				copy[p] = hyu_data[p];
 			serv.SendMessageToClient(copy);
-			Sleep(50);
+			if (useSleep)
+				Sleep(50);
 			printf("%s\n", hyu_data);
 			readSKKUvision(hyu_data, skku_dataset);
 
@@ -895,7 +899,8 @@ void communicationFunc(int argc, char **argv)
 			//send_data = getSimulationState(objects);
 			//serv.SendMessageToClient(send_data);	
 			serv.SendMessageToClient(hyu_data);
-			Sleep(50);
+			if (useSleep)
+				Sleep(50);
 		}
 		else if (hyu_data_flag == 'R')
 		{
@@ -904,22 +909,25 @@ void communicationFunc(int argc, char **argv)
 			for (unsigned int p = 0; p <= strlen(hyu_data); p++)
 				copy[p] = hyu_data[p];
 			serv.SendMessageToClient(copy);
-			Sleep(50);
+			if (useSleep)
+				Sleep(50);
 			printf("%s\n", hyu_data);
 			int robotFlag = 0;
 			robotFlag = readRobotCurState(hyu_data, robot_state);
 
 			if (robotFlag == 1)
 			{
-				rManager1->setJointVal(robot_state.robot_joint);
+				//rManager1->setJointVal(robot_state.robot_joint);
 				serv.SendMessageToClient("T1");
-				Sleep(50);
+				if (useSleep)
+					Sleep(50);
 			}
 			else if (robotFlag == 2)
 			{
-				rManager2->setJointVal(robot_state.robot_joint);
+				//rManager2->setJointVal(robot_state.robot_joint);
 				serv.SendMessageToClient("T2");
-				Sleep(50);
+				if (useSleep)
+					Sleep(50);
 			}
 			else
 				printf("Wrong robot flag is given (Flag = 'R')!!!!!!\n");
@@ -956,7 +964,8 @@ void communicationFunc(int argc, char **argv)
 				{
 					// send to robot
 					serv.SendMessageToClient(copy);
-					Sleep(50);
+					if (useSleep)
+						Sleep(50);
 					printf(copy);
 					printf("\n");
 					if (hyu_data_output.second[0] == 1) // when gripper input comes
@@ -967,7 +976,8 @@ void communicationFunc(int argc, char **argv)
 					char temp_char[3];
 					sprintf(temp_char, "P%d", hyu_data_output.first);
 					serv.SendMessageToClient(temp_char);
-					Sleep(50);
+					if (useSleep)
+						Sleep(50);
 					//string tempP = "P" + to_string(hyu_data_output.first);
 					//char* tempPchar = (char*)malloc(sizeof(char)*2);
 					//tempPchar = strcpy(tempPchar, tempP.c_str());
@@ -1136,19 +1146,30 @@ void communicationFunc(int argc, char **argv)
 		}
 		else if (hyu_data_flag == 'A') 
 		{
-			char temp_char[2];
-			sprintf(temp_char, "%c", hyu_data[1]);
-			int robotFlag = atoi(temp_char);
-			initialPlanning[robotFlag - 1] = true;
-			for (unsigned int i = 0; i < objects.size(); i++)
-			{
-				objects[i]->setBaseLinkFrame(TobjectsInitSimul[i]);
-				objects[i]->KIN_UpdateFrame_All_The_Entity();
-			}
 			isHYUPlanning = false;
 			isVision = true;
 			isRobotState = false;
 			isWaypoint = false;
+			char temp_char[2];
+			sprintf(temp_char, "%c", hyu_data[1]);
+			int robotFlag = atoi(temp_char);
+			sprintf(temp_char, "%c", hyu_data[2]);
+			int objectMaintainFlag = atoi(temp_char);
+			if (objectMaintainFlag == 0)
+			{
+				for (unsigned int i = 0; i < objects.size(); i++)
+				{
+					objects[i]->setBaseLinkFrame(TobjectsInitSimul[i]);
+					objects[i]->KIN_UpdateFrame_All_The_Entity();
+				}
+				for (unsigned int i = 0; i < gripObjectIdx.size(); i++)
+					gripObjectIdx[i] = -1;
+				initialPlanning[robotFlag - 1] = true;
+			}
+			else
+				startPlanningFromCurRobotState[robotFlag - 1] = true;
+
+			
 		}
 
 		else if (hyu_data_flag == 'P') {
@@ -1171,7 +1192,8 @@ void communicationFunc(int argc, char **argv)
 				//char* tempchar = (char *)malloc(sizeof(char) * 3);
 				//strcpy(tempchar, temp_char);
 				//serv.SendMessageToClient(tempchar);
-				Sleep(50);
+				if (useSleep)
+					Sleep(50);
 
 				// RRT problem setting
 				// decide initial point (read from robot for initial planning, use last joint val otherwise)
@@ -1180,7 +1202,11 @@ void communicationFunc(int argc, char **argv)
 					planningInit = robot_state.robot_joint;
 				else
 				{
-					planningInit = lastJointVal_multi[robotFlag - 1];
+					if (startPlanningFromCurRobotState[robotFlag - 1])
+						planningInit = robot_state.robot_joint;
+					else
+						planningInit = lastJointVal_multi[robotFlag - 1];
+					startPlanningFromCurRobotState[robotFlag - 1] = false;
 					if (gripObjectIdx[robotFlag - 1] != -1 && distSE3(TinitObjects_multi[robotFlag - 1], TlastObjects_multi[robotFlag - 1]) > 1.0e-5)		// move busbar to its last location when releasing
 					{
 						objects[gripObjectIdx[robotFlag - 1]]->setBaseLinkFrame(TlastObjects_multi[robotFlag - 1]);
@@ -1218,7 +1244,8 @@ void communicationFunc(int argc, char **argv)
 					strcat(send_data, makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag));
 					//char* send_data = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
 					serv.SendMessageToClient(send_data);
-					Sleep(50);
+					if (useSleep)
+						Sleep(50);
 					printf("%s\n", send_data);
 					if (attachobject.size() > 0 && attachobject[attachobject.size() - 1])
 						gripState_multi[robotFlag - 1] = 1;
@@ -1240,7 +1267,8 @@ void communicationFunc(int argc, char **argv)
 		}
 		/*hyu_data[0] = '\0';*/
 		hyu_data_flag = ' ';
-		Sleep(100);
+		if (useSleep)
+			Sleep(50);
 	}
 }
 
