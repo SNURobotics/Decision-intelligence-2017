@@ -519,7 +519,7 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 	int start = 0;
 	int end = goalPos.size();
 	vector<bool> feas(2);
-	vector<vector<Eigen::VectorXd>> traj(0);
+	vector<vector<Eigen::VectorXd>> traj (0);
 	//Ttraj.resize(0);
 	//idxTraj.resize(0);
 	printf("waypoints: \n");
