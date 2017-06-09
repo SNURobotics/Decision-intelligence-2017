@@ -446,6 +446,52 @@ char* makeJointCommand_SingleRobot(vector<vector<Eigen::VectorXd>>& jointTraj, d
 	return send_data;
 };
 
+char* makeForceResult(vector<vector<Eigen::VectorXd>>& forceTraj, int robotFlag)
+{
+	char pbuffer[100];
+
+	//char hyu_data_flag;
+	char tmp_buffer[255];
+	char div = 'd';
+
+	int digit_num = 5;
+	unsigned int totalNum = 0;
+	for (unsigned int i = 0; i < forceTraj.size(); i++)
+	{
+		totalNum += forceTraj[i].size();
+	}
+
+
+	char tmp_data[30000] = "M";
+	char plus[256];
+	sprintf(plus, "%dd", robotFlag);
+	strcat(tmp_data, plus);
+	sprintf(plus, "%dd", totalNum);
+	strcat(tmp_data, plus);
+	//string tmp_data = "J" + to_string(robotFlag)+"d"+to_string(totalNum) + "d";
+
+	//Robot joint trajectory
+	for (unsigned int i = 0; i < forceTraj.size(); i++)
+	{
+		for (unsigned int j = 0; j < forceTraj[i].size(); j++)
+		{
+			for (int k = 0; k < forceTraj[i][j].size(); k++)
+			{
+				strcpy(pbuffer, "");
+				strcat(pbuffer, _gcvt(forceTraj[i][j][k], digit_num, tmp_buffer));
+				//string add = string(pbuffer);
+				//tmp_data = tmp_data + add;
+				strcat(tmp_data, pbuffer);
+				sprintf(plus, "%c", div);
+				strcat(tmp_data, plus);
+				//tmp_data = tmp_data + div;
+			}
+		}
+	}
+	char *send_data = new char[strlen(tmp_data) + 1];
+	strcpy(send_data, tmp_data);
+	return send_data;
+};
 
 //
 //vector<char*> makeJointCommand_MultiRobot(vector<vector<vector<Eigen::VectorXd>>>& jointTraj, vector<desired_dataset>& hyu_desired_dataset, int robotFlag)

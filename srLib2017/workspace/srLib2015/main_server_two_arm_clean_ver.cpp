@@ -911,13 +911,13 @@ void communicationFunc(int argc, char **argv)
 
 			if (robotFlag == 1)
 			{
-				rManager1->setJointVal(robot_state.robot_joint);
+				// rManager1->setJointVal(robot_state.robot_joint);
 				serv.SendMessageToClient("T1");
 				Sleep(50);
 			}
 			else if (robotFlag == 2)
 			{
-				rManager2->setJointVal(robot_state.robot_joint);
+				// rManager2->setJointVal(robot_state.robot_joint);
 				serv.SendMessageToClient("T2");
 				Sleep(50);
 			}
@@ -1229,6 +1229,8 @@ void communicationFunc(int argc, char **argv)
 				}
 				else
 				{
+					// send not feasible flag
+					serv.SendMessageToClient("W");
 					isHYUPlanning = false;
 					isVision = false;
 					isRobotState = false;
