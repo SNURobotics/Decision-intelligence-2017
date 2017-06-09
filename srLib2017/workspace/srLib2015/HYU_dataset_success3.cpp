@@ -148,41 +148,47 @@ int main(int argc, char **argv)
 		Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.009));		// when stage removed
 	SE3 Tbase2jigbase = EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.184));
 	vector<SE3> busbarSE3set(0);
-	int n = 5;
-	double bin = 0.4 / (double)n;
-	busbar.resize(n*n*n);
-	flags.resize(busbar.size());
-	for (unsigned int i = 0; i < busbar.size(); i++)
-	{
-		busbar[i] = new BusBar_HYU;
-		busbar[i]->SetBaseLinkType(srSystem::FIXED);
-		gSpace.AddSystem(busbar[i]);
-	}
-	int l = 0;
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = 0; j < n; j++)
-		{
-			for (int k = 0; k < n; k++, l++)
-			{
-				busbarSE3set.push_back(SE3(Vec3((double)i*bin - 0.2, (double)j*bin - 0.2 - 0.6, (double)k*bin - 0.05)) * Tbase * Tbase2jigbase);
-				busbar[l]->setBaseLinkFrame(SE3(Vec3((double)i*bin - 0.2, (double)j*bin - 0.2 - 0.6, (double)k*bin - 0.05 - 10.0)) * Tbase * Tbase2jigbase);
-			}
-		}
-	}
 
 
-	//busbar.resize(16);
+	////////////////////////////////////////////////////////////////////////////////////////
+	//int n = 5;
+	//double bin = 0.4 / (double)n;
+	//busbar.resize(n*n*n);
 	//flags.resize(busbar.size());
-	//for (unsigned int i = 0; i < busbar.size()/2; i++)
+	//for (unsigned int i = 0; i < busbar.size(); i++)
 	//{
-	//	busbar[2*i] = new BusBar_HYU;
-	//	busbar[2*i+1] = new BusBar_HYU;
-	//	gSpace.AddSystem(busbar[2*i]);
-	//	gSpace.AddSystem(busbar[2 * i + 1]);
-	//	busbar[2*i]->setBaseLinkFrame(Tbase*Tbase2jigbase*jigAssem->holeCenter[i]);
-	//	busbar[2*i+1]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -0.025))*Tbase*Tbase2jigbase*jigAssem->holeCenter[i]);
+	//	busbar[i] = new BusBar_HYU;
+	//	busbar[i]->SetBaseLinkType(srSystem::FIXED);
+	//	gSpace.AddSystem(busbar[i]);
 	//}
+	//int l = 0;
+	//for (int i = 0; i < n; i++)
+	//{
+	//	for (int j = 0; j < n; j++)
+	//	{
+	//		for (int k = 0; k < n; k++, l++)
+	//		{
+	//			busbarSE3set.push_back(SE3(Vec3((double)i*bin - 0.2, (double)j*bin - 0.2 - 0.6, (double)k*bin - 0.05)) * Tbase * Tbase2jigbase);
+	//			busbar[l]->setBaseLinkFrame(SE3(Vec3((double)i*bin - 0.2, (double)j*bin - 0.2 - 0.6, (double)k*bin - 0.05 - 10.0)) * Tbase * Tbase2jigbase);
+	//		}
+	//	}
+	//}
+
+
+	busbar.resize(16);
+	busbarSE3set.resize(busbar.size());
+	flags.resize(busbar.size());
+	for (unsigned int i = 0; i < busbar.size()/2; i++)
+	{
+		busbar[2*i] = new BusBar_HYU;
+		busbar[2*i+1] = new BusBar_HYU;
+		gSpace.AddSystem(busbar[2*i]);
+		gSpace.AddSystem(busbar[2 * i + 1]);
+		busbar[2 * i]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -0.025 - 10.0))*Tbase*Tbase2jigbase*jigAssem->holeCenter[i]);
+		busbar[2 * i + 1]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -0.025 - 15.0))*Tbase*Tbase2jigbase*jigAssem->holeCenter[i]);
+		busbarSE3set[2 * i] = Tbase*Tbase2jigbase*jigAssem->holeCenter[i];
+		busbarSE3set[2 * i + 1] = SE3(Vec3(0.0, 0.0, -0.025))*Tbase*Tbase2jigbase*jigAssem->holeCenter[i];
+	}
 
 	
 	///////////////////////////////////////////////////////////////////
@@ -240,7 +246,7 @@ int main(int argc, char **argv)
 
 	for (unsigned int i = 0; i < busbar.size(); i++)
 		busbar[i]->setBaseLinkFrame(busbarSE3set[i]);
-
+	cout << jointVal.transpose() << endl;
 	////// test inverse kin of robot2
 	//Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
 	//// elbow up

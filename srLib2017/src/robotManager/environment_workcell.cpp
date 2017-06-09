@@ -353,16 +353,17 @@ void WorkCell::AssembleModel()
 
 
 		m_ObjLink[7].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-		m_ObjLink[7].GetGeomInfo().SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.91 + 0.099 + 0.008 - 1.176)) * TsrLib2cad);
+		double mount_height = 0.105;
+		m_ObjLink[7].GetGeomInfo().SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.91 + mount_height + 0.008 - 1.176)) * TsrLib2cad);
 		m_ObjLink[7].GetGeomInfo().SetFileName("../../../workspace/robot/workcell_3ds/XYZ_stage_4.3ds");
 		m_ObjLink[7].GetGeomInfo().SetColor(0.25f, 0.25f, 0.25f, 1.0f);
 
 		m_ObjCollision[5].GetGeomInfo().SetDimension(Vec3(0.5, 0.5, 0.008));
-		m_ObjCollision[5].SetLocalFrame(SE3(Vec3(0.025, 1.095, 0.91 + 0.099 + 0.5*0.008)));
+		m_ObjCollision[5].SetLocalFrame(SE3(Vec3(0.025, 1.095, 0.91 + mount_height + 0.5*0.008)));
 		m_ObjLink[7].AddCollision(&m_ObjCollision[5]);
 
-		m_ObjCollision[6].GetGeomInfo().SetDimension(Vec3(0.135, 0.166, 0.099));
-		m_ObjCollision[6].SetLocalFrame(SE3(Vec3(0.025, 1.095, 0.91 + 0.5*0.099)));
+		m_ObjCollision[6].GetGeomInfo().SetDimension(Vec3(0.135, 0.166, mount_height));
+		m_ObjCollision[6].SetLocalFrame(SE3(Vec3(0.025, 1.095, 0.91 + 0.5*mount_height)));
 		m_ObjLink[7].AddCollision(&m_ObjCollision[6]);
 	}
 
