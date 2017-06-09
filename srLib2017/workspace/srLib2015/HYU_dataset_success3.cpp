@@ -175,20 +175,20 @@ int main(int argc, char **argv)
 	//}
 
 
-	busbar.resize(16);
-	busbarSE3set.resize(busbar.size());
-	flags.resize(busbar.size());
-	for (unsigned int i = 0; i < busbar.size()/2; i++)
-	{
-		busbar[2*i] = new BusBar_HYU;
-		busbar[2*i+1] = new BusBar_HYU;
-		gSpace.AddSystem(busbar[2*i]);
-		gSpace.AddSystem(busbar[2 * i + 1]);
-		busbar[2 * i]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -0.025 - 10.0))*Tbase*Tbase2jigbase*jigAssem->holeCenter[i]);
-		busbar[2 * i + 1]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -0.025 - 15.0))*Tbase*Tbase2jigbase*jigAssem->holeCenter[i]);
-		busbarSE3set[2 * i] = Tbase*Tbase2jigbase*jigAssem->holeCenter[i];
-		busbarSE3set[2 * i + 1] = SE3(Vec3(0.0, 0.0, -0.025))*Tbase*Tbase2jigbase*jigAssem->holeCenter[i];
-	}
+	//busbar.resize(16);
+	//busbarSE3set.resize(busbar.size());
+	//flags.resize(busbar.size());
+	//for (unsigned int i = 0; i < busbar.size()/2; i++)
+	//{
+	//	busbar[2*i] = new BusBar_HYU;
+	//	busbar[2*i+1] = new BusBar_HYU;
+	//	gSpace.AddSystem(busbar[2*i]);
+	//	gSpace.AddSystem(busbar[2 * i + 1]);
+	//	busbar[2 * i]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -0.025 - 10.0))*Tbase*Tbase2jigbase*jigAssem->holeCenter[i]);
+	//	busbar[2 * i + 1]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -0.025 - 15.0))*Tbase*Tbase2jigbase*jigAssem->holeCenter[i]);
+	//	busbarSE3set[2 * i] = Tbase*Tbase2jigbase*jigAssem->holeCenter[i];
+	//	busbarSE3set[2 * i + 1] = SE3(Vec3(0.0, 0.0, -0.025))*Tbase*Tbase2jigbase*jigAssem->holeCenter[i];
+	//}
 
 	
 	///////////////////////////////////////////////////////////////////
@@ -216,37 +216,37 @@ int main(int argc, char **argv)
 
 
 	//////// test inverse kin of robot1
-	Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
-	// elbow up
-	qInit[1] = -0.65*SR_PI;
-	qInit[2] = 0.3*SR_PI;
-	qInit[3] = 0.5*SR_PI_HALF;
-	Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
-	qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
-	qInit2 = robot1->homePos;
-	rManager1->setJointVal(robot1->homePos);
-	rManager2->setJointVal(robot2->homePos);
-	cout << gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP() << endl;
-	for (unsigned int i = 0; i < busbar.size(); i++)
-	{
-		jointVal = rManager1->inverseKin(busbarSE3set[i] * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flags[i], qInit2);
-		testJointVal.push_back(jointVal);
-		//if (flags[i] != 0)
-		//	jointVal = rManager1->inverseKin(busbar[i]->GetBaseLink()->GetFrame() * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flags[i], qInit);
-		rManager1->setJointVal(jointVal);
-		bool isColli = rManager1->checkCollision();
-		
-		if (flags[i] == 0 && !isColli)
-			busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 1.0, 0.0);
-		if (flags[i] == 1 && !isColli)
-			busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 0.0, 0.1);
-		if (flags[i] == 2 || isColli)
-			busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(1.0, 0.0, 0.0);
-	}
+	//Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
+	//// elbow up
+	//qInit[1] = -0.65*SR_PI;
+	//qInit[2] = 0.3*SR_PI;
+	//qInit[3] = 0.5*SR_PI_HALF;
+	//Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
+	//qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
+	//qInit2 = robot1->homePos;
+	//rManager1->setJointVal(robot1->homePos);
+	//rManager2->setJointVal(robot2->homePos);
+	//cout << gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP() << endl;
+	//for (unsigned int i = 0; i < busbar.size(); i++)
+	//{
+	//	jointVal = rManager1->inverseKin(busbarSE3set[i] * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flags[i], qInit2);
+	//	testJointVal.push_back(jointVal);
+	//	//if (flags[i] != 0)
+	//	//	jointVal = rManager1->inverseKin(busbar[i]->GetBaseLink()->GetFrame() * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flags[i], qInit);
+	//	rManager1->setJointVal(jointVal);
+	//	bool isColli = rManager1->checkCollision();
+	//	
+	//	if (flags[i] == 0 && !isColli)
+	//		busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 1.0, 0.0);
+	//	if (flags[i] == 1 && !isColli)
+	//		busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 0.0, 0.1);
+	//	if (flags[i] == 2 || isColli)
+	//		busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(1.0, 0.0, 0.0);
+	//}
 
-	for (unsigned int i = 0; i < busbar.size(); i++)
-		busbar[i]->setBaseLinkFrame(busbarSE3set[i]);
-	cout << jointVal.transpose() << endl;
+	//for (unsigned int i = 0; i < busbar.size(); i++)
+	//	busbar[i]->setBaseLinkFrame(busbarSE3set[i]);
+	//cout << jointVal.transpose() << endl;
 	////// test inverse kin of robot2
 	//Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
 	//// elbow up
@@ -743,16 +743,33 @@ int main(int argc, char **argv)
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////////////////////// test busbar location
-	//busbar[0]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, -0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame());
-	//int flag;
-	//jointVal = rManager1->inverseKin(busbar[0]->GetBaseLink()->GetFrame() * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, robot1->qInvKinInit);
-	//cout << flag << endl;
-	//cout << Trobotbase1 % busbar[0]->GetBaseLink()->GetFrame();
+	double xpos = -0.2;
+	busbar[0]->GetBaseLink()->SetFrame(SE3(Vec3(xpos, -0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame());
+	int flag;
+	jointVal = rManager1->inverseKin(busbar[0]->GetBaseLink()->GetFrame() * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, robot1->qInvKinInit);
+	cout << flag << endl;
+	cout << Trobotbase1 % busbar[0]->GetBaseLink()->GetFrame();
 
-	//busbar[0]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame());
+	xpos = -0.2;
+	cout << Trobotbase1 % SE3(Vec3(xpos, -0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame();
+	xpos = -0.1;
+	cout << Trobotbase1 % SE3(Vec3(xpos, -0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame();
+	xpos = 0.1;
+	cout << Trobotbase1 % SE3(Vec3(xpos, -0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame();
+
+	//double xpos = -0.2;
+	//int flag;
+	//busbar[0]->GetBaseLink()->SetFrame(SE3(Vec3(xpos, 0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame());
 	//jointVal = rManager2->inverseKin(busbar[0]->GetBaseLink()->GetFrame() * Tbusbar2gripper_new, &robot2->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, robot2->qInvKinInit);
 	//cout << flag << endl;
 	//cout << Trobotbase1 % busbar[0]->GetBaseLink()->GetFrame();
+
+	//xpos = -0.2;
+	//cout << Trobotbase1 % SE3(Vec3(xpos, 0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame();
+	//xpos = -0.1;
+	//cout << Trobotbase1 % SE3(Vec3(xpos, 0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame();
+	//xpos = 0.1;
+	//cout << Trobotbase1 % SE3(Vec3(xpos, 0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	FTtraj.resize(initPos.size());
 	TtrajVec.resize(initPos.size());

@@ -53,12 +53,14 @@ SE3 initBusbar = SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.5)));
 int workcell_mode = 0;
 WorkCell* workCell = new WorkCell(workcell_mode);
 Eigen::VectorXd stageVal(3);
+bool useNoVisionTestSetting = true;
 
 // Robot
 IndyRobot* robot1 = new IndyRobot(false);
 IndyRobot* robot2 = new IndyRobot(true);
 vector<IndyRobot*> robotVector(2);
 SE3 Tbusbar2gripper_new = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
+SE3 Tbusbar2gripper_tight = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.015));
 SE3 TctCase2gripper = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.006, 0.031625, 0.01));
 vector<SE3> Tobject2gripper(objects.size());
 SE3 Thole2busbar = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
@@ -164,17 +166,17 @@ int getObjectIdx(int robotIdx);
 
 int main(int argc, char **argv)
 {
-	bool useVision = false;
-	objectSetting();
-	
+	bool useVision = true;
+	if (useVision)
+		useNoVisionTestSetting = false;
 	srand(time(NULL));
 	// Robot home position
+	robotSetting();
 	homePosRobotVector[0] = robot1->homePos;
 	homePosRobotVector[1] = robot2->homePos;
 	// environment
 	workspaceSetting();
-	robotSetting();
-
+	objectSetting();
 	////////////////////////////////////////////// setting environment (replacable from vision data)
 	if (!useVision)
 	{
@@ -193,6 +195,8 @@ int main(int argc, char **argv)
 
 		// rrt
 		rrtSetting();
+
+		serv.SendMessageToClient("Ld0d");
 	}
 
 	
@@ -325,8 +329,16 @@ void environmentSetting_HYU2(bool connect)
 	//	busbar[i]->SetBaseLinkType(srSystem::FIXED);
 	//	gSpace.AddSystem(busbar[i]);
 	//}
+	Vec3 testJigPosFromRobot1(-0.702151, -0.014057, 0.750026);
 	jigAssem->SetBaseLinkType(srSystem::FIXED);
-	jigAssem->setBaseLinkFrame(Tbase*Tbase2jigbase);
+	if (!useNoVisionTestSetting)
+		jigAssem->setBaseLinkFrame(Tbase*Tbase2jigbase);
+	else
+	{
+		SE3 tempSE3 = Trobotbase1 * SE3(testJigPosFromRobot1);
+		jigAssem->setBaseLinkFrame(SE3(tempSE3.GetPosition()) * jigAssem->m_visionOffset);
+	}
+		
 	if (!connect)
 		gSpace.AddSystem((srSystem*)jigAssem);
 	else
@@ -335,7 +347,16 @@ void environmentSetting_HYU2(bool connect)
 		wJoint->SetParentLink(workCell->GetBaseLink()); // removed stage
 		//wJoint->SetParentLink(workCell->getStagePlate());
 		wJoint->SetChildLink(jigAssem->GetBaseLink());
-		wJoint->SetParentLinkFrame(Tbase*Tbase2jigbase);
+		if (!useNoVisionTestSetting)
+			wJoint->SetParentLinkFrame(Tbase*Tbase2jigbase);
+		else
+		{
+			SE3 tempSE3 = Trobotbase1 * SE3(testJigPosFromRobot1);
+			SE3 Tjig = Trobotbase1 % SE3(tempSE3.GetPosition()) * jigAssem->m_visionOffset;
+			cout << "Tjig" << endl;
+			cout << Tjig << endl;
+			wJoint->SetParentLinkFrame(SE3(tempSE3.GetPosition()) * jigAssem->m_visionOffset);
+		}
 		wJoint->SetChildLinkFrame(SE3());
 	}
 
@@ -554,10 +575,19 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 
 void objectSetting()
 {
+	vector<SE3> testInit(4);
+	testInit[0] = Trobotbase1 * SE3(-0.51328, 0.85822, 1.1137e-06, 0.85822, 0.51328, 5.4682e-06, 3.5287e-06, 3.3661e-06, -1, -0.28018, -0.10959, 0.85844);
+	testInit[1] = Trobotbase1 * SE3(-0.9354,0.35358,5.9942e-06,0.35358,0.9354,-6.9362e-06,-8.4326e-06,-4.4553e-06,-1,-0.26685,-0.020595,0.85866);
+	testInit[2] = Trobotbase1 * SE3(-0.66831,-0.74389,-1.1055e-05,-0.74389,0.66831,-4.5087e-06,9.9899e-06,5.0997e-06,-1,-0.3734,0.011193,0.85824);
+	testInit[3] = Trobotbase1 * SE3(-0.20649,0.97845,-2.1991e-05,0.97845,0.20649,-1.3097e-06,2.7943e-06,-2.1829e-05,-1,-0.36767,0.11754,0.85743);
+	
 	for (unsigned int i = 0; i < busbar.size(); i++)
 	{
 		busbar[i] = new BusBar_HYU;
-		busbar[i]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -(double)0.1*i)) * initBusbar);
+		if (useNoVisionTestSetting && i < testInit.size())
+			busbar[i]->setBaseLinkFrame(testInit[i]);
+		else
+			busbar[i]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -(double)0.1*i)) * initBusbar);
 		gSpace.AddSystem(busbar[i]);
 		busbar[i]->SetBaseLinkType(srSystem::FIXED);
 	}
@@ -781,8 +811,7 @@ void communicationFunc(int argc, char **argv)
 			for (unsigned int p = 0; p <= strlen(hyu_data); p++)
 				copy[p] = hyu_data[p];
 			serv.SendMessageToClient(copy);
-			if (useSleep)
-				Sleep(50);
+			Sleep(50);
 			printf("%s\n", hyu_data);
 			readSKKUvision(hyu_data, skku_dataset);
 
@@ -802,6 +831,7 @@ void communicationFunc(int argc, char **argv)
 			if (liftObjects)
 			{
 				Vec3 delta_z = Vec3(0.0, 0.0, -0.0001);
+				int liftIter = 0;
 				while (gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP())
 				{
 					for (int i = 0; i < bNum; i++)
@@ -814,9 +844,16 @@ void communicationFunc(int argc, char **argv)
 						ctCase[i]->GetBaseLink()->SetPosition(ctCase[i]->GetBaseLink()->GetPosition() + delta_z);
 						ctCase[i]->KIN_UpdateFrame_All_The_Entity();
 					}
+					liftIter++;
 				}
+				char liftBuf[255];
+				sprintf(liftBuf, "Ld%fd", (double)liftIter * delta_z[2]);
+				serv.SendMessageToClient(liftBuf);
 			}
-
+			else
+			{
+				serv.SendMessageToClient("Ld0d");
+			}
 			robotManagerSetting();						// robot manager setting
 
 			// workcell robot initial config
@@ -837,12 +874,14 @@ void communicationFunc(int argc, char **argv)
 			isRobotState = false;
 			isWaypoint = false;
 			//m.unlock();
+			free(copy);
 		}
 		else if (hyu_data_flag == 'G') {
 
 			//char* send_data;
 			//send_data = getSimulationState(objects);
 			//serv.SendMessageToClient(send_data);	
+			printf(hyu_data);
 			serv.SendMessageToClient(hyu_data);
 			if (useSleep)
 				Sleep(50);
@@ -886,6 +925,7 @@ void communicationFunc(int argc, char **argv)
 			//isHYUPlanning = false;
 			//isRobotState = true;
 			//m.unlock();
+			free(copy);
 		}
 		else if (hyu_data_flag == 'S') {
 			char* copy = (char*)malloc(sizeof(char)*(strlen(hyu_data) + 1));
@@ -959,6 +999,7 @@ void communicationFunc(int argc, char **argv)
 					Sleep(50);
 					printf(send_data1);
 					printf("\n");
+					free(send_data1);
 					if (hyu_data_output.second[0] == 1) // when gripper input comes
 						gripObjectIdx[0] = getObjectIdx(1);
 				}
@@ -1010,10 +1051,13 @@ void communicationFunc(int argc, char **argv)
 					Sleep(50);
 					printf(send_data2);
 					printf("\n");
+					free(send_data2);
+					
 					if (hyu_data_output.second[1] == 1) // when gripper input comes
 						gripObjectIdx[1] = getObjectIdx(2);
 				}
 			}
+			free(copy);
 		}
 		else if (hyu_data_flag == 'A') 
 		{
@@ -1034,13 +1078,23 @@ void communicationFunc(int argc, char **argv)
 					objects[i]->KIN_UpdateFrame_All_The_Entity();
 				}
 				for (unsigned int i = 0; i < gripObjectIdx.size(); i++)
+				{
+					if (gripObjectIdx[i] != -1)
+						TlastObjects_multi[i] = TobjectsInitSimul[gripObjectIdx[i]];
 					gripObjectIdx[i] = -1;
+				}
+					
 				initialPlanning[robotFlag - 1] = true;
+
 			}
 			else
 				startPlanningFromCurRobotState[robotFlag - 1] = true;
 
-			
+			// to see values
+			gripObjectIdx;
+			TlastObjects_multi;
+			TinitObjects_multi;
+			int stop = 1;
 		}
 
 		else if (hyu_data_flag == 'P') {
@@ -1076,6 +1130,7 @@ void communicationFunc(int argc, char **argv)
 					if (gripObjectIdx[robotFlag - 1] != -1 && distSE3(TinitObjects_multi[robotFlag - 1], TlastObjects_multi[robotFlag - 1]) > 1.0e-5)		// move busbar to its last location when releasing
 					{
 						objects[gripObjectIdx[robotFlag - 1]]->setBaseLinkFrame(TlastObjects_multi[robotFlag - 1]);
+						objects[gripObjectIdx[robotFlag - 1]]->KIN_UpdateFrame_All_The_Entity();
 					}
 				}
 					
@@ -1105,7 +1160,9 @@ void communicationFunc(int argc, char **argv)
 					isWaypoint = false;
 					char send_data[30000];
 					strcpy(send_data, "");
-					strcat(send_data, makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag));
+					char *add = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
+					strcat(send_data, add);
+					delete(add);
 					//char* send_data = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
 					serv.SendMessageToClient(send_data);
 					if (useSleep)
@@ -1211,7 +1268,7 @@ void updateFuncPlanning_multi()
 		if (gripObjectIdxRender[j] != -1 && idx[j] == 0 && trjIdx[j] == 0 && initialObjectSavedRender[j])
 		{
 			objects[gripObjectIdxRender[j]]->setBaseLinkFrame(TinitObjects_multiRender[j]);
-
+			objects[gripObjectIdxRender[j]]->KIN_UpdateFrame_All_The_Entity();
 		}
 		//cout << Trobotbase1 % TinitObjects_multiRender[1] << endl;
 		//cout << Trobotbase1 % TlastObjects_multi[1] << endl;

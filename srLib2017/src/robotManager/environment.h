@@ -19,6 +19,7 @@ public:
 	void					setBaseLinkPosition(Vec3 position);
 	void					setBaseLinkPosition(Eigen::VectorXd position);
 	void					setBaseLinkFrame(SE3 T);
+	SE3						getBaseLinkFrame();
 
 	
 public:

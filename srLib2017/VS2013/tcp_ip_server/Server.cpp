@@ -157,6 +157,18 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 			buf 변수에 받은 데이터가 저장되어 있다.
 		*/
 		char newBuf[BUFSIZE + 1] = "";
+		int len = strlen(buf);
+		bool isValidData = true;
+		for (int kk = 0; kk < len; kk++) {
+			if (kk > 3 && (buf[kk] == 'R' || buf[kk] == 'P')) {
+				isValidData = false;
+			}
+		}
+		if (!isValidData) {
+			printf("not valid data recieved\n");
+			continue;
+		}
+
 		if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT01) == 0 && buf[0] == 'R') {
 			strcat(newBuf, "R1");
 			//strncpy(buf, buf + 1, len - 1);
@@ -186,8 +198,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 		else
 			strcpy(test_str[testIndex], buf);
 
-				
-		printf("%d[%s] \n> ", retval, inet_ntoa(clientaddr.sin_addr));
+		//printf("%d[%s] \n> ", retval, inet_ntoa(clientaddr.sin_addr));
 		//printf("[TCP /%s:%d] %s\n> ", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port), recvBuf);
 	}
 	closesocket(client_sock);
@@ -327,9 +338,14 @@ char *Server::RecevData()
 {
 	for (int i = 0; i < 10; i++) {
 		int index = (receiveIndex + 1 + i) % 10;
-		if (strcmp(test_str[index], "") == 0 || strcmp(test_str[index], "\0") == 0 || strcmp(test_str[index], "\n\n\0") == 0)
+		if (strcmp(test_str[index], "") == 0 || strcmp(test_str[index], "\0") == 0 || strcmp(test_str[index], "\n\n\0") == 0 || test_str[index][0] == '\n' || test_str[index][0] == '\0' || test_str[index] == NULL)
 			continue;
 		else {
+			if (test_str[index][0] < 'A' || test_str[index][0] > 'Z') {
+				printf("check: %d", test_str[index][0]);
+				continue;
+			}
+				
 			char *name = (char *)malloc(sizeof(char)*BUFFER_SIZE);
 			printf(test_str[index]);
 			printf("             ...receivedData\n");

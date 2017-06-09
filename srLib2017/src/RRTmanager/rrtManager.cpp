@@ -590,7 +590,7 @@ int rrtManager::randomInt(int LB, int UB)
 
 list<Eigen::VectorXd> rrtManager::fillingPath(list<rrtVertex*>& path)
 {
-	list<Eigen::VectorXd>			filledPath;
+	list<Eigen::VectorXd>			filledPath(0);
 
 	list<rrtVertex*>::iterator iter = path.begin(); iter++;
 	list<rrtVertex*>::iterator end_iter = path.end(); 
