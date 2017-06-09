@@ -30,6 +30,10 @@
 #include <stdlib.h>
 #include <vector>
 
+// memory leakaage check
+#include <crtdbg.h>
+
+
 //srLib
 srSpace gSpace;
 serverRenderer* renderer;
@@ -52,7 +56,7 @@ Eigen::VectorXd stageVal(3);
 
 // Robot
 IndyRobot* robot1 = new IndyRobot(false);
-IndyRobot* robot2 = new IndyRobot;
+IndyRobot* robot2 = new IndyRobot(true);
 vector<IndyRobot*> robotVector(2);
 SE3 Tbusbar2gripper_new = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
 SE3 TctCase2gripper = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.006, 0.031625, 0.01));
@@ -192,11 +196,14 @@ int main(int argc, char **argv)
 	}
 
 	
+
 	thread commuThread(communicationFunc, argc, argv);
 	commuThread.detach();
 
 	if (commuThread.joinable())
 		commuThread.join();
+
+	
 
 	if (useVision)
 	{
@@ -1125,6 +1132,8 @@ void communicationFunc(int argc, char **argv)
 			else
 				printf("Wrong robot Flag is given (Flag = 'P')!!!\n");
 		}
+
+		// _CrtDumpMemoryLeaks();
 		/*hyu_data[0] = '\0';*/
 		hyu_data_flag = ' ';
 		if (useSleep)

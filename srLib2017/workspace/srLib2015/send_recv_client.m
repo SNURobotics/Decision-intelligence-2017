@@ -5,7 +5,7 @@ close all;
 
 %% HYU waypoint
 load('send_data.mat');
-
+% 
 client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
 fopen(client);
 idx = 1;
@@ -57,8 +57,8 @@ send_data2 = [send_data2; num2str(0)'; 'd'];
 for i = 1:6
     send_data2 = [send_data2; num2str(joint2(i))'; 'd'];
 end
-fwrite(client,send_data);
-% fwrite(client,send_data2);
+%fwrite(client,send_data);
+fwrite(client,send_data2);
 % receive robot traj from server
 
 % while (1)
@@ -122,10 +122,16 @@ robot_pos3 =robot1_way3(10:12);
 robot_rot3 = robot1_way3(1:9);
 
 
-robot2_way1 = [-1.11022e-16	-1	-1.83697e-16	1.4297e-32	-1.83697e-16	1	-1	1.11022e-16	4.5747e-32	-1.1419	0.1529	0.6789	];
-robot2_way2 = [-1	-1.80851e-07	-2.87912e-13	1.80851e-07	-1	-1.83166e-13	-2.8796e-13	-1.83196e-13	1	-0.75378	-0.2395+0.1	0.8509-0.05		];
-robot2_way3 = [-1	-1.80851e-07	-2.99097e-13	1.80851e-07	-1	-1.84997e-13	-2.99102e-13	-1.84984e-13	1	-0.75378	0.2405-0.1	0.8509-0.05	];
-robot2_way4 = [-1	-1.80851e-07	-2.99097e-13	1.80851e-07	-1	-1.84997e-13	-2.99102e-13	-1.84984e-13	1	-0.75378	0.0	0.8509-0.05	];
+% robot2_way1 = [-0.210225	-0.952044	-0.2223	0.317276	-0.281512	0.905587	-0.924738	0.119847	0.361242	-1.06169	0.10515	0.756704	];
+% robot2_way2 = [-1	-1.80851e-07	-2.87912e-13	1.80851e-07	-1	-1.83166e-13	-2.8796e-13	-1.83196e-13	1	-0.75378	-0.2395+0.1	0.8509-0.05		];
+% robot2_way3 = [-1	-1.80851e-07	-2.99097e-13	1.80851e-07	-1	-1.84997e-13	-2.99102e-13	-1.84984e-13	1	-0.75378	0.2405-0.1	0.8509-0.05	];
+% robot2_way4 = [-1	-1.80851e-07	-2.99097e-13	1.80851e-07	-1	-1.84997e-13	-2.99102e-13	-1.84984e-13	1	-0.75378	0.0	0.8509-0.05	];
+% % 
+% 
+robot2_way1 = [-0.210225	-0.952044	-0.2223	0.317276	-0.281512	0.905587	-0.924738	0.119847	0.361242	-1.06169	0.10515	0.756704];
+robot2_way2 = [-1	-1.80851e-07	-2.89722e-13	1.80851e-07	-1	-1.84016e-13	-2.89633e-13	-1.84024e-13	1	-0.75378	-0.128731	0.8509];
+robot2_way3 = [-1	-1.80851e-07	-2.99097e-13	1.80851e-07	-1	-1.84997e-13	-2.99102e-13	-1.84984e-13	1	-0.75378	0.2405	0.8509		];
+
 
 robot2_pos1 =robot2_way1(10:12);
 robot2_rot1 = robot2_way1(1:9);
@@ -133,8 +139,8 @@ robot2_pos2 =robot2_way2(10:12);
 robot2_rot2 = robot2_way2(1:9);
 robot2_pos3 =robot2_way3(10:12);
 robot2_rot3 = robot2_way3(1:9);
-robot2_pos4 =robot2_way4(10:12);
-robot2_rot4 = robot2_way4(1:9);
+% robot2_pos4 =robot2_way4(10:12);
+% robot2_rot4 = robot2_way4(1:9);
 
 Tbusbarfinal = [reshape(robot2_rot3,3,3), robot2_pos3'];
 Tbusbarfinal = [Tbusbarfinal; 0,0,0,1];
@@ -188,11 +194,11 @@ for i = 1:size(robot_pos1,2)
     char_robot2_pos3 = [char_robot2_pos3; num2str(robot2_pos3(i))'];
     char_robot2_pos3 = [char_robot2_pos3; 'd']; 
 end
-char_robot2_pos4 = [];
-for i = 1:size(robot_pos1,2)
-    char_robot2_pos4 = [char_robot2_pos4; num2str(robot2_pos4(i))'];
-    char_robot2_pos4 = [char_robot2_pos4; 'd']; 
-end
+% char_robot2_pos4 = [];
+% for i = 1:size(robot_pos1,2)
+%     char_robot2_pos4 = [char_robot2_pos4; num2str(robot2_pos4(i))'];
+%     char_robot2_pos4 = [char_robot2_pos4; 'd']; 
+% end
 char_robot2_rot1 = [];
 for i = 1:size(robot_rot1,2)
     char_robot2_rot1 = [char_robot2_rot1; num2str(robot2_rot1(i))'];
@@ -208,11 +214,11 @@ for i = 1:size(robot_rot1,2)
     char_robot2_rot3 = [char_robot2_rot3; num2str(robot2_rot3(i))'];
     char_robot2_rot3 = [char_robot2_rot3; 'd']; 
 end
-char_robot2_rot4 = [];
-for i = 1:size(robot_rot1,2)
-    char_robot2_rot4 = [char_robot2_rot4; num2str(robot2_rot4(i))'];
-    char_robot2_rot4 = [char_robot2_rot4; 'd']; 
-end
+% char_robot2_rot4 = [];
+% for i = 1:size(robot_rot1,2)
+%     char_robot2_rot4 = [char_robot2_rot4; num2str(robot2_rot4(i))'];
+%     char_robot2_rot4 = [char_robot2_rot4; 'd']; 
+% end
 robot_gripper = 0;
 char_robot_gripper = [num2str(robot_gripper)];
 char_robot_gripper = [char_robot_gripper; 'd']; 
@@ -233,19 +239,19 @@ end
 
 send_data = ['S';'1'; 'd';num2str(3); 'd';char_robot_pos1; char_robot_rot1; char_robot_gripper; char_robot_ft; 
     char_robot_pos2; char_robot_rot2; char_robot_gripper; char_robot_ft;
-    char_robot_pos3; char_robot_rot3; char_robot_gripper; char_robot_ft;'0'];
+    char_robot_pos3; char_robot_rot3; char_robot_gripper; char_robot_ft;'0';'d'];
 
 
 send_data2 = ['S';'2'; 'd';num2str(3); 'd';char_robot2_pos1; char_robot2_rot1; char_robot_gripper; char_robot_ft; 
     char_robot2_pos2; char_robot2_rot2; char_robot_gripper; char_robot_ft;
-    char_robot2_pos3; char_robot2_rot3; char_robot_gripper; char_robot_ft;'0'];
+    char_robot2_pos3; char_robot2_rot3; char_robot_gripper; char_robot_ft;'0';'d'];
 
 send_data3 = ['S';'3'; 'd';num2str(3); 'd';num2str(3);'d';char_robot_pos1; char_robot_rot1; char_robot_gripper_on; char_robot_ft; 
     char_robot_pos2; char_robot_rot2; char_robot_gripper_on; char_robot_ft;
     char_robot_pos3; char_robot_rot3; char_robot_gripper_on; char_robot_ft;'0';'d';
     char_robot2_pos1; char_robot2_rot1; char_robot_gripper; char_robot_ft; 
     char_robot2_pos2; char_robot2_rot2; char_robot_gripper; char_robot_ft;
-    char_robot2_pos3; char_robot2_rot3; char_robot_gripper_on; char_robot_ft;'0'];
+    char_robot2_pos3; char_robot2_rot3; char_robot_gripper_on; char_robot_ft;'0';'d'];
 
 % 
 fwrite(client,send_data3);
@@ -292,78 +298,35 @@ fwrite(client,send_data3);
 %         end
 %     end 
 % end
-%% Send P
-% pause;
-% client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
-% fopen(client);
-I33 = reshape(eye(3),9,1);
-p = zeros(3,1);
-ft = zeros(6,1);
-joint2 = zeros(6,1);
-joint2(2) = -pi/2;
-joint2(4) = pi/2;
-joint2(5) = -pi/2;
-
-send_data = ['P';'1';'d'];
-for i = 1:3
-    send_data = [send_data; num2str(p(i))'; 'd'];
-end
-for i = 1:9
-    send_data = [send_data; num2str(I33(i))'; 'd'];
-end
-send_data = [send_data; num2str(0)'; 'd'];
-for i = 1:6
-    send_data = [send_data; num2str(ft(i))'; 'd'];
-end
-for i = 1:6
-    send_data = [send_data; num2str(joint2(i))'; 'd'];
-end
-
-send_data2 = ['P';'2';'d'];
-for i = 1:3
-    send_data2 = [send_data2; num2str(p(i))'; 'd'];
-end
-for i = 1:9
-    send_data2 = [send_data2; num2str(I33(i))'; 'd'];
-end
-send_data2 = [send_data2; num2str(0)'; 'd'];
-for i = 1:6
-    send_data2 = [send_data2; num2str(ft(i))'; 'd'];
-end
-for i = 1:6
-    send_data2 = [send_data2; num2str(joint2(i))'; 'd'];
-end
-% fwrite(client,send_data);
-fwrite(client,send_data2);
-
-
-while (1)
-    if client.BytesAvailable ~= 0
-        curr_data = fread(client, client.BytesAvailable);
-        char_data = char(curr_data);
-%         display(char_data)
-        if (char_data(1) == 'M')
-           % display(char_data)
-            char_data = char_data(4:end);
-            ndiv = find(char_data == 'd');
-            n_data = round(size(ndiv,1)/6);
-            qTrj = zeros(n_data, 6);
-            for i = 1:size(ndiv,1)
-                n_data = fix((i-1) / 6) + 1;
-                jointIdx = mod(i-1,6) + 1;
-                
-                if i == 1
-                    qTrj(n_data,jointIdx) = str2num(char_data(1:ndiv(i)-1)');
-                else
-                    qTrj(n_data,jointIdx) = str2num(char_data(ndiv(i-1)+1:ndiv(i)-1)');
-                end
-               
-            end
-            figure()
-            plot(qTrj)
-        end
-    end
-end
+%% receive robot traj from server
+% 
+% while (1)
+%     if client.BytesAvailable ~= 0
+%         curr_data = fread(client, client.BytesAvailable);
+%         char_data = char(curr_data);
+% %         display(char_data)
+%         if (char_data(1) == 'M')
+%            % display(char_data)
+%             char_data = char_data(4:end);
+%             ndiv = find(char_data == 'd');
+%             n_data = round(size(ndiv,1)/6);
+%             qTrj = zeros(n_data, 6);
+%             for i = 1:size(ndiv,1)
+%                 n_data = fix((i-1) / 6) + 1;
+%                 jointIdx = mod(i-1,6) + 1;
+%                 
+%                 if i == 1
+%                     qTrj(n_data,jointIdx) = str2num(char_data(1:ndiv(i)-1)');
+%                 else
+%                     qTrj(n_data,jointIdx) = str2num(char_data(ndiv(i-1)+1:ndiv(i)-1)');
+%                 end
+%                
+%             end
+%             figure()
+%             plot(qTrj)
+%         end
+%     end
+% end
 % receive robot traj from server
 % 
 % while (1)
