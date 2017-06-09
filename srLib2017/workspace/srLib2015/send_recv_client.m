@@ -4,12 +4,12 @@ close all;
 
 
 %% HYU waypoint
-% load('send_data.mat');
-% % 
-% client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
-% fopen(client);
-% idx = 1;
-% fwrite(client,senddata_set{idx});
+load('send_data.mat');
+% 
+client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
+fopen(client);
+idx = 5;
+fwrite(client,senddata_set{idx});
 
 I33 = reshape(eye(3),9,1);
 p = zeros(3,1);
@@ -57,8 +57,8 @@ send_data2 = [send_data2; num2str(0)'; 'd'];
 for i = 1:6
     send_data2 = [send_data2; num2str(joint2(i))'; 'd'];
 end
-%fwrite(client,send_data);
-fwrite(client,send_data2);
+fwrite(client,send_data);
+% fwrite(client,send_data2);
 % receive robot traj from server
 
 % while (1)
@@ -79,6 +79,31 @@ fwrite(client,send_data2);
 %         end
 %     end 
 % end
+
+%% test memory 
+send_data = ['R';'1';'d'];
+for i = 1:3
+    send_data = [send_data; num2str(p(i))'; 'd'];
+end
+for i = 1:9
+    send_data = [send_data; num2str(I33(i))'; 'd'];
+end
+send_data = [send_data; num2str(0)'; 'd'];
+for i = 1:6
+    send_data = [send_data; num2str(ft(i))'; 'd'];
+end
+send_data = [send_data; num2str(0)'; 'd'];
+send_data = [send_data; num2str(0)'; 'd'];
+for i = 1:6
+    send_data = [send_data; num2str(joint1(i))'; 'd'];
+end
+client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
+fopen(client);
+
+
+while(1)
+    fwrite(client,send_data);
+end
 %% receive dataset from server
 % client = tcpip('localhost',9000);
 % fopen(client);
@@ -463,10 +488,41 @@ send_data = ['V'; char_vision];
 client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
 fopen(client);
 
-
-
-
 fwrite(client,send_data);
 
 % pause;
 % 
+char_pos(:,3) = char_pos(:,3) - 1;
+char_vision = [];
+for i = 1:5
+    char_vision = [char_vision; num2str(char_objID(i))'; 'd'];
+    for j = 1:12
+        if j<=9
+            char_vision = [char_vision;num2str(char_ori(i, j))';'d'];
+        else
+            char_vision = [char_vision;num2str(char_pos(i,j-9))';'d'];
+        end
+%         char_vision = [char_vision; num2str(i+0.01*j)'; 'd'];
+    end
+end
+char_pos_obs2 = [0, 1, -3;
+    1,0,-4];
+char_size_obs2 = [0.5,0.5,0.5];
+
+for i = 1:2
+    char_vision = [char_vision; num2str(-1)'; 'd'];
+    for j = 1:6
+        if j<=3
+            char_vision = [char_vision; num2str(char_pos_obs2(i,j))'; 'd'];
+        else
+            char_vision = [char_vision; num2str(char_size_obs2(j-3))'; 'd'];
+        end
+        
+%         char_vision = [char_vision; num2str(i+0.01*j)'; 'd'];
+    end
+end
+for i = 1:9
+    char_vision = [char_vision; num2str(0.)'; 'd'];
+end;
+send_data2 = ['V'; char_vision]; 
+fwrite(client,send_data2);

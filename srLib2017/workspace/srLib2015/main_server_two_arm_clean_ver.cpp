@@ -53,7 +53,7 @@ SE3 initBusbar = SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.5)));
 int workcell_mode = 0;
 WorkCell* workCell = new WorkCell(workcell_mode);
 Eigen::VectorXd stageVal(3);
-bool useNoVisionTestSetting = true;
+bool useNoVisionTestSetting = false;
 
 // Robot
 IndyRobot* robot1 = new IndyRobot(false);
@@ -128,9 +128,9 @@ vector<desired_dataset> hyu_desired_dataset;
 vision_data skku_dataset;
 robot_current_data robot_state;
 static mutex m;
-char hyu_data[30000];
 char hyu_data_flag;
 bool useSleep = false;
+bool isSystemAssembled = false;
 
 // modelling functions
 void workspaceSetting();
@@ -182,6 +182,7 @@ int main(int argc, char **argv)
 	{
 		environmentSetting_HYU2(true);			// temporary environment setting
 		initDynamics();								// initialize srLib				
+		isSystemAssembled = true;
 		robotManagerSetting();						// robot manager setting
 
 		// workcell robot initial config
@@ -197,6 +198,8 @@ int main(int argc, char **argv)
 		rrtSetting();
 
 		serv.SendMessageToClient("Ld0d");
+		if (useSleep)
+			Sleep(50);
 	}
 
 	
@@ -617,7 +620,7 @@ void objectSetting()
 
 void setEnviromentFromVision(const vision_data & skku_dataset, int& bNum, int& cNum)
 {
-	// set object (id:1 - busbar, id:2 - CTcase (insert), id:3 - jig),   objects start from 0, objPos start from 1 
+	// set object (id:1 - busbar, id:2 - CTcase (insert), id:3 - jig) 
 	int bIdx = 0;
 	int cIdx = 0;
 	for (unsigned int i = 0; i < skku_dataset.objID.size(); i++)
@@ -627,7 +630,7 @@ void setEnviromentFromVision(const vision_data & skku_dataset, int& bNum, int& c
 			printf("objID: %d, index: %d\n", skku_dataset.objID[i], bIdx);
 			cout << SKKUtoSE3(skku_dataset.objOri[i], skku_dataset.objPos[i]) << endl;
 			busbar[bIdx]->GetBaseLink()->SetFrame(Trobotbase1 * SKKUtoSE3(skku_dataset.objOri[i], skku_dataset.objPos[i]) * busbar[bIdx]->m_visionOffset);
-			busbar[bIdx]->SetBaseLinkType(srSystem::FIXED); 
+			busbar[bIdx]->KIN_UpdateFrame_All_The_Entity();
 			bIdx++;
 		}
 		else if (skku_dataset.objID[i] == 2)
@@ -635,34 +638,49 @@ void setEnviromentFromVision(const vision_data & skku_dataset, int& bNum, int& c
 			printf("objID: %d, index: %d\n", skku_dataset.objID[i], cIdx);
 			cout << SKKUtoSE3(skku_dataset.objOri[i], skku_dataset.objPos[i]) << endl;
 			ctCase[cIdx]->GetBaseLink()->SetFrame(Trobotbase1 * SKKUtoSE3(skku_dataset.objOri[i], skku_dataset.objPos[i]) * ctCase[cIdx]->m_visionOffset);
-			ctCase[cIdx]->SetBaseLinkType(srSystem::FIXED);
+			ctCase[cIdx]->KIN_UpdateFrame_All_The_Entity();
 			cIdx++;
 		}
 		else if (skku_dataset.objID[i] == 3)
 		{
+			// only set once when jig is connected to workcell by weld joint
 			printf("objID: %d\n", skku_dataset.objID[i]);
 			cout << SKKUtoSE3(skku_dataset.objOri[i], skku_dataset.objPos[i]) << endl;
 			jigAssem->GetBaseLink()->SetFrame(Trobotbase1 * SKKUtoSE3(skku_dataset.objOri[i], skku_dataset.objPos[i]) * jigAssem->m_visionOffset);
-			jigAssem->SetBaseLinkType(srSystem::FIXED);
+			jigAssem->KIN_UpdateFrame_All_The_Entity();
 		}
 		else if (skku_dataset.objID[i] != 0)
 			printf("object ID is outside range!!!\n");
 	}
 	bNum = bIdx;
 	cNum = cIdx;
-	// set obstacle
-	obstacle.resize(skku_dataset.obsInfo.size());
-	wJoint.resize(skku_dataset.obsInfo.size());
-	for (unsigned int i = 0; i < skku_dataset.obsInfo.size(); i++)
+	// set other objects to far away location
+	for (unsigned int i = bIdx; i < busbar.size(); i++)
 	{
-		obstacle[i] = new srLink();
-		wJoint[i] = new srWeldJoint;
-		obstacle[i]->GetGeomInfo().SetDimension(skku_dataset.obsInfo[i][3], skku_dataset.obsInfo[i][4], skku_dataset.obsInfo[i][5]);
-		wJoint[i]->SetParentLink(workCell->GetBaseLink());
-		wJoint[i]->SetParentLinkFrame(robot1->GetBaseLink()->GetFrame()*SE3(Vec3(skku_dataset.obsInfo[i][0], skku_dataset.obsInfo[i][1], skku_dataset.obsInfo[i][2])));
-		wJoint[i]->SetChildLink(obstacle[i]);
-		wJoint[i]->SetChildLinkFrame(SE3());
-		obstacle[i]->GetGeomInfo().SetColor(0.2, 0.2, 0.2);
+		busbar[bIdx]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -(double)0.1*i)) * initBusbar);
+		busbar[bIdx]->KIN_UpdateFrame_All_The_Entity();
+	}
+	for (unsigned int i = cIdx; i < ctCase.size(); i++)
+	{
+		ctCase[cIdx]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 10.0, -(double)0.1*i)) * initBusbar);
+		ctCase[cIdx]->KIN_UpdateFrame_All_The_Entity();
+	}
+	// set obstacle (only set by the first vision input)
+	if (!isSystemAssembled)
+	{
+		obstacle.resize(skku_dataset.obsInfo.size());
+		wJoint.resize(skku_dataset.obsInfo.size());
+		for (unsigned int i = 0; i < skku_dataset.obsInfo.size(); i++)
+		{
+			obstacle[i] = new srLink();
+			wJoint[i] = new srWeldJoint;
+			obstacle[i]->GetGeomInfo().SetDimension(skku_dataset.obsInfo[i][3], skku_dataset.obsInfo[i][4], skku_dataset.obsInfo[i][5]);
+			wJoint[i]->SetParentLink(workCell->GetBaseLink());
+			wJoint[i]->SetParentLinkFrame(robot1->GetBaseLink()->GetFrame()*SE3(Vec3(skku_dataset.obsInfo[i][0], skku_dataset.obsInfo[i][1], skku_dataset.obsInfo[i][2])));
+			wJoint[i]->SetChildLink(obstacle[i]);
+			wJoint[i]->SetChildLinkFrame(SE3());
+			obstacle[i]->GetGeomInfo().SetColor(0.2, 0.2, 0.2);
+		}
 	}
 }
 
@@ -772,9 +790,9 @@ void communicationFunc(int argc, char **argv)
 	while (TRUE) {
 
 		//Receiving data from HYU client
-		//recv_data = serv.RecevData();
-		strcpy(hyu_data, "");
-		strcat(hyu_data, serv.RecevData());
+		char* hyu_data = serv.RecevData();
+		//strcpy(hyu_data, "");
+		//strcat(hyu_data, serv.RecevData());
 
 		hyu_data_flag = hyu_data[0];
 
@@ -820,17 +838,34 @@ void communicationFunc(int argc, char **argv)
 			setEnviromentFromVision(skku_dataset, bNum, cNum);		// should be called later than robotSetting
 			
 
-			if (isJigConnectedToWorkCell)
-				connectJigToWorkCell();
+			if (!isSystemAssembled)
+			{
+				if (isJigConnectedToWorkCell)
+					connectJigToWorkCell();
+				/////////////////////////////////////// after setting environment
+				initDynamics();								// initialize srLib
 
-			/////////////////////////////////////// after setting environment
-			initDynamics();								// initialize srLib
+				isSystemAssembled = true;
+				robotManagerSetting();						// robot manager setting
 
+															// workcell robot initial config
+				rManager2->setJointVal(robot2->homePos);
+				rManager1->setJointVal(robot1->homePos);
+				Eigen::VectorXd gripInput(2);
+				gripInput[0] = -0.005;
+				gripInput[1] = 0.005;
+				rManager1->setGripperPosition(gripInput);
+				rManager2->setGripperPosition(gripInput);
+
+				// rrt
+				rrtSetting();
+			}
+			
 			// lift objects if collision occur
 			bool liftObjects = false;
 			if (liftObjects)
 			{
-				Vec3 delta_z = Vec3(0.0, 0.0, -0.0001);
+				Vec3 delta_z = Vec3(0.0, 0.0, 0.0001);
 				int liftIter = 0;
 				while (gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP())
 				{
@@ -846,27 +881,20 @@ void communicationFunc(int argc, char **argv)
 					}
 					liftIter++;
 				}
-				char liftBuf[255];
-				sprintf(liftBuf, "Ld%fd", (double)liftIter * delta_z[2]);
+				char liftBuf[20];
+				sprintf(liftBuf, "Ld%fd", -(double)liftIter * delta_z[2]);
 				serv.SendMessageToClient(liftBuf);
+				if (useSleep)
+					Sleep(50);
+				printf(liftBuf);
+				printf("\n");
 			}
 			else
 			{
 				serv.SendMessageToClient("Ld0d");
+				if (useSleep)
+					Sleep(50);
 			}
-			robotManagerSetting();						// robot manager setting
-
-			// workcell robot initial config
-			rManager2->setJointVal(robot2->homePos);
-			rManager1->setJointVal(robot1->homePos);
-			Eigen::VectorXd gripInput(2);
-			gripInput[0] = -0.005;
-			gripInput[1] = 0.005;
-			rManager1->setGripperPosition(gripInput);
-			rManager2->setGripperPosition(gripInput);
-
-			// rrt
-			rrtSetting();
 			//////////////////////////////////////////////////////////////////////
 			//m.lock();
 			isVision = true;
@@ -925,7 +953,7 @@ void communicationFunc(int argc, char **argv)
 			//isHYUPlanning = false;
 			//isRobotState = true;
 			//m.unlock();
-			free(copy);
+			//free(copy);
 		}
 		else if (hyu_data_flag == 'S') {
 			char* copy = (char*)malloc(sizeof(char)*(strlen(hyu_data) + 1));
@@ -971,8 +999,8 @@ void communicationFunc(int argc, char **argv)
 				}
 				else
 				{
-					char* tmp_Data1 = (char*)malloc(30000);
-					memset(tmp_Data1, NULL, 30000);
+					char* tmp_Data1 = (char*)malloc(sizeof(char)*30000);
+					memset(tmp_Data1, NULL, sizeof(char)*30000);
 					strcat(tmp_Data1, "S");
 					sprintf(plus, "%dd", 1);
 					strcat(tmp_Data1, plus);
@@ -1024,8 +1052,8 @@ void communicationFunc(int argc, char **argv)
 				else
 				{
 
-					char* tmp_Data2 = (char*)malloc(30000);
-					memset(tmp_Data2, NULL, 30000);
+					char* tmp_Data2 = (char*)malloc(sizeof(char)*30000);
+					memset(tmp_Data2, NULL, sizeof(char)*30000);
 					strcat(tmp_Data2, "S");
 					sprintf(plus, "%dd", 2);
 					strcat(tmp_Data2, plus);
@@ -1179,8 +1207,8 @@ void communicationFunc(int argc, char **argv)
 					isRobotState = false;
 					isWaypoint = false;
 
-					char* send_data = (char*)malloc(30000);
-					memset(send_data, NULL, 30000);
+					char* send_data = (char*)malloc(sizeof(char)*30000);
+					memset(send_data, NULL, sizeof(char) * 30000);
 					//char send_data[30000];
 					//strcpy(send_data, "");
 					char *add = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
@@ -1216,6 +1244,8 @@ void communicationFunc(int argc, char **argv)
 
 		// _CrtDumpMemoryLeaks();
 		/*hyu_data[0] = '\0';*/
+		if (hyu_data[0] != '\0')
+			free(hyu_data);
 		hyu_data_flag = ' ';
 		if (useSleep)
 			Sleep(50);

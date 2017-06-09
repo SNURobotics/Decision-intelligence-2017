@@ -849,6 +849,11 @@ void updateFunc()
 	cnt++;
 	if (cnt % 100 == 0)
 		temp_cnt++;
+
+
+	workCell->m_ObjWeldJoint[3].SetParentLinkFrame(SE3(Vec3(0.0, 0.0, (double)cnt * 0.01)));
+	workCell->KIN_UpdateFrame_All_The_Entity();
+	gSpace.KIN_MODE_PRESTEP();
 	//if (!gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP())
 	//{
 	//	cout << RAD2DEG(q3) << endl;

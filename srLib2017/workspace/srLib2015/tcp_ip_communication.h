@@ -414,7 +414,10 @@ char* makeJointCommand_SingleRobot(vector<vector<Eigen::VectorXd>>& jointTraj, d
 	}
 
 
-	char tmp_data[30000] = "J";
+	//char tmp_data[30000] = "J";
+	char* tmp_data = (char*)malloc(sizeof(char) * 30000);
+	memset(tmp_data, NULL, sizeof(char) * 30000);
+	strcat(tmp_data, "J");
 	char plus[256];
 	sprintf(plus, "%dd", robotFlag);
 	strcat(tmp_data, plus);
@@ -451,6 +454,7 @@ char* makeJointCommand_SingleRobot(vector<vector<Eigen::VectorXd>>& jointTraj, d
 	}
 	char *send_data = new char[strlen(tmp_data) + 1];
 	strcpy(send_data, tmp_data);
+	free(tmp_data);
 	return send_data;
 };
 
@@ -470,7 +474,10 @@ char* makeForceResult(vector<vector<Eigen::VectorXd>>& forceTraj, int robotFlag)
 	}
 
 
-	char tmp_data[30000] = "M";
+	//char tmp_data[30000] = "M";
+	char* tmp_data = (char*)malloc(sizeof(char) * 30000);
+	memset(tmp_data, NULL, sizeof(char) * 30000);
+	strcat(tmp_data, "M");
 	char plus[256];
 	sprintf(plus, "%dd", robotFlag);
 	strcat(tmp_data, plus);
