@@ -25,3 +25,8 @@ void Object::setBaseLinkFrame(SE3 T)
 {
 	this->GetBaseLink()->SetFrame(T);
 }
+
+SE3 Object::getBaseLinkFrame()
+{
+	return this->GetBaseLink()->GetFrame();
+}
