@@ -4,12 +4,12 @@ close all;
 
 
 %% HYU waypoint
-load('send_data.mat');
-% 
-client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
-fopen(client);
-idx = 1;
-fwrite(client,senddata_set{idx});
+% load('send_data.mat');
+% % 
+% client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
+% fopen(client);
+% idx = 1;
+% fwrite(client,senddata_set{idx});
 
 I33 = reshape(eye(3),9,1);
 p = zeros(3,1);

@@ -166,7 +166,7 @@ int getObjectIdx(int robotIdx);
 
 int main(int argc, char **argv)
 {
-	bool useVision = true;
+	bool useVision = false;
 	if (useVision)
 		useNoVisionTestSetting = false;
 	srand(time(NULL));
@@ -971,11 +971,21 @@ void communicationFunc(int argc, char **argv)
 				}
 				else
 				{
-					char tmp_Data1[30000] = "S";
+					char* tmp_Data1 = (char*)malloc(30000);
+					memset(tmp_Data1, NULL, 30000);
+					strcat(tmp_Data1, "S");
 					sprintf(plus, "%dd", 1);
 					strcat(tmp_Data1, plus);
 					strcpy(plus, "");
 					strcpy(nway_char, "");
+
+					//char tmp_Data1[30000] = "S";
+					//sprintf(plus, "%dd", 1);
+					//strcat(tmp_Data1, plus);
+					//strcpy(plus, "");
+					//strcpy(nway_char, "");
+
+
 					for (unsigned int p = 0; p <= strlen(copy); p++)
 					{
 						if (iter != 0 && iter != 2)
@@ -1000,6 +1010,7 @@ void communicationFunc(int argc, char **argv)
 					printf(send_data1);
 					printf("\n");
 					free(send_data1);
+					free(tmp_Data1);
 					if (hyu_data_output.second[0] == 1) // when gripper input comes
 						gripObjectIdx[0] = getObjectIdx(1);
 				}
@@ -1012,11 +1023,20 @@ void communicationFunc(int argc, char **argv)
 					
 				else
 				{
-					char tmp_Data2[30000] = "S";
+
+					char* tmp_Data2 = (char*)malloc(30000);
+					memset(tmp_Data2, NULL, 30000);
+					strcat(tmp_Data2, "S");
 					sprintf(plus, "%dd", 2);
 					strcat(tmp_Data2, plus);
 					strcpy(plus, "");
 					strcpy(nway_char, "");
+
+					//char tmp_Data2[30000] = "S";
+					//sprintf(plus, "%dd", 2);
+					//strcat(tmp_Data2, plus);
+					//strcpy(plus, "");
+					//strcpy(nway_char, "");
 					iter = 0;
 					for (unsigned int p = 0; p <= strlen(copy); p++)
 					{
@@ -1052,7 +1072,7 @@ void communicationFunc(int argc, char **argv)
 					printf(send_data2);
 					printf("\n");
 					free(send_data2);
-					
+					free(tmp_Data2);
 					if (hyu_data_output.second[1] == 1) // when gripper input comes
 						gripObjectIdx[1] = getObjectIdx(2);
 				}
@@ -1158,8 +1178,11 @@ void communicationFunc(int argc, char **argv)
 					isVision = false;
 					isRobotState = false;
 					isWaypoint = false;
-					char send_data[30000];
-					strcpy(send_data, "");
+
+					char* send_data = (char*)malloc(30000);
+					memset(send_data, NULL, 30000);
+					//char send_data[30000];
+					//strcpy(send_data, "");
 					char *add = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
 					strcat(send_data, add);
 					delete(add);
@@ -1168,6 +1191,7 @@ void communicationFunc(int argc, char **argv)
 					if (useSleep)
 						Sleep(50);
 					printf("%s\n", send_data);
+					free(send_data);
 					if (attachobject.size() > 0 && attachobject[attachobject.size() - 1])
 						gripState_multi[robotFlag - 1] = 1;
 					else
