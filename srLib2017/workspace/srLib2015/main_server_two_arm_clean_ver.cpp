@@ -894,6 +894,7 @@ void communicationFunc(int argc, char **argv)
 
 			if (robotFlag == 1)
 			{
+
 				//rManager1->setJointVal(robot_state.robot_joint);
 				serv.SendMessageToClient("T1");
 				if (useSleep)
@@ -901,6 +902,7 @@ void communicationFunc(int argc, char **argv)
 			}
 			else if (robotFlag == 2)
 			{
+
 				//rManager2->setJointVal(robot_state.robot_joint);
 				serv.SendMessageToClient("T2");
 				if (useSleep)
@@ -1168,6 +1170,8 @@ void communicationFunc(int argc, char **argv)
 				}
 				else
 				{
+					// send not feasible flag
+					serv.SendMessageToClient("W");
 					isHYUPlanning = false;
 					isVision = false;
 					isRobotState = false;
