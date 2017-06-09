@@ -36,11 +36,12 @@ vector<SE3>	goalSE3(2);
 vector<SE3> allSE3_busbar(2 * initSE3.size());
 
 // Workspace
-WorkCell* workCell = new WorkCell();
+int workcell_mode = 2;
+WorkCell* workCell = new WorkCell(workcell_mode);
 Eigen::VectorXd stageVal(3);
 
 // Robot
-IndyRobot* robot1 = new IndyRobot(0.0);
+IndyRobot* robot1 = new IndyRobot(false);
 IndyRobot* robot2 = new IndyRobot;
 Eigen::VectorXd jointVal(6);
 Eigen::VectorXd jointAcc(6);
@@ -138,10 +139,18 @@ int main(int argc, char **argv)
 	environmentSetting_HYU2(true);
 	//jigAssem->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -0.5)));
 	////////////////////////////////////////////// for testing workspace
-	//SE3 Tbase = SE3(Vec3(0.025, 1.095, 1.176));		// when stage attached
-	SE3 Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.009));		// when stage removed
+	SE3 Tbase;
+	if (workcell_mode == 1)
+		Tbase = SE3(Vec3(0.025, 1.095, 1.176));		// when stage attached
+	else if (workcell_mode == 2)
+		Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.099 + 0.009));	// when only stage4 is used
+	else
+		Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.009));		// when stage removed
 	SE3 Tbase2jigbase = EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.184));
+	vector<SE3> busbarSE3set(0);
 
+
+	////////////////////////////////////////////////////////////////////////////////////////
 	//int n = 5;
 	//double bin = 0.4 / (double)n;
 	//busbar.resize(n*n*n);
@@ -159,23 +168,27 @@ int main(int argc, char **argv)
 	//	{
 	//		for (int k = 0; k < n; k++, l++)
 	//		{
-	//			busbar[l]->setBaseLinkFrame(SE3(Vec3((double)i*bin - 0.2, (double)j*bin - 0.2, (double)k*bin)) * Tbase);
+	//			busbarSE3set.push_back(SE3(Vec3((double)i*bin - 0.2, (double)j*bin - 0.2 - 0.6, (double)k*bin - 0.05)) * Tbase * Tbase2jigbase);
+	//			busbar[l]->setBaseLinkFrame(SE3(Vec3((double)i*bin - 0.2, (double)j*bin - 0.2 - 0.6, (double)k*bin - 0.05 - 10.0)) * Tbase * Tbase2jigbase);
 	//		}
 	//	}
 	//}
 
 
-	//busbar.resize(16);
-	//flags.resize(busbar.size());
-	//for (unsigned int i = 0; i < busbar.size()/2; i++)
-	//{
-	//	busbar[2*i] = new BusBar_HYU;
-	//	busbar[2*i+1] = new BusBar_HYU;
-	//	gSpace.AddSystem(busbar[2*i]);
-	//	gSpace.AddSystem(busbar[2 * i + 1]);
-	//	busbar[2*i]->setBaseLinkFrame(Tbase*Tbase2jigbase*jigAssem->holeCenter[i]);
-	//	busbar[2*i+1]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -0.025))*Tbase*Tbase2jigbase*jigAssem->holeCenter[i]);
-	//}
+	busbar.resize(16);
+	busbarSE3set.resize(busbar.size());
+	flags.resize(busbar.size());
+	for (unsigned int i = 0; i < busbar.size()/2; i++)
+	{
+		busbar[2*i] = new BusBar_HYU;
+		busbar[2*i+1] = new BusBar_HYU;
+		gSpace.AddSystem(busbar[2*i]);
+		gSpace.AddSystem(busbar[2 * i + 1]);
+		busbar[2 * i]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -0.025 - 10.0))*Tbase*Tbase2jigbase*jigAssem->holeCenter[i]);
+		busbar[2 * i + 1]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -0.025 - 15.0))*Tbase*Tbase2jigbase*jigAssem->holeCenter[i]);
+		busbarSE3set[2 * i] = Tbase*Tbase2jigbase*jigAssem->holeCenter[i];
+		busbarSE3set[2 * i + 1] = SE3(Vec3(0.0, 0.0, -0.025))*Tbase*Tbase2jigbase*jigAssem->holeCenter[i];
+	}
 
 	
 	///////////////////////////////////////////////////////////////////
@@ -203,32 +216,37 @@ int main(int argc, char **argv)
 
 
 	//////// test inverse kin of robot1
-	//Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
-	//// elbow up
-	//qInit[1] = -0.65*SR_PI;
-	//qInit[2] = 0.3*SR_PI;
-	//qInit[3] = 0.5*SR_PI_HALF;
-	//Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
-	//qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
+	Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
+	// elbow up
+	qInit[1] = -0.65*SR_PI;
+	qInit[2] = 0.3*SR_PI;
+	qInit[3] = 0.5*SR_PI_HALF;
+	Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
+	qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
+	qInit2 = robot1->homePos;
+	rManager1->setJointVal(robot1->homePos);
+	rManager2->setJointVal(robot2->homePos);
+	cout << gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP() << endl;
+	for (unsigned int i = 0; i < busbar.size(); i++)
+	{
+		jointVal = rManager1->inverseKin(busbarSE3set[i] * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flags[i], qInit2);
+		testJointVal.push_back(jointVal);
+		//if (flags[i] != 0)
+		//	jointVal = rManager1->inverseKin(busbar[i]->GetBaseLink()->GetFrame() * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flags[i], qInit);
+		rManager1->setJointVal(jointVal);
+		bool isColli = rManager1->checkCollision();
+		
+		if (flags[i] == 0 && !isColli)
+			busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 1.0, 0.0);
+		if (flags[i] == 1 && !isColli)
+			busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 0.0, 0.1);
+		if (flags[i] == 2 || isColli)
+			busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(1.0, 0.0, 0.0);
+	}
 
-	//for (unsigned int i = 0; i < busbar.size(); i++)
-	//{
-	//	jointVal = rManager1->inverseKin(busbar[i]->GetBaseLink()->GetFrame() * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flags[i], qInit2);
-	//	
-	//	//if (flags[i] != 0)
-	//	//	jointVal = rManager1->inverseKin(busbar[i]->GetBaseLink()->GetFrame() * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flags[i], qInit);
-
-	//	
-	//	if (flags[i] == 0)
-	//		busbar[i]->GetBaseLink()->GetGeomInfo().SetColor(0.0, 1.0, 0.0);
-	//	if (flags[i] == 1)
-	//		busbar[i]->GetBaseLink()->GetGeomInfo().SetColor(0.0, 0.0, 0.1);
-	//	if (flags[i] == 2)
-	//		busbar[i]->GetBaseLink()->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
-	//}
-
-
-
+	for (unsigned int i = 0; i < busbar.size(); i++)
+		busbar[i]->setBaseLinkFrame(busbarSE3set[i]);
+	cout << jointVal.transpose() << endl;
 	////// test inverse kin of robot2
 	//Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
 	//// elbow up
@@ -254,10 +272,10 @@ int main(int argc, char **argv)
 	//}
 
 	// workcell robot initial config
-	jointVal.setZero();
-	jointVal[0] = 0.0; jointVal[1] = -SR_PI_HALF; jointVal[2] = 80.0 / 90.0*SR_PI_HALF; jointVal[3] = SR_PI_HALF;
-	rManager2->setJointVal(jointVal);
-	rManager1->setJointVal(homePos);
+	//jointVal.setZero();
+	//jointVal[0] = 0.0; jointVal[1] = -SR_PI_HALF; jointVal[2] = 80.0 / 90.0*SR_PI_HALF; jointVal[3] = SR_PI_HALF;
+	//rManager2->setJointVal(jointVal);
+	//rManager1->setJointVal(homePos);
 	Eigen::VectorXd gripInput(2);
 	gripInput[0] = -0.009;
 	gripInput[1] = 0.009;
@@ -724,6 +742,18 @@ int main(int argc, char **argv)
 	//cout << Trobotbase2 % robot2->gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]->GetFrame() << endl;
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	//////////////////////////////////////////////////////////////////////////////// test busbar location
+	//busbar[0]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, -0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame());
+	//int flag;
+	//jointVal = rManager1->inverseKin(busbar[0]->GetBaseLink()->GetFrame() * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, robot1->qInvKinInit);
+	//cout << flag << endl;
+	//cout << Trobotbase1 % busbar[0]->GetBaseLink()->GetFrame();
+
+	//busbar[0]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame());
+	//jointVal = rManager2->inverseKin(busbar[0]->GetBaseLink()->GetFrame() * Tbusbar2gripper_new, &robot2->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, robot2->qInvKinInit);
+	//cout << flag << endl;
+	//cout << Trobotbase1 % busbar[0]->GetBaseLink()->GetFrame();
+	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	FTtraj.resize(initPos.size());
 	TtrajVec.resize(initPos.size());
 	busbarTraj.resize(initPos.size());
@@ -775,24 +805,33 @@ void updateFunc()
 	
 
 	static int cnt = 0;
+	static int temp_cnt = 0;
 	//rManager1->setJointVal(testJointValVec[0][cnt % (testJointValVec[0].size() - 1)]);
 	//rManager2->setJointVal(testJointValVec[1][cnt % (testJointValVec[1].size() - 1)]);
 	Eigen::VectorXd testpos = homePos;
 	testpos[5] += 1.0;
 	Eigen::VectorXd testpos1 = Eigen::VectorXd::Zero(6);
-	testpos1[1] = DEG2RAD(30); testpos1[2] = DEG2RAD(-260); testpos1[3] = DEG2RAD(90); testpos1[4] = DEG2RAD(-100);
+	testpos1[1] = DEG2RAD(30); testpos1[2] = DEG2RAD(-90); testpos1[3] = DEG2RAD(90); testpos1[4] = DEG2RAD(-100);
 	static double q3 = DEG2RAD(-235);
 	//q3 += 0.01;
-	testpos1[2] = q3;
-	rManager1->setJointVal(testpos1);
-	rManager2->setJointVal(testpos);
+	//testpos1[2] = q3;
+	//rManager1->setJointVal(robot1->qInvKinInit);
+	//cout << jointVal << endl;
+	//rManager1->setJointVal(testJointVal[temp_cnt % testJointVal.size()]);
+	//rManager1->setJointVal(testJointVal[testJointVal.size() - 1]);
+	//rManager1->setJointVal(testpos1);
+	rManager1->setJointVal(jointVal);
+	rManager2->setJointVal(jointVal);
 	cout << Trobotbase1 % robot1->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() << endl;
 	cout << Trobotbase2 % robot2->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() << endl;
+	cout << gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP() << endl;
+	//cout << testJointVal[testJointVal.size() - 1].transpose() << endl;
 	//rManager1->setJointVal(testjointvalue);
 	//rManager1->setJointVal(testWaypoint);
 	//rManager1->setJointVal(traj[0][cnt%(traj[0].size()-1)]);
 	cnt++;
-
+	if (cnt % 100 == 0)
+		temp_cnt++;
 	//if (!gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP())
 	//{
 	//	cout << RAD2DEG(q3) << endl;
@@ -1212,8 +1251,13 @@ void updateFuncTestSensor()
 
 void environmentSetting_HYU2(bool connect)
 {
-	//SE3 Tbase = SE3(Vec3(0.025, 1.095, 1.176));		// when stage attached
-	SE3 Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.009));		// when stage removed
+	SE3 Tbase;
+	if (workcell_mode == 1)
+		Tbase = SE3(Vec3(0.025, 1.095, 1.176));		// when stage attached
+	else if (workcell_mode == 2)
+		Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.099 + 0.009));	// when only stage4 is used
+	else
+		Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.009));		// when stage removed
 	double z_angle = (double)rand() / RAND_MAX * 0.0;
 	double x_trans = -(double)rand() / RAND_MAX * 0.1;
 	double y_trans = (double)rand() / RAND_MAX * 0.1;

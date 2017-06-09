@@ -158,34 +158,29 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 		*/
 		char newBuf[BUFSIZE + 1] = "";
 		if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT01) == 0 && buf[0] == 'R') {
-			int len = strlen(buf);
 			strcat(newBuf, "R1");
-			strncpy(buf, buf + 1, len - 1);
+			//strncpy(buf, buf + 1, len - 1);
 			strcat(newBuf, buf);
-			strcpy(test_str[testIndex], newBuf);
+			strcpy(test_str[testIndex], "");
+			strcat(test_str[testIndex], newBuf);
 		}
 		else if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT02) == 0 && buf[0] == 'R') {
-			int len = strlen(buf);
 			strcat(newBuf, "R2");
-			strncpy(buf, buf + 1, len - 1);
 			strcat(newBuf, buf);
-			strcpy(test_str[testIndex], newBuf);
+			strcpy(test_str[testIndex], "");
+			strcat(test_str[testIndex], newBuf);
 		}
 		else if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT01) == 0 && buf[0] == 'P') {
-			int len = strlen(buf);
-			printf("receive p1");
 			strcat(newBuf, "P1");
-			strncpy(buf, buf + 1, len - 1);
 			strcat(newBuf, buf);
-			strcpy(test_str[testIndex], newBuf);
+			strcpy(test_str[testIndex], "");
+			strcat(test_str[testIndex], newBuf);
 		}
 		else if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT02) == 0 && buf[0] == 'P') {
-			int len = strlen(buf);
 			strcat(newBuf, "P2");
-			printf("receive p2");
-			strncpy(buf, buf + 1, len - 1);
 			strcat(newBuf, buf);
-			strcpy(test_str[testIndex], newBuf);
+			strcpy(test_str[testIndex], "");
+			strcat(test_str[testIndex], newBuf);
 		}
 		//
 		else

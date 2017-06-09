@@ -1,53 +1,63 @@
 clc;
 clear;
 close all;
-% 
-% %% HYU waypoint
-% load('send_data.mat');
-% 
-% client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
-% fopen(client);
-% idx = 5;
-% fwrite(client,senddata_set{idx});
-% 
-% I33 = reshape(eye(3),9,1);
-% p = zeros(3,1);
-% ft = zeros(6,1);
-% joint = zeros(6,1);
-% joint(2) = -pi/2;
-% joint(4) = pi/2;
-% joint(5) = -pi/2;
-% 
-% send_data = ['P';'1';'d'];
-% for i = 1:3
-%     send_data = [send_data; num2str(p(i))'; 'd'];
-% end
-% for i = 1:9
-%     send_data = [send_data; num2str(I33(i))'; 'd'];
-% end
-% send_data = [send_data; num2str(0)'; 'd'];
-% for i = 1:6
-%     send_data = [send_data; num2str(ft(i))'; 'd'];
-% end
-% for i = 1:6
-%     send_data = [send_data; num2str(joint(i))'; 'd'];
-% end
-% 
-% send_data2 = ['P';'2';'d'];
-% for i = 1:3
-%     send_data2 = [send_data2; num2str(p(i))'; 'd'];
-% end
-% for i = 1:9
-%     send_data2 = [send_data2; num2str(I33(i))'; 'd'];
-% end
-% send_data2 = [send_data2; num2str(0)'; 'd'];
-% for i = 1:6
-%     send_data2 = [send_data2; num2str(ft(i))'; 'd'];
-% end
-% for i = 1:6
-%     send_data2 = [send_data2; num2str(joint(i))'; 'd'];
-% end
-% fwrite(client,send_data);
+
+
+%% HYU waypoint
+load('send_data.mat');
+
+client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
+fopen(client);
+idx = 1;
+fwrite(client,senddata_set{idx});
+
+I33 = reshape(eye(3),9,1);
+p = zeros(3,1);
+ft = zeros(6,1);
+joint1 = zeros(6,1);
+joint1(2) = pi/6;
+joint1(3) = -220/180*pi;
+joint1(4) = pi/2;
+joint1(5) = -100/180*pi;
+joint2 = zeros(6,1);
+joint2(2) = -pi/2;
+joint2(4) = pi/2;
+joint2(5) = -pi/2;
+
+send_data = ['P';'1';'d'];
+for i = 1:3
+    send_data = [send_data; num2str(p(i))'; 'd'];
+end
+for i = 1:9
+    send_data = [send_data; num2str(I33(i))'; 'd'];
+end
+send_data = [send_data; num2str(0)'; 'd'];
+for i = 1:6
+    send_data = [send_data; num2str(ft(i))'; 'd'];
+end
+send_data = [send_data; num2str(0)'; 'd'];
+send_data = [send_data; num2str(0)'; 'd'];
+for i = 1:6
+    send_data = [send_data; num2str(joint1(i))'; 'd'];
+end
+
+send_data2 = ['P';'2';'d'];
+for i = 1:3
+    send_data2 = [send_data2; num2str(p(i))'; 'd'];
+end
+for i = 1:9
+    send_data2 = [send_data2; num2str(I33(i))'; 'd'];
+end
+send_data2 = [send_data2; num2str(0)'; 'd'];
+for i = 1:6
+    send_data2 = [send_data2; num2str(ft(i))'; 'd'];
+end
+send_data2 = [send_data2; num2str(0)'; 'd'];
+send_data2 = [send_data2; num2str(0)'; 'd'];
+for i = 1:6
+    send_data2 = [send_data2; num2str(joint2(i))'; 'd'];
+end
+fwrite(client,send_data);
 % fwrite(client,send_data2);
 % receive robot traj from server
 
@@ -289,10 +299,10 @@ fwrite(client,send_data3);
 I33 = reshape(eye(3),9,1);
 p = zeros(3,1);
 ft = zeros(6,1);
-joint = zeros(6,1);
-joint(2) = -pi/2;
-joint(4) = pi/2;
-joint(5) = -pi/2;
+joint2 = zeros(6,1);
+joint2(2) = -pi/2;
+joint2(4) = pi/2;
+joint2(5) = -pi/2;
 
 send_data = ['P';'1';'d'];
 for i = 1:3
@@ -306,7 +316,7 @@ for i = 1:6
     send_data = [send_data; num2str(ft(i))'; 'd'];
 end
 for i = 1:6
-    send_data = [send_data; num2str(joint(i))'; 'd'];
+    send_data = [send_data; num2str(joint2(i))'; 'd'];
 end
 
 send_data2 = ['P';'2';'d'];
@@ -321,7 +331,7 @@ for i = 1:6
     send_data2 = [send_data2; num2str(ft(i))'; 'd'];
 end
 for i = 1:6
-    send_data2 = [send_data2; num2str(joint(i))'; 'd'];
+    send_data2 = [send_data2; num2str(joint2(i))'; 'd'];
 end
 % fwrite(client,send_data);
 fwrite(client,send_data2);

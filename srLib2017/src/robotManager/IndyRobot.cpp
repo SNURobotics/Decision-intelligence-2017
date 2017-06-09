@@ -2,7 +2,7 @@
 #include "common\utils.h"
 #include "makeSpecialCol.h"
 
-IndyRobot::IndyRobot(double gripperRot)
+IndyRobot::IndyRobot(bool elbowUp, double gripperRot)
 {
 	for (int i = 0; i < NUM_OF_RJOINT_INDY; i++)
 		gJoint[i] = new srRevoluteJoint;
@@ -15,9 +15,21 @@ IndyRobot::IndyRobot(double gripperRot)
 
 	AssembleModel(gripperRot);
 	AssembleCollision();
-	SetJointLimit();
+	SetJointLimit(elbowUp);
 	SetInitialConfiguration();
 	SetInertia();
+	homePos = Eigen::VectorXd::Zero(6);
+	qInvKinInit = Eigen::VectorXd::Zero(6);
+	if (elbowUp)
+	{
+		homePos[1] = -SR_PI_HALF; homePos[3] = SR_PI_HALF; homePos[4] = -0.5 * SR_PI;
+		qInvKinInit[0] = -0.224778; qInvKinInit[1] = -1.91949; qInvKinInit[2] = -0.384219; qInvKinInit[3] = 1.5708; qInvKinInit[4] = -0.73291; qInvKinInit[5] = 1.79557;
+	}
+	else
+	{
+		homePos[1] = DEG2RAD(30); homePos[2] = DEG2RAD(-220); homePos[3] = DEG2RAD(90); homePos[4] = DEG2RAD(-100); 
+		qInvKinInit[0] = -0.074913; qInvKinInit[1] = -0.612778; qInvKinInit[2] = -2.488023; qInvKinInit[3] = 1.570796; qInvKinInit[4] = -1.530005; qInvKinInit[5] = 1.645710;
+	}
 	this->SetSelfCollision(true);
 }
 
@@ -50,25 +62,44 @@ void IndyRobot::SetGripperActType(srJoint::ACTTYPE actType, vector<int> gpJointI
 		gPjoint[gpJointIdx[i]]->SetActType(actType);
 }
 
-void IndyRobot::SetJointLimit()
+void IndyRobot::SetJointLimit(bool elbowUp)
 {
 	// unit: deg
 	// from robot spec
 	
 	// R joint
-	UpperJointLimit[Indy_Index::JOINT_1] = 130;
-	UpperJointLimit[Indy_Index::JOINT_2] = 135;
-	UpperJointLimit[Indy_Index::JOINT_3] = 80;
-	UpperJointLimit[Indy_Index::JOINT_4] = 180;
-	UpperJointLimit[Indy_Index::JOINT_5] = 180;
-	UpperJointLimit[Indy_Index::JOINT_6] = 200;
-	
-	LowerJointLimit[Indy_Index::JOINT_1] = -130;
-	LowerJointLimit[Indy_Index::JOINT_2] = -135;
-	LowerJointLimit[Indy_Index::JOINT_3] = -100;
-	LowerJointLimit[Indy_Index::JOINT_4] = -90;
-	LowerJointLimit[Indy_Index::JOINT_5] = -180;
-	LowerJointLimit[Indy_Index::JOINT_6] = -200;
+	if (elbowUp)
+	{
+		UpperJointLimit[Indy_Index::JOINT_1] = 130;
+		UpperJointLimit[Indy_Index::JOINT_2] = 135;
+		UpperJointLimit[Indy_Index::JOINT_3] = 80;
+		UpperJointLimit[Indy_Index::JOINT_4] = 180;
+		UpperJointLimit[Indy_Index::JOINT_5] = 180;
+		UpperJointLimit[Indy_Index::JOINT_6] = 200;
+
+		LowerJointLimit[Indy_Index::JOINT_1] = -130;
+		LowerJointLimit[Indy_Index::JOINT_2] = -135;
+		LowerJointLimit[Indy_Index::JOINT_3] = -100;
+		LowerJointLimit[Indy_Index::JOINT_4] = -90;
+		LowerJointLimit[Indy_Index::JOINT_5] = -180;
+		LowerJointLimit[Indy_Index::JOINT_6] = -200;
+	}
+	else
+	{
+		UpperJointLimit[Indy_Index::JOINT_1] = 130;
+		UpperJointLimit[Indy_Index::JOINT_2] = 135;
+		UpperJointLimit[Indy_Index::JOINT_3] = -90;			// 80, to maintain elbow down shape (reducing range will beneficial for fast planning)
+		UpperJointLimit[Indy_Index::JOINT_4] = 180;
+		UpperJointLimit[Indy_Index::JOINT_5] = 180;
+		UpperJointLimit[Indy_Index::JOINT_6] = 200;
+
+		LowerJointLimit[Indy_Index::JOINT_1] = -130;
+		LowerJointLimit[Indy_Index::JOINT_2] = -135;
+		LowerJointLimit[Indy_Index::JOINT_3] = -235;		// -100
+		LowerJointLimit[Indy_Index::JOINT_4] = -90;
+		LowerJointLimit[Indy_Index::JOINT_5] = -180;
+		LowerJointLimit[Indy_Index::JOINT_6] = -200;
+	}
 
 	// P joint
 	UpperPJointLimit[Indy_Index::GRIPJOINT_L] = 0.0294*0.5;

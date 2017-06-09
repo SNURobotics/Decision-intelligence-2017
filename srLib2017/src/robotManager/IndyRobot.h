@@ -45,7 +45,7 @@ public:
 class IndyRobot : public srSystem
 {
 public:
-	IndyRobot(double gripperRot = 0.0);
+	IndyRobot(bool elbowUp = true, double gripperRot = 0.0);
 	~IndyRobot();
 
 public:
@@ -74,7 +74,7 @@ public:
 	void	SetActType(srJoint::ACTTYPE actType = srJoint::HYBRID);
 	void	SetGripperActType(srJoint::ACTTYPE actType = srJoint::HYBRID);
 	void	SetGripperActType(srJoint::ACTTYPE actType, vector<int> gpJointIdx);
-	void	SetJointLimit();
+	void	SetJointLimit(bool elbowUp = true);
 	void	SetVelocityLimit();
 	//	void	SetAccelerationLimit();
 
@@ -87,6 +87,8 @@ public:
 
 	Eigen::VectorXd	getLowerJointLimit() const;
 	Eigen::VectorXd getUpperJointLimit() const;
+	Eigen::VectorXd homePos;
+	Eigen::VectorXd qInvKinInit;
 
 public:
 	int m_numCollision;
