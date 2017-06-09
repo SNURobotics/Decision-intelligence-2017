@@ -46,7 +46,7 @@ vector<srWeldJoint*> wJoint(0);		// weld joint for connecting workcell and obsta
 SE3 initBusbar = SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.5)));
 
 // Workspace
-int workcell_mode = 2;
+int workcell_mode = 0;
 WorkCell* workCell = new WorkCell(workcell_mode);
 Eigen::VectorXd stageVal(3);
 
@@ -122,7 +122,7 @@ vector<desired_dataset> hyu_desired_dataset;
 vision_data skku_dataset;
 robot_current_data robot_state;
 static mutex m;
-char hyu_data[BUFFER_SIZE];
+char hyu_data[30000];
 char hyu_data_flag;
 bool useSleep = false;
 
@@ -1094,7 +1094,7 @@ void communicationFunc(int argc, char **argv)
 					isVision = false;
 					isRobotState = false;
 					isWaypoint = false;
-					char send_data[BUFFER_SIZE];
+					char send_data[30000];
 					strcpy(send_data, "");
 					strcat(send_data, makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag));
 					//char* send_data = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
