@@ -50,10 +50,10 @@ vector<srWeldJoint*> wJoint(0);		// weld joint for connecting workcell and obsta
 SE3 initBusbar = SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.5)));
 
 // Workspace
-int workcell_mode = 0;
+int workcell_mode = 2;
 WorkCell* workCell = new WorkCell(workcell_mode);
 Eigen::VectorXd stageVal(3);
-bool useNoVisionTestSetting = false;
+bool useNoVisionTestSetting = true;
 
 // Robot
 IndyRobot* robot1 = new IndyRobot(false);
@@ -83,6 +83,7 @@ vector<vector<bool>> attachObjectWaypoint(2);
 vector<vector<int>> idxTraj(0);
 vector<Eigen::VectorXd> initPos(0);
 vector<Eigen::VectorXd> goalPos(0);
+bool checkTorque = false;
 
 // Rendering flags
 static bool isVision = false;
@@ -162,10 +163,12 @@ void RRT_problemSettingFromSingleRobotCommand(const desired_dataset & hyu_desire
 void RRT_problemSetting_SingleRobot(Eigen::VectorXd init, vector<SE3> wayPoints, vector<bool> includeOri, vector<bool> attachObject, vector<bool>& waypointFlag, int robotFlag);
 void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize, int robotFlag);
 int getObjectIdx(int robotIdx);
+vector<Eigen::VectorXd> calculateJointTorque(vector<vector<Eigen::VectorXd>>& traj, int robotFlag);
 
 
 int main(int argc, char **argv)
 {
+	Eigen::initParallel();
 	bool useVision = false;
 	if (useVision)
 		useNoVisionTestSetting = false;
@@ -332,7 +335,8 @@ void environmentSetting_HYU2(bool connect)
 	//	busbar[i]->SetBaseLinkType(srSystem::FIXED);
 	//	gSpace.AddSystem(busbar[i]);
 	//}
-	Vec3 testJigPosFromRobot1(-0.702151, -0.014057, 0.750026);
+	//Vec3 testJigPosFromRobot1(-0.702151, -0.014057, 0.750026);		// 17.06.09 using robot1
+	Vec3 testJigPosFromRobot1(-0.8254, 0.0338, 0.7483);		// 17.06.10 using robot2
 	jigAssem->SetBaseLinkType(srSystem::FIXED);
 	if (!useNoVisionTestSetting)
 		jigAssem->setBaseLinkFrame(Tbase*Tbase2jigbase);
@@ -356,8 +360,8 @@ void environmentSetting_HYU2(bool connect)
 		{
 			SE3 tempSE3 = Trobotbase1 * SE3(testJigPosFromRobot1);
 			SE3 Tjig = Trobotbase1 % SE3(tempSE3.GetPosition()) * jigAssem->m_visionOffset;
-			cout << "Tjig" << endl;
-			cout << Tjig << endl;
+			//cout << "Tjig" << endl;
+			//cout << Tjig << endl;
 			wJoint->SetParentLinkFrame(SE3(tempSE3.GetPosition()) * jigAssem->m_visionOffset);
 		}
 		wJoint->SetChildLinkFrame(SE3());
@@ -579,11 +583,16 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 void objectSetting()
 {
 	vector<SE3> testInit(4);
-	testInit[0] = Trobotbase1 * SE3(-0.51328, 0.85822, 1.1137e-06, 0.85822, 0.51328, 5.4682e-06, 3.5287e-06, 3.3661e-06, -1, -0.28018, -0.10959, 0.85844);
-	testInit[1] = Trobotbase1 * SE3(-0.9354,0.35358,5.9942e-06,0.35358,0.9354,-6.9362e-06,-8.4326e-06,-4.4553e-06,-1,-0.26685,-0.020595,0.85866);
-	testInit[2] = Trobotbase1 * SE3(-0.66831,-0.74389,-1.1055e-05,-0.74389,0.66831,-4.5087e-06,9.9899e-06,5.0997e-06,-1,-0.3734,0.011193,0.85824);
-	testInit[3] = Trobotbase1 * SE3(-0.20649,0.97845,-2.1991e-05,0.97845,0.20649,-1.3097e-06,2.7943e-06,-2.1829e-05,-1,-0.36767,0.11754,0.85743);
-	
+	// 17.06.09 (using robot1)
+	//testInit[0] = Trobotbase1 * SE3(-0.51328, 0.85822, 1.1137e-06, 0.85822, 0.51328, 5.4682e-06, 3.5287e-06, 3.3661e-06, -1, -0.28018, -0.10959, 0.85844);
+	//testInit[1] = Trobotbase1 * SE3(-0.9354,0.35358,5.9942e-06,0.35358,0.9354,-6.9362e-06,-8.4326e-06,-4.4553e-06,-1,-0.26685,-0.020595,0.85866);
+	//testInit[2] = Trobotbase1 * SE3(-0.66831,-0.74389,-1.1055e-05,-0.74389,0.66831,-4.5087e-06,9.9899e-06,5.0997e-06,-1,-0.3734,0.011193,0.85824);
+	//testInit[3] = Trobotbase1 * SE3(-0.20649,0.97845,-2.1991e-05,0.97845,0.20649,-1.3097e-06,2.7943e-06,-2.1829e-05,-1,-0.36767,0.11754,0.85743);
+	// 17.06.10 (using robot2)
+	testInit[0] = Trobotbase1 * SE3(0.49715, -0.86767, -2.3813e-06, -0.86767, -0.49714, -1.4671e-06, 4.218e-07, 2.6782e-06, -1, -1.2308, 0.17082, 1.0477);
+	testInit[1] = Trobotbase1 * SE3(-0.11762, -0.99306, 1.039e-06, -0.99306, 0.11762, -5.0989e-06, 5.0868e-06, -8.7669e-07, -1, -1.204, 0.028933, 1.0467);
+	testInit[2] = Trobotbase1 * SE3(-0.84321, -0.53758, 6.7572e-06, -0.53758, 0.84321, 4.3601e-06, -8.1082e-06, 3.8774e-07, -1, -1.2815, -0.060334, 1.0468);
+	testInit[3] = Trobotbase1 * SE3(-0.014703,-0.99989,-8.5711e-07,-0.99989,0.014703,-3.6814e-06,3.9231e-06,7.9429e-08,-1,-1.2911,0.095115,1.0473);
 	for (unsigned int i = 0; i < busbar.size(); i++)
 	{
 		busbar[i] = new BusBar_HYU;
@@ -920,25 +929,58 @@ void communicationFunc(int argc, char **argv)
 			char* copy = (char*)malloc(sizeof(char)*(strlen(hyu_data) + 1));
 			for (unsigned int p = 0; p <= strlen(hyu_data); p++)
 				copy[p] = hyu_data[p];
-			serv.SendMessageToClient(copy);
-			if (useSleep)
-				Sleep(50);
 			printf("%s\n", hyu_data);
 			int robotFlag = 0;
 			robotFlag = readRobotCurState(hyu_data, robot_state);
 
 			if (robotFlag == 1)
 			{
-
 				//rManager1->setJointVal(robot_state.robot_joint);
+				serv.SendMessageToClient(copy);
+				Sleep(50);
 				serv.SendMessageToClient("T1");
 				if (useSleep)
 					Sleep(50);
 			}
 			else if (robotFlag == 2)
 			{
-
 				//rManager2->setJointVal(robot_state.robot_joint);
+				//char pbuffer[100];
+				//char tmp_buffer[255];
+				//int digit_num = 5;
+				//SE3 robot2StateFromRobot1;
+				//for (int i = 0; i < 9; i++)
+				//	robot2StateFromRobot1[i] = robot_state.robot_rot[i];
+				//for (int i = 0; i < 3; i++)
+				//	robot2StateFromRobot1[9 + i] = robot_state.robot_pos[i];
+				//robot2StateFromRobot1 = Trobotbase1 % Trobotbase2 * robot2StateFromRobot1;
+
+				//char *temp_data = strtok(copy, "d");
+
+				//char* copy2 = (char*)malloc(sizeof(char) * 30000);
+				//memset(copy2, NULL, sizeof(char) * 30000);
+				//strcat(copy2, temp_data);
+				//strcat(copy2, "d");
+				//for (int i = 0; i < 12; i++)
+				//{
+				//	temp_data = strtok(NULL, "d");
+				//	strcpy(pbuffer, "");
+				//	strcat(pbuffer, _gcvt(robot2StateFromRobot1[i], digit_num, tmp_buffer));
+				//	strcat(copy2, pbuffer);
+				//	strcat(copy2, "d");
+				//}
+				//while (temp_data != NULL)
+				//{
+				//	temp_data = strtok(NULL, "d");
+				//	strcat(copy2, temp_data);
+				//	strcat(copy2, "d");
+				//}
+				//serv.SendMessageToClient(copy2);
+				//if (useSleep)
+				//	Sleep(50);
+
+				serv.SendMessageToClient(copy);
+				Sleep(50);
 				serv.SendMessageToClient("T2");
 				if (useSleep)
 					Sleep(50);
@@ -953,7 +995,7 @@ void communicationFunc(int argc, char **argv)
 			//isHYUPlanning = false;
 			//isRobotState = true;
 			//m.unlock();
-			//free(copy);
+			free(copy);
 		}
 		else if (hyu_data_flag == 'S') {
 			char* copy = (char*)malloc(sizeof(char)*(strlen(hyu_data) + 1));
@@ -989,7 +1031,7 @@ void communicationFunc(int argc, char **argv)
 				int nway;
 				int iter = 0;
 				int n_inside_way = 19;
-				char plus[10];
+				char plus[3];
 				char nway_char[10];
 				int disregardNum = 3;
 				if (hyu_data_output.second[0] == 0)
@@ -1220,6 +1262,17 @@ void communicationFunc(int argc, char **argv)
 						Sleep(50);
 					printf("%s\n", send_data);
 					free(send_data);
+					if (checkTorque)
+					{
+						vector<Eigen::VectorXd> tauTrj = calculateJointTorque(renderTraj_multi[robotFlag - 1], robotFlag);
+						Eigen::VectorXd maxTau = Eigen::VectorXd::Zero(6);
+						for (unsigned int i = 0; i < tauTrj.size(); i++)
+						{
+							maxTau = maxTau.cwiseMax(tauTrj[i]);
+							printf("maximum torque: \n");
+							cout << maxTau.transpose() << endl;
+						}
+					}
 					if (attachobject.size() > 0 && attachobject[attachobject.size() - 1])
 						gripState_multi[robotFlag - 1] = 1;
 					else
@@ -1417,4 +1470,31 @@ void updateFuncWaypoint()
 		}
 			
 	}
+}
+
+vector<Eigen::VectorXd> calculateJointTorque(vector<vector<Eigen::VectorXd>>& traj, int robotFlag)
+{
+	vector<Eigen::VectorXd> qTrj(0);
+	for (unsigned int i = 0; i < traj.size(); i++)
+	{
+		for (unsigned int j = 0; j < traj[i].size(); j++)
+		{
+			if (qTrj.size() > 0 && (traj[i][j] - qTrj[qTrj.size() - 1]).norm() > 1.0e-5)
+				qTrj.push_back(traj[i][j]);
+		}
+	}
+	vector<double> dt(qTrj.size());
+	vector<Eigen::VectorXd> vTrj(qTrj.size());
+	vector<Eigen::VectorXd> aTrj(qTrj.size());
+	for (unsigned int i = 0; i < qTrj.size() - 1; i++)
+	{
+		dt[i] = (qTrj[i + 1] - qTrj[i]).cwiseAbs().sum() * 10.0;
+		vTrj[i] = (qTrj[i + 1] - qTrj[i]) / dt[i];
+	}
+	for (unsigned int i = 0; i < qTrj.size() - 1; i++)
+		aTrj[i] = (vTrj[i + 1] - vTrj[i]) / dt[i];
+	vector<Eigen::VectorXd> tauTrj(qTrj.size() - 1);
+	for (unsigned int i = 0; i < qTrj.size() - 1; i++)
+		tauTrj[i] = rManagerVector[robotFlag - 1]->inverseDyn(qTrj[i], vTrj[i], aTrj[i]);
+	return tauTrj;
 }

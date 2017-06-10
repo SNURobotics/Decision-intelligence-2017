@@ -347,6 +347,7 @@ char *Server::RecevData()
 			}
 				
 			char *name = (char *)malloc(sizeof(char)*BUFFER_SIZE);
+			memset(name, NULL, sizeof(char)*BUFFER_SIZE);
 			printf(test_str[index]);
 			printf("             ...receivedData\n");
 			strcpy(name, test_str[index]);

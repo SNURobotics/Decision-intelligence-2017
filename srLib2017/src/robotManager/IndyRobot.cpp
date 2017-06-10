@@ -22,7 +22,8 @@ IndyRobot::IndyRobot(bool elbowUp, double gripperRot)
 	qInvKinInit = Eigen::VectorXd::Zero(6);
 	if (elbowUp)
 	{
-		homePos[1] = -SR_PI_HALF; homePos[3] = SR_PI_HALF; homePos[4] = -0.5 * SR_PI;
+		//homePos[1] = -SR_PI_HALF; homePos[3] = SR_PI_HALF; homePos[4] = -0.5 * SR_PI;
+		homePos[1] = -SR_PI_HALF; homePos[2] = DEG2RAD(40.0); homePos[3] = SR_PI_HALF; homePos[4] = DEG2RAD(40);
 		qInvKinInit[0] = -0.224778; qInvKinInit[1] = -1.91949; qInvKinInit[2] = -0.384219; qInvKinInit[3] = 1.5708; qInvKinInit[4] = -0.73291; qInvKinInit[5] = 1.79557;
 	}
 	else

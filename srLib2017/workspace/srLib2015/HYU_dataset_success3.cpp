@@ -31,6 +31,7 @@ vector<SE3> jig2busbar(2);
 //vector<SE3> allSE3_busbar(2 * busbar.size());
 
 vector<BusBar_HYU*> busbar(1);
+vector<Insert*> ctCase(1);
 vector<SE3>	initSE3(2);
 vector<SE3>	goalSE3(2);
 vector<SE3> allSE3_busbar(2 * initSE3.size());
@@ -50,6 +51,7 @@ srSpace gSpace;
 myRenderer* renderer;
 SE3 Tbusbar2gripper = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
 SE3 Tbusbar2gripper_new = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
+SE3 TctCase2gripper = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.006, 0.031625, 0.01));
 SE3 Thole2busbar = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
 
 // Planning
@@ -277,8 +279,8 @@ int main(int argc, char **argv)
 	//rManager2->setJointVal(jointVal);
 	//rManager1->setJointVal(homePos);
 	Eigen::VectorXd gripInput(2);
-	gripInput[0] = -0.009;
-	gripInput[1] = 0.009;
+	gripInput[0] = -0.005;
+	gripInput[1] = 0.005;
 	rManager1->setGripperPosition(gripInput);
 	rManager2->setGripperPosition(gripInput);
 
@@ -743,19 +745,19 @@ int main(int argc, char **argv)
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////////////////////// test busbar location
-	double xpos = -0.2;
-	busbar[0]->GetBaseLink()->SetFrame(SE3(Vec3(xpos, -0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame());
-	int flag;
-	jointVal = rManager1->inverseKin(busbar[0]->GetBaseLink()->GetFrame() * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, robot1->qInvKinInit);
-	cout << flag << endl;
-	cout << Trobotbase1 % busbar[0]->GetBaseLink()->GetFrame();
+	//double xpos = -0.2;
+	//busbar[0]->GetBaseLink()->SetFrame(SE3(Vec3(xpos, -0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame());
+	//int flag;
+	//jointVal = rManager1->inverseKin(busbar[0]->GetBaseLink()->GetFrame() * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, robot1->qInvKinInit);
+	//cout << flag << endl;
+	//cout << Trobotbase1 % busbar[0]->GetBaseLink()->GetFrame();
 
-	xpos = -0.2;
-	cout << Trobotbase1 % SE3(Vec3(xpos, -0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame();
-	xpos = -0.1;
-	cout << Trobotbase1 % SE3(Vec3(xpos, -0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame();
-	xpos = 0.1;
-	cout << Trobotbase1 % SE3(Vec3(xpos, -0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame();
+	//xpos = -0.2;
+	//cout << Trobotbase1 % SE3(Vec3(xpos, -0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame();
+	//xpos = -0.1;
+	//cout << Trobotbase1 % SE3(Vec3(xpos, -0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame();
+	//xpos = 0.1;
+	//cout << Trobotbase1 % SE3(Vec3(xpos, -0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame();
 
 	//double xpos = -0.2;
 	//int flag;
@@ -771,6 +773,22 @@ int main(int argc, char **argv)
 	//xpos = 0.1;
 	//cout << Trobotbase1 % SE3(Vec3(xpos, 0.4, -0.05)) * jigAssem->GetBaseLink()->GetFrame();
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	////////////////////////////////////////////////////////////////////////////////////////// test ctCase location
+	int flag;
+	ctCase[0]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, 0.01)) * jigAssem->GetBaseLink()->GetFrame());
+
+	jointVal = rManager2->inverseKin(ctCase[0]->GetBaseLink()->GetFrame() * TctCase2gripper, &robot2->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, robot2->qInvKinInit);
+
+	cout << Trobotbase1 % ctCase[0]->GetBaseLink()->GetFrame() * TctCase2gripper;
+	cout << Trobotbase1 % ctCase[0]->GetBaseLink()->GetFrame() * Inv(ctCase[0]->m_visionOffset);
+
+	cout << Trobotbase1 % SE3(Vec3(0.0, 0.0, 0.05)) * ctCase[0]->GetBaseLink()->GetFrame() * TctCase2gripper;
+	cout << Trobotbase1 % ctCase[0]->GetBaseLink()->GetFrame() * Inv(ctCase[0]->m_visionOffset);
+
+	//SE3 TctCaseDrop = SE3(-0.8377,-0.54613,-1.4986e-06,-0.54613,0.835,-4.7415e-05,2.3729e-06,-1.8125e-06,-1,-0.84198,0.45533,0.84967);
+
 	FTtraj.resize(initPos.size());
 	TtrajVec.resize(initPos.size());
 	busbarTraj.resize(initPos.size());
@@ -851,9 +869,9 @@ void updateFunc()
 		temp_cnt++;
 
 
-	workCell->m_ObjWeldJoint[3].SetParentLinkFrame(SE3(Vec3(0.0, 0.0, (double)cnt * 0.01)));
-	workCell->KIN_UpdateFrame_All_The_Entity();
-	gSpace.KIN_MODE_PRESTEP();
+	//workCell->m_ObjWeldJoint[3].SetParentLinkFrame(SE3(Vec3(0.0, 0.0, (double)cnt * 0.01)));
+	//workCell->KIN_UpdateFrame_All_The_Entity();
+	//gSpace.KIN_MODE_PRESTEP();
 	//if (!gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP())
 	//{
 	//	cout << RAD2DEG(q3) << endl;
@@ -1291,6 +1309,13 @@ void environmentSetting_HYU2(bool connect)
 		busbar[i]->SetBaseLinkType(srSystem::FIXED);
 		busbar[i]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, 10.0*(i+1))));
 		gSpace.AddSystem(busbar[i]);
+	}
+	for (unsigned int i = 0; i < ctCase.size(); i++)
+	{
+		ctCase[i] = new Insert;
+		ctCase[i]->SetBaseLinkType(srSystem::FIXED);
+		ctCase[i]->setBaseLinkFrame(SE3(Vec3(0.0, 10.0, (double) 10.0 * (i + 1))));
+		gSpace.AddSystem(ctCase[i]);
 	}
 	jigAssem->SetBaseLinkType(srSystem::FIXED);
 	jigAssem->setBaseLinkFrame(Tbase*Tbase2jigbase);

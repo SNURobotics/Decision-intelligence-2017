@@ -418,7 +418,7 @@ char* makeJointCommand_SingleRobot(vector<vector<Eigen::VectorXd>>& jointTraj, d
 	char* tmp_data = (char*)malloc(sizeof(char) * 30000);
 	memset(tmp_data, NULL, sizeof(char) * 30000);
 	strcat(tmp_data, "J");
-	char plus[256];
+	char plus[3];
 	sprintf(plus, "%dd", robotFlag);
 	strcat(tmp_data, plus);
 	sprintf(plus, "%dd", totalNum);
