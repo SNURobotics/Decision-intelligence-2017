@@ -50,10 +50,11 @@ vector<srWeldJoint*> wJoint(0);		// weld joint for connecting workcell and obsta
 SE3 initBusbar = SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.5)));
 
 // Workspace
-int workcell_mode = 2;
+int workcell_mode = 0;
 WorkCell* workCell = new WorkCell(workcell_mode);
 Eigen::VectorXd stageVal(3);
 bool useNoVisionTestSetting = true;
+bool useNoVisionTestSettingJig = true;
 
 // Robot
 IndyRobot* robot1 = new IndyRobot(false);
@@ -197,6 +198,9 @@ int main(int argc, char **argv)
 		rManager1->setGripperPosition(gripInput);
 		rManager2->setGripperPosition(gripInput);
 
+		cout << Trobotbase2 % robot2->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() << endl;
+
+
 		// rrt
 		rrtSetting();
 
@@ -336,9 +340,10 @@ void environmentSetting_HYU2(bool connect)
 	//	gSpace.AddSystem(busbar[i]);
 	//}
 	//Vec3 testJigPosFromRobot1(-0.702151, -0.014057, 0.750026);		// 17.06.09 using robot1
-	Vec3 testJigPosFromRobot1(-0.8254, 0.0338, 0.7483);		// 17.06.10 using robot2
+	//Vec3 testJigPosFromRobot1(-0.8254, 0.0338, 0.7483);		// 17.06.10 using robot2
+	Vec3 testJigPosFromRobot1(-0.8277, - 0.0536,    0.8620);		// 17.06.10 using robot2
 	jigAssem->SetBaseLinkType(srSystem::FIXED);
-	if (!useNoVisionTestSetting)
+	if (!useNoVisionTestSettingJig)
 		jigAssem->setBaseLinkFrame(Tbase*Tbase2jigbase);
 	else
 	{
@@ -354,14 +359,14 @@ void environmentSetting_HYU2(bool connect)
 		wJoint->SetParentLink(workCell->GetBaseLink()); // removed stage
 		//wJoint->SetParentLink(workCell->getStagePlate());
 		wJoint->SetChildLink(jigAssem->GetBaseLink());
-		if (!useNoVisionTestSetting)
+		if (!useNoVisionTestSettingJig)
 			wJoint->SetParentLinkFrame(Tbase*Tbase2jigbase);
 		else
 		{
 			SE3 tempSE3 = Trobotbase1 * SE3(testJigPosFromRobot1);
 			SE3 Tjig = Trobotbase1 % SE3(tempSE3.GetPosition()) * jigAssem->m_visionOffset;
-			//cout << "Tjig" << endl;
-			//cout << Tjig << endl;
+			cout << "Tjig" << endl;
+			cout << Tjig << endl;
 			wJoint->SetParentLinkFrame(SE3(tempSE3.GetPosition()) * jigAssem->m_visionOffset);
 		}
 		wJoint->SetChildLinkFrame(SE3());
@@ -420,6 +425,8 @@ void workspaceSetting()
 		Vec2 stage4xyTrans(0.0, 0.0);
 		workCell->m_ObjWeldJoint[3].SetParentLinkFrame(SE3(Vec3(stage4xyTrans[0], stage4xyTrans[1], 0.0)));
 	}
+
+	
 }
 
 void rrtSetting()
@@ -929,6 +936,9 @@ void communicationFunc(int argc, char **argv)
 			char* copy = (char*)malloc(sizeof(char)*(strlen(hyu_data) + 1));
 			for (unsigned int p = 0; p <= strlen(hyu_data); p++)
 				copy[p] = hyu_data[p];
+			serv.SendMessageToClient(copy);
+			if (useSleep)
+				Sleep(50);
 			printf("%s\n", hyu_data);
 			int robotFlag = 0;
 			robotFlag = readRobotCurState(hyu_data, robot_state);
@@ -936,8 +946,7 @@ void communicationFunc(int argc, char **argv)
 			if (robotFlag == 1)
 			{
 				//rManager1->setJointVal(robot_state.robot_joint);
-				serv.SendMessageToClient(copy);
-				Sleep(50);
+
 				serv.SendMessageToClient("T1");
 				if (useSleep)
 					Sleep(50);
@@ -979,8 +988,7 @@ void communicationFunc(int argc, char **argv)
 				//if (useSleep)
 				//	Sleep(50);
 
-				serv.SendMessageToClient(copy);
-				Sleep(50);
+
 				serv.SendMessageToClient("T2");
 				if (useSleep)
 					Sleep(50);
@@ -1031,7 +1039,7 @@ void communicationFunc(int argc, char **argv)
 				int nway;
 				int iter = 0;
 				int n_inside_way = 19;
-				char plus[3];
+				char plus[10];
 				char nway_char[10];
 				int disregardNum = 3;
 				if (hyu_data_output.second[0] == 0)

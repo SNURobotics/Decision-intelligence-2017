@@ -401,7 +401,7 @@ void IndyRobot::AssembleCollision()
 	// Cylinder size: H = 182.5, D = 154
 	// Center position = (0,0,182.5*0.5)
 	
-	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.1825*0.5)), 0.154*0.5, 0.1825, thickness, space, numBox);
+	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.1825*0.5)), 0.154*0.5, 0.1825 - 0.04, thickness, space, numBox);
 	for (int i = 0; i < numBox; i++)
 	{
 		gLink[Indy_Index::LINK_1].AddCollision(&gCollision[m_numCollision]);
@@ -496,7 +496,7 @@ void IndyRobot::AssembleCollision()
 		gCollision[m_numCollision++].SetLocalFrame(boxSet[i].second);
 	}
 
-	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(0.3445 + 0.071+ (0.1089 - 0.1015) *0.5 - 0.005, 0.0, (0.0749 - 0.0790*0.5)+ 0.7884 + 0.156*0.5+0.079*0.5)), 0.079*0.5, 0.2104 - 0.01, thickness*0.25, space, numBox);
+	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(0.3445 + 0.071+ (0.1089 - 0.1015) *0.5 - 0.005, 0.0, (0.0749 - 0.0790*0.5)+ 0.7884 + 0.156*0.5+0.079*0.5)), 0.079*0.5 + 0.079*0.25, 0.2104 - 0.01, thickness*0.25, space, numBox);
 	for (int i = 0; i < numBox; i++)
 	{
 		gLink[Indy_Index::LINK_6].AddCollision(&gCollision[m_numCollision]);
@@ -526,8 +526,8 @@ void IndyRobot::AssembleCollision()
 
 	gLink[Indy_Index::GRIPPER].AddCollision(&gCollision[m_numCollision]);
 	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	gCollision[m_numCollision].GetGeomInfo().SetDimension(0.044, 0.043 - eps_colsize, 0.062);
-	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(0.0, -0.0495 - 0.0215, 0.0)));
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(0.044, 0.043 - eps_colsize, 0.062 + 0.04);
+	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(0.0, -0.0495 - 0.0215, 0.0 - 0.04*0.5)));
 
 	gLink[Indy_Index::GRIPPER_FINGER_L].AddCollision(&gCollision[m_numCollision]);
 	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);

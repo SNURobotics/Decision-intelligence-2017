@@ -107,6 +107,13 @@ void WorkCell::AssembleModel()
 	m_ObjLink[8].AddCollision(&m_ObjCollision[21]);
 	m_ObjLink[9].AddCollision(&m_ObjCollision[22]);
 
+	// temporary obstacle
+	m_ObjCollision[23].GetGeomInfo().SetDimension(Vec3(0.6, 0.4, 0.014));
+	m_ObjCollision[23].SetLocalFrame(SE3(Vec3(0.0, 1.57, 0.910 + 0.5*0.014)));
+	m_ObjLink[0].AddCollision(&m_ObjCollision[23]);
+
+
+
 	//// Collision
 	////// left first bar
 	m_ObjCollision[61].GetGeomInfo().SetShape(srGeometryInfo::BOX);

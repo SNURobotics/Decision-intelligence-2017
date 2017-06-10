@@ -66,8 +66,6 @@ for j = 1:12
     tempchar = [tempchar, num2str(temp(j)), ','];
 end
 display(tempchar)
-% jig position
-pjig = [-0.614563, -0.033770, 0.748277]';
 
 
 %%
@@ -101,7 +99,11 @@ for i = 1:numB
     end
     display(tempchar)
 end
+% jig position
+pjig = [-0.614563, -0.033770, 0.748277]';
 
 pjig1 = Trobot12robot2*[pjig; 1];
 
+pjig = [-0.612261, 0.053647, 0.862041]';
 
+pjig1 = Trobot12robot2*[pjig; 1];

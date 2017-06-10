@@ -779,7 +779,9 @@ int main(int argc, char **argv)
 	int flag;
 	ctCase[0]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, 0.01)) * jigAssem->GetBaseLink()->GetFrame());
 
-	jointVal = rManager2->inverseKin(ctCase[0]->GetBaseLink()->GetFrame() * TctCase2gripper, &robot2->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, robot2->qInvKinInit);
+	//jointVal = rManager2->inverseKin(ctCase[0]->GetBaseLink()->GetFrame() * TctCase2gripper, &robot2->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, robot2->qInvKinInit);
+	SE3 Ttest(-0.22185, 0.97154, -0.083059, -0.97496, -0.21966, 0.034789, 0.015554, 0.088697, 0.99594, -0.95131, 0.054624, 0.69);
+	jointVal = rManager2->inverseKin(Trobotbase1 * Ttest, &robot2->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, robot2->qInvKinInit);
 
 	cout << Trobotbase1 % ctCase[0]->GetBaseLink()->GetFrame() * TctCase2gripper;
 	cout << Trobotbase1 % ctCase[0]->GetBaseLink()->GetFrame() * Inv(ctCase[0]->m_visionOffset);
@@ -838,7 +840,7 @@ void updateFunc()
 {
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 	
-
+	busbar[0]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -10.0)));
 	static int cnt = 0;
 	static int temp_cnt = 0;
 	//rManager1->setJointVal(testJointValVec[0][cnt % (testJointValVec[0].size() - 1)]);
@@ -848,18 +850,31 @@ void updateFunc()
 	Eigen::VectorXd testpos1 = Eigen::VectorXd::Zero(6);
 	testpos1[1] = DEG2RAD(30); testpos1[2] = DEG2RAD(-90); testpos1[3] = DEG2RAD(90); testpos1[4] = DEG2RAD(-100);
 	static double q3 = DEG2RAD(-235);
+
+	Eigen::VectorXd testpos2 = robot2->homePos;
+	static double q2 = robot2->homePos[1];
+	q2 -= 0.01;
+	testpos2[1] = q2;
 	//q3 += 0.01;
 	//testpos1[2] = q3;
 	//rManager1->setJointVal(robot1->qInvKinInit);
 	//cout << jointVal << endl;
 	//rManager1->setJointVal(testJointVal[temp_cnt % testJointVal.size()]);
 	//rManager1->setJointVal(testJointVal[testJointVal.size() - 1]);
-	//rManager1->setJointVal(testpos1);
-	rManager1->setJointVal(jointVal);
-	rManager2->setJointVal(jointVal);
-	cout << Trobotbase1 % robot1->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() << endl;
-	cout << Trobotbase2 % robot2->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() << endl;
+	rManager1->setJointVal(robot1->homePos);
+	//rManager1->setJointVal(jointVal);
+	rManager2->setJointVal(robot2->homePos);
+	//cout << Trobotbase1 % robot1->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() << endl;
+	//cout << Trobotbase2 % robot2->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() << endl;
 	cout << gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP() << endl;
+
+	if (gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP())
+	{
+		cout << q2 << endl;
+		int stop = 1;
+	}
+		
+
 	//cout << testJointVal[testJointVal.size() - 1].transpose() << endl;
 	//rManager1->setJointVal(testjointvalue);
 	//rManager1->setJointVal(testWaypoint);
