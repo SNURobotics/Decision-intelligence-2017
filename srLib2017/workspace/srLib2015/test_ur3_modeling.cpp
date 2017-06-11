@@ -45,6 +45,7 @@ int main(int argc, char **argv)
 
 	initDynamics();
 
+	rManager1 = new UR3RobotManager(URRobot, &gSpace);
 	//robotManagerSetting();
 
 	qval.setZero(6);
@@ -89,8 +90,15 @@ void updateFunc()
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 
 	static double JointVal = 0;
-	((srStateJoint*)URRobot->m_KIN_Joints[activeJointIdx])->m_State.m_rValue[0] = JointVal;
+	//((srStateJoint*)URRobot->m_KIN_Joints[activeJointIdx])->m_State.m_rValue[0] = JointVal;
 	JointVal += 0.01;
+
+	static double dist = 0.05;
+
+	//dist += 0.001;
+
+	rManager1->setGripperDistance(dist);
+
 
 	//rManager1->setJointVal(qval);
 
