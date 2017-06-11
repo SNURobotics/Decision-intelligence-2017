@@ -33,6 +33,7 @@
 // memory leakaage check
 #include <crtdbg.h>
 
+static mutex m;
 
 //srLib
 srSpace gSpace;
@@ -45,8 +46,6 @@ vector<Insert*> ctCase(4);
 vector<Object*> objects(busbar.size() + ctCase.size());
 vector<SE3> TobjectsInitSimul(objects.size());
 bool isJigConnectedToWorkCell = true;
-vector<srLink*> obstacle(0);
-vector<srWeldJoint*> wJoint(0);		// weld joint for connecting workcell and obstacle
 SE3 initBusbar = SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.5)));
 
 // Workspace
@@ -123,16 +122,7 @@ vector<Eigen::VectorXd> goalJigLocation(1);
 bool saveTraj = true;
 
 
-// 서버 초기화
-Server serv = Server::Server();
-dataset hyu_dataset;
-vector<desired_dataset> hyu_desired_dataset;
-vision_data skku_dataset;
-robot_current_data robot_state;
-static mutex m;
-char hyu_data_flag;
-bool useSleep = false;
-bool isSystemAssembled = false;
+
 
 // modelling functions
 void workspaceSetting();
@@ -153,7 +143,6 @@ void updateFuncRobotState();
 void updateFuncTotal();
 
 // communication function
-void communicationFunc(int argc, char **argv);		// run on the other thread
 void setEnviromentFromVision(const vision_data& skku_dataset, int& bNum, int& cNum);
 void setRobotFromRealRobot(const robot_current_data& robot_state);
 char* getSimulationState(vector<srSystem*> objects);
@@ -165,6 +154,24 @@ void RRT_problemSetting_SingleRobot(Eigen::VectorXd init, vector<SE3> wayPoints,
 void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize, int robotFlag);
 int getObjectIdx(int robotIdx);
 vector<Eigen::VectorXd> calculateJointTorque(vector<vector<Eigen::VectorXd>>& traj, int robotFlag);
+
+
+void communicationFunc(int argc, char **argv);		// run on the other thread
+
+// 서버 초기화
+Server serv = Server::Server();
+dataset hyu_dataset;
+vector<desired_dataset> hyu_desired_dataset;
+vision_data skku_dataset;
+robot_current_data robot_state;
+
+//char hyu_data[30000];
+char hyu_data_flag;
+bool useSleep = false;
+bool isSystemAssembled = false; 
+
+vector<srLink*> obstacle(0);
+vector<srWeldJoint*> wJoint(0);		// weld joint for connecting workcell and obstacle
 
 
 int main(int argc, char **argv)
@@ -1259,11 +1266,14 @@ void communicationFunc(int argc, char **argv)
 
 					char* send_data = (char*)malloc(sizeof(char)*30000);
 					memset(send_data, NULL, sizeof(char) * 30000);
-					//char send_data[30000];
-					//strcpy(send_data, "");
 					char *add = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
 					strcat(send_data, add);
 					delete(add);
+
+					//char send_data[30000];
+					//strcpy(send_data, "");
+					//strcat(send_data, makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag));
+
 					//char* send_data = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
 					serv.SendMessageToClient(send_data);
 					if (useSleep)
@@ -1307,6 +1317,8 @@ void communicationFunc(int argc, char **argv)
 		/*hyu_data[0] = '\0';*/
 		if (hyu_data[0] != '\0')
 			free(hyu_data);
+
+
 		hyu_data_flag = ' ';
 		if (useSleep)
 			Sleep(50);

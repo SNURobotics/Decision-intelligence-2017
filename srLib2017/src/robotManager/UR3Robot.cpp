@@ -426,9 +426,12 @@ void UR3Robot::AssembleCollision()
 	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-(0.03*0.5 + 0.04385), 0.01 + 0.05285 - 0.5*0.048, 0.0)));
 
 	gLink[UR3_Index::GRIPPER].AddCollision(&gCollision[m_numCollision]);
-	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.15, 0.09 + 0.01485, 0.085));
-	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(0.0, 0.5*(0.01485 - 0.09), 0.0)));
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.15, 0.05 + 0.01485, 0.05));
+	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(0.0, 0.5*(0.01485 - 0.05), 0.0)));
 	
+	gLink[UR3_Index::GRIPPER].AddCollision(&gCollision[m_numCollision]);
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.15, 0.04, 0.085));
+	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(0.0, 0.5*0.04 - 0.09, 0.0)));
 }
 
 void UR3Robot::SetInertia()

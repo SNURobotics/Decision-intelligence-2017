@@ -9,15 +9,20 @@
 #include "robotManager/IndyRobot.h"
 #include "robotManager\UR3Robot.h"
 #include <time.h>
+#include "robotManager\environmentBusbar.h"
 #include "robotManager\environment_QBtech.h"
-#include "RRTmanager\rrtManager.h"
+#include "robotManager\robotRRTManager.h"
 
 
 // Robot
 UR3Robot* URRobot = new UR3Robot;
 UR3RobotManager* rManager1;
 
-
+BusBar_HYU* busbar = new BusBar_HYU;
+Insert* ctCase = new Insert;
+SE3 Tbusbar2gripper_ur = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.025));
+SE3 Tbusbar2gripper_tight = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.015));
+SE3 TctCase2gripper_ur = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.006, 0.031625, 0.015));
 
 Eigen::VectorXd qval;
 
@@ -26,34 +31,67 @@ myRenderer* renderer;
 
 
 robotManager* rManager2;
-rrtManager* RRTManager = new rrtManager;
-srLink* ee;
+robotRRTManager* RRTManager = new robotRRTManager;
+srLink* ee = new srLink;
 srSystem* obs = new srSystem;
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::TORQUE;
 void initDynamics();
 void rendering(int argc, char **argv);
 void updateFunc();
-void robotSetting();
-void robotManagerSetting();
-
+void URrobotSetting();
+void URrobotManagerSetting();
+void URrrtSetting();
 int activeJointIdx =5;
+vector<Eigen::VectorXd> traj(0);
 
 int main(int argc, char **argv)
 {
 
-    robotSetting();
+    URrobotSetting();
 
+	ee->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
+	ee->GetGeomInfo().SetDimension(0.01);
+	ee->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
+	obs->SetBaseLink(ee);
+	obs->SetBaseLinkType(srSystem::FIXED);
+	gSpace.AddSystem(obs);
+	gSpace.AddSystem(busbar);
+	gSpace.AddSystem(ctCase);
 	initDynamics();
 
-	rManager1 = new UR3RobotManager(URRobot, &gSpace);
-	//robotManagerSetting();
+	
+	URrobotManagerSetting();
 
+	rManager1->setGripperDistance(0.02);
+	//busbar->setBaseLinkFrame(URRobot->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() * Inv(Tbusbar2gripper_ur));
+	//ctCase->setBaseLinkFrame(URRobot->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() * Inv(TctCase2gripper_ur));
 	qval.setZero(6);
 
-	for (int i = 0; i < 6; i++)
+	rManager1->setJointVal(qval);
+	obs->GetBaseLink()->SetFrame(URRobot->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame());
+	busbar->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -10.0)));
+	ctCase->setBaseLinkFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(0.0, 0.3, 0.35)));
+	int flag;
+	Eigen::VectorXd goal = rManager1->inverseKin(ctCase->getBaseLinkFrame() * TctCase2gripper_ur, &URRobot->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag);
+	cout << flag << endl;
+	rManager1->setJointVal(goal);
+
+	URrrtSetting();
+	
+	RRTManager->setStartandGoal(qval, goal);
+
+	cout << RRTManager->checkFeasibility(qval) << RRTManager->checkFeasibility(goal);
+	if (!RRTManager->checkFeasibility(goal) && !RRTManager->checkFeasibility(qval))
 	{
-		((srStateJoint*)URRobot->m_KIN_Joints[i])->m_State.m_rValue[0] = qval[i];
+		RRTManager->execute(0.1);
+		traj = RRTManager->extractPath();
+
 	}
+	//for (int i = 0; i < 6; i++)
+	//{
+	//	((srStateJoint*)URRobot->m_KIN_Joints[i])->m_State.m_rValue[0] = qval[i];
+	//}
+
 
 
 	rendering(argc, argv);
@@ -93,13 +131,18 @@ void updateFunc()
 	//((srStateJoint*)URRobot->m_KIN_Joints[activeJointIdx])->m_State.m_rValue[0] = JointVal;
 	JointVal += 0.01;
 
-	static double dist = 0.05;
+	static int cnt = 0;
+	static int trajcnt = 0;
+	cnt++;
 
-	//dist += 0.001;
+	if (cnt % 10 == 0)
+		trajcnt++;
+	if (traj.size() > 0)
+		rManager1->setJointVal(traj[trajcnt % traj.size()]);
 
-	rManager1->setGripperDistance(dist);
-
-
+	
+	//cout << URRobot->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() << endl;
+	//cout << URRobot->gLink[UR3_Index::GRIPPER].GetFrame() << endl;
 	//rManager1->setJointVal(qval);
 
 	// check inv dyn with gripper
@@ -135,13 +178,16 @@ void updateFunc()
 }
 
 
-void robotSetting()
+void URrobotSetting()
 {
 	gSpace.AddSystem((srSystem*)URRobot);
 	URRobot->GetBaseLink()->SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 	URRobot->SetActType(srJoint::ACTTYPE::HYBRID);
 
-
+	vector<int> gpIdx(2);
+	gpIdx[0] = 0;
+	gpIdx[1] = 1;
+	URRobot->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
 
 	//robot1->SetActType(srJoint::ACTTYPE::HYBRID);
 	//robot2->SetActType(srJoint::ACTTYPE::TORQUE);
@@ -156,7 +202,7 @@ void robotSetting()
 	//robot2->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
 }
 
-void robotManagerSetting()
+void URrobotManagerSetting()
 {
 
 	//rManager2 = new robotManager();
@@ -178,4 +224,14 @@ void robotManagerSetting()
 
 	rManager1 = new UR3RobotManager(URRobot, &gSpace);
 
+}
+
+void URrrtSetting()
+{
+	RRTManager->setSpace(&gSpace);
+	vector<srStateJoint*> planningJoint(6);
+	for (int i = 0; i < 6; i++)
+		planningJoint[i] = (srStateJoint*)URRobot->gJoint[i];
+	RRTManager->setSystem(planningJoint);
+	RRTManager->setStateBound(URRobot->getLowerJointLimit(), URRobot->getUpperJointLimit());
 }
