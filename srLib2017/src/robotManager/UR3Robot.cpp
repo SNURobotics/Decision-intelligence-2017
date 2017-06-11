@@ -312,6 +312,17 @@ void UR3Robot::AssembleModel(double gripperRot)
 	gLink[UR3_Index::GRIPPER_FINGER_P].GetGeomInfo().SetLocalFrame(SE3());
 	gLink[UR3_Index::GRIPPER_FINGER_P].GetGeomInfo().SetFileName("../../../workspace/robot/ur3_3ds/Robotiq_tip_p.3ds");
 
+	gWeldJoint[UR3_Index::WELDJOINT_GRIP_MARKER]->SetActType(srJoint::PASSIVE);
+	gWeldJoint[UR3_Index::WELDJOINT_GRIP_MARKER]->SetParentLink(&gLink[UR3_Index::ENDEFFECTOR]);
+	gWeldJoint[UR3_Index::WELDJOINT_GRIP_MARKER]->SetChildLink(&gMarkerLink[UR3_Index::MLINK_GRIP]);
+	gWeldJoint[UR3_Index::WELDJOINT_GRIP_MARKER]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(0.0, 0.0, 0.69195)));
+	gWeldJoint[UR3_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(SE3( Vec3(0.0, 0.0, -(0.1928+0.2003))));		// consider offset for gripper assembly
+																													// marker links
+	gMarkerLink[UR3_Index::MLINK_GRIP].GetGeomInfo().SetDimension(Vec3(0.00, 0.00, 0.00));
+	gMarkerLink[UR3_Index::MLINK_GRIP].GetGeomInfo().SetColor(0.1f, 0.1f, 0.1f);
+	gMarkerLink[UR3_Index::MLINK_GRIP].SetInertia(Inertia(0.001));
+
+
 
 
 	this->SetBaseLink(&gLink[UR3_Index::LINK_1]);
