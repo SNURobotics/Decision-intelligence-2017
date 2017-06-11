@@ -55,6 +55,8 @@
     <ClCompile Include="..\..\src\robotManager\robotManager.cpp" />
     <ClCompile Include="..\..\src\robotManager\robotRRTManager.cpp" />
     <ClCompile Include="..\..\src\robotManager\robotTaskManager.cpp" />
+    <ClCompile Include="..\..\src\robotManager\UR3Robot.cpp" />
+    <ClCompile Include="..\..\src\robotManager\UR3RobotManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\robotManager\environment.h" />
@@ -71,6 +73,8 @@
     <ClInclude Include="..\..\src\robotManager\robotManager.h" />
     <ClInclude Include="..\..\src\robotManager\robotRRTManager.h" />
     <ClInclude Include="..\..\src\robotManager\robotTaskManager.h" />
+    <ClInclude Include="..\..\src\robotManager\UR3Robot.h" />
+    <ClInclude Include="..\..\src\robotManager\UR3RobotManager.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9682940B-2E28-4127-B240-CF7AFA7B9CFB}</ProjectGuid>

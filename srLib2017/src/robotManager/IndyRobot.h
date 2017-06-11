@@ -53,7 +53,7 @@ public:
 	srLink						gLink[NUM_OF_LINK_INDY];
 	srLink						gMarkerLink[NUM_OF_MARKERLINK_INDY];
 	srCollision					gCollision[NUM_OF_COLLISION_INDY];
-	srRevoluteJoint*			gJoint[NUM_OF_LINK_INDY];
+	srRevoluteJoint*			gJoint[NUM_OF_RJOINT_INDY];
 	srPrismaticJoint*			gPjoint[NUM_OF_PJOINT_INDY];
 	srWeldJoint*				gWeldJoint[NUM_OF_WJOINT_INDY];
 	
