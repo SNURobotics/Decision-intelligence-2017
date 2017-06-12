@@ -112,7 +112,13 @@ void WorkCell::AssembleModel()
 	m_ObjCollision[23].SetLocalFrame(SE3(Vec3(0.0, 1.57, 0.910 + 0.5*0.014)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[23]);
 
+	m_ObjCollision[24].GetGeomInfo().SetDimension(Vec3(0.5, 0.5, 0.2));
+	m_ObjCollision[24].SetLocalFrame(SE3(Vec3(0.4, -1.75, 0.910 + 0.5*0.2)));
+	m_ObjLink[0].AddCollision(&m_ObjCollision[24]);
 
+	m_ObjCollision[25].GetGeomInfo().SetDimension(Vec3(0.35, 0.3, 0.12));
+	m_ObjCollision[25].SetLocalFrame(SE3(Vec3(0.45, -1.15, 0.910 + 0.5*0.12)));
+	m_ObjLink[0].AddCollision(&m_ObjCollision[25]);
 
 	//// Collision
 	////// left first bar
@@ -183,12 +189,22 @@ void WorkCell::AssembleModel()
 	m_ObjLink[1].AddCollision(&m_ObjCollision[1]);
 	double trans_x = 0.01;
 	m_ObjCollision[1].SetLocalFrame(SE3(Vec3(-0.005 + trans_x, -0.29972, 1.03555)));
+
 	m_ObjCollision[72].GetGeomInfo().SetDimension(Vec3(0.01, 0.02, 0.05));
 	m_ObjCollision[72].SetLocalFrame(SE3(Vec3(0.5*(0.44 - 0.01) - 0.005 + trans_x, 0.5*2.068 - 0.175 - 0.29972, 0.5*(0.1511 + 0.05)+ 1.03555)));
 	m_ObjCollision[73].GetGeomInfo().SetDimension(Vec3(0.01, 0.02, 0.05));
 	m_ObjCollision[73].SetLocalFrame(SE3(Vec3(-0.5*(0.44 - 0.01) - 0.005, 0.5*2.068 - 0.175 - 0.29972, 0.5*(0.1511 + 0.05)+ 1.03555)));
 	m_ObjLink[1].AddCollision(&m_ObjCollision[72]);
 	m_ObjLink[1].AddCollision(&m_ObjCollision[73]);
+
+	m_ObjCollision[74].GetGeomInfo().SetDimension(Vec3(0.04, 0.06, 0.08));
+	m_ObjCollision[74].SetLocalFrame(SE3(Vec3(0.5*(0.44 - 0.01) - 0.005 + trans_x, - 0.5*2.068 + 0.125 - 0.29972, 0.5*(0.1511 + 0.05) + 1.03555)));
+	m_ObjCollision[75].GetGeomInfo().SetDimension(Vec3(0.04, 0.06, 0.08));
+	m_ObjCollision[75].SetLocalFrame(SE3(Vec3(-0.5*(0.44 - 0.01) - 0.005, - 0.5*2.068 + 0.125 - 0.29972, 0.5*(0.1511 + 0.05) + 1.03555)));
+	m_ObjLink[1].AddCollision(&m_ObjCollision[74]);
+	m_ObjLink[1].AddCollision(&m_ObjCollision[75]);
+
+
 	// tool frame
 	m_ObjLink[2].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	m_ObjLink[2].GetGeomInfo().SetLocalFrame(TsrLib2cad);

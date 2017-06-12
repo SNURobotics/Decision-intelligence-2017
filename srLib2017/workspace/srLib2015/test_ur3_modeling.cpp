@@ -35,13 +35,14 @@ robotRRTManager* RRTManager = new robotRRTManager;
 srLink* ee = new srLink;
 srSystem* obs = new srSystem;
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::TORQUE;
+SE3 Trobotbase1;
 void initDynamics();
 void rendering(int argc, char **argv);
 void updateFunc();
 void URrobotSetting();
 void URrobotManagerSetting();
 void URrrtSetting();
-int activeJointIdx =5;
+int activeJointIdx =0;
 vector<Eigen::VectorXd> traj(0);
 
 int main(int argc, char **argv)
@@ -62,11 +63,13 @@ int main(int argc, char **argv)
 	
 	URrobotManagerSetting();
 
-	rManager1->setGripperDistance(0.02);
+	rManager1->setGripperDistance(0.0);
 	//busbar->setBaseLinkFrame(URRobot->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() * Inv(Tbusbar2gripper_ur));
 	//ctCase->setBaseLinkFrame(URRobot->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() * Inv(TctCase2gripper_ur));
 	qval.setZero(6);
-
+	qval[1] = -SR_PI_HALF;
+	qval[3] = -SR_PI_HALF;
+	qval[4] = SR_PI_HALF;
 	rManager1->setJointVal(qval);
 	obs->GetBaseLink()->SetFrame(URRobot->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame());
 	busbar->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -10.0)));
@@ -81,17 +84,25 @@ int main(int argc, char **argv)
 	RRTManager->setStartandGoal(qval, goal);
 
 	cout << RRTManager->checkFeasibility(qval) << RRTManager->checkFeasibility(goal);
-	if (!RRTManager->checkFeasibility(goal) && !RRTManager->checkFeasibility(qval))
-	{
-		RRTManager->execute(0.1);
-		traj = RRTManager->extractPath();
+	//if (!RRTManager->checkFeasibility(goal) && !RRTManager->checkFeasibility(qval))
+	//{
+	//	RRTManager->execute(0.1);
+	//	traj = RRTManager->extractPath();
 
-	}
+	//}
+
+	rManager1->setJointVal(qval);
+	
 	//for (int i = 0; i < 6; i++)
 	//{
 	//	((srStateJoint*)URRobot->m_KIN_Joints[i])->m_State.m_rValue[0] = qval[i];
 	//}
-
+	SE3 Tend = Trobotbase1 % URRobot->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame();
+	cout << Tend << endl;
+	cout << Tend[9] << endl << Tend[10] << endl << Tend[11] << endl;
+	SE3 T = SE3();
+	T.SetOrientation(Exp(Vec3(0.0, SR_PI / sqrt(2), -SR_PI / sqrt(2))));
+	cout << Log( Tend.GetOrientation()) << endl;
 
 
 	rendering(argc, argv);
@@ -189,6 +200,7 @@ void URrobotSetting()
 	gpIdx[1] = 1;
 	URRobot->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
 
+	Trobotbase1 = URRobot->GetBaseLink()->GetFrame() * URRobot->TsrLinkbase2robotbase;
 	//robot1->SetActType(srJoint::ACTTYPE::HYBRID);
 	//robot2->SetActType(srJoint::ACTTYPE::TORQUE);
 	//vector<int> gpIdx(2);

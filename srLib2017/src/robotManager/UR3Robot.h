@@ -90,6 +90,7 @@ public:
 	Eigen::VectorXd getUpperJointLimit() const;
 	Eigen::VectorXd homePos;
 	Eigen::VectorXd qInvKinInit;
+	SE3				TsrLinkbase2robotbase;
 
 public:
 	int m_numCollision;

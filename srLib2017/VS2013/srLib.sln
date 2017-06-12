@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.6
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "common", "common\common.vcxproj", "{ED8465DD-8442-4D0D-9468-6FFE51B1C507}"
 EndProject
@@ -14,6 +14,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "srLib2015", "workspace\srLi
 		{1A290D69-7322-4EFF-9902-34AEF7FE59F9} = {1A290D69-7322-4EFF-9902-34AEF7FE59F9}
 		{E75E70BD-BA31-4E27-A4AB-537D15426B08} = {E75E70BD-BA31-4E27-A4AB-537D15426B08}
 		{43AD65CE-C39C-451E-98B6-BC1850D871FA} = {43AD65CE-C39C-451E-98B6-BC1850D871FA}
+		{C9E6A1FF-F61A-448D-94EB-1C3C99CC8AAE} = {C9E6A1FF-F61A-448D-94EB-1C3C99CC8AAE}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SceneGraph", "SceneGraph\SceneGraph.vcxproj", "{43AD65CE-C39C-451E-98B6-BC1850D871FA}"
@@ -32,6 +33,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ForceCtrlManager", "ForceCt
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tcp_ip_server", "tcp_ip_server\tcp_ip_server.vcxproj", "{E75E70BD-BA31-4E27-A4AB-537D15426B08}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tcp_ip_client", "tcp_ip_client\tcp_ip_client.vcxproj", "{C9E6A1FF-F61A-448D-94EB-1C3C99CC8AAE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -185,6 +188,20 @@ Global
 		{E75E70BD-BA31-4E27-A4AB-537D15426B08}.Release|Win32.Build.0 = Release|Win32
 		{E75E70BD-BA31-4E27-A4AB-537D15426B08}.Release|x64.ActiveCfg = Release|x64
 		{E75E70BD-BA31-4E27-A4AB-537D15426B08}.Release|x64.Build.0 = Release|x64
+		{C9E6A1FF-F61A-448D-94EB-1C3C99CC8AAE}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{C9E6A1FF-F61A-448D-94EB-1C3C99CC8AAE}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{C9E6A1FF-F61A-448D-94EB-1C3C99CC8AAE}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{C9E6A1FF-F61A-448D-94EB-1C3C99CC8AAE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C9E6A1FF-F61A-448D-94EB-1C3C99CC8AAE}.Debug|Win32.Build.0 = Debug|Win32
+		{C9E6A1FF-F61A-448D-94EB-1C3C99CC8AAE}.Debug|x64.ActiveCfg = Debug|x64
+		{C9E6A1FF-F61A-448D-94EB-1C3C99CC8AAE}.Debug|x64.Build.0 = Debug|x64
+		{C9E6A1FF-F61A-448D-94EB-1C3C99CC8AAE}.Release|Any CPU.ActiveCfg = Release|Win32
+		{C9E6A1FF-F61A-448D-94EB-1C3C99CC8AAE}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{C9E6A1FF-F61A-448D-94EB-1C3C99CC8AAE}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{C9E6A1FF-F61A-448D-94EB-1C3C99CC8AAE}.Release|Win32.ActiveCfg = Release|Win32
+		{C9E6A1FF-F61A-448D-94EB-1C3C99CC8AAE}.Release|Win32.Build.0 = Release|Win32
+		{C9E6A1FF-F61A-448D-94EB-1C3C99CC8AAE}.Release|x64.ActiveCfg = Release|x64
+		{C9E6A1FF-F61A-448D-94EB-1C3C99CC8AAE}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

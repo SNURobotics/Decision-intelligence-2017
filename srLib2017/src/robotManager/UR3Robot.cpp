@@ -19,18 +19,18 @@ UR3Robot::UR3Robot(bool elbowUp, double gripperRot)
 	SetInitialConfiguration();
 	SetInertia();
 	homePos = Eigen::VectorXd::Zero(6);
+	homePos[1] = -SR_PI_HALF; homePos[3] = -SR_PI_HALF;
 	qInvKinInit = Eigen::VectorXd::Zero(6);
 	if (elbowUp)
 	{
-		//homePos[1] = -SR_PI_HALF; homePos[3] = SR_PI_HALF; homePos[4] = -0.5 * SR_PI;
-		homePos[1] = -SR_PI_HALF; homePos[2] = DEG2RAD(40.0); homePos[3] = SR_PI_HALF; homePos[4] = DEG2RAD(40);
-		qInvKinInit[0] = -0.224778; qInvKinInit[1] = -1.91949; qInvKinInit[2] = -0.384219; qInvKinInit[3] = 1.5708; qInvKinInit[4] = -0.73291; qInvKinInit[5] = 1.79557;
+		//qInvKinInit[0] = -0.224778; qInvKinInit[1] = -1.91949; qInvKinInit[2] = -0.384219; qInvKinInit[3] = 1.5708; qInvKinInit[4] = -0.73291; qInvKinInit[5] = 1.79557;
 	}
 	else
 	{
-		homePos[1] = DEG2RAD(30); homePos[2] = DEG2RAD(-220); homePos[3] = DEG2RAD(90); homePos[4] = DEG2RAD(-100); 
-		qInvKinInit[0] = -0.074913; qInvKinInit[1] = -0.612778; qInvKinInit[2] = -2.488023; qInvKinInit[3] = 1.570796; qInvKinInit[4] = -1.530005; qInvKinInit[5] = 1.645710;
+		//qInvKinInit[0] = -0.074913; qInvKinInit[1] = -0.612778; qInvKinInit[2] = -2.488023; qInvKinInit[3] = 1.570796; qInvKinInit[4] = -1.530005; qInvKinInit[5] = 1.645710;
 	}
+	TsrLinkbase2robotbase = EulerZYX(Vec3(SR_PI, 0.0, 0.0), Vec3(0.0, 0.0, 0.69195 - 0.69511));
+	//TsrLinkbase2robotbase = EulerZYX(Vec3(SR_PI, 0.0, 0.0), Vec3(0.0, 0.0, 0.69195 - 0.69511 + 0.00195));
 	this->SetSelfCollision(true);
 }
 
@@ -138,11 +138,11 @@ void UR3Robot::AssembleModel(double gripperRot)
 	for (int i = 0; i < NUM_OF_LINK_UR3; i++)
 		gLink[i].GetGeomInfo().SetColor(0.3f, 0.3f, 0.3f, 1.0f);
 
-
+	SE3 Tcad2srlib = EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0));
 
 	gLink[UR3_Index::LINK_1].SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 	gLink[UR3_Index::LINK_1].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	gLink[UR3_Index::LINK_1].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0)));
+	gLink[UR3_Index::LINK_1].GetGeomInfo().SetLocalFrame(Tcad2srlib);
 	gLink[UR3_Index::LINK_1].GetGeomInfo().SetFileName("../../../workspace/robot/ur3_3ds/link1.3ds");
 	
 
@@ -156,7 +156,7 @@ void UR3Robot::AssembleModel(double gripperRot)
 	gJoint[UR3_Index::JOINT_1]->MakePositionLimit(false);
 
 	gLink[UR3_Index::LINK_2].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	gLink[UR3_Index::LINK_2].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0)));
+	gLink[UR3_Index::LINK_2].GetGeomInfo().SetLocalFrame(Tcad2srlib);
 	gLink[UR3_Index::LINK_2].GetGeomInfo().SetFileName("../../../workspace/robot/ur3_3ds/link2.3ds");
 	//gLink[UR3_Index::LINK_2].GetGeomInfo().SetColor(0.15f, 0.15f, 0.15f, 1.0f);
 
@@ -164,12 +164,13 @@ void UR3Robot::AssembleModel(double gripperRot)
 	gJoint[UR3_Index::JOINT_2]->SetParentLink(&gLink[UR3_Index::LINK_2]);
 	gJoint[UR3_Index::JOINT_2]->SetChildLink(&gLink[UR3_Index::LINK_3]);
 	gJoint[UR3_Index::JOINT_2]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(0.0, 0.0, 0.1519)));
-	gJoint[UR3_Index::JOINT_2]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(0.0, 0.0, 0.1519)));
+	//gJoint[UR3_Index::JOINT_2]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(0.0, 0.0, 0.1519)));
+	gJoint[UR3_Index::JOINT_2]->SetChildLinkFrame(EulerZYX(Vec3(-SR_PI_HALF, -SR_PI_HALF, 0.0), Vec3(0.0, 0.0, 0.1519)));
 	gJoint[UR3_Index::JOINT_2]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[UR3_Index::JOINT_2]->MakePositionLimit(false);
 
 	gLink[UR3_Index::LINK_3].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	gLink[UR3_Index::LINK_3].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0)));
+	gLink[UR3_Index::LINK_3].GetGeomInfo().SetLocalFrame(Tcad2srlib);
 	gLink[UR3_Index::LINK_3].GetGeomInfo().SetFileName("../../../workspace/robot/ur3_3ds/link3.3ds");
 
 	gJoint[UR3_Index::JOINT_3]->SetActType(srJoint::HYBRID);
@@ -182,7 +183,7 @@ void UR3Robot::AssembleModel(double gripperRot)
 
 
 	gLink[UR3_Index::LINK_4].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	gLink[UR3_Index::LINK_4].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0)));
+	gLink[UR3_Index::LINK_4].GetGeomInfo().SetLocalFrame(Tcad2srlib);
 	gLink[UR3_Index::LINK_4].GetGeomInfo().SetFileName("../../../workspace/robot/ur3_3ds/link4.3ds");
 	//gLink[UR3_Index::LINK_4].GetGeomInfo().SetColor(0.15f, 0.15f, 0.15f, 1.0f);
 
@@ -190,12 +191,13 @@ void UR3Robot::AssembleModel(double gripperRot)
 	gJoint[UR3_Index::JOINT_4]->SetParentLink(&gLink[UR3_Index::LINK_4]);
 	gJoint[UR3_Index::JOINT_4]->SetChildLink(&gLink[UR3_Index::LINK_5]);
 	gJoint[UR3_Index::JOINT_4]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(0.0, 0.0, 0.60855)));
-	gJoint[UR3_Index::JOINT_4]->SetChildLinkFrame(EulerZYX(Vec3(0.0,0.0, -SR_PI_HALF), Vec3(0.0, 0.0, 0.60855)));
+	//gJoint[UR3_Index::JOINT_4]->SetChildLinkFrame(EulerZYX(Vec3(0.0,0.0, -SR_PI_HALF), Vec3(0.0, 0.0, 0.60855)));
+	gJoint[UR3_Index::JOINT_4]->SetChildLinkFrame(EulerZYX(Vec3(-SR_PI_HALF, -SR_PI_HALF, 0.0), Vec3(0.0, 0.0, 0.60855)));
 	gJoint[UR3_Index::JOINT_4]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[UR3_Index::JOINT_4]->MakePositionLimit(false);
 
 	gLink[UR3_Index::LINK_5].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	gLink[UR3_Index::LINK_5].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0)));
+	gLink[UR3_Index::LINK_5].GetGeomInfo().SetLocalFrame(Tcad2srlib);
 	gLink[UR3_Index::LINK_5].GetGeomInfo().SetFileName("../../../workspace/robot/ur3_3ds/link5.3ds");
 
 
@@ -208,7 +210,7 @@ void UR3Robot::AssembleModel(double gripperRot)
 	gJoint[UR3_Index::JOINT_5]->MakePositionLimit(false);
 
 	gLink[UR3_Index::LINK_6].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	gLink[UR3_Index::LINK_6].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0)));
+	gLink[UR3_Index::LINK_6].GetGeomInfo().SetLocalFrame(Tcad2srlib);
 	gLink[UR3_Index::LINK_6].GetGeomInfo().SetFileName("../../../workspace/robot/ur3_3ds/link6.3ds");
 	//gLink[UR3_Index::LINK_6].GetGeomInfo().SetColor(0.15f, 0.15f, 0.15f, 1.0f);
 
@@ -221,7 +223,7 @@ void UR3Robot::AssembleModel(double gripperRot)
 	gJoint[UR3_Index::JOINT_6]->MakePositionLimit(false);
 
 	gLink[UR3_Index::ENDEFFECTOR].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	gLink[UR3_Index::ENDEFFECTOR].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0)));
+	gLink[UR3_Index::ENDEFFECTOR].GetGeomInfo().SetLocalFrame(Tcad2srlib);
 	gLink[UR3_Index::ENDEFFECTOR].GetGeomInfo().SetFileName("../../../workspace/robot/ur3_3ds/link7.3ds");
 
 	// sensor
@@ -316,8 +318,10 @@ void UR3Robot::AssembleModel(double gripperRot)
 	gWeldJoint[UR3_Index::WELDJOINT_GRIP_MARKER]->SetParentLink(&gLink[UR3_Index::ENDEFFECTOR]);
 	gWeldJoint[UR3_Index::WELDJOINT_GRIP_MARKER]->SetChildLink(&gMarkerLink[UR3_Index::MLINK_GRIP]);
 	gWeldJoint[UR3_Index::WELDJOINT_GRIP_MARKER]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(0.0, 0.0, 0.69195)));
-	gWeldJoint[UR3_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(SE3( Vec3(0.0, 0.0, -(0.1928+0.2003))));		// consider offset for gripper assembly
-																													// marker links
+	gWeldJoint[UR3_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(SE3( Vec3(0.0, 0.0, -(0.1928+0.2003+0.001))));		// consider offset for gripper assembly
+	//gWeldJoint[UR3_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(SE3(Vec3(0.0, 0.00195, -(0.1928 + 0.2003 + 0.001))));		// consider offset for gripper assembly
+	
+	// marker links
 	gMarkerLink[UR3_Index::MLINK_GRIP].GetGeomInfo().SetDimension(Vec3(0.00, 0.00, 0.00));
 	gMarkerLink[UR3_Index::MLINK_GRIP].GetGeomInfo().SetColor(0.1f, 0.1f, 0.1f);
 	gMarkerLink[UR3_Index::MLINK_GRIP].SetInertia(Inertia(0.001));

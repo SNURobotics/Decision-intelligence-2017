@@ -116,5 +116,11 @@
     <ClCompile Include="..\..\..\workspace\srLib2015\test_ur3_modeling.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\main_client_ur.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\tcp_ip_client\tcp_ip_client.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
