@@ -57,7 +57,7 @@ bool useNoVisionTestSettingJig = true;
 
 // Robot
 IndyRobot* robot1 = new IndyRobot(false);
-IndyRobot* robot2 = new IndyRobot(true);
+IndyRobot* robot2 = new IndyRobot(false);
 vector<IndyRobot*> robotVector(2);
 SE3 Tbusbar2gripper_new = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
 SE3 Tbusbar2gripper_tight = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.015));
@@ -84,6 +84,8 @@ vector<vector<int>> idxTraj(0);
 vector<Eigen::VectorXd> initPos(0);
 vector<Eigen::VectorXd> goalPos(0);
 bool checkTorque = false;
+Eigen::VectorXd qval1;
+Eigen::VectorXd qval2;
 
 // Rendering flags
 static bool isVision = false;
@@ -153,10 +155,13 @@ void RRT_problemSettingFromSingleRobotCommand(const desired_dataset & hyu_desire
 void RRT_problemSetting_SingleRobot(Eigen::VectorXd init, vector<SE3> wayPoints, vector<bool> includeOri, vector<bool> attachObject, vector<bool>& waypointFlag, int robotFlag);
 void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize, int robotFlag);
 int getObjectIdx(int robotIdx);
+void planning_demo(int robotFlag, int objNum);
 vector<Eigen::VectorXd> calculateJointTorque(vector<vector<Eigen::VectorXd>>& traj, int robotFlag);
 
 
 void communicationFunc(int argc, char **argv);		// run on the other thread
+
+
 
 // 서버 초기화
 Server serv = Server::Server();
@@ -173,6 +178,7 @@ bool isSystemAssembled = false;
 vector<srLink*> obstacle(0);
 vector<srWeldJoint*> wJoint(0);		// weld joint for connecting workcell and obstacle
 
+SE3 Tjigbase;
 
 int main(int argc, char **argv)
 {
@@ -216,7 +222,6 @@ int main(int argc, char **argv)
 			Sleep(50);
 	}
 
-	
 
 	thread commuThread(communicationFunc, argc, argv);
 	commuThread.detach();
@@ -224,7 +229,6 @@ int main(int argc, char **argv)
 	if (commuThread.joinable())
 		commuThread.join();
 
-	
 
 	if (useVision)
 	{
@@ -285,12 +289,14 @@ void initDynamics()
 void updateFunc()
 {
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
-	rManager2->setJointVal(robot2->homePos);
-	rManager1->setJointVal(robot1->homePos);
+	qval1 = robot1->homePos;
+	//qval2 = robot2->homePos;
+	rManager2->setJointVal(qval2);
+	rManager1->setJointVal(qval1);
 	//static double th = 0.0;
 	//busbar[0]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, 2.0 * sin(th))));
 	//th += 0.1;
-	//cout << gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP() << endl;
+	cout << gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP() << endl;
 	//int stop = 1;
 }
 
@@ -487,7 +493,7 @@ void RRT_problemSetting_SingleRobot(Eigen::VectorXd init, vector<SE3> wayPoints,
 		else
 			RRTManagerVector[robotFlag - 1]->detachObject();
 
-
+		//cout << TrobotbaseVector[0] * wayPoints[i] << endl;
 		feas = RRTManagerVector[robotFlag - 1]->checkFeasibility(qtemp);
 		qWaypoint[robotFlag - 1].push_back(qtemp);
 		if (feas == 0 && flag == 0)
@@ -545,7 +551,7 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 		feas = RRTManagerVector[robotFlag - 1]->checkFeasibility(initPos[i], goalPos[i]);
 		cout << feas[0] << feas[1] << endl;
 		RRTManagerVector[robotFlag - 1]->execute(stepsize[i]);
-		tempTraj = RRTManagerVector[robotFlag - 1]->extractPath();
+		tempTraj = RRTManagerVector[robotFlag - 1]->extractPath(40);
 
 		// check collision
 		for (unsigned int j = 0; j < tempTraj.size(); j++)
@@ -596,17 +602,18 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 
 void objectSetting()
 {
-	vector<SE3> testInit(4);
+	vector<SE3> testInit(8);
 	// 17.06.09 (using robot1)
-	//testInit[0] = Trobotbase1 * SE3(-0.51328, 0.85822, 1.1137e-06, 0.85822, 0.51328, 5.4682e-06, 3.5287e-06, 3.3661e-06, -1, -0.28018, -0.10959, 0.85844);
-	//testInit[1] = Trobotbase1 * SE3(-0.9354,0.35358,5.9942e-06,0.35358,0.9354,-6.9362e-06,-8.4326e-06,-4.4553e-06,-1,-0.26685,-0.020595,0.85866);
-	//testInit[2] = Trobotbase1 * SE3(-0.66831,-0.74389,-1.1055e-05,-0.74389,0.66831,-4.5087e-06,9.9899e-06,5.0997e-06,-1,-0.3734,0.011193,0.85824);
-	//testInit[3] = Trobotbase1 * SE3(-0.20649,0.97845,-2.1991e-05,0.97845,0.20649,-1.3097e-06,2.7943e-06,-2.1829e-05,-1,-0.36767,0.11754,0.85743);
+	testInit[0] = Trobotbase1 * SE3(-0.51328, 0.85822, 1.1137e-06, 0.85822, 0.51328, 5.4682e-06, 3.5287e-06, 3.3661e-06, -1, -0.28018, -0.10959, 0.85844);
+	testInit[1] = Trobotbase1 * SE3(-0.9354,0.35358,5.9942e-06,0.35358,0.9354,-6.9362e-06,-8.4326e-06,-4.4553e-06,-1,-0.26685,-0.020595,0.85866);
+	testInit[2] = Trobotbase1 * SE3(-0.66831,-0.74389,-1.1055e-05,-0.74389,0.66831,-4.5087e-06,9.9899e-06,5.0997e-06,-1,-0.3734,0.011193,0.85824);
+	testInit[3] = Trobotbase1 * SE3(-0.20649,0.97845,-2.1991e-05,0.97845,0.20649,-1.3097e-06,2.7943e-06,-2.1829e-05,-1,-0.36767,0.11754,0.85743);
 	// 17.06.10 (using robot2)
-	testInit[0] = Trobotbase1 * SE3(0.49715, -0.86767, -2.3813e-06, -0.86767, -0.49714, -1.4671e-06, 4.218e-07, 2.6782e-06, -1, -1.2308, 0.17082, 1.0477);
-	testInit[1] = Trobotbase1 * SE3(-0.11762, -0.99306, 1.039e-06, -0.99306, 0.11762, -5.0989e-06, 5.0868e-06, -8.7669e-07, -1, -1.204, 0.028933, 1.0467);
-	testInit[2] = Trobotbase1 * SE3(-0.84321, -0.53758, 6.7572e-06, -0.53758, 0.84321, 4.3601e-06, -8.1082e-06, 3.8774e-07, -1, -1.2815, -0.060334, 1.0468);
-	testInit[3] = Trobotbase1 * SE3(-0.014703,-0.99989,-8.5711e-07,-0.99989,0.014703,-3.6814e-06,3.9231e-06,7.9429e-08,-1,-1.2911,0.095115,1.0473);
+	SE3 Trans = SE3(Vec3(-0.35, -0.1, 0.0));
+	testInit[4] = Trans * Trobotbase1 * SE3(0.49715, -0.86767, -2.3813e-06, -0.86767, -0.49714, -1.4671e-06, 4.218e-07, 2.6782e-06, -1, -1.2308, 0.17082, 1.0477);
+	testInit[5] = Trans * Trobotbase1 * SE3(-0.11762, -0.99306, 1.039e-06, -0.99306, 0.11762, -5.0989e-06, 5.0868e-06, -8.7669e-07, -1, -1.204, 0.028933, 1.0467);
+	testInit[6] = Trans * Trobotbase1 * SE3(-0.84321, -0.53758, 6.7572e-06, -0.53758, 0.84321, 4.3601e-06, -8.1082e-06, 3.8774e-07, -1, -1.2815, -0.060334, 1.0468);
+	testInit[7] = Trans * Trobotbase1 * SE3(-0.014703, -0.99989, -8.5711e-07, -0.99989, 0.014703, -3.6814e-06, 3.9231e-06, 7.9429e-08, -1, -1.2911, 0.095115, 1.0473);
 	for (unsigned int i = 0; i < busbar.size(); i++)
 	{
 		busbar[i] = new BusBar_HYU;
@@ -1517,4 +1524,108 @@ vector<Eigen::VectorXd> calculateJointTorque(vector<vector<Eigen::VectorXd>>& tr
 	for (unsigned int i = 0; i < qTrj.size() - 1; i++)
 		tauTrj[i] = rManagerVector[robotFlag - 1]->inverseDyn(qTrj[i], vTrj[i], aTrj[i]);
 	return tauTrj;
+}
+
+void planning_demo(int robotFlag, int objNum)
+{
+	isHYUPlanning = false;
+	if (robotFlag < 1)
+		robotFlag = 1;
+	else if (robotFlag > 2)
+		robotFlag = 2;
+	//cout << jigAssem->getBaseLinkFrame() << endl;
+	int busbarNum;
+	int holeNum;
+	if (robotFlag == 1)
+	{
+		busbarNum = objNum;
+		holeNum = objNum + 4;
+	}
+	else
+	{
+		busbarNum = objNum + 4;
+		holeNum = objNum;
+	}
+	Eigen::VectorXd qInit;
+	vector<SE3> wayPoints(0);
+	vector<bool> attachObject(0);
+	int flag;
+	if (objNum == 0)
+	{
+		qInit = robotVector[robotFlag - 1]->homePos;
+	}
+	else
+	{
+		wayPoints.push_back(TrobotbaseVector[0] % jigAssem->getBaseLinkFrame() * jigAssem->holeCenter[holeNum - 1] * Thole2busbar * Tbusbar2gripper_new);
+		attachObject.push_back(false);
+		SE3 Tprevgoal = SE3(Vec3(0.0, 0.0, -0.025)) * jigAssem->getBaseLinkFrame() * jigAssem->holeCenter[holeNum - 1] * Thole2busbar;
+		//cout << "prev goal" << endl << Tprevgoal << endl;
+		qInit = rManagerVector[robotFlag - 1]->inverseKin(Tprevgoal * Tbusbar2gripper_new, &robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, robotVector[robotFlag - 1]->qInvKinInit);
+		int holenum_i;
+		for (int i = (robotFlag - 1) * 4; i < (robotFlag - 1) * 4 + objNum; i++)
+		{
+			if (robotFlag == 1)
+				holenum_i = i + 4;
+			else
+				holenum_i = i - 4;
+			busbar[i]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -0.025)) * jigAssem->getBaseLinkFrame() * jigAssem->holeCenter[holenum_i] * Thole2busbar);
+		}
+	}
+	wayPoints.push_back(TrobotbaseVector[0] % SE3(Vec3(0.0, 0.0, 0.025)) * objects[busbarNum]->getBaseLinkFrame() * Tbusbar2gripper_new);
+	attachObject.push_back(false);
+	wayPoints.push_back(TrobotbaseVector[0] % objects[busbarNum]->getBaseLinkFrame() * Tbusbar2gripper_new);
+	attachObject.push_back(false);
+	wayPoints.push_back(TrobotbaseVector[0] % jigAssem->getBaseLinkFrame() * jigAssem->holeCenter[holeNum] * Thole2busbar * Tbusbar2gripper_new);
+	attachObject.push_back(true);
+	wayPoints.push_back(TrobotbaseVector[0] % SE3(Vec3(0.0, 0.0, -0.025)) * jigAssem->getBaseLinkFrame() * jigAssem->holeCenter[holeNum] * Thole2busbar * Tbusbar2gripper_new);
+	attachObject.push_back(true);
+	//cout << jigAssem->getBaseLinkFrame() << endl;
+
+	//cout << wayPoints[1] << endl;
+	//cout << wayPoints[0] << endl;
+	//cout << wayPoints[2] << endl;
+	//cout << wayPoints[3] << endl;
+	
+	vector<bool> includeOri(wayPoints.size(), true);
+	attachObject[0] = false; attachObject[1] = false;
+	vector<bool> waypointFlag(wayPoints.size());
+	gripObjectIdx[robotFlag - 1] = busbarNum;
+	RRT_problemSetting_SingleRobot(qInit, wayPoints, includeOri, attachObject, waypointFlag, robotFlag);
+	vector<double> stepsize(0);
+	vector<bool> attachobject(0);
+	for (unsigned int i = 0; i < waypointFlag.size(); i++)
+	{
+		if (waypointFlag[i])
+		{
+			stepsize.push_back(0.1);
+			attachobject.push_back(attachObject[i]);
+		}
+	}
+	attachObjectWaypoint[robotFlag - 1] = attachObject;
+
+	/////////////////////////////////////////////
+	//qval2 = goalPos[goalPos.size() - 1];
+	//rManagerVector[robotFlag - 1]->setJointVal(qval2);
+	//busbar[busbarNum]->setBaseLinkFrame(robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() * Inv(Tbusbar2gripper_new));
+	/////////////////////////////////////////////
+	// Solve RRT
+	if (goalPos.size() > 0)
+	{
+		RRTSolve_HYU_SingleRobot(attachobject, stepsize, robotFlag);
+		attachObjRender_multi[robotFlag - 1] = attachobject;
+		gripObjectIdxRender[robotFlag - 1] = gripObjectIdx[robotFlag - 1];
+		TinitObjects_multiRender[robotFlag - 1] = TinitObjects_multi[robotFlag - 1];
+		initialObjectSavedRender[robotFlag - 1] = initialObjectSaved[robotFlag - 1];
+		isHYUPlanning = true;
+		isVision = false;
+		isRobotState = false;
+		isWaypoint = false;
+
+		if (attachobject.size() > 0 && attachobject[attachobject.size() - 1])
+			gripState_multi[robotFlag - 1] = 1;
+		else
+			gripState_multi[robotFlag - 1] = 0;
+
+		initialPlanning[robotFlag - 1] = false;
+	 }
 }

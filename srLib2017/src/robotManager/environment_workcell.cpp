@@ -43,7 +43,7 @@ void WorkCell::AssembleModel()
 	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	m_ObjLink[0].GetGeomInfo().SetLocalFrame(TsrLib2cad);
 	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/workcell_3ds/cellframe.3ds");
-	m_ObjLink[0].GetGeomInfo().SetColor(0.35f, 0.35f, 0.35f, 1.0f);
+	m_ObjLink[0].GetGeomInfo().SetColor(0.15f, 0.25f, 0.15f, 1.0f);
 
 	m_ObjLink[8].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	m_ObjLink[8].GetGeomInfo().SetLocalFrame(TsrLib2cad);
@@ -109,7 +109,8 @@ void WorkCell::AssembleModel()
 
 	// temporary obstacle
 	m_ObjCollision[23].GetGeomInfo().SetDimension(Vec3(0.6, 0.4, 0.014));
-	m_ObjCollision[23].SetLocalFrame(SE3(Vec3(0.0, 1.57, 0.910 + 0.5*0.014)));
+	double temp_x = -0.35; double temp_y = -0.1;
+	m_ObjCollision[23].SetLocalFrame(SE3(Vec3(temp_x, 1.57 + temp_y, 0.910 + 0.5*0.014)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[23]);
 
 	m_ObjCollision[24].GetGeomInfo().SetDimension(Vec3(0.5, 0.5, 0.2));
