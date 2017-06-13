@@ -473,6 +473,10 @@ void RRT_problemSetting_SingleRobot(Eigen::VectorXd init, vector<SE3> wayPoints,
 	initPos.resize(0);
 	goalPos.resize(0);
 	initPos.push_back(init);
+	if (attachObject[0] && gripObjectIdx[robotFlag - 1] != -1)
+		RRTManagerVector[robotFlag - 1]->attachObject(objects[gripObjectIdx[robotFlag - 1]], &robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tobject2gripper[gripObjectIdx[robotFlag - 1]]));
+	else
+		RRTManagerVector[robotFlag - 1]->detachObject();
 	bool feas = RRTManagerVector[robotFlag-1]->checkFeasibility(init);
 	if (feas != 0)
 		printf("initial point not feasible!!!\n");

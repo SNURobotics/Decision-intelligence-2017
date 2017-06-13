@@ -158,7 +158,7 @@ void RRT_problemSettingFromSingleRobotCommand(const desired_dataset & hyu_desire
 void RRT_problemSetting_SingleRobot(Eigen::VectorXd init, vector<SE3> wayPoints, vector<bool> includeOri, vector<bool> attachObject, vector<bool>& waypointFlag, int robotFlag);
 void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize, int robotFlag);
 int getObjectIdx(int robotIdx);
-void planning_demo(int robotFlag, int objNum);
+void planning_demo(int robotFlag, int objNum, bool doPlanning = true);
 void initialize(int robotFlag);
 vector<Eigen::VectorXd> calculateJointTorque(vector<vector<Eigen::VectorXd>>& traj, int robotFlag);
 
@@ -167,14 +167,17 @@ vector<srLink*> obstacle(0);
 vector<srWeldJoint*> wJoint(0);		// weld joint for connecting workcell and obstacle
 
 SE3 Tjigbase;
-
+bool conti = false;
+bool randomPos = false;
 int main(int argc, char **argv)
 {
-	srand(time(NULL));
+	//srand(time(NULL));
 	// Robot home position
 	robotSetting();
 	homePosRobotVector[0] = robot1->homePos;
 	homePosRobotVector[1] = robot2->homePos;
+	qval1 = robot1->homePos;
+	qval2 = robot2->homePos;
 	// environment
 	workspaceSetting();
 	objectSetting();
@@ -200,8 +203,53 @@ int main(int argc, char **argv)
 	for (unsigned int i = 0; i < robotVector.size(); i++)
 		lastJointVal_multi[i] = robotVector[i]->homePos;
 
+	//for (int robotNum = 1; robotNum < 3; robotNum++)
+	//	for (int objNum = 0; objNum < 4; objNum++)
+	//	{
+	//		printf("robotNum: %d, objNum: %d\n check waypoints \n", robotNum, objNum);
+	//		planning_demo(robotNum, objNum, false);
+	//		initialize(robotNum);
+	//	}
+	//planning_demo(2, 2);
+	//int robotFlag = 2;
+	//int busbarNum;
+	//int objNum = 2;
+	//int holeNum;
+	////planning_demo(robotFlag, objNum, false);
+	//if (robotFlag == 1)
+	//{
+	//	busbarNum = objNum;
+	//	holeNum = objNum + 4;
+	//}
+	//else
+	//{
+	//	busbarNum = objNum + 4;
+	//	holeNum = objNum;
+	//}
+	//int flag;
 
-	//planning_demo(1, 3);
+	//vector<SE3> wayPoints(0);
+	//vector<bool> attachObject(0);
+	//wayPoints.push_back(SE3(Vec3(0.0, 0.0, 0.025)) * objects[busbarNum]->getBaseLinkFrame() * Tbusbar2gripper_new);
+	//attachObject.push_back(false);
+	//wayPoints.push_back(objects[busbarNum]->getBaseLinkFrame() * Tbusbar2gripper_new);
+	//attachObject.push_back(false);
+	//wayPoints.push_back(jigAssem->getBaseLinkFrame() * jigAssem->holeCenter[holeNum] * Thole2busbar * Tbusbar2gripper_new);
+	//attachObject.push_back(true);
+	//wayPoints.push_back(SE3(Vec3(0.0, 0.0, -0.025)) * jigAssem->getBaseLinkFrame() * jigAssem->holeCenter[holeNum] * Thole2busbar * Tbusbar2gripper_new);
+	//attachObject.push_back(true);
+
+	//int wayPointNum = 1;
+
+	//Eigen::VectorXd qInit = rManagerVector[robotFlag - 1]->inverseKin(wayPoints[wayPointNum], &robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, robotVector[robotFlag - 1]->qInvKinInit);
+	//qval2 = qInit;
+
+
+	//for (unsigned int i = 0; i < objects.size(); i++)
+	//	cout << SE3toVector(objects[i]->getBaseLinkFrame()).transpose() << endl;
+	//cout << endl << endl;
+
+	//conti = true;		// continuous planning
 
 	rendering(argc, argv);
 
@@ -239,8 +287,6 @@ void initDynamics()
 void updateFunc()
 {
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
-	qval1 = robot1->homePos;
-	//qval2 = robot2->homePos;
 	rManager2->setJointVal(qval2);
 	rManager1->setJointVal(qval1);
 	//static double th = 0.0;
@@ -291,9 +337,9 @@ void environmentSetting_HYU2(bool connect)
 	}
 	else
 		Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.009));		// when stage removed
-	double z_angle = (double)rand() / RAND_MAX * 1.0;
-	double x_trans = -(double)rand() / RAND_MAX * 0.1;
-	double y_trans = (double)rand() / RAND_MAX * 0.1;
+	double z_angle = (double)rand() / RAND_MAX * 0.3;
+	double x_trans = -(double)rand() / RAND_MAX * 0.03;
+	double y_trans = (double)rand() / RAND_MAX * 0.03;
 	//SE3 Tbase2jigbase = EulerZYX(Vec3(z_angle, 0.0, 0.0), Vec3(x_trans, y_trans, 0.184));
 	SE3 Tbase2jigbase = EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.184));
 	//for (unsigned int i = 0; i < busbar.size(); i++)
@@ -304,7 +350,9 @@ void environmentSetting_HYU2(bool connect)
 	//}
 	//Vec3 testJigPosFromRobot1(-0.702151, -0.014057, 0.750026);		// 17.06.09 using robot1
 	//Vec3 testJigPosFromRobot1(-0.8254, 0.0338, 0.7483);		// 17.06.10 using robot2
-	Vec3 testJigPosFromRobot1(-0.8277, - 0.0536,    0.8620);		// 17.06.10 using robot2
+	//Vec3 testJigPosFromRobot1(-0.8277, - 0.0536,    0.8620);		// 17.06.10 using robot2
+	SE3 Trobot12robot2 = Trobotbase1 % Trobotbase2;
+	Vec3 testJigPosFromRobot1(-0.8277 + 0.05, -0.0536, 0.8120);		// 17.06.13 demo
 	jigAssem->SetBaseLinkType(srSystem::FIXED);
 	if (!useNoVisionTestSettingJig)
 		jigAssem->setBaseLinkFrame(Tbase*Tbase2jigbase);
@@ -328,9 +376,12 @@ void environmentSetting_HYU2(bool connect)
 		{
 			SE3 tempSE3 = Trobotbase1 * SE3(testJigPosFromRobot1);
 			SE3 Tjig = Trobotbase1 % SE3(tempSE3.GetPosition()) * jigAssem->m_visionOffset;
-			cout << "Tjig" << endl;
-			cout << Tjig << endl;
-			wJoint->SetParentLinkFrame(SE3(tempSE3.GetPosition()) * jigAssem->m_visionOffset);
+			//cout << "Tjig" << endl;
+			//cout << Tjig << endl;
+			SE3 Trandom = SE3();
+			if (randomPos)
+				Trandom = EulerZYX(Vec3(z_angle, 0.0, 0.0), Vec3(x_trans, y_trans, 0.0));
+			wJoint->SetParentLinkFrame(Trandom * SE3(tempSE3.GetPosition()) * jigAssem->m_visionOffset);
 		}
 		wJoint->SetChildLinkFrame(SE3());
 	}
@@ -423,6 +474,10 @@ void RRT_problemSetting_SingleRobot(Eigen::VectorXd init, vector<SE3> wayPoints,
 	initPos.resize(0);
 	goalPos.resize(0);
 	initPos.push_back(init);
+	if (attachObject[0] && gripObjectIdx[robotFlag - 1] != -1)
+		RRTManagerVector[robotFlag - 1]->attachObject(objects[gripObjectIdx[robotFlag - 1]], &robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tobject2gripper[gripObjectIdx[robotFlag - 1]]));
+	else
+		RRTManagerVector[robotFlag - 1]->detachObject();
 	bool feas = RRTManagerVector[robotFlag-1]->checkFeasibility(init);
 	if (feas != 0)
 		printf("initial point not feasible!!!\n");
@@ -437,7 +492,7 @@ void RRT_problemSetting_SingleRobot(Eigen::VectorXd init, vector<SE3> wayPoints,
 		if (flag != 0)
 			qtemp = rManagerVector[robotFlag - 1]->inverseKin(TrobotbaseVector[0] * wayPoints[i], &robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, initPos[initPos.size() - 1]);
 		printf("%d-th init inv kin flag: %d\n", i, flag);
-
+		//cout << qtemp << endl;
 		if (attachObject[i] && gripObjectIdx[robotFlag - 1] != -1)
 			RRTManagerVector[robotFlag - 1]->attachObject(objects[gripObjectIdx[robotFlag - 1]], &robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tobject2gripper[gripObjectIdx[robotFlag - 1]]));
 		else
@@ -500,9 +555,11 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 
 		feas = RRTManagerVector[robotFlag - 1]->checkFeasibility(initPos[i], goalPos[i]);
 		cout << feas[0] << feas[1] << endl;
+		clock_t begin_time = clock();
 		RRTManagerVector[robotFlag - 1]->execute(stepsize[i]);
 		tempTraj = RRTManagerVector[robotFlag - 1]->extractPath(40);
-
+		clock_t end_time = clock();
+		cout << "way point RRT time: " << end_time - begin_time << endl;
 		// check collision
 		for (unsigned int j = 0; j < tempTraj.size(); j++)
 			if (RRTManagerVector[robotFlag - 1]->setState(tempTraj[j]))
@@ -518,8 +575,8 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 			// otherwise, busbar will not move, initial and final location will be the same.
 			RRTManagerVector[robotFlag - 1]->setState(tempTraj[tempTraj.size() - 1]);
 			TlastObjects_multi[robotFlag - 1] = objects[gripObjectIdx[robotFlag - 1]]->GetBaseLink()->GetFrame();
-			cout << "TlastBusbar" << endl;
-			cout << Trobotbase1 % TlastObjects_multi[robotFlag - 1] << endl;
+			//cout << "TlastBusbar" << endl;
+			//cout << Trobotbase1 % TlastObjects_multi[robotFlag - 1] << endl;
 			if (attachObject[i])
 			{
 				// set busbar initial location
@@ -528,8 +585,8 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 					initialObjectSaved[robotFlag - 1] = true;
 					RRTManagerVector[robotFlag - 1]->setState(tempTraj[0]);
 					TinitObjects_multi[robotFlag - 1] = objects[gripObjectIdx[robotFlag - 1]]->GetBaseLink()->GetFrame();
-					cout << "TinitBusbar" << endl;
-					cout << Trobotbase1 % TinitObjects_multi[robotFlag - 1] << endl;
+					//cout << "TinitBusbar" << endl;
+					//cout << Trobotbase1 % TinitObjects_multi[robotFlag - 1] << endl;
 				}
 			}
 		}
@@ -572,6 +629,14 @@ void objectSetting()
 		gSpace.AddSystem(busbar[i]);
 		busbar[i]->SetBaseLinkType(srSystem::FIXED);
 	}
+	//busbar[0]->m_ObjLink[0].GetGeomInfo().SetColor(1.0, 0.0, 0.0);
+	//busbar[1]->m_ObjLink[0].GetGeomInfo().SetColor(0.2, 0.0, 0.0);
+	//busbar[2]->m_ObjLink[0].GetGeomInfo().SetColor(1.0, 1.0, 0.0);
+	//busbar[3]->m_ObjLink[0].GetGeomInfo().SetColor(0.2, 0.2, 0.0);
+	//busbar[4]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 1.0, 0.0);
+	//busbar[5]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 0.2, 0.0);
+	//busbar[6]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 0.0, 1.0);
+	//busbar[7]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 0.0, 0.2);
 	for (unsigned int i = 0; i < ctCase.size(); i++)
 	{
 		ctCase[i] = new Insert;
@@ -785,7 +850,7 @@ vector<Eigen::VectorXd> calculateJointTorque(vector<vector<Eigen::VectorXd>>& tr
 	return tauTrj;
 }
 
-void planning_demo(int robotFlag, int objNum)
+void planning_demo(int robotFlag, int objNum, bool doPlanning)
 {
 	isHYUPlanning = false;
 	if (robotFlag < 1)
@@ -809,14 +874,16 @@ void planning_demo(int robotFlag, int objNum)
 	{
 		busbarNum = objNum;
 		holeNum = objNum + 4;
-		holeNum_bf = objNum_bf[0][objNum_bf[0].size() - 1] + 4;
+		if (!initialPlanning[robotFlag - 1])
+			holeNum_bf = objNum_bf[0][objNum_bf[0].size() - 1] + 4;
 		renderTraj_multi[1].resize(0);
 	}
 	else
 	{
 		busbarNum = objNum + 4;
 		holeNum = objNum;
-		holeNum_bf = objNum_bf[1][objNum_bf[1].size() - 1] + 4;
+		if (!initialPlanning[robotFlag - 1])
+			holeNum_bf = objNum_bf[1][objNum_bf[1].size() - 1];
 		renderTraj_multi[0].resize(0);
 	}
 	if (!isMoved)
@@ -873,61 +940,85 @@ void planning_demo(int robotFlag, int objNum)
 		{
 			if (waypointFlag[i])
 			{
-				stepsize.push_back(0.1);
+				stepsize.push_back(0.2);
 				attachobject.push_back(attachObject[i]);
 			}
 		}
 		attachObjectWaypoint[robotFlag - 1] = attachObject;
 
 		/////////////////////////////////////////////
+		//stepsize[1] = 0.01;
+		//stepsize[3] = 0.01;
+		/////////////////////////////////////////////
 		//qval2 = goalPos[goalPos.size() - 1];
 		//rManagerVector[robotFlag - 1]->setJointVal(qval2);
 		//busbar[busbarNum]->setBaseLinkFrame(robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() * Inv(Tbusbar2gripper_new));
 		/////////////////////////////////////////////
 		// Solve RRT
-		if (goalPos.size() > 0)
+		if (goalPos.size() > 0 && doPlanning)
 		{
 			RRTSolve_HYU_SingleRobot(attachobject, stepsize, robotFlag);
 			attachObjRender_multi[robotFlag - 1] = attachobject;
 			gripObjectIdxRender[robotFlag - 1] = gripObjectIdx[robotFlag - 1];
 			TinitObjects_multiRender[robotFlag - 1] = TinitObjects_multi[robotFlag - 1];
 			initialObjectSavedRender[robotFlag - 1] = initialObjectSaved[robotFlag - 1];
-			isHYUPlanning = true;
-			isVision = false;
-			isRobotState = false;
-			isWaypoint = false;
-
-			if (attachobject.size() > 0 && attachobject[attachobject.size() - 1])
-				gripState_multi[robotFlag - 1] = 1;
-			else
-				gripState_multi[robotFlag - 1] = 0;
+			busbar[busbarNum]->setBaseLinkFrame(TobjectsInitSimul[busbarNum]);
+			busbar[busbarNum]->KIN_UpdateFrame_All_The_Entity();
 
 			initialPlanning[robotFlag - 1] = false;
 		}
 	}
+	else
+		renderTraj_multi[robotFlag - 1].resize(0);
 }
 
 void updateFuncDemo()
 {
+	//gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 	static int trjIdx = 0;
 	static int taskIdx = 0;
 	static int cnt = 0;
+	static int run = 0;
+	static int taskCnt = 0;
 	if (cnt == 0)
 	{
 		// select problem
 		int robotNum;
 		int objNum;
-		printf("robot: ");
-		cin >> robotNum;
+		if (!conti)
+		{
+			printf("robot: ");
+			cin >> robotNum;
+		}
+		else
+			robotNum = taskCnt % 2 + 1;
+		
 		if (objNum_bf[robotNum - 1].size() == 4)
 			initialize(robotNum);
 
-		printf("obj: ");
-		cin >> objNum;
+		
+		if (!conti)
+		{
+			printf("obj: ");
+			cin >> objNum;
+		}
+		else
+			objNum = taskCnt / 2;
+		
 		if (objNum == -1)
+		{
 			initialize(robotNum);
+		}
+		else if (objNum == -2)
+		{
+			while (run < 1000)
+				run++;
+			run = 0;
+		}
 		else
 			planning_demo(robotNum, objNum);
+
+		Sleep(1000);
 	}
 	for (unsigned int i = 0; i < renderTraj_multi.size(); i++)
 	{
@@ -967,9 +1058,17 @@ void updateFuncDemo()
 			{
 				taskIdx = 0;
 				cnt = 0;
+				taskCnt++;
+				if (conti && taskCnt == 8)
+				{
+					initialize(1);
+					initialize(2);
+					taskCnt = 0;
+				}
 			}
 		}
 	}	
+	gSpace._KIN_UpdateFrame_All_The_Entity_All_The_Systems();
 }
 
 void initialize(int robotFlag)
@@ -978,15 +1077,26 @@ void initialize(int robotFlag)
 	if (robotFlag == 1)
 	{
 		for (int i = 0; i < 4; i++)
+		{
 			busbar[i]->setBaseLinkFrame(TobjectsInitSimul[i]);
+			busbar[i]->KIN_UpdateFrame_All_The_Entity();
+		}
+			
 		rManagerVector[robotFlag - 1]->setJointVal(robotVector[robotFlag - 1]->homePos);
 	}
 	else
 	{
 		for (int i = 0; i < 4; i++)
+		{
 			busbar[i + 4]->setBaseLinkFrame(TobjectsInitSimul[i + 4]);
+			busbar[i + 4]->KIN_UpdateFrame_All_The_Entity();
+		}
+			
 		rManagerVector[robotFlag - 1]->setJointVal(robotVector[robotFlag - 1]->homePos);
 	}
 	lastJointVal_multi[robotFlag - 1] = robotVector[robotFlag - 1]->homePos;
-	objNum_bf.resize(0);
+	renderTraj_multi[robotFlag - 1].resize(0);
+	gripObjectIdxRender[robotFlag - 1] = -1;
+	attachObjRender_multi[robotFlag - 1].resize(0);
+	objNum_bf[robotFlag - 1].resize(0);
 }

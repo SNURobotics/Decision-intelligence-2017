@@ -182,8 +182,11 @@ int main(int argc, char **argv)
 	//initOffsetSE3fromHole = holeSE3 % TbusbarInit;
 
 	/////////////////////////////// read from text
-	//string dir_folder = "../../../data/HYU_data2/failure_data16";
-	//loadJointVal = loadDataFromText(dir_folder + "/jointValTraj.txt", 6);
+	printf("datanum:");		//12, 15, 18, 21, 24
+	int datanum;
+	cin >> datanum;
+	string dir_folder = "../../../data/HYU_data2/failure_data" + to_string(datanum);
+	loadJointVal = loadDataFromText(dir_folder + "/jointValTraj.txt", 6);
 	/////////////////////////////// plot contact
 	//hctrl->T_des_trj[0] = SE3(Vec3(0.0, 0.0, 0.0))*TbusbarInit;
 	//hctrl->SelectMtx = Eigen::VectorXd();
@@ -204,7 +207,8 @@ void rendering(int argc, char **argv)
 
 	renderer->InitializeRenderer(argc, argv, windows, false);
 	renderer->InitializeNode(&gSpace);
-	renderer->setUpdateFunc(updateFunc);
+//	renderer->setUpdateFunc(updateFunc);
+	renderer->setUpdateFunc(updateFuncLoadJointVal);
 
 	renderer->RunRendering();
 }
