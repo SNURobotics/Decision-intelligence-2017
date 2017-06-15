@@ -19,11 +19,12 @@ public:
 		//m_camera = new Camera(2.0, 0.4*SR_PI_HALF, 0.5*SR_PI_HALF);
 		// workcell view
 		Vec3 focus = Vec3(0.025, 1.095, 1.176);
+		m_camera = new Camera(1.5, 0.3*SR_PI_HALF, 0.0*SR_PI_HALF, focus);
 		// UR view
 		//Vec3 conv_end(-0.005 + 0.01 + 0.5*0.44, -0.29972 - 0.5*2.068, 1.03555 + 0.5*0.1511);
 		//Vec3 robot2conv_end(-0.072, 0.372, 0.007 - 0.69511 + 0.69195);		// represented in simulator global frame
 		//Vec3 focus = conv_end - robot2conv_end;
-		m_camera = new Camera(1.5, 0.3*SR_PI_HALF, 0.0*SR_PI_HALF, focus);
+		//m_camera = new Camera(1.25, 0.3*SR_PI_HALF, 1.6*SR_PI_HALF, focus);
 		///////////////////////////////////////////////////////////
 		Light* light = new Light;
 		Light* light2 = new Light;

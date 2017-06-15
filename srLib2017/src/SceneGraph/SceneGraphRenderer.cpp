@@ -74,8 +74,9 @@ void SceneGraphRenderer::InitializeRenderer( int argc, char *argv[], NUM_WINDOWS
 	{
 		m_root = new Group;
 
-		glutInitWindowSize(700, 700);
-		window1 = glutCreateWindow("Robitcs@SNU Viewer1");
+		//glutInitWindowSize(700, 700);
+		glutInitWindowSize(1200, 1000);
+		window1 = glutCreateWindow("Robotics@SNU Viewer1");
 		glutDisplayFunc(render);
 		glutReshapeFunc(reshape);
 		glutMouseFunc(mouseFunc);

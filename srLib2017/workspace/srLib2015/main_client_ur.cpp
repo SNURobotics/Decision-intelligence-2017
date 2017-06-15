@@ -237,17 +237,17 @@ int main(int argc, char **argv)
 
 	// busbar location
 	//busbar[0]->setBaseLinkFrame(jigAssem->getBaseLinkFrame() * jigAssem->holeCenter[0] * Thole2busbar);
-	int flag;
-	qval = 	rManager1->inverseKin(busbar[0]->getBaseLinkFrame() * Tbusbar2gripper_ur, &robot1->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag);
-	cout << flag << endl;
-	rManager1->setJointVal(qval);
+	//int flag;
+	//qval = 	rManager1->inverseKin(busbar[0]->getBaseLinkFrame() * Tbusbar2gripper_ur, &robot1->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag);
+	//cout << flag << endl;
+	//rManager1->setJointVal(qval);
 	rManager1->setGripperDistance(0.05);
 
 
 	// single busbar moving task
 	for (unsigned int i = 0; i < robotVector.size(); i++)
 		lastJointVal_multi[i] = robotVector[i]->homePos;
-	planning_URdemo(1, 2);
+	planning_URdemo(0, 2);
 
 
 	if (useVision)
@@ -543,7 +543,7 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 		cout << feas[0] << feas[1] << endl;
 		clock_t begin_time = clock();
 		RRTManagerVector[robotFlag - 1]->execute(stepsize[i]);
-		tempTraj = RRTManagerVector[robotFlag - 1]->extractPath();
+		tempTraj = RRTManagerVector[robotFlag - 1]->extractPath(40);
 		clock_t end_time = clock();
 		cout << "way point RRT time: " << end_time - begin_time << endl;
 		// check collision
@@ -561,8 +561,8 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 			// otherwise, busbar will not move, initial and final location will be the same.
 			RRTManagerVector[robotFlag - 1]->setState(tempTraj[tempTraj.size() - 1]);
 			TlastObjects_multi[robotFlag - 1] = objects[gripObjectIdx[robotFlag - 1]]->GetBaseLink()->GetFrame();
-			cout << "TlastBusbar" << endl;
-			cout << Trobotbase1 % TlastObjects_multi[robotFlag - 1] << endl;
+			//cout << "TlastBusbar" << endl;
+			//cout << Trobotbase1 % TlastObjects_multi[robotFlag - 1] << endl;
 			if (attachObject[i])
 			{
 				// set busbar initial location
@@ -571,8 +571,8 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 					initialObjectSaved[robotFlag - 1] = true;
 					RRTManagerVector[robotFlag - 1]->setState(tempTraj[0]);
 					TinitObjects_multi[robotFlag - 1] = objects[gripObjectIdx[robotFlag - 1]]->GetBaseLink()->GetFrame();
-					cout << "TinitBusbar" << endl;
-					cout << Trobotbase1 % TinitObjects_multi[robotFlag - 1] << endl;
+					//cout << "TinitBusbar" << endl;
+					//cout << Trobotbase1 % TinitObjects_multi[robotFlag - 1] << endl;
 				}
 			}
 		}
@@ -607,10 +607,10 @@ void objectSetting()
 	//testInit[2] = Trobotbase1 * SE3(-0.84321, -0.53758, 6.7572e-06, -0.53758, 0.84321, 4.3601e-06, -8.1082e-06, 3.8774e-07, -1, -1.2815, -0.060334, 1.0468);
 	//testInit[3] = Trobotbase1 * SE3(-0.014703,-0.99989,-8.5711e-07,-0.99989,0.014703,-3.6814e-06,3.9231e-06,7.9429e-08,-1,-1.2911,0.095115,1.0473);
 	// 17.06.13 using URrobot
-	testInit[0] = Trobotbase1 * SE3(Vec3(-0.35, -0.15, 0.03));
-	testInit[1] = Trobotbase1 * SE3(Vec3(-0.35, -0.25, 0.03));
-	testInit[2] = Trobotbase1 * SE3(Vec3(-0.35, -0.35, 0.03));
-	testInit[3] = Trobotbase1 * SE3(Vec3(-0.35, -0.45, 0.03));
+	testInit[0] = Trobotbase1 * SE3(Vec3(-0.4, -0.15, 0.03));
+	testInit[1] = Trobotbase1 * SE3(Vec3(-0.4, -0.25, 0.03));
+	testInit[2] = Trobotbase1 * SE3(Vec3(-0.4, -0.35, 0.03));
+	testInit[3] = Trobotbase1 * SE3(Vec3(-0.4, -0.45, 0.03));
 	for (unsigned int i = 0; i < busbar.size(); i++)
 	{
 		busbar[i] = new BusBar_HYU;
@@ -628,7 +628,7 @@ void objectSetting()
 		ctCase[i]->setBaseLinkFrame(SE3(Vec3(0.0, 10.0, -(double)0.1*i)) * initBusbar);
 		gSpace.AddSystem(ctCase[i]);
 	}
-	ctCase[0]->setBaseLinkFrame(Trobotbase1 * EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.2, -0.3, 0.1)));
+	ctCase[0]->setBaseLinkFrame(Trobotbase1 * EulerZYX(Vec3(0.0, -SR_PI_HALF, SR_PI_HALF), Vec3(-0.2, -0.35, 0.08)));
 	for (unsigned int i = 0; i < objects.size(); i++)
 	{
 		if (i < busbar.size())
