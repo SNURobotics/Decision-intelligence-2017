@@ -1701,9 +1701,8 @@ void communicationFunc(int argc, char **argv)
 				
 				initialPlanning[robotFlag - 1] = false;
 			}
-			else
-				printf("Wrong robot Flag is given (Flag = 'P')!!!\n");
-/*
+
+
 			else if (robotFlag == 3)
 			{
 				Eigen::VectorXd robot1Joint(6), robot2Joint(6);
@@ -1760,7 +1759,9 @@ void communicationFunc(int argc, char **argv)
 				else
 					gripState = 0;
 
-			}*/
+			}
+			else
+				printf("Wrong robot Flag is given (Flag = 'P')!!!\n");
 		}
 		/*hyu_data[0] = '\0';*/
 		hyu_data_flag = ' ';

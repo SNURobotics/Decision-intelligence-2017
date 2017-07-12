@@ -180,7 +180,7 @@ int readRobotCurState(char * hyu_data, robot_current_data & robot_state)
 			recv_cnt += 1;
 		}
 	}
-	/*else if (robotFlag == 3)
+	else if (robotFlag == 3)
 	{
 		robot_state.robot_joint.resize(6 * 2);
 		robot_state.robot_pos.resize(3 * 2);
@@ -208,7 +208,7 @@ int readRobotCurState(char * hyu_data, robot_current_data & robot_state)
 				nrobot_cnt += 1;
 			}
 		}
-	}*/
+	}
 	else
 		printf("Wrong robotFlag is given!!!!!!! (readRobotCurState())");
 	
@@ -508,57 +508,62 @@ char* makeForceResult(vector<vector<Eigen::VectorXd>>& forceTraj, int robotFlag)
 	return send_data;
 };
 
-//
-//vector<char*> makeJointCommand_MultiRobot(vector<vector<vector<Eigen::VectorXd>>>& jointTraj, vector<desired_dataset>& hyu_desired_dataset, int robotFlag)
-//{
-//	char *pbuffer;
-//
-//	char hyu_data_flag;
-//	char tmp_buffer[255];
-//	char div = 'd';
-//	int digit_num = 5;
-//	vector<unsigned int> totalNum(2);
-//	totalNum[0] = 0;
-//	totalNum[1] = 0;
-//	for (int robotnum = 0; robotnum < 2; robotnum++)
-//	{
-//		for (unsigned int i = 0; i < jointTraj[robotnum].size(); i++)
-//		{
-//			totalNum[robotnum] += jointTraj[robotnum][i].size();
-//		}
-//	}
-//
-//	vector<char*> send_data(2);
-//
-//	string tmp_data;
-//	
-//	//tmp_data= "J" + to_string(robotFlag) + "d" + to_string(totalNum) + "d";
-//
-//	//Robot joint trajectory
-//	for (int robotnum = 0; robotnum < 2; robotnum++)
-//	{
-//		tmp_data = "J" + to_string(robotnum+1) + "d" + to_string(totalNum[robotnum]) + "d";
-//		for (unsigned int i = 0; i < jointTraj[robotnum].size(); i++)
-//		{
-//			for (unsigned int j = 0; j < jointTraj[robotnum][i].size(); j++)
-//			{
-//				for (int k = 0; k < jointTraj[robotnum][i][j].size(); k++)
-//				{
-//					pbuffer = _gcvt(jointTraj[robotnum][i][j][k], digit_num, tmp_buffer);
-//					tmp_data = tmp_data + pbuffer;
-//					tmp_data = tmp_data + div;
-//				}
-//				pbuffer = _gcvt(hyu_desired_dataset[robotnum].robot_gripper[i], digit_num, tmp_buffer);
-//				tmp_data = tmp_data + pbuffer;
-//				tmp_data = tmp_data + div;
-//			}
-//		}
-//		send_data[i] = new char[tmp_data.length() + 1];
-//		strcpy(send_data[robotnum], tmp_data.c_str());
-//	}
-//	return send_data;
-//	
-//	//char *send_data = new char[tmp_data.length() + 1];
-//	strcpy(send_data, tmp_data.c_str());
-//	return send_data;
-//};
+
+char* makeJointCommand_MultiRobot(vector<vector<Eigen::VectorXd>>& jointTraj, vector<desired_dataset>& hyu_desired_dataset, int robotFlag)
+{
+	char pbuffer[100];
+
+	//char hyu_data_flag;
+	char tmp_buffer[255];
+	char div = 'd';
+	int digit_num = 5;
+	unsigned int totalNum = 0;
+	for (unsigned int i = 0; i < jointTraj.size(); i++)
+	{
+		totalNum += jointTraj[i].size();
+	}
+
+
+	char* tmp_data = (char*)malloc(sizeof(char) * 30000);
+	memset(tmp_data, NULL, sizeof(char) * 30000);
+	char plus[256];
+	// output: J1d.........J2d.......... 
+	for (int robotnum = 0; robotnum < 2; robotnum++)
+	{
+		strcat(tmp_data, "J");
+		sprintf(plus, "%dd", (robotnum+1));
+		strcat(tmp_data, plus);
+		sprintf(plus, "%dd", totalNum);
+		strcat(tmp_data, plus);
+		for (unsigned int i = 0; i < jointTraj.size(); i++)
+		{
+			for (unsigned int j = 0; j < jointTraj[i].size(); j++)
+			{
+				for (int k = 0; k < jointTraj[i][j].size()/2; k++) // since dual arms (12 dim)
+				{
+					strcpy(pbuffer, "");
+					strcat(pbuffer, _gcvt(jointTraj[i][j][k + (robotnum * 6)], digit_num, tmp_buffer));
+					//string add = string(pbuffer);
+					//tmp_data = tmp_data + add;
+					strcat(tmp_data, pbuffer);
+					sprintf(plus, "%c", div);
+					strcat(tmp_data, plus);
+					//tmp_data = tmp_data + div;
+				}
+				strcpy(pbuffer, "");
+				strcat(pbuffer, _gcvt(hyu_desired_dataset[robotnum].robot_gripper[i], digit_num, tmp_buffer));
+				//pbuffer = _gcvt(hyu_desired_dataset.robot_gripper[i], digit_num, tmp_buffer);
+				strcat(tmp_data, pbuffer);
+				sprintf(plus, "%c", div);
+				strcat(tmp_data, plus);
+				//tmp_data = tmp_data + string(pbuffer);
+				//tmp_data = tmp_data + div;
+			}
+		}
+	}
+	char *send_data = new char[strlen(tmp_data) + 1];
+	strcpy(send_data, tmp_data);
+	free(tmp_data);
+	return send_data;
+
+};
