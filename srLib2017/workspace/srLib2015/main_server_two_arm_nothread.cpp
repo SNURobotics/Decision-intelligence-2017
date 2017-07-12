@@ -158,7 +158,7 @@ int getObjectIdx(int robotIdx);
 void planning_demo(int robotFlag, int objNum);
 vector<Eigen::VectorXd> calculateJointTorque(vector<vector<Eigen::VectorXd>>& traj, int robotFlag);
 bool saveTrajectories = true;
-void savePlannedResultToText();
+void savePlannedResultToText(unsigned int robotFlag, vector<vector<Eigen::VectorXd>>& traj, vector<vector<bool>>& attachObjectVec);
 
 void communicationFunc(int argc, char **argv);		// run on the other thread
 
@@ -212,7 +212,7 @@ int main(int argc, char **argv)
 		rManager1->setGripperPosition(gripInput);
 		rManager2->setGripperPosition(gripInput);
 
-		cout << Trobotbase2 % robot2->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() << endl;
+		//cout << Trobotbase2 % robot2->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() << endl;
 
 
 		// rrt
@@ -605,10 +605,13 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 	else
 		lastJointVal_multi[robotFlag - 1] = initPos[0];
 
-	// save joint trajectory and object trajectories to text
-	vector<Eigen::VectorXd> saveTraj(0);
-
-
+	// save planned result to text file
+	if (saveTrajectories)
+	{
+		vector<vector<bool>> attachObjectVec(0);
+		attachObjectVec.push_back(attachObject);
+		savePlannedResultToText(robotFlag, traj, attachObjectVec);
+	}
 }
 
 
@@ -1644,6 +1647,86 @@ void planning_demo(int robotFlag, int objNum)
 	 }
 }
 
-void savePlannedResultToText()
+void savePlannedResultToText(unsigned int robotFlag, vector<vector<Eigen::VectorXd>>& traj, vector<vector<bool>>& attachObjectVec)
 {
+	// attachObject: first vector - robotnum, second vector - tasknum
+	// save joint trajectory and object trajectories to text
+	vector<Eigen::VectorXd> saveTraj(0);
+	string loc = "../../../data/render_traj/";
+	if (robotFlag == 1 || robotFlag == 2)
+	{
+		// single robot case
+		saveTraj.resize(0);
+		for (unsigned int i = 0; i < traj.size(); i++)
+		{
+			for (unsigned int j = 0; j < traj[i].size(); j++)
+			{
+				saveTraj.push_back(traj[i][j]);
+			}
+		}
+		saveDataToText(saveTraj, loc + "jointVal" + to_string(robotFlag) + ".txt");
+		for (unsigned int k = 0; k < objects.size(); k++)
+		{
+			saveTraj.resize(0);
+			for (unsigned int i = 0; i < traj.size(); i++)
+			{
+				for (unsigned int j = 0; j < traj[i].size(); j++)
+				{
+					if (attachObjectVec[0][i] && k == gripObjectIdx[robotFlag - 1])
+					{
+						rManagerVector[robotFlag - 1]->setJointVal(traj[i][j]);
+						saveTraj.push_back(SE3toVector(robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() * Inv(Tobject2gripper[k])));
+					}
+					else
+						saveTraj.push_back(SE3toVector(objects[k]->GetBaseLink()->GetFrame()));
+				}
+			}
+			saveDataToText(saveTraj, loc + "object" + to_string(k) + ".txt");
+		}
+	}
+	else
+	{
+		// multi robot case
+		for (int k = 0; k < 1; k++)
+		{
+			saveTraj.resize(0);
+			for (unsigned int i = 0; i < traj.size(); i++)
+			{
+				for (unsigned int j = 0; j < traj[i].size(); j++)
+				{
+					saveTraj.push_back(traj[i][j].segment(6*k, 6));
+				}
+			}
+			saveDataToText(saveTraj, loc + "jointVal" + to_string(k + 1) + ".txt");
+		}
+		
+		for (unsigned int k = 0; k < objects.size(); k++)
+		{
+			saveTraj.resize(0);
+			for (unsigned int i = 0; i < traj.size(); i++)
+			{
+				int robotnum = -1;
+				for (int r = 1; r < 3; r++)
+				{
+					if (attachObjectVec[r - 1][i] && k == gripObjectIdx[r - 1])
+					{
+						robotnum = r;
+						break;
+					}
+				}
+				
+				for (unsigned int j = 0; j < traj[i].size(); j++)
+				{
+					if (robotnum != -1)
+					{
+						rManagerVector[robotnum - 1]->setJointVal(traj[i][j]);
+						saveTraj.push_back(SE3toVector(robotVector[robotnum - 1]->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() * Inv(Tobject2gripper[k])));
+					}
+					else
+						saveTraj.push_back(SE3toVector(objects[k]->GetBaseLink()->GetFrame()));
+				}
+			}
+			saveDataToText(saveTraj, loc + "object" + to_string(k) + ".txt");
+		}
+	}
 }
