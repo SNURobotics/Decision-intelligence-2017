@@ -376,7 +376,41 @@ send_data2 = [send_data2; num2str(0)'; 'd'];
 for i = 1:6
     send_data2 = [send_data2; num2str(joint2(i))'; 'd'];
 end
-fwrite(client,send_data);
+
+send_data3 = ['P';'3';'d'];
+for i = 1:3
+    send_data3 = [send_data3; num2str(p(i))'; 'd'];
+end
+for i = 1:9
+    send_data3 = [send_data3; num2str(I33(i))'; 'd'];
+end
+send_data3 = [send_data3; num2str(0)'; 'd'];
+for i = 1:6
+    send_data3 = [send_data3; num2str(ft(i))'; 'd'];
+end
+send_data3 = [send_data3; num2str(0)'; 'd'];
+send_data3 = [send_data3; num2str(0)'; 'd'];
+for i = 1:6
+    send_data3 = [send_data3; num2str(joint1(i))'; 'd'];
+end
+
+for i = 1:3
+    send_data3 = [send_data3; num2str(p(i))'; 'd'];
+end
+for i = 1:9
+    send_data3 = [send_data3; num2str(I33(i))'; 'd'];
+end
+send_data3 = [send_data3; num2str(0)'; 'd'];
+for i = 1:6
+    send_data3 = [send_data3; num2str(ft(i))'; 'd'];
+end
+send_data3 = [send_data3; num2str(0)'; 'd'];
+send_data3 = [send_data3; num2str(0)'; 'd'];
+for i = 1:6
+    send_data3 = [send_data3; num2str(joint2(i))'; 'd'];
+end
+
+fwrite(client,send_data3);
 pause(0.01);
 
 %% Send S2 (second)
