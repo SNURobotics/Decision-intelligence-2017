@@ -197,13 +197,17 @@ int readRobotCurState(char * hyu_data, robot_current_data & robot_state)
 				robot_state.robot_gripper[recv_cnt - 3 - 9 + (nrobot_cnt * 1)] = atof(recv_data);
 			else if (recv_cnt < 3 + 9 + 1 + 6)
 				robot_state.robot_ft[recv_cnt - 3 - 9 - 1 + (nrobot_cnt * 6)] = atof(recv_data);
+			else if (recv_cnt < 3 + 9 + 1 + 6 + 1)
+				robot_state.robot_isOnWaypoint = atoi(recv_data);
+			else if (recv_cnt < 3 + 9 + 1 + 6 + 1 + 1)
+				robot_state.robot_isDead = atoi(recv_data);
 			else
-				robot_state.robot_joint[recv_cnt - 3 - 9 - 1 - 6 + (nrobot_cnt * 6)] = atof(recv_data);
+				robot_state.robot_joint[recv_cnt - 3 - 9 - 1 - 6 -1 -1 + (nrobot_cnt * 6)] = atof(recv_data);
 
 			recv_data = strtok(NULL, "d");
 			recv_cnt += 1;
 
-			if (recv_cnt == 19) {
+			if (recv_cnt == 27) {
 				recv_cnt = 0;
 				nrobot_cnt += 1;
 			}
