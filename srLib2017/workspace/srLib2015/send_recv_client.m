@@ -308,7 +308,7 @@ send_data3 = ['S';'3'; 'd';num2str(3); 'd';num2str(3);'d';char_robot_pos1; char_
     char_robot2_pos3; char_robot2_rot3; char_robot_gripper_on; char_robot_ft;'0';'d'];
 
 % 
-fwrite(client,send_data3);
+fwrite(client,send_data2);
 % while (1)
 %     
 %     if client.BytesAvailable ~= 0
@@ -410,7 +410,7 @@ for i = 1:6
     send_data3 = [send_data3; num2str(joint2(i))'; 'd'];
 end
 
-fwrite(client,send_data3);
+fwrite(client,send_data2);
 pause(0.01);
 
 %% Send S2 (second)

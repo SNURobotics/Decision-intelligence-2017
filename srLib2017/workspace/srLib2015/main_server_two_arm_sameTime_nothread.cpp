@@ -651,8 +651,13 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 	else
 		lastJointVal_multi[robotFlag - 1] = initPos[0];
 
-	// save joint trajectory and object trajectories to text
-	vector<Eigen::VectorXd> saveTraj(0);
+	// save planned result to text file
+	if (saveTrajectories)
+	{
+		vector<vector<bool>> attachObjectVec(0);
+		attachObjectVec.push_back(attachObject);
+		savePlannedResultToText(robotFlag, traj, attachObjectVec);
+	}
 
 
 }
