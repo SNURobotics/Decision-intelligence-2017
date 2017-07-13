@@ -20,5 +20,5 @@ public:
 
 	std::vector<srRevoluteJoint*> rJoint;
 	std::vector<srPrismaticJoint*> pJoint;
-	int m_mode;
+	int m_mode;			// mode: 0 - no stage, 1 - connect stage to workcell, 2 - attach last stage plate and cylinder
 };

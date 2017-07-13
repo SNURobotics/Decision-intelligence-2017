@@ -2,17 +2,17 @@
 
 //#include "myRenderer.h"
 #include "serverRenderer.h"
-
-#include "common\dataIO.h"
-#include "srDyn/srDYN.h"
-#include "srGamasot\srURDF.h"
-#include "robotManager\indyRobotManager.h"
-#include "robotManager/IndyRobot.h"
-#include <time.h>
-#include "robotManager\environmentBusbar.h"
-#include "robotManager\environment_QBtech.h"
-#include "robotManager\environment_workcell.h"
-#include "robotManager\robotRRTManager.h"
+#include "simulationEnvSetting.h"
+//#include "common\dataIO.h"
+//#include "srDyn/srDYN.h"
+//#include "srGamasot\srURDF.h"
+//#include "robotManager\indyRobotManager.h"
+//#include "robotManager/IndyRobot.h"
+//#include <time.h>
+//#include "robotManager\environmentBusbar.h"
+//#include "robotManager\environment_QBtech.h"
+//#include "robotManager\environment_workcell.h"
+//#include "robotManager\robotRRTManager.h"
 #include <fstream>
 #include <iostream>
 
@@ -28,44 +28,44 @@
 #include <crtdbg.h>
 
 //srLib
-srSpace gSpace;
+//srSpace gSpace;
 serverRenderer* renderer;
 
 // Environment
-JigAssem_QB_bar* jigAssem = new JigAssem_QB_bar(false);
-vector<BusBar_HYU*> busbar(8);
-vector<Insert*> ctCase(4);
-vector<Object*> objects(busbar.size() + ctCase.size());
-vector<SE3> TobjectsInitSimul(objects.size());
-bool isJigConnectedToWorkCell = true;
-SE3 initBusbar = SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.5)));
+//JigAssem_QB_bar* jigAssem = new JigAssem_QB_bar(false);
+//vector<BusBar_HYU*> busbar(8);
+//vector<Insert*> ctCase(4);
+//vector<Object*> objects(busbar.size() + ctCase.size());
+//vector<SE3> TobjectsInitSimul(objects.size());
+//bool isJigConnectedToWorkCell = true;
+//SE3 initBusbar = SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.5)));
 
 // Workspace
-int workcell_mode = 0;
-WorkCell* workCell = new WorkCell(workcell_mode);
-Eigen::VectorXd stageVal(3);
-bool useNoVisionTestSetting = true;
-bool useNoVisionTestSettingJig = true;
+//int workcell_mode = 0;
+//WorkCell* workCell = new WorkCell(workcell_mode);
+//Eigen::VectorXd stageVal(3);
+//bool useNoVisionTestSetting = true;
+//bool useNoVisionTestSettingJig = true;
 
 // Robot
-IndyRobot* robot1 = new IndyRobot(false);
-IndyRobot* robot2 = new IndyRobot(false);
-vector<IndyRobot*> robotVector(2);
-SE3 Tbusbar2gripper_new = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
-SE3 Tbusbar2gripper_tight = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.015));
-SE3 TctCase2gripper = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.006, 0.031625, 0.01));
-vector<SE3> Tobject2gripper(objects.size());
-SE3 Thole2busbar = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
-SE3 Trobotbase1;
-SE3 Trobotbase2;
-vector<SE3> TrobotbaseVector(2);
+//IndyRobot* robot1 = new IndyRobot(false);
+//IndyRobot* robot2 = new IndyRobot(false);
+//vector<IndyRobot*> robotVector(2);
+//SE3 Tbusbar2gripper_new = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
+//SE3 Tbusbar2gripper_tight = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.015));
+//SE3 TctCase2gripper = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.006, 0.031625, 0.01));
+//vector<SE3> Tobject2gripper(objects.size());
+//SE3 Thole2busbar = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
+//SE3 Trobotbase1;
+//SE3 Trobotbase2;
+//vector<SE3> TrobotbaseVector(2);
 
-indyRobotManager* rManager1;
-indyRobotManager* rManager2;
-vector<indyRobotManager*> rManagerVector(2);
-robotRRTManager* RRTManager1 = new robotRRTManager;
-robotRRTManager* RRTManager2 = new robotRRTManager;
-vector<robotRRTManager*> RRTManagerVector(2);
+//indyRobotManager* rManager1;
+//indyRobotManager* rManager2;
+//vector<indyRobotManager*> rManagerVector(2);
+//robotRRTManager* RRTManager1 = new robotRRTManager;
+//robotRRTManager* RRTManager2 = new robotRRTManager;
+//vector<robotRRTManager*> RRTManagerVector(2);
 
 
 // save last gripper state
@@ -102,13 +102,13 @@ bool saveTraj = true;
 
 
 // modelling functions
-void workspaceSetting();
-void robotSetting();
-void environmentSetting_HYU2(bool connect);
-void objectSetting();
-void connectJigToWorkCell();
-void initDynamics();
-void robotManagerSetting();
+//void workspaceSetting();
+//void robotSetting();
+//void environmentSetting_HYU2(bool connect);
+//void objectSetting();
+//void connectJigToWorkCell();
+//void initDynamics();
+//void robotManagerSetting();
 
 // rendering functions
 void rendering(int argc, char **argv);

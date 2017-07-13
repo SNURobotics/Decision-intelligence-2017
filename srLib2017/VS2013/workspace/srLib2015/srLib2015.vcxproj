@@ -142,15 +142,21 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\main_server_two_arm_clean_ver.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\main_server_two_arm_forceCtrl.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\main_server_two_arm_nothread.cpp" />
-    <ClCompile Include="..\..\..\workspace\srLib2015\main_server_two_arm_sameTime_nothread.cpp" />
+    <ClCompile Include="..\..\..\workspace\srLib2015\main_server_two_arm_nothread.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\main_server_two_arm_sameTime_nothread.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\Retargetting_time_check.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -199,10 +205,9 @@
     <ClInclude Include="..\..\..\workspace\srLib2015\extApiPlatform.h" />
     <ClInclude Include="..\..\..\workspace\srLib2015\myRenderer.h" />
     <ClInclude Include="..\..\..\workspace\srLib2015\serverRenderer.h" />
-    <ClInclude Include="..\..\..\workspace\srLib2015\srLibSetting.h" />
     <ClInclude Include="..\..\..\workspace\srLib2015\tcp_ip_communication.h" />
     <ClInclude Include="..\..\..\workspace\srLib2015\vrepConnect.h" />
-    <ClInclude Include="..\..\..\workspace\srLib2015\workspaceSetting.h" />
+    <ClInclude Include="..\..\..\workspace\srLib2015\simulationEnvSetting.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\common\common.vcxproj">
