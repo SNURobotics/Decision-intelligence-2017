@@ -1,3 +1,5 @@
+#pragma once
+
 #include "common\dataIO.h"
 #include "srDyn/srDYN.h"
 #include "srGamasot\srURDF.h"
@@ -7,6 +9,7 @@
 #include "robotManager\environmentBusbar.h"
 #include "robotManager\environment_QBtech.h"
 #include "robotManager\environment_workcell.h"
+#include "tcp_ip_communication.h"
 
 //srLib
 srSpace gSpace;
@@ -37,12 +40,18 @@ vector<SE3> TrobotbaseVector(2);
 indyRobotManager* rManager1;
 indyRobotManager* rManager2;
 vector<indyRobotManager*> rManagerVector(2);
+vector<Eigen::VectorXd> homePosRobotVector(2);
 
 SE3 Tbusbar2gripper_new = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
 SE3 Tbusbar2gripper_tight = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.015));
 SE3 TctCase2gripper = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.006, 0.031625, 0.01));
 vector<SE3> Tobject2gripper(objects.size());
 SE3 Thole2busbar = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
+
+
+vector<srLink*> obstacle(0);
+vector<srWeldJoint*> wJoint(0);		// weld joint for connecting workcell and obstacle
+bool isSystemAssembled = false;
 
 // modelling functions
 void workspaceSetting();
@@ -52,6 +61,8 @@ void objectSetting();
 void connectJigToWorkCell();
 void initDynamics();
 void robotManagerSetting();
+// communication function
+void setEnviromentFromVision(const vision_data& skku_dataset, int& bNum, int& cNum);
 
 
 void workspaceSetting()
@@ -90,6 +101,9 @@ void robotSetting()
 	Trobotbase2 = robot2->GetBaseLink()->GetFrame();
 	TrobotbaseVector[0] = Trobotbase1;
 	TrobotbaseVector[1] = Trobotbase2;
+
+	homePosRobotVector[0] = robot1->homePos;
+	homePosRobotVector[1] = robot2->homePos;
 }
 
 void environmentSetting_HYU2(bool connect)
@@ -146,8 +160,8 @@ void environmentSetting_HYU2(bool connect)
 			//SE3 tempSE3 = Trobotbase1 * SE3(testJigPosFromRobot1);
 			SE3 tempSE3 = Trobotbase2 * SE3(testJigPosFromRobot2);
 			SE3 Tjig = Trobotbase1 % SE3(tempSE3.GetPosition()) * jigAssem->m_visionOffset;
-			cout << "Tjig" << endl;
-			cout << Tjig << endl;
+			//cout << "Tjig" << endl;
+			//cout << Tjig << endl;
 			wJoint->SetParentLinkFrame(SE3(tempSE3.GetPosition()) * jigAssem->m_visionOffset);
 		}
 		wJoint->SetChildLinkFrame(SE3());
@@ -233,4 +247,70 @@ void robotManagerSetting()
 
 	rManagerVector[0] = rManager1;
 	rManagerVector[1] = rManager2;
+}
+
+void setEnviromentFromVision(const vision_data & skku_dataset, int& bNum, int& cNum)
+{
+	// set object (id:1 - busbar, id:2 - CTcase (insert), id:3 - jig) 
+	int bIdx = 0;
+	int cIdx = 0;
+	for (unsigned int i = 0; i < skku_dataset.objID.size(); i++)
+	{
+		if (skku_dataset.objID[i] == 1)
+		{
+			printf("objID: %d, index: %d\n", skku_dataset.objID[i], bIdx);
+			cout << SKKUtoSE3(skku_dataset.objOri[i], skku_dataset.objPos[i]) << endl;
+			busbar[bIdx]->GetBaseLink()->SetFrame(Trobotbase1 * SKKUtoSE3(skku_dataset.objOri[i], skku_dataset.objPos[i]) * busbar[bIdx]->m_visionOffset);
+			busbar[bIdx]->KIN_UpdateFrame_All_The_Entity();
+			bIdx++;
+		}
+		else if (skku_dataset.objID[i] == 2)
+		{
+			printf("objID: %d, index: %d\n", skku_dataset.objID[i], cIdx);
+			cout << SKKUtoSE3(skku_dataset.objOri[i], skku_dataset.objPos[i]) << endl;
+			ctCase[cIdx]->GetBaseLink()->SetFrame(Trobotbase1 * SKKUtoSE3(skku_dataset.objOri[i], skku_dataset.objPos[i]) * ctCase[cIdx]->m_visionOffset);
+			ctCase[cIdx]->KIN_UpdateFrame_All_The_Entity();
+			cIdx++;
+		}
+		else if (skku_dataset.objID[i] == 3)
+		{
+			// only set once when jig is connected to workcell by weld joint
+			printf("objID: %d\n", skku_dataset.objID[i]);
+			cout << SKKUtoSE3(skku_dataset.objOri[i], skku_dataset.objPos[i]) << endl;
+			jigAssem->GetBaseLink()->SetFrame(Trobotbase1 * SKKUtoSE3(skku_dataset.objOri[i], skku_dataset.objPos[i]) * jigAssem->m_visionOffset);
+			jigAssem->KIN_UpdateFrame_All_The_Entity();
+		}
+		else if (skku_dataset.objID[i] != 0)
+			printf("object ID is outside range!!!\n");
+	}
+	bNum = bIdx;
+	cNum = cIdx;
+	// set other objects to far away location
+	for (unsigned int i = bIdx; i < busbar.size(); i++)
+	{
+		busbar[bIdx]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -(double)0.1*i)) * initBusbar);
+		busbar[bIdx]->KIN_UpdateFrame_All_The_Entity();
+	}
+	for (unsigned int i = cIdx; i < ctCase.size(); i++)
+	{
+		ctCase[cIdx]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 10.0, -(double)0.1*i)) * initBusbar);
+		ctCase[cIdx]->KIN_UpdateFrame_All_The_Entity();
+	}
+	// set obstacle (only set by the first vision input)
+	if (!isSystemAssembled)
+	{
+		obstacle.resize(skku_dataset.obsInfo.size());
+		wJoint.resize(skku_dataset.obsInfo.size());
+		for (unsigned int i = 0; i < skku_dataset.obsInfo.size(); i++)
+		{
+			obstacle[i] = new srLink();
+			wJoint[i] = new srWeldJoint;
+			obstacle[i]->GetGeomInfo().SetDimension(skku_dataset.obsInfo[i][3], skku_dataset.obsInfo[i][4], skku_dataset.obsInfo[i][5]);
+			wJoint[i]->SetParentLink(workCell->GetBaseLink());
+			wJoint[i]->SetParentLinkFrame(robot1->GetBaseLink()->GetFrame()*SE3(Vec3(skku_dataset.obsInfo[i][0], skku_dataset.obsInfo[i][1], skku_dataset.obsInfo[i][2])));
+			wJoint[i]->SetChildLink(obstacle[i]);
+			wJoint[i]->SetChildLinkFrame(SE3());
+			obstacle[i]->GetGeomInfo().SetColor(0.2, 0.2, 0.2);
+		}
+	}
 }

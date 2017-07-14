@@ -1,3 +1,4 @@
+#pragma once
 #include "../../VS2013/tcp_ip_server/stdafx.h"
 #include "../../VS2013/tcp_ip_server/Server.h"
 
