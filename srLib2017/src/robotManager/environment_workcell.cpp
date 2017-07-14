@@ -108,10 +108,10 @@ void WorkCell::AssembleModel()
 	m_ObjLink[9].AddCollision(&m_ObjCollision[22]);
 
 	// temporary obstacle
-	m_ObjCollision[23].GetGeomInfo().SetDimension(Vec3(0.6, 0.4, 0.014));
-	double temp_x = -0.35; double temp_y = -0.1;
-	m_ObjCollision[23].SetLocalFrame(SE3(Vec3(temp_x, 1.57 + temp_y, 0.910 + 0.5*0.014)));
-	m_ObjLink[0].AddCollision(&m_ObjCollision[23]);
+	//m_ObjCollision[23].GetGeomInfo().SetDimension(Vec3(0.6, 0.4, 0.014));
+	//double temp_x = -0.35; double temp_y = -0.1;
+	//m_ObjCollision[23].SetLocalFrame(SE3(Vec3(temp_x, 1.57 + temp_y, 0.910 + 0.5*0.014)));
+	//m_ObjLink[0].AddCollision(&m_ObjCollision[23]);
 
 	m_ObjCollision[24].GetGeomInfo().SetDimension(Vec3(0.5, 0.5, 0.2));
 	m_ObjCollision[24].SetLocalFrame(SE3(Vec3(0.4, -1.75, 0.910 + 0.5*0.2)));

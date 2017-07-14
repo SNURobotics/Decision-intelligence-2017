@@ -118,13 +118,15 @@ void environmentSetting_HYU2(bool connect)
 	//}
 	//Vec3 testJigPosFromRobot1(-0.702151, -0.014057, 0.750026);		// 17.06.09 using robot1
 	//Vec3 testJigPosFromRobot1(-0.8254, 0.0338, 0.7483);		// 17.06.10 using robot2
-	Vec3 testJigPosFromRobot1(-0.8277, -0.0536, 0.8620);		// 17.06.10 using robot2
+	//Vec3 testJigPosFromRobot1(-0.8277, -0.0536, 0.8620);		// 17.06.10 using robot2
+	Vec3 testJigPosFromRobot2(-0.5276, -0.032456, 0.869522);		// 17.07.13 using robot2
 	jigAssem->SetBaseLinkType(srSystem::FIXED);
 	if (!useNoVisionTestSettingJig)
 		jigAssem->setBaseLinkFrame(Tbase*Tbase2jigbase);
 	else
 	{
-		SE3 tempSE3 = Trobotbase1 * SE3(testJigPosFromRobot1);
+		//SE3 tempSE3 = Trobotbase1 * SE3(testJigPosFromRobot1);
+		SE3 tempSE3 = Trobotbase2 * SE3(testJigPosFromRobot2);
 		jigAssem->setBaseLinkFrame(SE3(tempSE3.GetPosition()) * jigAssem->m_visionOffset);
 	}
 
@@ -141,7 +143,8 @@ void environmentSetting_HYU2(bool connect)
 			wJoint->SetParentLinkFrame(Tbase*Tbase2jigbase);
 		else
 		{
-			SE3 tempSE3 = Trobotbase1 * SE3(testJigPosFromRobot1);
+			//SE3 tempSE3 = Trobotbase1 * SE3(testJigPosFromRobot1);
+			SE3 tempSE3 = Trobotbase2 * SE3(testJigPosFromRobot2);
 			SE3 Tjig = Trobotbase1 % SE3(tempSE3.GetPosition()) * jigAssem->m_visionOffset;
 			cout << "Tjig" << endl;
 			cout << Tjig << endl;

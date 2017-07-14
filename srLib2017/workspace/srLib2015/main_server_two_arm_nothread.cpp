@@ -359,13 +359,15 @@ void environmentSetting_HYU2(bool connect)
 	//}
 	//Vec3 testJigPosFromRobot1(-0.702151, -0.014057, 0.750026);		// 17.06.09 using robot1
 	//Vec3 testJigPosFromRobot1(-0.8254, 0.0338, 0.7483);		// 17.06.10 using robot2
-	Vec3 testJigPosFromRobot1(-0.8277, - 0.0536,    0.8620);		// 17.06.10 using robot2
+	//Vec3 testJigPosFromRobot1(-0.8277, -0.0536, 0.8620);		// 17.06.10 using robot2
+	Vec3 testJigPosFromRobot2(-0.5276, -0.032456, 0.869522);		// 17.07.13 using robot2
 	jigAssem->SetBaseLinkType(srSystem::FIXED);
 	if (!useNoVisionTestSettingJig)
 		jigAssem->setBaseLinkFrame(Tbase*Tbase2jigbase);
 	else
 	{
-		SE3 tempSE3 = Trobotbase1 * SE3(testJigPosFromRobot1);
+		//SE3 tempSE3 = Trobotbase1 * SE3(testJigPosFromRobot1);
+		SE3 tempSE3 = Trobotbase2 * SE3(testJigPosFromRobot2);
 		jigAssem->setBaseLinkFrame(SE3(tempSE3.GetPosition()) * jigAssem->m_visionOffset);
 	}
 		
@@ -381,7 +383,8 @@ void environmentSetting_HYU2(bool connect)
 			wJoint->SetParentLinkFrame(Tbase*Tbase2jigbase);
 		else
 		{
-			SE3 tempSE3 = Trobotbase1 * SE3(testJigPosFromRobot1);
+			//SE3 tempSE3 = Trobotbase1 * SE3(testJigPosFromRobot1);
+			SE3 tempSE3 = Trobotbase2 * SE3(testJigPosFromRobot2);
 			SE3 Tjig = Trobotbase1 % SE3(tempSE3.GetPosition()) * jigAssem->m_visionOffset;
 			//cout << "Tjig" << endl;
 			//cout << Tjig << endl;
@@ -490,7 +493,7 @@ void RRT_problemSetting_SingleRobot(Eigen::VectorXd init, vector<SE3> wayPoints,
 	qWaypoint[robotFlag - 1].resize(0);
 	for (unsigned int i = 0; i < wayPoints.size(); i++)
 	{
-		qtemp = rManagerVector[robotFlag - 1]->inverseKin(TrobotbaseVector[0] * wayPoints[i], &robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, robotVector[robotFlag - 1]->qInvKinInit);
+		qtemp = rManagerVector[robotFlag - 1]->inverseKin(TrobotbaseVector[0] * wayPoints[i], &robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, robotVector[robotFlag - 1]->qInvKinInit/*, 500, robotManager::invKinAlg::NR, robotManager::invKinMet::LOG*/);
 		//if (flag != 0)
 		//	qtemp = rManagerVector[robotFlag - 1]->inverseKin(TrobotbaseVector[0] * wayPoints[i], &robotVector[robotFlag - 1]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, qInit);
 		if (flag != 0)
@@ -559,6 +562,10 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 
 		feas = RRTManagerVector[robotFlag - 1]->checkFeasibility(initPos[i], goalPos[i]);
 		cout << feas[0] << feas[1] << endl;
+		/////////////////////
+		if ((initPos[i] - goalPos[i]).norm() < 0.2)
+			stepsize[i] = 0.01;
+		/////////////////////
 		RRTManagerVector[robotFlag - 1]->execute(stepsize[i]);
 		tempTraj = RRTManagerVector[robotFlag - 1]->extractPath(40);
 
