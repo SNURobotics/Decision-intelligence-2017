@@ -28,7 +28,9 @@ bool startPlanningFromCurRobotState_twoArm = false;
 
 // Two arm flag
 bool isTwoArm = true;
-
+bool planTwoArmOkay = false;
+vector<bool> planningInitUpdated(2, false);
+Eigen::VectorXd planningInit_twoArm(12);
 
 void communicationFunc(int argc, char **argv);		// run on the other thread
 
@@ -46,7 +48,7 @@ bool useSleep = false;
 
 int main(int argc, char **argv)
 {
-	//Eigen::initParallel();
+	Eigen::initParallel();
 	bool useVision = false;
 	if (useVision)
 		useNoVisionTestSetting = false;
@@ -338,10 +340,13 @@ void communicationFunc(int argc, char **argv)
 				char plus[10];
 				char nway_char[10];
 				int disregardNum = 3;
-
-				if ((isTwoArm == true) && (nway_robot1 == nway_robot2) && (hyu_data_output.second[0] == 0) && (hyu_data_output.second[1] == 0)) // planning two arms simultaneously 
+				planTwoArmOkay = false;
+				planTwoArmOkay = (isTwoArm == true) && (nway_robot1 == nway_robot2) && (hyu_data_output.second[0] == 0) && (hyu_data_output.second[1] == 0);
+				if (planTwoArmOkay) // planning two arms simultaneously 
 				{
-					serv.SendMessageToClient("P3");
+					serv.SendMessageToClient("P1");
+					Sleep(50);
+					serv.SendMessageToClient("P2");
 					Sleep(50);
 				}
 				else 
@@ -473,6 +478,7 @@ void communicationFunc(int argc, char **argv)
 			int objectMaintainFlag = atoi(temp_char);
 			if (objectMaintainFlag == 0)
 			{
+				// initialize all (object, robot)
 				for (unsigned int i = 0; i < objects.size(); i++)
 				{
 					objects[i]->setBaseLinkFrame(TobjectsInitSimul[i]);
@@ -484,12 +490,28 @@ void communicationFunc(int argc, char **argv)
 						TlastObjects_multi[i] = TobjectsInitSimul[gripObjectIdx[i]];
 					gripObjectIdx[i] = -1;
 				}
-
-				initialPlanning[robotFlag - 1] = true;
-
+				if (robotFlag == 1 || robotFlag == 2)
+					initialPlanning[robotFlag - 1] = true;
+				else
+				{
+					initialPlanning[0] = true;
+					initialPlanning[1] = true;
+					initialPlanning_twoArm = true;
+				}
 			}
 			else
-				startPlanningFromCurRobotState[robotFlag - 1] = true;
+			{
+				// maintain object, initialize planning from current robot state update
+				if (robotFlag == 1 || robotFlag == 2)
+					startPlanningFromCurRobotState[robotFlag - 1] = true;
+				else
+				{
+					startPlanningFromCurRobotState[0] = true;
+					startPlanningFromCurRobotState[1] = true;
+					startPlanningFromCurRobotState_twoArm = true;
+				}
+			}
+				
 
 			// to see values
 			gripObjectIdx;
@@ -511,7 +533,9 @@ void communicationFunc(int argc, char **argv)
 			int robotFlag = 0;
 			robotFlag = readRobotCurState(hyu_data, robot_state);
 
-			if (robotFlag == 1 || robotFlag == 2)
+			if (robotFlag != 1 && robotFlag != 2)
+				printf("Wrong robot Flag is given (Flag = 'P')!!!\n");
+			else
 			{
 				// send confirming message to robot
 				char temp_char[3];
@@ -519,169 +543,174 @@ void communicationFunc(int argc, char **argv)
 				serv.SendMessageToClient(temp_char);
 				if (useSleep)
 					Sleep(50);
-
-				// RRT problem setting
-				// decide initial point (read from robot for initial planning, use last joint val otherwise)
-				Eigen::VectorXd planningInit;
-				if (initialPlanning[robotFlag - 1])
-					planningInit = robot_state.robot_joint;
-				else
+				if (!planTwoArmOkay)
 				{
-					if (startPlanningFromCurRobotState[robotFlag - 1])
+					// RRT problem setting for single arm planning
+					// decide initial point (read from robot for initial planning, use last joint val otherwise)
+					Eigen::VectorXd planningInit;
+					if (initialPlanning[robotFlag - 1])
 						planningInit = robot_state.robot_joint;
 					else
-						planningInit = lastJointVal_multi[robotFlag - 1];
-					startPlanningFromCurRobotState[robotFlag - 1] = false;
-					if (gripObjectIdx[robotFlag - 1] != -1 && distSE3(TinitObjects_multi[robotFlag - 1], TlastObjects_multi[robotFlag - 1]) > 1.0e-5)		// move busbar to its last location when releasing
 					{
-						objects[gripObjectIdx[robotFlag - 1]]->setBaseLinkFrame(TlastObjects_multi[robotFlag - 1]);
-						objects[gripObjectIdx[robotFlag - 1]]->KIN_UpdateFrame_All_The_Entity();
-					}
-				}
-
-				RRT_problemSettingFromSingleRobotCommand(hyu_desired_dataset[robotFlag - 1], attachObject, planningInit, waypointFlag, robotFlag);
-				for (unsigned int i = 0; i < waypointFlag.size(); i++)
-				{
-					if (waypointFlag[i])
-					{
-						stepsize.push_back(0.1);
-						attachobject.push_back(attachObject[i]);
-					}
-				}
-				attachObjectWaypoint[robotFlag - 1] = attachObject;
-
-				// Solve RRT
-				//m.lock();
-				if (goalPos.size() > 0)
-				{
-					RRTSolve_HYU_SingleRobot(attachobject, stepsize, robotFlag);
-
-					char* send_data = (char*)malloc(sizeof(char) * 30000);
-					memset(send_data, NULL, sizeof(char) * 30000);
-					char *add = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
-					strcat(send_data, add);
-					delete(add);
-
-					//char send_data[30000];
-					//strcpy(send_data, "");
-					//strcat(send_data, makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag));
-
-					//char* send_data = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
-					serv.SendMessageToClient(send_data);
-					if (useSleep)
-						Sleep(50);
-					printf("%s\n", send_data);
-					free(send_data);
-					if (checkTorque)
-					{
-						vector<Eigen::VectorXd> tauTrj = calculateJointTorque(renderTraj_multi[robotFlag - 1], robotFlag);
-						Eigen::VectorXd maxTau = Eigen::VectorXd::Zero(6);
-						for (unsigned int i = 0; i < tauTrj.size(); i++)
-						{
-							maxTau = maxTau.cwiseMax(tauTrj[i]);
-							printf("maximum torque: \n");
-							cout << maxTau.transpose() << endl;
-						}
-					}
-					if (attachobject.size() > 0 && attachobject[attachobject.size() - 1])
-						gripState_multi[robotFlag - 1] = 1;
-					else
-						gripState_multi[robotFlag - 1] = 0;
-
-					initialPlanning[robotFlag - 1] = false;
-				}
-				else
-				{
-					// send not feasible flag
-					serv.SendMessageToClient("W");
-				}
-				//m.unlock();
-			}
-			else if (robotFlag == 3)
-			{
-				// send confirming message to robot
-				char temp_char[3];
-				sprintf(temp_char, "T%d", robotFlag);
-				serv.SendMessageToClient(temp_char);
-				if (useSleep)
-					Sleep(50);
-
-				for (int i = 0; i < 2; i++)
-				{
-					attachObject_twoArm[i].resize(0);
-					waypointFlag_twoArm[i].resize(0);
-					attachobject_twoArm[i].resize(0);
-				}
-
-				// RRT problem setting
-				// decide initial point (read from robot for initial planning, use last joint val otherwise)
-				Eigen::VectorXd planningInit_twoArm;
-				if (initialPlanning_twoArm)
-					planningInit_twoArm = robot_state.robot_joint;
-				else
-				{
-					if (startPlanningFromCurRobotState_twoArm)
-						planningInit_twoArm = robot_state.robot_joint;
-					else
-						planningInit_twoArm = lastJointVal_multi_twoArm;
-					startPlanningFromCurRobotState_twoArm = false;
-					for (int robotnum = 0; robotnum < 2; robotnum++)
-					{
-						if (gripObjectIdx[robotnum] != -1 && distSE3(TinitObjects_multi[robotnum], TlastObjects_multi[robotnum]) > 1.0e-5)		// move busbar to its last location when releasing
-						{
-							objects[gripObjectIdx[robotnum]]->setBaseLinkFrame(TlastObjects_multi[robotnum]);
-							objects[gripObjectIdx[robotnum]]->KIN_UpdateFrame_All_The_Entity();
-						}
-					}
-				}
-
-				RRT_problemSettingFromMultiRobotCommand(hyu_desired_dataset, attachObject_twoArm, planningInit_twoArm, waypointFlag_twoArm, robotFlag);
-				vector<double> stepsize(0);	
-				
-				for (unsigned int i = 0; i < waypointFlag_twoArm[0].size(); i++)
-				{
-					if (waypointFlag_twoArm[0][i] && waypointFlag_twoArm[1][i])
-					{
-						stepsize.push_back(0.1);
-						attachobject_twoArm[0].push_back(attachObject_twoArm[0][i]);
-						attachobject_twoArm[1].push_back(attachObject_twoArm[1][i]);
-					}
-				}
-
-				// Solve RRT
-				if (goalPos.size() > 0)
-				{
-					RRTSolve_HYU_multiRobot(attachobject_twoArm, stepsize, robotFlag);
-
-					char* send_data = (char*)malloc(sizeof(char) * 30000);
-					memset(send_data, NULL, sizeof(char) * 30000);
-					char *add = makeJointCommand_MultiRobot(renderTraj_twoArm, hyu_desired_dataset, robotFlag);
-					strcat(send_data, add);
-					delete(add);
-
-					//char send_data[30000];
-					//strcpy(send_data, "");
-					//strcat(send_data, makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag));
-
-					//char* send_data = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
-					serv.SendMessageToClient(send_data);
-					if (useSleep)
-						Sleep(50);
-					printf("%s\n", send_data);
-					free(send_data);
-					for (int robotnum = 0; robotnum < 2; robotnum++)
-					{
-						if (attachobject_twoArm[robotnum].size() > 0 && attachobject_twoArm[robotnum][attachobject_twoArm[robotnum].size() - 1])
-							gripState_multi[robotnum] = 1;
+						if (startPlanningFromCurRobotState[robotFlag - 1])
+							planningInit = robot_state.robot_joint;
 						else
-							gripState_multi[robotnum] = 0;
+							planningInit = lastJointVal_multi[robotFlag - 1];
+						startPlanningFromCurRobotState[robotFlag - 1] = false;
+						if (gripObjectIdx[robotFlag - 1] != -1 && distSE3(TinitObjects_multi[robotFlag - 1], TlastObjects_multi[robotFlag - 1]) > 1.0e-5)		// move busbar to its last location when releasing
+						{
+							objects[gripObjectIdx[robotFlag - 1]]->setBaseLinkFrame(TlastObjects_multi[robotFlag - 1]);
+							objects[gripObjectIdx[robotFlag - 1]]->KIN_UpdateFrame_All_The_Entity();
+						}
+					}
 
-						initialPlanning[robotnum] = false;
+					RRT_problemSettingFromSingleRobotCommand(hyu_desired_dataset[robotFlag - 1], attachObject, planningInit, waypointFlag, robotFlag);
+					for (unsigned int i = 0; i < waypointFlag.size(); i++)
+					{
+						if (waypointFlag[i])
+						{
+							stepsize.push_back(0.1);
+							attachobject.push_back(attachObject[i]);
+						}
+					}
+					attachObjectWaypoint[robotFlag - 1] = attachObject;
+
+					// Solve RRT
+					//m.lock();
+					if (goalPos.size() > 0)
+					{
+						RRTSolve_HYU_SingleRobot(attachobject, stepsize, robotFlag);
+
+						char* send_data = (char*)malloc(sizeof(char) * 30000);
+						memset(send_data, NULL, sizeof(char) * 30000);
+						char *add = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
+						strcat(send_data, add);
+						delete(add);
+
+						//char send_data[30000];
+						//strcpy(send_data, "");
+						//strcat(send_data, makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag));
+
+						//char* send_data = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
+						serv.SendMessageToClient(send_data);
+						if (useSleep)
+							Sleep(50);
+						printf("%s\n", send_data);
+						free(send_data);
+						if (checkTorque)
+						{
+							vector<Eigen::VectorXd> tauTrj = calculateJointTorque(renderTraj_multi[robotFlag - 1], robotFlag);
+							Eigen::VectorXd maxTau = Eigen::VectorXd::Zero(6);
+							for (unsigned int i = 0; i < tauTrj.size(); i++)
+							{
+								maxTau = maxTau.cwiseMax(tauTrj[i]);
+								printf("maximum torque: \n");
+								cout << maxTau.transpose() << endl;
+							}
+						}
+						if (attachobject.size() > 0 && attachobject[attachobject.size() - 1])
+							gripState_multi[robotFlag - 1] = 1;
+						else
+							gripState_multi[robotFlag - 1] = 0;
+
+						initialPlanning[robotFlag - 1] = false;
+					}
+					else
+					{
+						// send not feasible flag
+						serv.SendMessageToClient("W");
+					}
+					//m.unlock();
+				}
+				else
+				{
+					// RRT problem setting for multi arm planning
+					// decide initial point (read from robot for initial planning, use last joint val otherwise)
+					if (initialPlanning_twoArm)
+						planningInit_twoArm.segment(6*(robotFlag - 1), 6) = robot_state.robot_joint;
+					else
+					{
+						if (startPlanningFromCurRobotState_twoArm)
+							planningInit_twoArm.segment(6 * (robotFlag - 1), 6) = robot_state.robot_joint;
+						else
+							planningInit_twoArm.segment(6 * (robotFlag - 1), 6) = lastJointVal_multi_twoArm.segment(6 * (robotFlag - 1), 6);
+						startPlanningFromCurRobotState_twoArm = false;
+						for (int robotnum = 0; robotnum < 2; robotnum++)
+						{
+							if (gripObjectIdx[robotnum] != -1 && distSE3(TinitObjects_multi[robotnum], TlastObjects_multi[robotnum]) > 1.0e-5)		// move busbar to its last location when releasing
+							{
+								objects[gripObjectIdx[robotnum]]->setBaseLinkFrame(TlastObjects_multi[robotnum]);
+								objects[gripObjectIdx[robotnum]]->KIN_UpdateFrame_All_The_Entity();
+							}
+						}
+					}
+					
+					planningInitUpdated[robotFlag - 1] = true;
+
+					// start planning when both arm initial points are updated
+					if (planningInitUpdated[0] && planningInitUpdated[1])
+					{
+						for (int i = 0; i < 2; i++)
+						{
+							attachObject_twoArm[i].resize(0);
+							waypointFlag_twoArm[i].resize(0);
+							attachobject_twoArm[i].resize(0);
+						}
+						RRT_problemSettingFromMultiRobotCommand(hyu_desired_dataset, attachObject_twoArm, planningInit_twoArm, waypointFlag_twoArm);
+						vector<double> stepsize(0);
+
+						for (unsigned int i = 0; i < waypointFlag_twoArm[0].size(); i++)
+						{
+							if (waypointFlag_twoArm[0][i] && waypointFlag_twoArm[1][i])
+							{
+								stepsize.push_back(0.1);
+								attachobject_twoArm[0].push_back(attachObject_twoArm[0][i]);
+								attachobject_twoArm[1].push_back(attachObject_twoArm[1][i]);
+							}
+						}
+
+						// Solve RRT
+						if (goalPos.size() > 0)
+						{
+							RRTSolve_HYU_multiRobot(attachobject_twoArm, stepsize);
+
+							char* send_data = (char*)malloc(sizeof(char) * 30000);
+							for (int i = 0; i < 2; i++)
+							{
+								memset(send_data, NULL, sizeof(char) * 30000);
+								char *add = makeJointCommand_MultiRobot(renderTraj_twoArm, hyu_desired_dataset, i + 1);
+								strcat(send_data, add);
+								delete(add);
+
+								//char send_data[30000];
+								//strcpy(send_data, "");
+								//strcat(send_data, makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag));
+
+								//char* send_data = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
+								serv.SendMessageToClient(send_data);
+								Sleep(50);
+								printf("%s\n", send_data);
+							}
+							
+							free(send_data);
+							for (int robotnum = 0; robotnum < 2; robotnum++)
+							{
+								if (attachobject_twoArm[robotnum].size() > 0 && attachobject_twoArm[robotnum][attachobject_twoArm[robotnum].size() - 1])
+									gripState_multi[robotnum] = 1;
+								else
+									gripState_multi[robotnum] = 0;
+
+								initialPlanning[robotnum] = false;
+							}
+							initialPlanning_twoArm = false;
+						}
+						// initialize two arm planning conditions
+						planTwoArmOkay = false;
+						planningInitUpdated[0] = false;
+						planningInitUpdated[1] = false;
 					}
 				}
 			}
-			else
-				printf("Wrong robot Flag is given (Flag = 'P')!!!\n");
 		}
 
 		// _CrtDumpMemoryLeaks();

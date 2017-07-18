@@ -35,9 +35,9 @@ void RRT_problemSettingFromSingleRobotCommand(const desired_dataset & hyu_desire
 void RRT_problemSetting_SingleRobot(Eigen::VectorXd init, vector<SE3> wayPoints, vector<bool> includeOri, vector<bool> attachObject, vector<bool>& waypointFlag, int robotFlag);
 void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize, int robotFlag);
 // (Two arm simultaneously)
-void RRT_problemSettingFromMultiRobotCommand(const vector<desired_dataset> & hyu_desired_dataset, vector<vector<bool>>& attachObject, Eigen::VectorXd init, vector<vector<bool>>& waypointFlag, int robotFlag);
-void RRT_problemSetting_MultiRobot(Eigen::VectorXd init, vector<vector<SE3>> wayPoints, vector<vector<bool>> includeOri, vector<vector<bool>> attachObject, vector<vector<bool>>& waypointFlag, int robotFlag);
-void RRTSolve_HYU_multiRobot(vector<vector<bool>> attachObject, vector<double> stepsize, int robotFlag);
+void RRT_problemSettingFromMultiRobotCommand(const vector<desired_dataset> & hyu_desired_dataset, vector<vector<bool>>& attachObject, Eigen::VectorXd init, vector<vector<bool>>& waypointFlag);
+void RRT_problemSetting_MultiRobot(Eigen::VectorXd init, vector<vector<SE3>> wayPoints, vector<vector<bool>> includeOri, vector<vector<bool>> attachObject, vector<vector<bool>>& waypointFlag);
+void RRTSolve_HYU_multiRobot(vector<vector<bool>> attachObject, vector<double> stepsize);
 
 
 int getObjectIdx(int robotIdx);
@@ -267,7 +267,7 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 }
 
 
-void RRT_problemSettingFromMultiRobotCommand(const vector<desired_dataset> & hyu_desired_dataset, vector<vector<bool>>& attachObject, Eigen::VectorXd init, vector<vector<bool>>& waypointFlag, int robotFlag)
+void RRT_problemSettingFromMultiRobotCommand(const vector<desired_dataset> & hyu_desired_dataset, vector<vector<bool>>& attachObject, Eigen::VectorXd init, vector<vector<bool>>& waypointFlag)
 {
 	vector<int> nWayVector(2);
 	vector<vector<SE3>> wayPoints(2);
@@ -304,10 +304,10 @@ void RRT_problemSettingFromMultiRobotCommand(const vector<desired_dataset> & hyu
 	}
 
 
-	RRT_problemSetting_MultiRobot(init, wayPoints, includeOri, attachObject, waypointFlag, robotFlag);
+	RRT_problemSetting_MultiRobot(init, wayPoints, includeOri, attachObject, waypointFlag);
 }
 
-void RRT_problemSetting_MultiRobot(Eigen::VectorXd init, vector<vector<SE3>> wayPoints, vector<vector<bool>> includeOri, vector<vector<bool>> attachObject, vector<vector<bool>>& waypointFlag, int robotFlag)
+void RRT_problemSetting_MultiRobot(Eigen::VectorXd init, vector<vector<SE3>> wayPoints, vector<vector<bool>> includeOri, vector<vector<bool>> attachObject, vector<vector<bool>>& waypointFlag)
 {
 
 
@@ -338,7 +338,7 @@ void RRT_problemSetting_MultiRobot(Eigen::VectorXd init, vector<vector<SE3>> way
 		if (flag[0] != 0)
 			qtemp_each_robot[0] = rManagerVector[0]->inverseKin(TrobotbaseVector[0] * wayPoints[0][i], &robotVector[0]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[0][i], SE3(), flag[0], initPos[initPos.size() - 1].segment(0, 6));
 		else if (flag[1] != 0)
-			qtemp_each_robot[1] = rManagerVector[1]->inverseKin(TrobotbaseVector[1] * wayPoints[1][i], &robotVector[1]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[1][i], SE3(), flag[1], initPos[initPos.size() - 1].segment(6, 12));
+			qtemp_each_robot[1] = rManagerVector[1]->inverseKin(TrobotbaseVector[0] * wayPoints[1][i], &robotVector[1]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[1][i], SE3(), flag[1], initPos[initPos.size() - 1].segment(6, 6));
 		printf("Two robot's %d-th init inv kin flag: %d, %d\n", i, flag[0], flag[1]);
 		qtemp = concatenateVec6(qtemp_each_robot[0], qtemp_each_robot[1]);
 
@@ -383,7 +383,7 @@ void RRT_problemSetting_MultiRobot(Eigen::VectorXd init, vector<vector<SE3>> way
 }
 
 
-void RRTSolve_HYU_multiRobot(vector<vector<bool>> attachObject, vector<double> stepsize, int robotFlag)
+void RRTSolve_HYU_multiRobot(vector<vector<bool>> attachObject, vector<double> stepsize)
 {
 	int nDim = 12;
 	vector<Eigen::VectorXd> tempTraj;
@@ -475,16 +475,25 @@ void RRTSolve_HYU_multiRobot(vector<vector<bool>> attachObject, vector<double> s
 	renderTraj_twoArm = traj;
 	// save last joint val
 	if (goalPos.size() > 0)
+	{
 		lastJointVal_multi_twoArm = traj[traj.size() - 1][traj[traj.size() - 1].size() - 1];
+		lastJointVal_multi[0] = lastJointVal_multi_twoArm.segment(0, 6);
+		lastJointVal_multi[1] = lastJointVal_multi_twoArm.segment(6, 6);
+	}
 	else
+	{
 		lastJointVal_multi_twoArm = initPos[0];
+		lastJointVal_multi[0] = initPos[0].segment(0, 6);
+		lastJointVal_multi[1] = initPos[0].segment(6, 6);
+	}
+		
 
 	// save joint trajectory and object trajectories to text
 	if (saveTrajectories)
 	{
 		vector<vector<bool>> attachObjectVec;
 		attachObjectVec = attachObject;
-		savePlannedResultToText(robotFlag, traj, attachObjectVec);
+		savePlannedResultToText(3, traj, attachObjectVec);
 	}
 
 }

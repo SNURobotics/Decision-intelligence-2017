@@ -181,39 +181,39 @@ int readRobotCurState(char * hyu_data, robot_current_data & robot_state)
 			recv_cnt += 1;
 		}
 	}
-	else if (robotFlag == 3)
-	{
-		robot_state.robot_joint.resize(6 * 2);
-		robot_state.robot_pos.resize(3 * 2);
-		robot_state.robot_rot.resize(9 * 2);
-		robot_state.robot_ft.resize(6 * 2);
-		robot_state.robot_gripper.resize(1 * 2);
-		while (recv_data != NULL)
-		{
-			if (recv_cnt < 3)
-				robot_state.robot_pos[recv_cnt + (nrobot_cnt * 3)] = atof(recv_data);
-			else if (recv_cnt < 3 + 9)
-				robot_state.robot_rot[recv_cnt - 3 + (nrobot_cnt * 9)] = atof(recv_data);
-			else if (recv_cnt < 3 + 9 + 1)
-				robot_state.robot_gripper[recv_cnt - 3 - 9 + (nrobot_cnt * 1)] = atof(recv_data);
-			else if (recv_cnt < 3 + 9 + 1 + 6)
-				robot_state.robot_ft[recv_cnt - 3 - 9 - 1 + (nrobot_cnt * 6)] = atof(recv_data);
-			else if (recv_cnt < 3 + 9 + 1 + 6 + 1)
-				robot_state.robot_isOnWaypoint = atoi(recv_data);
-			else if (recv_cnt < 3 + 9 + 1 + 6 + 1 + 1)
-				robot_state.robot_isDead = atoi(recv_data);
-			else
-				robot_state.robot_joint[recv_cnt - 3 - 9 - 1 - 6 -1 -1 + (nrobot_cnt * 6)] = atof(recv_data);
+	//else if (robotFlag == 3)
+	//{
+	//	robot_state.robot_joint.resize(6 * 2);
+	//	robot_state.robot_pos.resize(3 * 2);
+	//	robot_state.robot_rot.resize(9 * 2);
+	//	robot_state.robot_ft.resize(6 * 2);
+	//	robot_state.robot_gripper.resize(1 * 2);
+	//	while (recv_data != NULL)
+	//	{
+	//		if (recv_cnt < 3)
+	//			robot_state.robot_pos[recv_cnt + (nrobot_cnt * 3)] = atof(recv_data);
+	//		else if (recv_cnt < 3 + 9)
+	//			robot_state.robot_rot[recv_cnt - 3 + (nrobot_cnt * 9)] = atof(recv_data);
+	//		else if (recv_cnt < 3 + 9 + 1)
+	//			robot_state.robot_gripper[recv_cnt - 3 - 9 + (nrobot_cnt * 1)] = atof(recv_data);
+	//		else if (recv_cnt < 3 + 9 + 1 + 6)
+	//			robot_state.robot_ft[recv_cnt - 3 - 9 - 1 + (nrobot_cnt * 6)] = atof(recv_data);
+	//		else if (recv_cnt < 3 + 9 + 1 + 6 + 1)
+	//			robot_state.robot_isOnWaypoint = atoi(recv_data);
+	//		else if (recv_cnt < 3 + 9 + 1 + 6 + 1 + 1)
+	//			robot_state.robot_isDead = atoi(recv_data);
+	//		else
+	//			robot_state.robot_joint[recv_cnt - 3 - 9 - 1 - 6 -1 -1 + (nrobot_cnt * 6)] = atof(recv_data);
 
-			recv_data = strtok(NULL, "d");
-			recv_cnt += 1;
+	//		recv_data = strtok(NULL, "d");
+	//		recv_cnt += 1;
 
-			if (recv_cnt == 27) {
-				recv_cnt = 0;
-				nrobot_cnt += 1;
-			}
-		}
-	}
+	//		if (recv_cnt == 27) {
+	//			recv_cnt = 0;
+	//			nrobot_cnt += 1;
+	//		}
+	//	}
+	//}
 	else
 		printf("Wrong robotFlag is given!!!!!!! (readRobotCurState())");
 	
@@ -532,40 +532,40 @@ char* makeJointCommand_MultiRobot(vector<vector<Eigen::VectorXd>>& jointTraj, ve
 	char* tmp_data = (char*)malloc(sizeof(char) * 30000);
 	memset(tmp_data, NULL, sizeof(char) * 30000);
 	char plus[256];
-	// output: J1d.........J2d.......... 
-	for (int robotnum = 0; robotnum < 2; robotnum++)
+	// output: J1d......... or J2d.......... 
+	int robotnum = robotFlag - 1;
+
+	strcat(tmp_data, "J");
+	sprintf(plus, "%dd", (robotnum + 1));
+	strcat(tmp_data, plus);
+	sprintf(plus, "%dd", totalNum);
+	strcat(tmp_data, plus);
+	for (unsigned int i = 0; i < jointTraj.size(); i++)
 	{
-		strcat(tmp_data, "J");
-		sprintf(plus, "%dd", (robotnum+1));
-		strcat(tmp_data, plus);
-		sprintf(plus, "%dd", totalNum);
-		strcat(tmp_data, plus);
-		for (unsigned int i = 0; i < jointTraj.size(); i++)
+		for (unsigned int j = 0; j < jointTraj[i].size(); j++)
 		{
-			for (unsigned int j = 0; j < jointTraj[i].size(); j++)
+			for (int k = 0; k < jointTraj[i][j].size() / 2; k++) // since dual arms (12 dim)
 			{
-				for (int k = 0; k < jointTraj[i][j].size()/2; k++) // since dual arms (12 dim)
-				{
-					strcpy(pbuffer, "");
-					strcat(pbuffer, _gcvt(jointTraj[i][j][k + (robotnum * 6)], digit_num, tmp_buffer));
-					//string add = string(pbuffer);
-					//tmp_data = tmp_data + add;
-					strcat(tmp_data, pbuffer);
-					sprintf(plus, "%c", div);
-					strcat(tmp_data, plus);
-					//tmp_data = tmp_data + div;
-				}
 				strcpy(pbuffer, "");
-				strcat(pbuffer, _gcvt(hyu_desired_dataset[robotnum].robot_gripper[i], digit_num, tmp_buffer));
-				//pbuffer = _gcvt(hyu_desired_dataset.robot_gripper[i], digit_num, tmp_buffer);
+				strcat(pbuffer, _gcvt(jointTraj[i][j][k + (robotnum * 6)], digit_num, tmp_buffer));
+				//string add = string(pbuffer);
+				//tmp_data = tmp_data + add;
 				strcat(tmp_data, pbuffer);
 				sprintf(plus, "%c", div);
 				strcat(tmp_data, plus);
-				//tmp_data = tmp_data + string(pbuffer);
 				//tmp_data = tmp_data + div;
 			}
+			strcpy(pbuffer, "");
+			strcat(pbuffer, _gcvt(hyu_desired_dataset[robotnum].robot_gripper[i], digit_num, tmp_buffer));
+			//pbuffer = _gcvt(hyu_desired_dataset.robot_gripper[i], digit_num, tmp_buffer);
+			strcat(tmp_data, pbuffer);
+			sprintf(plus, "%c", div);
+			strcat(tmp_data, plus);
+			//tmp_data = tmp_data + string(pbuffer);
+			//tmp_data = tmp_data + div;
 		}
 	}
+
 	char *send_data = new char[strlen(tmp_data) + 1];
 	strcpy(send_data, tmp_data);
 	free(tmp_data);

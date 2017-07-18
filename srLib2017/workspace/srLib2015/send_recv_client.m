@@ -5,8 +5,7 @@ close all;
 %% HYU waypoint
 load('send_data.mat');
 % 
-client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
-fopen(client);
+
 I33 = reshape(eye(3),9,1);
 p = zeros(3,1);
 ft = zeros(6,1);
@@ -19,6 +18,48 @@ joint2 = zeros(6,1);
 joint2(2) = -pi/2;
 joint2(4) = pi/2;
 joint2(5) = -pi/2;
+% % % Trobot1torobot2 = ...
+% % %     [-1 0 0 -1.44;
+% % %     0 -1 0 0;
+% % %     0 0 1 0;
+% % %     0 0 0 1];
+% % % tmp = [];
+% % % newsenddata_set = {};
+% % % for idx = 1:5
+% % %     ndiv = find(senddata_set{idx} == 'd');
+% % %     nway1 = str2num(senddata_set{idx}(ndiv(1)+1:ndiv(2)-1)');
+% % %     nway2 = str2num(senddata_set{idx}(ndiv(2)+1:ndiv(3)-1)');
+% % %     Tset1 = zeros(4,4,nway1);
+% % %     Tset2 = zeros(4,4,nway2);
+% % %     for i = 1:nway1
+% % %         for j = 1:3
+% % %             Tset1(j,4,i) = str2num(senddata_set{idx}(ndiv(3 + 19*(i-1) + j-1)+1:ndiv(3 + 19*(i-1) + j)-1));
+% % %         end
+% % %         for j = 1:9
+% % %             c = fix((j-1) / 3) + 1;
+% % %             r = mod(j-1, 3) + 1;
+% % %             Tset1(r,c,i) = str2num(senddata_set{idx}(ndiv(3 + 19*(i-1) + 3 + j-1)+1:ndiv(3 + 19*(i-1) + 3 + j)-1));
+% % %         end
+% % %     end
+% % %     for i = 1:nway2
+% % %         Tset2(:,:,i) = 
+% % %     end
+% % %     newsenddata_set{idx} = [];
+% % %     for i = 1:length(ndiv)
+% % %         if i == 1
+% % %             newsenddata_set{idx} = senddata_set{idx}(1:ndiv(1));
+% % %         elseif and(i >= 3 + nway1 * 19 + 1, i < 3+nway1*19 + 1 + 12)
+% % %         elseif and(i >= 3 + nway1 * 19 + 1 + 19, i < 3+nway1*19 + 1 + 19 + 12)
+% % %         else
+% % %             newsenddata_set{idx} = [newsenddata_set{idx}; senddata_set{idx}(ndiv(i)+1:ndiv(i+1))];
+% % %         end
+% % %     end
+% % % end
+
+
+client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
+fopen(client);
+
 while(1)
     for idx = 1:5
         for j = 1:2
@@ -63,7 +104,8 @@ while(1)
         for i = 1:6
             send_data = [send_data; num2str(joint1(i))'; 'd'];
         end
-        
+        fwrite(client,send_data);
+        pause(0.01);
         send_data2 = ['P';'2';'d'];
         for i = 1:3
             send_data2 = [send_data2; num2str(p(i))'; 'd'];
@@ -80,7 +122,7 @@ while(1)
         for i = 1:6
             send_data2 = [send_data2; num2str(joint2(i))'; 'd'];
         end
-        fwrite(client,send_data);
+        fwrite(client,send_data2);
         pause(0.01);
     end
     send_data = ['A10']';
@@ -308,7 +350,7 @@ send_data3 = ['S';'3'; 'd';num2str(3); 'd';num2str(3);'d';char_robot_pos1; char_
     char_robot2_pos3; char_robot2_rot3; char_robot_gripper_on; char_robot_ft;'0';'d'];
 
 % 
-fwrite(client,send_data2);
+fwrite(client,send_data3);
 % while (1)
 %     
 %     if client.BytesAvailable ~= 0
@@ -409,6 +451,9 @@ send_data3 = [send_data3; num2str(0)'; 'd'];
 for i = 1:6
     send_data3 = [send_data3; num2str(joint2(i))'; 'd'];
 end
+
+fwrite(client,send_data);
+pause(0.01);
 
 fwrite(client,send_data2);
 pause(0.01);
