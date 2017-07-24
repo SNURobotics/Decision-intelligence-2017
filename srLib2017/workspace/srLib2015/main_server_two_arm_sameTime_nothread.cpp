@@ -61,7 +61,7 @@ int main(int argc, char **argv)
 	////////////////////////////////////////////// setting environment (replacable from vision data)
 	if (!useVision)
 	{
-		environmentSetting_HYU2(true);			// temporary environment setting
+		environmentSetting_HYU2(true);				// temporary environment setting
 		initDynamics();								// initialize srLib				
 		isSystemAssembled = true;
 		robotManagerSetting();						// robot manager setting
@@ -156,6 +156,8 @@ void communicationFunc(int argc, char **argv)
 			{
 				if (isJigConnectedToWorkCell)
 					connectJigToWorkCell();
+				else
+					gSpace.AddSystem((srSystem*)jigAssem);
 				/////////////////////////////////////// after setting environment
 				initDynamics();								// initialize srLib
 
@@ -176,6 +178,7 @@ void communicationFunc(int argc, char **argv)
 			}
 
 			// lift objects if collision occur
+			printf("initial collision check: %d\n", (int)gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP());
 			bool liftObjects = false;
 			if (liftObjects)
 			{

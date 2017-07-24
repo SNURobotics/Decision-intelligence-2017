@@ -563,93 +563,93 @@ pause(0.01);
 % % end
 
 %% send vision dataset to server
-% % identity = eye(3);
-% % char_ori = reshape(identity, [1,9]);
-% % char_pos = [0, 0, -1;
-% %     0,0,-2];
-% Tx10 = eye(4);
-% Tx10(1,4) = 0.1;
-% % Tjig = [ 0.000  -1.000   0.000  -0.815  ;
-% % -0.540  -0.000  -0.841  -0.005  ;
-% %  0.841  -0.000  -0.540   0.869  ;
-% %  0.000   0.000   0.000   1.000  ;];
-%  Tjig = [0.000  -1.000   0.000  -0.815  ;
-% -1.000  -0.000   0.000  -0.032  ;
-% -0.000  -0.000  -1.000   0.869  ;
-%  0.000   0.000   0.000   1.000  ];
-% char_ori_jig = reshape(Tjig(1:3,1:3)',1,9);
-% char_pos_jig = Tjig(1:3,4);
-% Tbusbar1 = [ 0.000  -0.540   0.841   0.281  ;
-% -1.000   0.000   0.000   0.020  ;
-% -0.000  -0.841  -0.540   2.472  ;
+% identity = eye(3);
+% char_ori = reshape(identity, [1,9]);
+% char_pos = [0, 0, -1;
+%     0,0,-2];
+Tx10 = eye(4);
+Tx10(1,4) = 0.1;
+% Tjig = [ 0.000  -1.000   0.000  -0.815  ;
+% -0.540  -0.000  -0.841  -0.005  ;
+%  0.841  -0.000  -0.540   0.869  ;
 %  0.000   0.000   0.000   1.000  ;];
-% Tbusbar2 = Tx10 * Tbusbar1;
-% Tbusbar3 = Tx10 * Tbusbar2;
+ Tjig = [0.000  -1.000   0.000  -0.815  ;
+-1.000  -0.000   0.000  -0.032  ;
+-0.000  -0.000  -1.000   0.869  ;
+ 0.000   0.000   0.000   1.000  ];
+char_ori_jig = reshape(Tjig(1:3,1:3)',1,9);
+char_pos_jig = Tjig(1:3,4);
+Tbusbar1 = [ 0.000  -0.540   0.841   0.281  ;
+-1.000   0.000   0.000   0.020  ;
+-0.000  -0.841  -0.540   2.472  ;
+ 0.000   0.000   0.000   1.000  ;];
+Tbusbar2 = Tx10 * Tbusbar1;
+Tbusbar3 = Tx10 * Tbusbar2;
+
+Trobot2_way2 = [-1	-1.80851e-07	-2.87912e-13	1.80851e-07	-1	-1.83166e-13	-2.8796e-13	-1.83196e-13	1	-0.75378	-0.2395+0.1	0.8509-0.05		];
+Trobot2_way2 = reshape(Trobot2_way2, 3,4);
+Trobot2_way2 = [Trobot2_way2; 0,0,0,1];
+Tbusbar2gripper = [0.000   1.000   0.000   0.000  ;
+ 1.000  -0.000  -0.000   0.000  ;
+ -0.000  0.000  -1.000   0.040  ;
+ 0.000   0.000   0.000   1.000  ];
+TctCase2gripper = [ 1.000   0.000   0.000   0.006  ;
+ 0.000  -1.000  -0.000   0.032  ;
+ -0.000  0.000  -1.000   0.010  ;
+ 0.000   0.000   0.000   1.000  ];
+% Tbusbar4 = Trobot2_way2 * Tbusbar2gripper^-1;
+Tbusbar4 = Trobot2_way2 * TctCase2gripper^-1;
+Tbusbar4
+char_ori_busbar1 = reshape(Tbusbar1(1:3,1:3)',1,9);
+char_pos_busbar1 = Tbusbar1(1:3,4);
+char_ori_busbar2 = reshape(Tbusbar2(1:3,1:3)',1,9);
+char_pos_busbar2 = Tbusbar2(1:3,4);
+char_ori_busbar3 = reshape(Tbusbar3(1:3,1:3)',1,9);
+char_pos_busbar3 = Tbusbar3(1:3,4);
+char_ori_busbar4 = reshape(Tbusbar4(1:3,1:3)',1,9);
+char_pos_busbar4 = Tbusbar4(1:3,4);
+char_vision = [];
+char_ori = [char_ori_busbar1; char_ori_busbar2; char_ori_busbar3; char_ori_busbar4; char_ori_jig];
+char_pos = [char_pos_busbar1'; char_pos_busbar2'; char_pos_busbar3'; char_pos_busbar4'; char_pos_jig'];
+char_objID = [1,1,1,2,3];
+for i = 1:5
+    char_vision = [char_vision; num2str(char_objID(i))'; 'd'];
+    for j = 1:12
+        if j<=9
+            char_vision = [char_vision;num2str(char_ori(i, j))';'d'];
+        else
+            char_vision = [char_vision;num2str(char_pos(i,j-9))';'d'];
+        end
+%         char_vision = [char_vision; num2str(i+0.01*j)'; 'd'];
+    end
+end
+char_pos_obs = [0, 0, -3;
+    0,0,-4];
+char_size_obs = [0.5,0.5,0.5];
+
+for i = 1:2
+    char_vision = [char_vision; num2str(-1)'; 'd'];
+    for j = 1:6
+        if j<=3
+            char_vision = [char_vision; num2str(char_pos_obs(i,j))'; 'd'];
+        else
+            char_vision = [char_vision; num2str(char_size_obs(j-3))'; 'd'];
+        end
+        
+%         char_vision = [char_vision; num2str(i+0.01*j)'; 'd'];
+    end
+end
+for i = 1:9
+    char_vision = [char_vision; num2str(0.)'; 'd'];
+end
+send_data = ['V'; char_vision]; 
+client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
+fopen(client);
+
+fwrite(client,send_data);
+
+% pause;
 % 
-% Trobot2_way2 = [-1	-1.80851e-07	-2.87912e-13	1.80851e-07	-1	-1.83166e-13	-2.8796e-13	-1.83196e-13	1	-0.75378	-0.2395+0.1	0.8509-0.05		];
-% Trobot2_way2 = reshape(Trobot2_way2, 3,4);
-% Trobot2_way2 = [Trobot2_way2; 0,0,0,1];
-% Tbusbar2gripper = [0.000   1.000   0.000   0.000  ;
-%  1.000  -0.000  -0.000   0.000  ;
-%  -0.000  0.000  -1.000   0.040  ;
-%  0.000   0.000   0.000   1.000  ];
-% TctCase2gripper = [ 1.000   0.000   0.000   0.006  ;
-%  0.000  -1.000  -0.000   0.032  ;
-%  -0.000  0.000  -1.000   0.010  ;
-%  0.000   0.000   0.000   1.000  ];
-% % Tbusbar4 = Trobot2_way2 * Tbusbar2gripper^-1;
-% Tbusbar4 = Trobot2_way2 * TctCase2gripper^-1;
-% Tbusbar4
-% char_ori_busbar1 = reshape(Tbusbar1(1:3,1:3)',1,9);
-% char_pos_busbar1 = Tbusbar1(1:3,4);
-% char_ori_busbar2 = reshape(Tbusbar2(1:3,1:3)',1,9);
-% char_pos_busbar2 = Tbusbar2(1:3,4);
-% char_ori_busbar3 = reshape(Tbusbar3(1:3,1:3)',1,9);
-% char_pos_busbar3 = Tbusbar3(1:3,4);
-% char_ori_busbar4 = reshape(Tbusbar4(1:3,1:3)',1,9);
-% char_pos_busbar4 = Tbusbar4(1:3,4);
-% char_vision = [];
-% char_ori = [char_ori_busbar1; char_ori_busbar2; char_ori_busbar3; char_ori_busbar4; char_ori_jig];
-% char_pos = [char_pos_busbar1'; char_pos_busbar2'; char_pos_busbar3'; char_pos_busbar4'; char_pos_jig'];
-% char_objID = [1,1,1,2,3];
-% for i = 1:5
-%     char_vision = [char_vision; num2str(char_objID(i))'; 'd'];
-%     for j = 1:12
-%         if j<=9
-%             char_vision = [char_vision;num2str(char_ori(i, j))';'d'];
-%         else
-%             char_vision = [char_vision;num2str(char_pos(i,j-9))';'d'];
-%         end
-% %         char_vision = [char_vision; num2str(i+0.01*j)'; 'd'];
-%     end
-% end
-% char_pos_obs = [0, 0, -3;
-%     0,0,-4];
-% char_size_obs = [0.5,0.5,0.5];
-% 
-% for i = 1:2
-%     char_vision = [char_vision; num2str(-1)'; 'd'];
-%     for j = 1:6
-%         if j<=3
-%             char_vision = [char_vision; num2str(char_pos_obs(i,j))'; 'd'];
-%         else
-%             char_vision = [char_vision; num2str(char_size_obs(j-3))'; 'd'];
-%         end
-%         
-% %         char_vision = [char_vision; num2str(i+0.01*j)'; 'd'];
-%     end
-% end
-% for i = 1:9
-%     char_vision = [char_vision; num2str(0.)'; 'd'];
-% end;
-% send_data = ['V'; char_vision]; 
-% client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
-% fopen(client);
-% 
-% fwrite(client,send_data);
-% 
-% % pause;
-% % 
 % char_pos(:,3) = char_pos(:,3) - 1;
 % char_vision = [];
 % for i = 1:5

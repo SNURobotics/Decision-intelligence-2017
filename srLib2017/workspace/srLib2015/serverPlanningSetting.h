@@ -164,9 +164,19 @@ void RRT_problemSetting_SingleRobot(Eigen::VectorXd init, vector<SE3> wayPoints,
 		{
 			waypointFlag[i] = false;
 			if (i == wayPoints.size() - 1)
-				printf("final waypoint not feasible!!!\n");
+			{
+				if (feas != 0)
+					printf("final waypoint not feasible!!! (collision)\n");
+				else
+					printf("final waypoint not feasible!!! (inversekin)\n");
+			}
 			else
-				printf("%d-th waypoint not feasible!!!\n", i + 1);
+			{
+				if (feas != 0)
+					printf("%d-th waypoint not feasible!!! (collision)\n", i + 1);
+				else
+					printf("%d-th waypoint not feasible!!! (inversekin)\n", i + 1);
+			}
 			if (i > 0 && attachObject[i] != attachObject[i - 1])
 				printf("grasp point is not feasible!!!\n");
 		}

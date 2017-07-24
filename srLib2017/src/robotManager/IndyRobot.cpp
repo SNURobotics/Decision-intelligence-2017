@@ -31,6 +31,7 @@ IndyRobot::IndyRobot(bool elbowUp, double gripperRot)
 		//homePos[1] = DEG2RAD(30); homePos[2] = DEG2RAD(-220); homePos[3] = DEG2RAD(90); homePos[4] = DEG2RAD(-100); 
 		homePos[1] = DEG2RAD(30 - 30); homePos[2] = DEG2RAD(-220+30); homePos[3] = DEG2RAD(90); homePos[4] = DEG2RAD(-100);
 		qInvKinInit[0] = -0.074913; qInvKinInit[1] = -0.612778; qInvKinInit[2] = -2.488023; qInvKinInit[3] = 1.570796; qInvKinInit[4] = -1.530005; qInvKinInit[5] = 1.645710;
+		//qInvKinInit[0] = 0.414658; qInvKinInit[1] = -0.394408; qInvKinInit[2] = -2.63654; qInvKinInit[3] = -1.5708; qInvKinInit[4] = 1.46015; qInvKinInit[5] = -0.414657;
 	}
 	this->SetSelfCollision(true);
 }
