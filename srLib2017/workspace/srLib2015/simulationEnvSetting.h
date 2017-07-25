@@ -25,7 +25,7 @@ SE3 initBusbar = SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.5)));
 
 // Workspace
 int workcell_mode = 0;
-WorkCell* workCell = new WorkCell(workcell_mode);
+WorkCell* workCell;
 Eigen::VectorXd stageVal(3);
 bool useNoVisionTestSetting = true;
 bool useNoVisionTestSettingJig = true;
@@ -55,9 +55,9 @@ vector<srWeldJoint*> wJoint(0);		// weld joint for connecting workcell and obsta
 bool isSystemAssembled = false;
 
 // modelling functions
-void workspaceSetting();
-void robotSetting();
-void environmentSetting_HYU2(bool connect);
+void workspaceSetting(double height = 0.0);
+void robotSetting(double height = 0.0);
+void environmentSetting_HYU2(bool connect, bool fixJigPos = false);
 void objectSetting();
 void connectJigToWorkCell();
 void initDynamics();
@@ -67,8 +67,9 @@ void setEnviromentFromVision(const vision_data& skku_dataset, int& bNum, int& cN
 
 bool saveVisionResult = true;
 
-void workspaceSetting()
+void workspaceSetting(double height)
 {
+	workCell = new WorkCell(workcell_mode, height);
 	gSpace.AddSystem(workCell);
 	// change stage4 location
 	if (workcell_mode == 2)
@@ -79,12 +80,12 @@ void workspaceSetting()
 }
 
 
-void robotSetting()
+void robotSetting(double height)
 {
 	gSpace.AddSystem((srSystem*)robot1);
 	gSpace.AddSystem((srSystem*)robot2);
-	robot1->GetBaseLink()->SetFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 0.4005 - 0.12, 1.972)));
-	robot2->GetBaseLink()->SetFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 1.6005 + 0.12, 1.972)));
+	robot1->GetBaseLink()->SetFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 0.4005 - 0.12, 1.972 + height)));
+	robot2->GetBaseLink()->SetFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 1.6005 + 0.12, 1.972 + height)));
 	robot1->SetActType(srJoint::ACTTYPE::TORQUE);
 	robot2->SetActType(srJoint::ACTTYPE::TORQUE);
 	vector<int> gpIdx(2);
@@ -108,7 +109,7 @@ void robotSetting()
 	homePosRobotVector[1] = robot2->homePos;
 }
 
-void environmentSetting_HYU2(bool connect)
+void environmentSetting_HYU2(bool connect, bool fixJigPos)
 {
 	// should be called later than workcell setting
 	SE3 Tbase;
@@ -139,7 +140,7 @@ void environmentSetting_HYU2(bool connect)
 	Vec3 testJigPosFromRobot2(-0.551584, -0.073662, 0.865189);		// 17.07.21 using robot2
 
 	jigAssem->SetBaseLinkType(srSystem::FIXED);
-	if (!useNoVisionTestSettingJig)
+	if (!useNoVisionTestSettingJig || fixJigPos)
 		jigAssem->setBaseLinkFrame(Tbase*Tbase2jigbase);
 	else
 	{
@@ -157,7 +158,7 @@ void environmentSetting_HYU2(bool connect)
 		wJoint->SetParentLink(workCell->GetBaseLink()); // removed stage
 														//wJoint->SetParentLink(workCell->getStagePlate());
 		wJoint->SetChildLink(jigAssem->GetBaseLink());
-		if (!useNoVisionTestSettingJig)
+		if (!useNoVisionTestSettingJig || fixJigPos)
 			wJoint->SetParentLinkFrame(Tbase*Tbase2jigbase);
 		else
 		{

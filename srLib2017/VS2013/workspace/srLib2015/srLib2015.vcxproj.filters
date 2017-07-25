@@ -134,5 +134,8 @@
     <ClCompile Include="..\..\..\workspace\srLib2015\main_render_two_arm.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\main_workspace_check.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

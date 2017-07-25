@@ -12,7 +12,7 @@
 class WorkCell : public Object
 {
 public:
-	WorkCell(int mode = 0);
+	WorkCell(int mode = 0, double height = 0.0);
 	~WorkCell();
 	void AssembleModel();
 	void setStageVal(const Eigen::VectorXd& stageVal);
@@ -21,4 +21,5 @@ public:
 	std::vector<srRevoluteJoint*> rJoint;
 	std::vector<srPrismaticJoint*> pJoint;
 	int m_mode;			// mode: 0 - no stage, 1 - connect stage to workcell, 2 - attach last stage plate and cylinder
+	double m_height;	// elevation height of robot and frames from default model
 };

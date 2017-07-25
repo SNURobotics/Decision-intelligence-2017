@@ -2,9 +2,10 @@
 #include "common\utils.h"
 #include "environment_workcell.h"
 
-WorkCell::WorkCell(int mode)
+WorkCell::WorkCell(int mode, double height)
 {
 	m_mode = mode;
+	m_height = height;
 	AssembleModel();
 }
 
@@ -39,7 +40,7 @@ void WorkCell::AssembleModel()
 
 	SE3 TsrLib2cad = EulerZYX(Vec3(SR_PI_HALF, 0.0, -SR_PI_HALF), Vec3(0.670, -4.70334, 1.52486));
 
-	// cell frame
+	// cell body and robot base
 	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	m_ObjLink[0].GetGeomInfo().SetLocalFrame(TsrLib2cad);
 	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/workcell_3ds/cellframe.3ds");
@@ -57,35 +58,38 @@ void WorkCell::AssembleModel()
 
 	m_ObjWeldJoint[4].SetParentLink(&m_ObjLink[0]);
 	m_ObjWeldJoint[4].SetChildLink(&m_ObjLink[8]);
-	m_ObjWeldJoint[4].SetChildLinkFrame(SE3(Vec3(0.0, 0.12, 0.0)));
+	m_ObjWeldJoint[4].SetChildLinkFrame(SE3(Vec3(0.0, 0.12, -m_height)));
 
 	m_ObjWeldJoint[5].SetParentLink(&m_ObjLink[0]);
 	m_ObjWeldJoint[5].SetChildLink(&m_ObjLink[9]);
-	m_ObjWeldJoint[5].SetChildLinkFrame(SE3(Vec3(0.0, -0.12, 0.0)));
+	m_ObjWeldJoint[5].SetChildLinkFrame(SE3(Vec3(0.0, -0.12, -m_height)));
 
 	m_ObjCollision[0].GetGeomInfo().SetDimension(Vec3(1.5, 4.5, 0.91));
 	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(0.0, -0.25, 0.455)));
-	m_ObjCollision[11].GetGeomInfo().SetDimension(Vec3(0.559, 1.857, 0.04));
-	m_ObjCollision[11].SetLocalFrame(SE3(Vec3(0.44, 1.0005, 2.061)));
-	m_ObjCollision[12].GetGeomInfo().SetDimension(Vec3(0.559, 1.857, 0.04));
-	m_ObjCollision[12].SetLocalFrame(SE3(Vec3(-0.399, 1.0005, 2.061)));
-	m_ObjCollision[13].GetGeomInfo().SetDimension(Vec3(1.398, 0.04, 0.04));
-	m_ObjCollision[13].SetLocalFrame(SE3(Vec3(0.0205, 0.092, 2.061)));
-	m_ObjCollision[14].GetGeomInfo().SetDimension(Vec3(1.398, 0.04, 0.04));
-	m_ObjCollision[14].SetLocalFrame(SE3(Vec3(0.0205, 1.909, 2.061)));
 
-	m_ObjCollision[15].GetGeomInfo().SetDimension(Vec3(0.04, 0.04, 1.131));
-	m_ObjCollision[15].SetLocalFrame(SE3(Vec3(0.6995, 0.092, 1.4755)));
-	m_ObjCollision[16].GetGeomInfo().SetDimension(Vec3(0.04, 0.04, 1.131));
-	m_ObjCollision[16].SetLocalFrame(SE3(Vec3(-0.6585, 0.092, 1.4755)));
-	m_ObjCollision[17].GetGeomInfo().SetDimension(Vec3(0.04, 0.04, 1.131));
-	m_ObjCollision[17].SetLocalFrame(SE3(Vec3(0.6995, 1.909, 1.4755)));
-	m_ObjCollision[18].GetGeomInfo().SetDimension(Vec3(0.04, 0.04, 1.131));
-	m_ObjCollision[18].SetLocalFrame(SE3(Vec3(-0.6585, 1.909, 1.4755)));
-	m_ObjCollision[19].GetGeomInfo().SetDimension(Vec3(0.04, 0.04, 1.131));
-	m_ObjCollision[19].SetLocalFrame(SE3(Vec3(0.0205, 1.909, 1.4755)));
-	m_ObjCollision[20].GetGeomInfo().SetDimension(Vec3(0.04, 0.04, 1.131));
-	m_ObjCollision[20].SetLocalFrame(SE3(Vec3(-0.6585, 0.9805, 1.4755)));
+
+	// cell frame
+	m_ObjCollision[11].GetGeomInfo().SetDimension(Vec3(0.559, 1.857, 0.04));
+	m_ObjCollision[11].SetLocalFrame(SE3(Vec3(0.44, 1.0005, 2.061 + m_height)));
+	m_ObjCollision[12].GetGeomInfo().SetDimension(Vec3(0.559, 1.857, 0.04));
+	m_ObjCollision[12].SetLocalFrame(SE3(Vec3(-0.399, 1.0005, 2.061 + m_height)));
+	m_ObjCollision[13].GetGeomInfo().SetDimension(Vec3(1.398, 0.04, 0.04));
+	m_ObjCollision[13].SetLocalFrame(SE3(Vec3(0.0205, 0.092, 2.061 + m_height)));
+	m_ObjCollision[14].GetGeomInfo().SetDimension(Vec3(1.398, 0.04, 0.04));
+	m_ObjCollision[14].SetLocalFrame(SE3(Vec3(0.0205, 1.909, 2.061 + m_height)));
+
+	m_ObjCollision[15].GetGeomInfo().SetDimension(Vec3(0.04, 0.04, 1.131 + m_height));
+	m_ObjCollision[15].SetLocalFrame(SE3(Vec3(0.6995, 0.092, 1.4755 + 0.5 * m_height)));
+	m_ObjCollision[16].GetGeomInfo().SetDimension(Vec3(0.04, 0.04, 1.131 + m_height));
+	m_ObjCollision[16].SetLocalFrame(SE3(Vec3(-0.6585, 0.092, 1.4755 + 0.5 * m_height)));
+	m_ObjCollision[17].GetGeomInfo().SetDimension(Vec3(0.04, 0.04, 1.131 + m_height));
+	m_ObjCollision[17].SetLocalFrame(SE3(Vec3(0.6995, 1.909, 1.4755 + 0.5 * m_height)));
+	m_ObjCollision[18].GetGeomInfo().SetDimension(Vec3(0.04, 0.04, 1.131 + m_height));
+	m_ObjCollision[18].SetLocalFrame(SE3(Vec3(-0.6585, 1.909, 1.4755 + 0.5 * m_height)));
+	m_ObjCollision[19].GetGeomInfo().SetDimension(Vec3(0.04, 0.04, 1.131 + m_height));
+	m_ObjCollision[19].SetLocalFrame(SE3(Vec3(0.0205, 1.909, 1.4755 + 0.5 * m_height)));
+	m_ObjCollision[20].GetGeomInfo().SetDimension(Vec3(0.04, 0.04, 1.131 + m_height));
+	m_ObjCollision[20].SetLocalFrame(SE3(Vec3(-0.6585, 0.9805, 1.4755 + 0.5 * m_height)));
 
 	m_ObjLink[0].AddCollision(&m_ObjCollision[0]);
 	m_ObjLink[0].AddCollision(&m_ObjCollision[11]);
@@ -124,23 +128,23 @@ void WorkCell::AssembleModel()
 	//// Collision
 	////// left first bar
 	m_ObjCollision[61].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[61].GetGeomInfo().SetDimension(Vec3(0.04, 0.08, 1.230));
-	m_ObjCollision[61].SetLocalFrame(SE3(Vec3(0.749 - 0.04*0.5, 0.0, 0.910 + 1.230*0.5)));
+	m_ObjCollision[61].GetGeomInfo().SetDimension(Vec3(0.04, 0.08, 1.230 + m_height));
+ 	m_ObjCollision[61].SetLocalFrame(SE3(Vec3(0.749 - 0.04*0.5, 0.0, 0.910 + 1.230*0.5 + 0.5 * m_height)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[61]);
 	////// left second bar
 	m_ObjCollision[62].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[62].GetGeomInfo().SetDimension(Vec3(0.04, 0.08, 1.230));
-	m_ObjCollision[62].SetLocalFrame(SE3(Vec3(0.749 - 0.04 - 0.2895 - 0.04*0.5, 0.0, 0.910 + 1.230*0.5)));
+	m_ObjCollision[62].GetGeomInfo().SetDimension(Vec3(0.04, 0.08, 1.230 + m_height));
+	m_ObjCollision[62].SetLocalFrame(SE3(Vec3(0.749 - 0.04 - 0.2895 - 0.04*0.5, 0.0, 0.910 + 1.230*0.5 + 0.5 * m_height)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[62]);
 	////// left third bar
 	m_ObjCollision[63].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[63].GetGeomInfo().SetDimension(Vec3(0.04, 0.08, 1.230));
-	m_ObjCollision[63].SetLocalFrame(SE3(Vec3(0.749 - 0.04 - 0.2895 - 0.04 - 0.760 - 0.04*0.5, 0.0, 0.910 + 1.230*0.5)));
+	m_ObjCollision[63].GetGeomInfo().SetDimension(Vec3(0.04, 0.08, 1.230 + m_height));
+	m_ObjCollision[63].SetLocalFrame(SE3(Vec3(0.749 - 0.04 - 0.2895 - 0.04 - 0.760 - 0.04*0.5, 0.0, 0.910 + 1.230*0.5 + 0.5 * m_height)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[63]);
 	////// left fourth bar
 	m_ObjCollision[64].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[64].GetGeomInfo().SetDimension(Vec3(0.04, 0.08, 1.230));
-	m_ObjCollision[64].SetLocalFrame(SE3(Vec3(0.749 - 0.04 - 0.2895 - 0.04 - 0.760 - 0.04 - 0.2895 - 0.04*0.5, 0.0, 0.910 + 1.230*0.5)));
+	m_ObjCollision[64].GetGeomInfo().SetDimension(Vec3(0.04, 0.08, 1.230 + m_height));
+	m_ObjCollision[64].SetLocalFrame(SE3(Vec3(0.749 - 0.04 - 0.2895 - 0.04 - 0.760 - 0.04 - 0.2895 - 0.04*0.5, 0.0, 0.910 + 1.230*0.5 + 0.5 * m_height)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[64]);
 	////// left bottom bar
 	m_ObjCollision[65].GetGeomInfo().SetShape(srGeometryInfo::BOX);
@@ -150,22 +154,22 @@ void WorkCell::AssembleModel()
 	////// left top bar
 	m_ObjCollision[66].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	m_ObjCollision[66].GetGeomInfo().SetDimension(Vec3(1.499, 0.08, 0.04));
-	m_ObjCollision[66].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.910 + 1.230 - 0.04*0.5)));
+	m_ObjCollision[66].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.910 + 1.230 - 0.04*0.5 + m_height)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[66]);
 	////// right first bar
 	m_ObjCollision[67].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[67].GetGeomInfo().SetDimension(Vec3(0.04, 0.04, 1.230));
-	m_ObjCollision[67].SetLocalFrame(SE3(Vec3(0.749 - 0.04*0.5, 1.959 + 0.04*0.5, 0.910 + 1.230*0.5)));
+	m_ObjCollision[67].GetGeomInfo().SetDimension(Vec3(0.04, 0.04, 1.230 + m_height));
+	m_ObjCollision[67].SetLocalFrame(SE3(Vec3(0.749 - 0.04*0.5, 1.959 + 0.04*0.5, 0.910 + 1.230*0.5 + 0.5 * m_height)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[67]);
 	////// right second bar
 	m_ObjCollision[68].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[68].GetGeomInfo().SetDimension(Vec3(0.04, 0.04, 1.230));
-	m_ObjCollision[68].SetLocalFrame(SE3(Vec3(0.749 - 0.04 - 0.6895 - 0.04*0.5, 1.959 + 0.04*0.5, 0.910 + 1.230*0.5)));
+	m_ObjCollision[68].GetGeomInfo().SetDimension(Vec3(0.04, 0.04, 1.230 + m_height));
+	m_ObjCollision[68].SetLocalFrame(SE3(Vec3(0.749 - 0.04 - 0.6895 - 0.04*0.5, 1.959 + 0.04*0.5, 0.910 + 1.230*0.5 + 0.5 * m_height)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[68]);
 	////// right third bar
 	m_ObjCollision[69].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[69].GetGeomInfo().SetDimension(Vec3(0.04, 0.04, 1.230));
-	m_ObjCollision[69].SetLocalFrame(SE3(Vec3(0.749 - 0.04 - 0.6895 - 0.04 - 0.6895 - 0.04*0.5, 1.959 + 0.04*0.5, 0.910 + 1.230*0.5)));
+	m_ObjCollision[69].GetGeomInfo().SetDimension(Vec3(0.04, 0.04, 1.230 + m_height));
+	m_ObjCollision[69].SetLocalFrame(SE3(Vec3(0.749 - 0.04 - 0.6895 - 0.04 - 0.6895 - 0.04*0.5, 1.959 + 0.04*0.5, 0.910 + 1.230*0.5 + 0.5 * m_height)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[69]);
 	////// right bottom bar
 	m_ObjCollision[70].GetGeomInfo().SetShape(srGeometryInfo::BOX);
@@ -175,7 +179,7 @@ void WorkCell::AssembleModel()
 	////// right top bar
 	m_ObjCollision[71].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	m_ObjCollision[71].GetGeomInfo().SetDimension(Vec3(1.499, 0.04, 0.04));
-	m_ObjCollision[71].SetLocalFrame(SE3(Vec3(0.0, 1.959 + 0.04*0.5, 0.910 + 1.230 - 0.04*0.5)));
+	m_ObjCollision[71].SetLocalFrame(SE3(Vec3(0.0, 1.959 + 0.04*0.5, 0.910 + 1.230 - 0.04*0.5 + m_height)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[71]);
 
 	// conveyer belt
