@@ -93,14 +93,14 @@ void IndyRobot::SetJointLimit(bool elbowUp)
 		UpperJointLimit[Indy_Index::JOINT_2] = 135;
 		UpperJointLimit[Indy_Index::JOINT_3] = -90;			// 80, to maintain elbow down shape (reducing range will beneficial for fast planning)
 		UpperJointLimit[Indy_Index::JOINT_4] = 180;
-		UpperJointLimit[Indy_Index::JOINT_5] = 180;
+		UpperJointLimit[Indy_Index::JOINT_5] = 170;
 		UpperJointLimit[Indy_Index::JOINT_6] = 200;
 
 		LowerJointLimit[Indy_Index::JOINT_1] = -130;
 		LowerJointLimit[Indy_Index::JOINT_2] = -135;
 		LowerJointLimit[Indy_Index::JOINT_3] = -235;		// -100
 		LowerJointLimit[Indy_Index::JOINT_4] = -90;
-		LowerJointLimit[Indy_Index::JOINT_5] = -180;
+		LowerJointLimit[Indy_Index::JOINT_5] = -170;
 		LowerJointLimit[Indy_Index::JOINT_6] = -200;
 	}
 

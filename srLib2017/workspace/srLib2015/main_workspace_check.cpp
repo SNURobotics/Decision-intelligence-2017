@@ -68,7 +68,7 @@ vector<SE3> busbarSE3set(0);
 int main(int argc, char **argv)
 {
 	srand(time(NULL));
-	double height = 0.2;
+	double height = 0.0;
 
 	// Robot home position
 	robotSetting(height);
@@ -79,7 +79,9 @@ int main(int argc, char **argv)
 	environmentSetting_HYU2(true, true);
 
 	////////////////////////////////////////////////////////////////////////////////////////
-	bool testRobot1 = true;
+	bool testworkspace = false;
+
+	bool testRobot1 = false;
 	double yoffset;
 	if (testRobot1)
 		yoffset = -0.6;
@@ -97,6 +99,7 @@ int main(int argc, char **argv)
 	int ny = 10;
 	int n = 5;
 	double bin = 0.5 / (double)n;
+	double bin_x = 1.4 / (double)nx;
 	busbar.resize(nx*ny*n);
 	flags.resize(busbar.size());
 	for (unsigned int i = 0; i < busbar.size(); i++)
@@ -112,8 +115,8 @@ int main(int argc, char **argv)
 		{
 			for (int k = 0; k < n; k++, l++)
 			{
-				busbarSE3set.push_back(SE3(Vec3((double)i*bin - 0.4 + Trobotbase1[9], (double)j*bin - 0.2 + yoffset, (double)k*bin - 0.05)) * Tbase * Tbase2jigbase);
-				busbar[l]->setBaseLinkFrame(SE3(Vec3((double)i*bin - 0.4 + Trobotbase1[9], (double)j*bin - 0.2 + yoffset, (double)k*bin - 0.05 - 10.0)) * Tbase * Tbase2jigbase);
+				busbarSE3set.push_back(SE3(Vec3((double)i*bin_x - 0.7 + Trobotbase1[9], (double)j*bin - 0.2 + yoffset, (double)k*bin - 0.05)) * Tbase * Tbase2jigbase);
+				busbar[l]->setBaseLinkFrame(SE3(Vec3((double)i*bin_x - 0.7 + Trobotbase1[9], (double)j*bin - 0.2 + yoffset, (double)k*bin - 0.05 - 10.0)) * Tbase * Tbase2jigbase);
 			}
 		}
 	}
@@ -147,9 +150,14 @@ int main(int argc, char **argv)
 	rManager2->setJointVal(robot2->homePos);
 
 	cout << gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP() << endl;
+	Eigen::VectorXd checkPos1 = Eigen::VectorXd::Zero(6);
+	checkPos1[1] = -SR_PI_HALF; checkPos1[2] = DEG2RAD(0.0); checkPos1[3] = SR_PI_HALF; checkPos1[4] = DEG2RAD(-90);
+
+	Eigen::VectorXd checkPos2 = Eigen::VectorXd::Zero(6);
+	checkPos2[1] = DEG2RAD(30 - 30); checkPos2[2] = DEG2RAD(-220 + 30); checkPos2[3] = DEG2RAD(90); checkPos2[4] = DEG2RAD(-100);
 
 	//////// test inverse kin of robot1
-	if (testRobot1)
+	if (testRobot1 && testworkspace)
 	{
 		for (unsigned int i = 0; i < busbar.size(); i++)
 		{
@@ -166,9 +174,12 @@ int main(int argc, char **argv)
 				busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 0.0, 0.1);
 			if (flags[i] == 2 || isColli)
 				busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(1.0, 0.0, 0.0);
+
+
+
 		}
 	}
-	else
+	else if (testworkspace)
 	{
 		for (unsigned int i = 0; i < busbar.size(); i++)
 		{
@@ -187,35 +198,46 @@ int main(int argc, char **argv)
 		}
 	}
 	
+	if (testworkspace)
+	{
+		for (unsigned int i = 0; i < busbar.size(); i++)
+			busbar[i]->setBaseLinkFrame(busbarSE3set[i]);
+	}
 
-	for (unsigned int i = 0; i < busbar.size(); i++)
-		busbar[i]->setBaseLinkFrame(busbarSE3set[i]);
-	//cout << jointVal.transpose() << endl;
-	////// test inverse kin of robot2
-	//Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
-	//// elbow up
-	//qInit[1] = -0.65*SR_PI;
-	//qInit[2] = 0.3*SR_PI;
-	//qInit[3] = 0.5*SR_PI_HALF;
-	//Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
-	//qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
-
-	
-
-	// workcell robot initial config
-	//jointVal.setZero();
-	//jointVal[0] = 0.0; jointVal[1] = -SR_PI_HALF; jointVal[2] = 80.0 / 90.0*SR_PI_HALF; jointVal[3] = SR_PI_HALF;
-	//rManager2->setJointVal(jointVal);
-	//rManager1->setJointVal(homePos);
 	Eigen::VectorXd gripInput(2);
 	gripInput[0] = -0.005;
 	gripInput[1] = 0.005;
 	rManager1->setGripperPosition(gripInput);
 	rManager2->setGripperPosition(gripInput);
 
+	///////////////////////////////////////////// check gravity torque
+	Eigen::VectorXd checkVel = 1.0*Eigen::VectorXd::Ones(6);
 	
+	Eigen::VectorXd Zerovec = Eigen::VectorXd::Zero(6);
+	Eigen::VectorXd tau1 = rManager1->inverseDyn(checkPos1, checkVel, Zerovec);
+	Eigen::VectorXd tau2 = rManager2->inverseDyn(checkPos2, checkVel, Zerovec);
+	
+	robot1->homePos = checkPos1;
+	robot2->homePos = checkPos2;
+	printf("tau1 : ");
+	cout << tau1.transpose() << endl << endl;
+	printf("tau2 : ");
+	cout << tau2.transpose() << endl << endl;
 
 
+	Eigen::VectorXd checkPos3;
+	int flagg;
+	checkPos3 = rManager2->inverseKin(jigAssem->getBaseLinkFrame() * jigAssem->holeCenter[4] * Tbusbar2gripper_new, &robot2->gLink[Indy_Index::MLINK_GRIP], true, SE3(), flagg, robot2->qInvKinInit);
+	cout << flagg << endl;
+	Eigen::MatrixXd J2 = rManager2->getBodyJacobian(checkPos2, &robot2->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new));
+	Eigen::VectorXd F2(6);
+	F2[0] = 0.0; F2[1] = 0.0; F2[2] = 0.0; F2[3] = 5.0; F2[4] = 5.0; F2[5] = 50.0;
+	Eigen::VectorXd tau_add = J2.transpose() * F2;
+	printf("tau_add : ");
+	cout << tau_add.transpose() << endl;
+	printf("total torque: ");
+	cout << (tau2 - tau_add).transpose() << endl;
+	///////////////////////////////////////////////////////////////////
 
 	rendering(argc, argv);
 

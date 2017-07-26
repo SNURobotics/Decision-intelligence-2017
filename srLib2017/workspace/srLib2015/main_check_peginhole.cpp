@@ -1,14 +1,7 @@
 #include <cstdio>
 
-#include "myRenderer.h"
-#include "srDyn/srDYN.h"
-#include "srGamasot\srURDF.h"
-#include "robotManager\indyRobotManager.h"
-#include "robotManager/IndyRobot.h"
-#include <time.h>
-#include "robotManager\environmentBusbar.h"
-#include "robotManager\environment_workcell.h"
-#include "robotManager\environment_QBtech.h"
+#include "serverRenderer.h"
+#include "simulationEnvSetting.h"
 #include "robotManager\robotRRTManager.h"
 #include "ForceCtrlManager\hybridPFCtrlManager.h"
 #include "Math\Spline.h"
@@ -17,29 +10,13 @@
 #include <direct.h>
 
 // Environment
-Base_HYU* busbarBase = new Base_HYU;
-JigAssem_QB* jigAssem = new JigAssem_QB;
-vector<BusBar_HYU*> busbar(2);
 srLink* busbarlink = new srLink;
 srSystem* targetObj = new srSystem;
 int holeNum = 4;		// from 0 ~ 7
-SE3 Tbusbar2gripper = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
-SE3 Tbusbar2gripper_new = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
-SE3 Thole2busbar = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
 
-// Workspace
-WorkCell* workCell = new WorkCell;
-Eigen::VectorXd stageVal(3);
 srSystem* obs = new srSystem;
 
-// Robot
-IndyRobot* robot1 = new IndyRobot;
-IndyRobot* robot2 = new IndyRobot;
 Eigen::VectorXd jointVal(6);
-Eigen::VectorXd homePos(6);
-
-indyRobotManager* rManager1;
-indyRobotManager* rManager2;
 
 hybridPFCtrlManager_6dof* hctrl = new hybridPFCtrlManager_6dof();
 vector<SE3> Tdes;
@@ -57,10 +34,8 @@ SE3 holeSE3;
 SE3 initOffsetSE3fromHole;
 
 
-srSpace gSpace;
-myRenderer* renderer;
+serverRenderer* renderer;
 
-void initDynamics();
 void rendering(int argc, char **argv);
 void updateFunc();
 void updateFuncRandom();
@@ -69,12 +44,10 @@ void updateFuncTest2();
 void updateFuncDefault();
 void updateFuncLoadJointVal();
 void setObject(srSystem* system, Vec3 dim, SE3 T = SE3(), srSystem::BASELINKTYPE basetype = srSystem::BASELINKTYPE::FIXED);
+void connectBusbarToRobotRigidly(srSystem* object, int robotNum);
 void setHybridPFCtrl();
 void generateRefTraj(SE3 init, Vec3 goal);
 void environmentSetting_HYU2(srSystem* object, bool connectStageBusbarBase = false);
-void workspaceSetting();
-void robotSetting();
-void robotManagerSetting();
 void setInitialConfig();
 SE3 setRandomDesSE3(SE3 holeSE3, double xrange = 0.04, double yrange = 0.04, double zrotrange = 1.0);
 
@@ -84,11 +57,9 @@ vector<SE3> finalOffset(4);
 int main(int argc, char **argv)
 {
 	srand(time(NULL));
-	// Robot home position
-	homePos[1] = -SR_PI_HALF; homePos[3] = SR_PI_HALF; homePos[4] = SR_PI;
-	homePos[4] = -SR_PI_HALF;		// match to robot workcell
 	// environment
 	workspaceSetting();
+	busbar.resize(2);
 	for (unsigned int i = 0; i < busbar.size(); i++)
 	{
 		busbar[i] = new BusBar_HYU;
@@ -98,7 +69,8 @@ int main(int argc, char **argv)
 	//gSpace.AddSystem((srSystem*)busbar[1]);
 	targetObj = busbar[0];
 	busbarlink = targetObj->GetBaseLink();
-	environmentSetting_HYU2(targetObj, false);		// targetObj is assumed to be rigidly attached to robot end-effector
+	environmentSetting_HYU2(false, true);		// targetObj is assumed to be rigidly attached to robot end-effector
+	connectBusbarToRobotRigidly(targetObj, 1);
 	robotSetting();
 	//setObject(obs, Vec3(0.5, 0.5, 0.5));
 
@@ -109,9 +81,7 @@ int main(int argc, char **argv)
 	robotManagerSetting();
 	
 	// workcell robot initial config
-	jointVal.setZero();
-	jointVal[0] = 0.0; jointVal[1] = -SR_PI_HALF; jointVal[2] = 80.0 / 90.0*SR_PI_HALF; jointVal[3] = SR_PI_HALF;
-	rManager2->setJointVal(jointVal);
+	rManager2->setJointVal(robot2->homePos);
 	Eigen::VectorXd gripInput(2);
 	gripInput[0] = -0.009;
 	gripInput[1] = 0.009;
@@ -124,62 +94,7 @@ int main(int argc, char **argv)
 	setInitialConfig();
 
 
-	//SE3 TgoalPos = jigAssem->GetBaseLink()->GetFrame() * jigAssem->holeCenter[holeNum] * Thole2busbar;
-	//
-	//// set initial config
-	//double xpos = (double)0.04*rand() / RAND_MAX-0.02;
-	//double ypos = (double)0.04*rand() / RAND_MAX-0.02;
-	//double zpos = (double)0.1*rand() / RAND_MAX;
-	//double xrot = (double)0.05*rand() / RAND_MAX - 0.025;
-	//double yrot = (double)0.05*rand() / RAND_MAX - 0.025;
-	//double zrot = (double)0.05*rand() / RAND_MAX - 0.025;
-	//SE3 initPosOffset = SE3(Vec3(xpos, ypos, 0.01));
-	//SE3 TbusbarInit = initPosOffset * TgoalPos * EulerZYX(Vec3(zrot, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
-	//
-	////obs->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -0.25))*TbusbarInit);
 
-	//finalOffset[0] = SE3(Vec3(0.01, 0.0, 0.0));
-	//finalOffset[1] = SE3(Vec3(0.0, 0.01, 0.0));
-	//finalOffset[2] = SE3(Vec3(-0.01, 0.0, 0.0));
-	//finalOffset[3] = SE3(Vec3(0.0, -0.01, 0.0));
-
-	//int flag;
-	//
-	//// initial condition 1
-	//Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
-	//// elbow up
-	//qInit[1] = -0.65*SR_PI;
-	//qInit[2] = 0.3*SR_PI;
-	//qInit[3] = 0.5*SR_PI_HALF;
-	//// initial condition 2
-	//Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
-	//qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
-	//Eigen::VectorXd q_config = rManager1->inverseKin(TbusbarInit * Tbusbar2gripper_new, rManager1->m_activeArmInfo->m_endeffector[0], true, SE3(), flag, qInit2, 1000);
-	//cout << flag << endl;
-	//rManager1->setJointVal(q_config);
-	//
-	//setHybridPFCtrl();
-
-	//// set desired trajectory (trajectory of the busbar)
-	////generateRefTraj(TbusbarInit, TgoalPos.GetPosition());
-	//Tdes.resize(1);
-	//TgoalPos = SE3(Vec3(initPosOffset.GetPosition()[0], initPosOffset.GetPosition()[1], 0.0)) * TgoalPos;
-	//Tdes[0] = TgoalPos;
-
-	//vector<dse3> Fdes(1, dse3(0.0));		// expressed in end-effector frame
-	//Fdes[0][0] = 0.00;
-	//Fdes[0][1] = 0.0;
-	//Fdes[0][5] = -1.0;
-	//
-
-	//hctrl->isDesTrjSet = hctrl->setDesiredTraj(Tdes, Fdes);
-	//hctrl->setDesiredJointVal(q_config);
-	//rManager1->setJointValVel(q_config, Eigen::VectorXd::Zero(q_config.size()));
-
-	//// saving setting
-	//goalJigSE3 = jigAssem->GetBaseLink()->GetFrame();
-	//holeSE3 = jigAssem->GetBaseLink()->GetFrame() * jigAssem->holeCenter[holeNum];
-	//initOffsetSE3fromHole = holeSE3 % TbusbarInit;
 
 	/////////////////////////////// read from text
 	//printf("datanum:");		//12, 15, 18, 21, 24
@@ -199,27 +114,21 @@ int main(int argc, char **argv)
 
 void rendering(int argc, char **argv)
 {
-	renderer = new myRenderer();
+	renderer = new serverRenderer();
 
 	SceneGraphRenderer::NUM_WINDOWS windows;
 
 	windows = SceneGraphRenderer::SINGLE_WINDOWS;
 
 	renderer->InitializeRenderer(argc, argv, windows, false);
-	renderer->InitializeNode(&gSpace);
+	renderer->InitializeNode_1st(&gSpace);
+	renderer->InitializeNode_2nd();
 	renderer->setUpdateFunc(updateFunc);
 	//renderer->setUpdateFunc(updateFuncLoadJointVal);
 
 	renderer->RunRendering();
 }
 
-void initDynamics()
-{
-	gSpace.SetTimestep(0.001);
-	gSpace.SetGravity(0.0, 0.0, -10.0);
-	gSpace.SetNumberofSubstepForRendering(1);
-	gSpace.DYN_MODE_PRESTEP();
-}
 
 void updateFunc()
 {
@@ -419,8 +328,8 @@ void updateFuncTest()
 	static se3 V_bf = se3(0.0);
 	
 	rManager1->setJointValVel(jointVal, jointVel);
-	Eigen::MatrixXd J = rManager1->getBodyJacobian(jointVal, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper));
-	Eigen::MatrixXd Jdot = rManager1->getBodyJacobianDot(jointVal, jointVel, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper));
+	Eigen::MatrixXd J = rManager1->getBodyJacobian(jointVal, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new));
+	Eigen::MatrixXd Jdot = rManager1->getBodyJacobianDot(jointVal, jointVel, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new));
 	se3 V = robot1->gMarkerLink[Indy_Index::MLINK_GRIP].m_Vel;
 	Eigen::VectorXd Vnum = J*jointVel;
 	cout << "Jdot_num = " << endl << (J - J_bf) / dt << endl << "------------" << endl;
@@ -459,83 +368,6 @@ void setHybridPFCtrl()
 }
 
 
-void robotSetting()
-{
-	gSpace.AddSystem((srSystem*)robot1);
-	gSpace.AddSystem((srSystem*)robot2);
-	robot1->GetBaseLink()->SetFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 0.4005 - 0.12, 1.972)));
-	robot2->GetBaseLink()->SetFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 1.6005 + 0.12, 1.972)));
-	robot1->SetActType(srJoint::ACTTYPE::TORQUE);
-	robot2->SetActType(srJoint::ACTTYPE::TORQUE);
-	vector<int> gpIdx(2);
-	gpIdx[0] = 0;
-	gpIdx[1] = 1;
-	robot1->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
-	robot2->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
-	gpIdx[0] = 2;
-	gpIdx[1] = 3;
-	robot1->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
-	robot2->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
-}
-
-void robotManagerSetting()
-{
-	// robot 1
-	rManager1 = new indyRobotManager(robot1, &gSpace);
-
-	// robot 2
-	rManager2 = new indyRobotManager(robot2, &gSpace);
-}
-
-void workspaceSetting()
-{
-	gSpace.AddSystem(workCell);
-}
-
-
-void environmentSetting_HYU2(srSystem* object, bool connect)
-{
-
-	//SE3 Tbase = SE3(Vec3(0.025, 1.095, 1.176));		// when stage attached
-	SE3 Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.009));		// when stage removed
-
-	//double z_angle = (double)rand() / RAND_MAX * 0.1;
-	//double x_trans = -(double)rand() / RAND_MAX * 0.1;
-	//double y_trans = (double)rand() / RAND_MAX * 0.1;
-	//SE3 Tbase2jigbase = EulerZYX(Vec3(z_angle, 0.0, 0.0), Vec3(x_trans, y_trans, 0.184));
-	SE3 Tbase2jigbase = EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.184));
-	if (object != NULL)
-	{
-		srWeldJoint* wobjJoint = new srWeldJoint;
-		wobjJoint->SetParentLink(&robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
-		wobjJoint->SetChildLink(object->GetBaseLink());
-		wobjJoint->SetParentLinkFrame(SE3());
-		wobjJoint->SetChildLinkFrame(Tbusbar2gripper_new);
-		busbarlink = object->GetBaseLink();
-	}
-	else
-	{
-		for (unsigned int i = 0; i < busbar.size(); i++)
-		{
-			busbar[i] = new BusBar_HYU;
-			busbar[i]->SetBaseLinkType(srSystem::FIXED);
-			gSpace.AddSystem(busbar[i]);
-		}
-	}
-	jigAssem->setBaseLinkFrame(Tbase*Tbase2jigbase);
-	jigAssem->SetBaseLinkType(srSystem::FIXED);
-	if (!connect)
-		gSpace.AddSystem((srSystem*)jigAssem);
-	else
-	{
-		srWeldJoint* wJoint = new srWeldJoint;
-		wJoint->SetParentLink(workCell->GetBaseLink()); // removed stage
-		//wJoint->SetParentLink(workCell->getStagePlate()); 
-		wJoint->SetChildLink(jigAssem->GetBaseLink());
-		wJoint->SetParentLinkFrame(Tbase*Tbase2jigbase);
-		wJoint->SetChildLinkFrame(SE3());
-	}
-}
 
 void updateFuncRandom()
 {
@@ -570,7 +402,7 @@ void updateFuncDefault()
 {
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 	rManager2->setJointVal(jointVal);
-	rManager1->setJointVal(homePos);
+	rManager1->setJointVal(robot1->homePos);
 }
 
 void updateFuncLoadJointVal()
@@ -641,7 +473,7 @@ void setInitialConfig()
 	// initial condition 2
 	Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
 	qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
-	Eigen::VectorXd q_config = rManager1->inverseKin(TbusbarInit * Tbusbar2gripper_new, rManager1->m_activeArmInfo->m_endeffector[0], true, SE3(), flag, qInit2, 1000);
+	Eigen::VectorXd q_config = rManager1->inverseKin(TbusbarInit * Tbusbar2gripper_new, rManager1->m_activeArmInfo->m_endeffector[0], true, SE3(), flag, robot1->qInvKinInit, 1000);
 	cout << flag << endl;
 	rManager1->setJointVal(q_config);
 
@@ -680,4 +512,17 @@ SE3 setRandomDesSE3(SE3 holeSE3, double xrange, double yrange, double zrotrange)
 	
 	SE3 Trandom = SE3(Vec3(xpos, ypos, 0.0)) * holeSE3 * EulerZYX(Vec3(zrot, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
 	return Trandom;
+}
+
+void connectBusbarToRobotRigidly(srSystem * object, int robotNum)
+{
+	srWeldJoint* wobjJoint = new srWeldJoint;
+	if (robotNum == 1)
+		wobjJoint->SetParentLink(&robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
+	else
+		wobjJoint->SetParentLink(&robot2->gMarkerLink[Indy_Index::MLINK_GRIP]);
+	wobjJoint->SetChildLink(object->GetBaseLink());
+	wobjJoint->SetParentLinkFrame(SE3());
+	wobjJoint->SetChildLinkFrame(Tbusbar2gripper_new);
+	busbarlink = object->GetBaseLink();
 }
