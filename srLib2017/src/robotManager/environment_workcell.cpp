@@ -412,3 +412,41 @@ srLink * WorkCell::getStagePlate() const
 {
 	return (srLink*)&(m_ObjLink[7]);
 }
+
+SphereMarker::SphereMarker(double dim)
+{
+	m_dim = dim;
+	AssembleModel();
+}
+
+SphereMarker::~SphereMarker()
+{
+}
+
+void SphereMarker::AssembleModel()
+{
+	m_numLink = 1;
+	m_numCollision = 0;
+	m_numWeldJoint = 0;
+	for (int i = 0; i < m_numLink; i++)
+	{
+		srLink* temp = new srLink;
+		m_ObjLink.push_back(*temp);
+	}
+	for (int i = 0; i < m_numCollision; i++)
+	{
+		srCollision* temp = new srCollision;
+		m_ObjCollision.push_back(*temp);
+	}
+	for (int i = 0; i < m_numWeldJoint; i++)
+	{
+		srWeldJoint* temp = new srWeldJoint;
+		m_ObjWeldJoint.push_back(*temp);
+	}
+
+	m_ObjLink[0].GetGeomInfo().SetColor(0.3, 0.3, 0.3);
+	m_ObjLink[0].GetGeomInfo().SetDimension(m_dim);
+	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
+	this->SetBaseLink(&m_ObjLink[0]);
+	this->SetBaseLinkType(srSystem::KINEMATIC);
+}

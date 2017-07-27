@@ -1,7 +1,14 @@
 #include <cstdio>
 
-#include "serverRenderer.h"
-#include "simulationEnvSetting.h"
+#include "myRenderer.h"
+#include "srDyn/srDYN.h"
+#include "srGamasot\srURDF.h"
+#include "robotManager\indyRobotManager.h"
+#include "robotManager/IndyRobot.h"
+#include <time.h>
+#include "robotManager\environmentBusbar.h"
+#include "robotManager\environment_workcell.h"
+#include "robotManager\environment_QBtech.h"
 #include "robotManager\robotRRTManager.h"
 #include "ForceCtrlManager\hybridPFCtrlManager.h"
 #include "Math\Spline.h"
@@ -10,13 +17,29 @@
 #include <direct.h>
 
 // Environment
+Base_HYU* busbarBase = new Base_HYU;
+JigAssem_QB* jigAssem = new JigAssem_QB;
+vector<BusBar_HYU*> busbar(2);
 srLink* busbarlink = new srLink;
 srSystem* targetObj = new srSystem;
-int holeNum = 6;		// from 0 ~ 7
+int holeNum = 4;		// from 0 ~ 7
+SE3 Tbusbar2gripper = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
+SE3 Tbusbar2gripper_new = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
+SE3 Thole2busbar = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
 
+// Workspace
+WorkCell* workCell = new WorkCell;
+Eigen::VectorXd stageVal(3);
 srSystem* obs = new srSystem;
 
+// Robot
+IndyRobot* robot1 = new IndyRobot;
+IndyRobot* robot2 = new IndyRobot;
 Eigen::VectorXd jointVal(6);
+Eigen::VectorXd homePos(6);
+
+indyRobotManager* rManager1;
+indyRobotManager* rManager2;
 
 hybridPFCtrlManager_6dof* hctrl = new hybridPFCtrlManager_6dof();
 vector<SE3> Tdes;
@@ -34,22 +57,24 @@ SE3 holeSE3;
 SE3 initOffsetSE3fromHole;
 
 
-serverRenderer* renderer;
+srSpace gSpace;
+myRenderer* renderer;
 
+void initDynamics();
 void rendering(int argc, char **argv);
 void updateFunc();
-void updateFuncPegInHole();
 void updateFuncRandom();
 void updateFuncTest();
 void updateFuncTest2();
 void updateFuncDefault();
 void updateFuncLoadJointVal();
 void setObject(srSystem* system, Vec3 dim, SE3 T = SE3(), srSystem::BASELINKTYPE basetype = srSystem::BASELINKTYPE::FIXED);
-void connectBusbarToRobotRigidly(srSystem* object, int robotNum);
 void setHybridPFCtrl();
-void initializePositionCtrl();
 void generateRefTraj(SE3 init, Vec3 goal);
 void environmentSetting_HYU2(srSystem* object, bool connectStageBusbarBase = false);
+void workspaceSetting();
+void robotSetting();
+void robotManagerSetting();
 void setInitialConfig();
 SE3 setRandomDesSE3(SE3 holeSE3, double xrange = 0.04, double yrange = 0.04, double zrotrange = 1.0);
 
@@ -59,9 +84,11 @@ vector<SE3> finalOffset(4);
 int main(int argc, char **argv)
 {
 	srand(time(NULL));
+	// Robot home position
+	homePos[1] = -SR_PI_HALF; homePos[3] = SR_PI_HALF; homePos[4] = SR_PI;
+	homePos[4] = -SR_PI_HALF;		// match to robot workcell
 	// environment
 	workspaceSetting();
-	busbar.resize(2);
 	for (unsigned int i = 0; i < busbar.size(); i++)
 	{
 		busbar[i] = new BusBar_HYU;
@@ -70,20 +97,21 @@ int main(int argc, char **argv)
 	busbar[1]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -0.5)));
 	//gSpace.AddSystem((srSystem*)busbar[1]);
 	targetObj = busbar[0];
-	environmentSetting_HYU2(false, true);		// targetObj is assumed to be rigidly attached to robot end-effector
-	connectBusbarToRobotRigidly(targetObj, 1);
+	busbarlink = targetObj->GetBaseLink();
+	environmentSetting_HYU2(targetObj, false);		// targetObj is assumed to be rigidly attached to robot end-effector
 	robotSetting();
 	//setObject(obs, Vec3(0.5, 0.5, 0.5));
 
 	// initialize srLib
 	initDynamics();
 
-	busbarlink = targetObj->GetBaseLink()->m_ChildLinks[0];
 	// robot manager setting
 	robotManagerSetting();
 	
 	// workcell robot initial config
-	rManager2->setJointVal(robot2->homePos);
+	jointVal.setZero();
+	jointVal[0] = 0.0; jointVal[1] = -SR_PI_HALF; jointVal[2] = 80.0 / 90.0*SR_PI_HALF; jointVal[3] = SR_PI_HALF;
+	rManager2->setJointVal(jointVal);
 	Eigen::VectorXd gripInput(2);
 	gripInput[0] = -0.009;
 	gripInput[1] = 0.009;
@@ -96,7 +124,62 @@ int main(int argc, char **argv)
 	setInitialConfig();
 
 
+	//SE3 TgoalPos = jigAssem->GetBaseLink()->GetFrame() * jigAssem->holeCenter[holeNum] * Thole2busbar;
+	//
+	//// set initial config
+	//double xpos = (double)0.04*rand() / RAND_MAX-0.02;
+	//double ypos = (double)0.04*rand() / RAND_MAX-0.02;
+	//double zpos = (double)0.1*rand() / RAND_MAX;
+	//double xrot = (double)0.05*rand() / RAND_MAX - 0.025;
+	//double yrot = (double)0.05*rand() / RAND_MAX - 0.025;
+	//double zrot = (double)0.05*rand() / RAND_MAX - 0.025;
+	//SE3 initPosOffset = SE3(Vec3(xpos, ypos, 0.01));
+	//SE3 TbusbarInit = initPosOffset * TgoalPos * EulerZYX(Vec3(zrot, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
+	//
+	////obs->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -0.25))*TbusbarInit);
 
+	//finalOffset[0] = SE3(Vec3(0.01, 0.0, 0.0));
+	//finalOffset[1] = SE3(Vec3(0.0, 0.01, 0.0));
+	//finalOffset[2] = SE3(Vec3(-0.01, 0.0, 0.0));
+	//finalOffset[3] = SE3(Vec3(0.0, -0.01, 0.0));
+
+	//int flag;
+	//
+	//// initial condition 1
+	//Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
+	//// elbow up
+	//qInit[1] = -0.65*SR_PI;
+	//qInit[2] = 0.3*SR_PI;
+	//qInit[3] = 0.5*SR_PI_HALF;
+	//// initial condition 2
+	//Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
+	//qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
+	//Eigen::VectorXd q_config = rManager1->inverseKin(TbusbarInit * Tbusbar2gripper_new, rManager1->m_activeArmInfo->m_endeffector[0], true, SE3(), flag, qInit2, 1000);
+	//cout << flag << endl;
+	//rManager1->setJointVal(q_config);
+	//
+	//setHybridPFCtrl();
+
+	//// set desired trajectory (trajectory of the busbar)
+	////generateRefTraj(TbusbarInit, TgoalPos.GetPosition());
+	//Tdes.resize(1);
+	//TgoalPos = SE3(Vec3(initPosOffset.GetPosition()[0], initPosOffset.GetPosition()[1], 0.0)) * TgoalPos;
+	//Tdes[0] = TgoalPos;
+
+	//vector<dse3> Fdes(1, dse3(0.0));		// expressed in end-effector frame
+	//Fdes[0][0] = 0.00;
+	//Fdes[0][1] = 0.0;
+	//Fdes[0][5] = -1.0;
+	//
+
+	//hctrl->isDesTrjSet = hctrl->setDesiredTraj(Tdes, Fdes);
+	//hctrl->setDesiredJointVal(q_config);
+	//rManager1->setJointValVel(q_config, Eigen::VectorXd::Zero(q_config.size()));
+
+	//// saving setting
+	//goalJigSE3 = jigAssem->GetBaseLink()->GetFrame();
+	//holeSE3 = jigAssem->GetBaseLink()->GetFrame() * jigAssem->holeCenter[holeNum];
+	//initOffsetSE3fromHole = holeSE3 % TbusbarInit;
 
 	/////////////////////////////// read from text
 	//printf("datanum:");		//12, 15, 18, 21, 24
@@ -116,22 +199,27 @@ int main(int argc, char **argv)
 
 void rendering(int argc, char **argv)
 {
-	renderer = new serverRenderer();
+	renderer = new myRenderer();
 
 	SceneGraphRenderer::NUM_WINDOWS windows;
 
 	windows = SceneGraphRenderer::SINGLE_WINDOWS;
 
 	renderer->InitializeRenderer(argc, argv, windows, false);
-	renderer->InitializeNode_1st(&gSpace);
-	renderer->InitializeNode_2nd();
-	//renderer->setUpdateFunc(updateFunc);
+	renderer->InitializeNode(&gSpace);
+	renderer->setUpdateFunc(updateFunc);
 	//renderer->setUpdateFunc(updateFuncLoadJointVal);
-	//renderer->setUpdateFunc(updateFuncTest2);
-	renderer->setUpdateFunc(updateFuncPegInHole);
+
 	renderer->RunRendering();
 }
 
+void initDynamics()
+{
+	gSpace.SetTimestep(0.001);
+	gSpace.SetGravity(0.0, 0.0, -10.0);
+	gSpace.SetNumberofSubstepForRendering(1);
+	gSpace.DYN_MODE_PRESTEP();
+}
 
 void updateFunc()
 {
@@ -149,7 +237,7 @@ void updateFunc()
 	cnt++;
 	hctrl->hybridPFControl();
 	
-	rManager2->setJointVal(robot2->homePos);
+	rManager2->setJointVal(jointVal);
 
 	// task0: go to initial contact point
 	if (taskIdx == 0 && Norm(hctrl->T_des_trj[0].GetPosition() - busbarlink->GetPosition()) < 0.0001)
@@ -324,10 +412,6 @@ void setObject(srSystem* system, Vec3 dim, SE3 T, srSystem::BASELINKTYPE basetyp
 
 void updateFuncTest()
 {
-	static int cnt = 0;
-	if (cnt == 0)
-		jointVal = Eigen::VectorXd::Random(6);
-	cnt++;
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 	Eigen::VectorXd jointVel = Eigen::VectorXd::Random(6);
 	static double dt = 0.0001;
@@ -335,8 +419,8 @@ void updateFuncTest()
 	static se3 V_bf = se3(0.0);
 	
 	rManager1->setJointValVel(jointVal, jointVel);
-	Eigen::MatrixXd J = rManager1->getBodyJacobian(jointVal, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new));
-	Eigen::MatrixXd Jdot = rManager1->getBodyJacobianDot(jointVal, jointVel, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new));
+	Eigen::MatrixXd J = rManager1->getBodyJacobian(jointVal, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper));
+	Eigen::MatrixXd Jdot = rManager1->getBodyJacobianDot(jointVal, jointVel, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper));
 	se3 V = robot1->gMarkerLink[Indy_Index::MLINK_GRIP].m_Vel;
 	Eigen::VectorXd Vnum = J*jointVel;
 	cout << "Jdot_num = " << endl << (J - J_bf) / dt << endl << "------------" << endl;
@@ -350,7 +434,7 @@ void setHybridPFCtrl()
 {
 	// initial config should be aligned to the contact plane
 	// assume target object is rigidly attached to robot end-effector
-	hctrl->isSystemSet = hctrl->setSystem((robotManager*) rManager1, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new), busbarlink);
+	hctrl->isSystemSet = hctrl->setSystem((robotManager*) rManager1, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new), targetObj->GetBaseLink());
 	hctrl->setTimeStep(rManager1->m_space->m_Timestep_dyn_fixed);
 	double kv_v = 0.25e2, kp_v = 0.25*kv_v*kv_v, ki_v = 0.25e3, kp_f = 1.0e-1, ki_f = 1.0e-1;
 	hctrl->setGain(kv_v, kp_v, ki_v, kp_f, ki_f);
@@ -375,6 +459,83 @@ void setHybridPFCtrl()
 }
 
 
+void robotSetting()
+{
+	gSpace.AddSystem((srSystem*)robot1);
+	gSpace.AddSystem((srSystem*)robot2);
+	robot1->GetBaseLink()->SetFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 0.4005 - 0.12, 1.972)));
+	robot2->GetBaseLink()->SetFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 1.6005 + 0.12, 1.972)));
+	robot1->SetActType(srJoint::ACTTYPE::TORQUE);
+	robot2->SetActType(srJoint::ACTTYPE::TORQUE);
+	vector<int> gpIdx(2);
+	gpIdx[0] = 0;
+	gpIdx[1] = 1;
+	robot1->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
+	robot2->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
+	gpIdx[0] = 2;
+	gpIdx[1] = 3;
+	robot1->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
+	robot2->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
+}
+
+void robotManagerSetting()
+{
+	// robot 1
+	rManager1 = new indyRobotManager(robot1, &gSpace);
+
+	// robot 2
+	rManager2 = new indyRobotManager(robot2, &gSpace);
+}
+
+void workspaceSetting()
+{
+	gSpace.AddSystem(workCell);
+}
+
+
+void environmentSetting_HYU2(srSystem* object, bool connect)
+{
+
+	//SE3 Tbase = SE3(Vec3(0.025, 1.095, 1.176));		// when stage attached
+	SE3 Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.009));		// when stage removed
+
+	//double z_angle = (double)rand() / RAND_MAX * 0.1;
+	//double x_trans = -(double)rand() / RAND_MAX * 0.1;
+	//double y_trans = (double)rand() / RAND_MAX * 0.1;
+	//SE3 Tbase2jigbase = EulerZYX(Vec3(z_angle, 0.0, 0.0), Vec3(x_trans, y_trans, 0.184));
+	SE3 Tbase2jigbase = EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.184));
+	if (object != NULL)
+	{
+		srWeldJoint* wobjJoint = new srWeldJoint;
+		wobjJoint->SetParentLink(&robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
+		wobjJoint->SetChildLink(object->GetBaseLink());
+		wobjJoint->SetParentLinkFrame(SE3());
+		wobjJoint->SetChildLinkFrame(Tbusbar2gripper_new);
+		busbarlink = object->GetBaseLink();
+	}
+	else
+	{
+		for (unsigned int i = 0; i < busbar.size(); i++)
+		{
+			busbar[i] = new BusBar_HYU;
+			busbar[i]->SetBaseLinkType(srSystem::FIXED);
+			gSpace.AddSystem(busbar[i]);
+		}
+	}
+	jigAssem->setBaseLinkFrame(Tbase*Tbase2jigbase);
+	jigAssem->SetBaseLinkType(srSystem::FIXED);
+	if (!connect)
+		gSpace.AddSystem((srSystem*)jigAssem);
+	else
+	{
+		srWeldJoint* wJoint = new srWeldJoint;
+		wJoint->SetParentLink(workCell->GetBaseLink()); // removed stage
+		//wJoint->SetParentLink(workCell->getStagePlate()); 
+		wJoint->SetChildLink(jigAssem->GetBaseLink());
+		wJoint->SetParentLinkFrame(Tbase*Tbase2jigbase);
+		wJoint->SetChildLinkFrame(SE3());
+	}
+}
 
 void updateFuncRandom()
 {
@@ -402,25 +563,21 @@ void updateFuncTest2()
 	}
 	cnt++;
 	hctrl->hybridPFControl();
-	rManager2->setJointVal(robot2->homePos);
-	printf("simulation step: %d\n", cnt);
-	cout << hctrl->m_contactLinks[0]->m_ConstraintImpulse << endl;
-	cout << robot1->gLink[Indy_Index::MLINK_GRIP].m_ConstraintImpulse << endl;
-	cout << rManager1->readSensorValue() << endl;
+	rManager2->setJointVal(jointVal);
 }
 
 void updateFuncDefault()
 {
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
-	rManager2->setJointVal(robot2->homePos);
-	rManager1->setJointVal(robot1->homePos);
+	rManager2->setJointVal(jointVal);
+	rManager1->setJointVal(homePos);
 }
 
 void updateFuncLoadJointVal()
 {
 	static int cnt = 0;
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
-	rManager2->setJointVal(robot2->homePos);
+	rManager2->setJointVal(jointVal);
 	rManager1->setJointVal(loadJointVal[cnt % loadJointVal.size()]);
 	cnt++;
 
@@ -484,7 +641,7 @@ void setInitialConfig()
 	// initial condition 2
 	Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
 	qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
-	Eigen::VectorXd q_config = rManager1->inverseKin(TbusbarInit * Tbusbar2gripper_new, rManager1->m_activeArmInfo->m_endeffector[0], true, SE3(), flag, robot1->qInvKinInit, 1000);
+	Eigen::VectorXd q_config = rManager1->inverseKin(TbusbarInit * Tbusbar2gripper_new, rManager1->m_activeArmInfo->m_endeffector[0], true, SE3(), flag, qInit2, 1000);
 	cout << flag << endl;
 	rManager1->setJointVal(q_config);
 
@@ -523,160 +680,4 @@ SE3 setRandomDesSE3(SE3 holeSE3, double xrange, double yrange, double zrotrange)
 	
 	SE3 Trandom = SE3(Vec3(xpos, ypos, 0.0)) * holeSE3 * EulerZYX(Vec3(zrot, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
 	return Trandom;
-}
-
-void connectBusbarToRobotRigidly(srSystem * object, int robotNum)
-{
-	srWeldJoint* wobjJoint = new srWeldJoint;
-	if (robotNum == 1)
-		wobjJoint->SetParentLink(&robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
-	else
-		wobjJoint->SetParentLink(&robot2->gMarkerLink[Indy_Index::MLINK_GRIP]);
-	wobjJoint->SetChildLink(object->GetBaseLink());
-	wobjJoint->SetParentLinkFrame(SE3());
-	wobjJoint->SetChildLinkFrame(Tbusbar2gripper_new);
-	busbarlink = object->GetBaseLink();
-}
-
-void initializePositionCtrl()
-{
-	hctrl->X_int = se3(0.0);
-	hctrl->SelectMtx = Eigen::MatrixXd();		// position control
-}
-
-void updateFuncPegInHole()
-{
-	/////////////////////////////////////////// initial setting ////////////////////////////////////////////////////
-	static unsigned int taskIdx = 0;								// index of task
-	static double moveRange = 0.03;
-
-	
-	static vector<int> moveIdx(10, -1);								// direction to move busbar for each task (-1: ignore, 9: x, 10: y, 11: z)
-	moveIdx[2] = 10;
-	moveIdx[4] = 9;
-
-	static vector<int> forceCheckIdx(10, -1);						// direction to check force for each task (-1: ignore, 3: f_x, 4: f_y, 5: f_z)
-	forceCheckIdx[2] = 4;
-	forceCheckIdx[4] = 3;
-
-	static vector<Vec3> moveDir(moveIdx.size(), Vec3(0.0));			// direction to move busbar for each task
-	for (unsigned int i = 0; i < moveIdx.size(); i++)
-	{
-		if (moveIdx[i] == 9)
-			moveDir[i] = Vec3(1.0, 0.0, 0.0);
-		else if (moveIdx[i] == 10)
-			moveDir[i] = Vec3(0.0, 1.0, 0.0);
-		else if (moveIdx[i] == 11)
-			moveDir[i] = Vec3(0.0, 0.0, 1.0);
-	}
-
-	static vector<bool> dirChanged(moveIdx.size(), false);			// denote if moving direction is changed
-
-	static vector<int> task_cnt(moveIdx.size(), 0);								// count control step for each task
-
-	static int cnt = 0;
-	static SE3 initialGoal;
-	static SE3 currentGoal;
-	static double sign = -1.0;
-	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-
-	// forward simulation step (should not be changed)
-	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();						
-	if (cnt == 0)
-		initialGoal = hctrl->T_des_trj[0];
-	cnt++;
-	// hybrid position/force control
-	hctrl->hybridPFControl();
-	Eigen::VectorXd tau = rManager1->getJointCommand();
-	// hold robot2 in home position
-	rManager2->setJointVal(robot2->homePos);
-	task_cnt[taskIdx]++;
-
-
-	/////////////////////////////////////////////////////// SELECT DESIRED POSITION (AND FORCE) FOR PEG-IN-HOLE TASK ///////////////////////////////////////////////////////
-	// numbers in stop conditions are parameters to be tuned... (except taskIdx)
-	// task0: go to initial contact point
-	if (taskIdx == 0 && task_cnt[taskIdx] > 10 && (Norm(hctrl->T_des_trj[0].GetPosition() - busbarlink->GetPosition()) < 0.0001 || abs(busbarlink->m_ConstraintImpulse[5]) / gSpace.m_Timestep_dyn_fixed > 0.01 ))
-	{
-		taskIdx++;
-		// task 1: tilt end-effector along x-axis
-		currentGoal = initialGoal * EulerZYX(Vec3(0.0, 0.0, DEG2RAD(7.0)), Vec3(0.0, 0.0, 0.0));
-		hctrl->T_des_trj[0] = currentGoal;
-		initializePositionCtrl();		// only position control
-	}
-	
-	if (taskIdx == 1 && task_cnt[taskIdx] > 100 && Norm(Log(Inv(busbarlink->GetFrame().GetOrientation()) * hctrl->T_des_trj[0].GetOrientation())) < 0.03/* && Norm(busbarlink->GetPosition() - hctrl->T_des_trj[0].GetPosition()) < 0.05*/)
-	{
-		taskIdx++;
-		// task 2: move back and forth along y-axis and stop if force in y-axis is big
-		currentGoal = SE3(moveRange * moveDir[taskIdx] + Vec3(0.0, 0.0, -0.001)) * currentGoal;
-		hctrl->T_des_trj[0] = currentGoal;
-		initializePositionCtrl();		// only position control
-	}
-	if (taskIdx == 2 && task_cnt[taskIdx] > 100 && !dirChanged[taskIdx] && (task_cnt[taskIdx] > 5000 || abs(busbarlink->GetFrame()[moveIdx[taskIdx]] - currentGoal[moveIdx[taskIdx]]) < 0.001))
-	{
-		// task 2-1: change direction
-		currentGoal = SE3(-2.0*moveRange * moveDir[taskIdx]) * currentGoal;
-		hctrl->T_des_trj[0] = currentGoal;
-		initializePositionCtrl();		// only position control
-		task_cnt[2] = 0;
-		dirChanged[taskIdx] = true;
-		sign = 1.0;
-	}
-	if (taskIdx == 2 && task_cnt[taskIdx] > 100 && sign * (busbarlink->m_ConstraintImpulse[forceCheckIdx[taskIdx]]) / gSpace.m_Timestep_dyn_fixed > 1.0)
-	{
-		taskIdx++;
-		// task 3: tilt end-effector to be near to original orientation while maintaining current position
-		currentGoal.SetOrientation(initialGoal.GetOrientation() * RotX(DEG2RAD(-3.0)).GetOrientation());
-		currentGoal.SetPosition(busbarlink->GetFrame().GetPosition());
-		hctrl->T_des_trj[0] = currentGoal;
-		initializePositionCtrl();		// only position control
-	}
-	if (taskIdx == 3 && task_cnt[taskIdx] > 10 && Norm(Log(Inv(busbarlink->GetFrame().GetOrientation()) * hctrl->T_des_trj[0].GetOrientation())) < 0.01)
-	{
-		taskIdx++;
-		// task 4: move back and forth along x-axis and stop if force in x-axis is big
-		currentGoal = SE3(moveRange * moveDir[taskIdx]) * currentGoal;
-		hctrl->T_des_trj[0] = currentGoal;
-		initializePositionCtrl();		// only position control
-		sign = -1.0;
-	}
-	if (taskIdx == 4 && task_cnt[taskIdx] > 100 && !dirChanged[taskIdx] && (task_cnt[taskIdx] > 5000 || abs(busbarlink->GetFrame()[moveIdx[taskIdx]] - currentGoal[moveIdx[taskIdx]]) < 0.001))
-	{
-		// task 4-1: change direction
-		currentGoal = SE3(-2.0*moveRange * moveDir[taskIdx]) * currentGoal;
-		hctrl->T_des_trj[0] = currentGoal;
-		initializePositionCtrl();		// only position control
-		task_cnt[4] = 0;
-		dirChanged[taskIdx] = true;
-		sign = 1.0;
-	}
-	if (taskIdx == 4 && task_cnt[taskIdx] > 100 && sign * (busbarlink->m_ConstraintImpulse[forceCheckIdx[taskIdx]]) / gSpace.m_Timestep_dyn_fixed > 1.0)
-	{
-		taskIdx++;
-		// task 5: rotate to original orientation while maintaining current position
-		currentGoal.SetOrientation(initialGoal.GetOrientation());
-		currentGoal.SetPosition(busbarlink->GetFrame().GetPosition());
-		hctrl->T_des_trj[0] = currentGoal;
-		initializePositionCtrl();		// only position control
-	}
-	if (taskIdx == 5 && task_cnt[taskIdx] > 10 && distSE3(currentGoal, busbarlink->GetFrame()))
-	{
-		taskIdx++;
-		// task 6: insert peg
-		currentGoal = SE3(Vec3(0.0, 0.0, -0.03)) * currentGoal;
-		hctrl->T_des_trj[0] = currentGoal;
-		initializePositionCtrl();		// only position control
-	}
-	if (taskIdx == 6 && task_cnt[taskIdx] > 10 && abs(busbarlink->m_ConstraintImpulse[5]) / gSpace.m_Timestep_dyn_fixed > 1.0)
-	{
-		taskIdx++;
-		printf("task finished\n");
-		currentGoal = busbarlink->GetFrame();
-		hctrl->T_des_trj[0] = currentGoal;
-		initializePositionCtrl();		// only position control
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }

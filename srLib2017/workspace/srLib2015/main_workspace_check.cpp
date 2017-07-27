@@ -7,6 +7,7 @@
 #include "ForceCtrlManager\hybridPFCtrlManager.h"
 
 Eigen::VectorXd jointVal(6);
+Eigen::VectorXd jointVal_add(6);
 Eigen::VectorXd jointAcc(6);
 Eigen::VectorXd jointVel(6);
 
@@ -55,6 +56,7 @@ void setHybridPFCtrl();
 Vec2 goalLocation; // busbar insertion location
 
 vector<int> flags(0);
+vector<int> flags_add(0);
 
 double planning = 0;
 vector<Eigen::VectorXd> loadJointVal(0);
@@ -65,6 +67,7 @@ vector<vector<Eigen::VectorXd>> testJointValVec(2);
 
 Eigen::VectorXd testjointvalue(6);
 vector<SE3> busbarSE3set(0);
+vector<SphereMarker*> sph(0);
 int main(int argc, char **argv)
 {
 	srand(time(NULL));
@@ -79,14 +82,16 @@ int main(int argc, char **argv)
 	environmentSetting_HYU2(true, true);
 
 	////////////////////////////////////////////////////////////////////////////////////////
-	bool testworkspace = false;
-
-	bool testRobot1 = false;
+	bool testworkspace = true;
+	bool testMaxTorque = false;
+	bool testRobot1 = true;
+	bool testBoth = true;
 	double yoffset;
+	bool useSphere = true;
 	if (testRobot1)
-		yoffset = -0.6;
+		yoffset = -0.8;
 	else
-		yoffset = 0.1;
+		yoffset = -0.4;
 	SE3 Tbase;
 	if (workcell_mode == 1)
 		Tbase = SE3(Vec3(0.025, 1.095, 1.176));		// when stage attached
@@ -95,28 +100,44 @@ int main(int argc, char **argv)
 	else
 		Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.009));		// when stage removed
 	SE3 Tbase2jigbase = EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.184));
-	int nx = 8;
-	int ny = 10;
-	int n = 5;
-	double bin = 0.5 / (double)n;
-	double bin_x = 1.4 / (double)nx;
-	busbar.resize(nx*ny*n);
+	int nx = 8; 	int ny = 10; 	int nz = 5;
+	double range_x = 1.4; double range_y = 1.2; double range_z = height + 0.5;
+	double bin_x = range_x / (double)nx; double bin_y = range_y / (double)ny; double bin_z = range_z / (double)nz;
+	busbar.resize(nx*ny*nz);
+	sph.resize(nx*ny*nz);
 	flags.resize(busbar.size());
-	for (unsigned int i = 0; i < busbar.size(); i++)
+	flags_add.resize(busbar.size());
+	if (!useSphere)
 	{
-		busbar[i] = new BusBar_HYU;
-		busbar[i]->SetBaseLinkType(srSystem::FIXED);
-		gSpace.AddSystem(busbar[i]);
+		for (unsigned int i = 0; i < busbar.size(); i++)
+		{
+			busbar[i] = new BusBar_HYU;
+			busbar[i]->SetBaseLinkType(srSystem::FIXED);
+			gSpace.AddSystem(busbar[i]);
+		}
 	}
+	else
+	{
+		for (unsigned int i = 0; i < sph.size(); i++)
+		{
+			sph[i] = new SphereMarker(0.03);
+			sph[i]->SetBaseLinkType(srSystem::FIXED);
+			gSpace.AddSystem(sph[i]);
+		}
+	}
+	
 	int l = 0;
 	for (int i = 0; i < nx; i++)
 	{
 		for (int j = 0; j < ny; j++)
 		{
-			for (int k = 0; k < n; k++, l++)
+			for (int k = 0; k < nz; k++, l++)
 			{
-				busbarSE3set.push_back(SE3(Vec3((double)i*bin_x - 0.7 + Trobotbase1[9], (double)j*bin - 0.2 + yoffset, (double)k*bin - 0.05)) * Tbase * Tbase2jigbase);
-				busbar[l]->setBaseLinkFrame(SE3(Vec3((double)i*bin_x - 0.7 + Trobotbase1[9], (double)j*bin - 0.2 + yoffset, (double)k*bin - 0.05 - 10.0)) * Tbase * Tbase2jigbase);
+				busbarSE3set.push_back(SE3(Vec3((double)i*bin_x - 0.5*range_x + Trobotbase1[9], (double)j*bin_y + yoffset, (double)k*bin_z - 0.05)) * Tbase * Tbase2jigbase);
+				if (!useSphere)
+					busbar[l]->setBaseLinkFrame(SE3(Vec3((double)i*bin_x - 0.5*range_x + Trobotbase1[9], (double)j*bin_y + yoffset, (double)k*bin_z - 0.05 - 10.0)) * Tbase * Tbase2jigbase);
+				else
+					sph[l]->setBaseLinkFrame(SE3(Vec3((double)i*bin_x - 0.5*range_x + Trobotbase1[9], (double)j*bin_y + yoffset, (double)k*bin_z - 0.05 - 10.0)) * Tbase * Tbase2jigbase);
 			}
 		}
 	}
@@ -157,53 +178,149 @@ int main(int argc, char **argv)
 	checkPos2[1] = DEG2RAD(30 - 30); checkPos2[2] = DEG2RAD(-220 + 30); checkPos2[3] = DEG2RAD(90); checkPos2[4] = DEG2RAD(-100);
 
 	//////// test inverse kin of robot1
-	if (testRobot1 && testworkspace)
+	Eigen::VectorXd maxTorque2Pos;
+	Eigen::VectorXd maxTorque3Pos;
+	Eigen::VectorXd maxTorque2 = Eigen::VectorXd();
+	Eigen::VectorXd maxTorque3 = Eigen::VectorXd();
+	Eigen::VectorXd testJointTorque;
+	Eigen::VectorXd Zerovec = Eigen::VectorXd::Zero(6);
+	indyRobotManager* mainRobotManager;
+	indyRobotManager* subRobotManager;
+	IndyRobot* mainRobot;
+	IndyRobot* subRobot;
+	if (testRobot1)
 	{
-		for (unsigned int i = 0; i < busbar.size(); i++)
-		{
-			jointVal = rManager1->inverseKin(busbarSE3set[i] * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flags[i], robot1->qInvKinInit);
-			testJointVal.push_back(jointVal);
-			//if (flags[i] != 0)
-			//	jointVal = rManager1->inverseKin(busbar[i]->GetBaseLink()->GetFrame() * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flags[i], qInit);
-			rManager1->setJointVal(jointVal);
-			bool isColli = rManager1->checkCollision();
-			
-			if (flags[i] == 0 && !isColli)
-				busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 1.0, 0.0);
-			if (flags[i] == 1 && !isColli)
-				busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 0.0, 0.1);
-			if (flags[i] == 2 || isColli)
-				busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(1.0, 0.0, 0.0);
-
-
-
-		}
+		mainRobotManager = rManager1;
+		mainRobot = robot1;
+		subRobotManager = rManager2;
+		subRobot = robot2;
 	}
-	else if (testworkspace)
+	else
 	{
-		for (unsigned int i = 0; i < busbar.size(); i++)
-		{
-			jointVal = rManager2->inverseKin(busbarSE3set[i] * Tbusbar2gripper_new, &robot2->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flags[i], robot2->qInvKinInit);
-
-			//if (flags[i] != 0)
-			//	jointVal = rManager2->inverseKin(busbar[i]->GetBaseLink()->GetFrame() * Tbusbar2gripper_new, &robot2->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flags[i], qInit);
-			rManager2->setJointVal(jointVal);
-			bool isColli = rManager2->checkCollision();
-			if (flags[i] == 0 && !isColli)
-				busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 1.0, 0.0);
-			if (flags[i] == 1 && !isColli)
-				busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 0.0, 0.1);
-			if (flags[i] == 2 || isColli)
-				busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(1.0, 0.0, 0.0);
-		}
+		mainRobotManager = rManager2;
+		mainRobot = robot2;
+		subRobotManager = rManager1;
+		subRobot = robot1;
 	}
-	
 	if (testworkspace)
 	{
 		for (unsigned int i = 0; i < busbar.size(); i++)
-			busbar[i]->setBaseLinkFrame(busbarSE3set[i]);
+		{
+			jointVal = mainRobotManager->inverseKin(busbarSE3set[i] * Tbusbar2gripper_new, &mainRobot->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flags[i], mainRobot->qInvKinInit);
+			testJointVal.push_back(jointVal);
+			//if (flags[i] != 0)
+			//	jointVal = rManager1->inverseKin(busbar[i]->GetBaseLink()->GetFrame() * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flags[i], qInit);
+			mainRobotManager->setJointVal(jointVal);
+
+			if (testBoth)
+			{
+				jointVal_add = subRobotManager->inverseKin(busbarSE3set[i] * Tbusbar2gripper_new, &subRobot->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flags_add[i], subRobot->qInvKinInit);
+				subRobotManager->setJointVal(subRobot->homePos);
+			}
+
+			bool isColli = mainRobotManager->checkCollision();
+			
+			if (flags[i] == 0 && !isColli)
+			{
+				if (testBoth && flags_add[i] == 0)
+				{
+					mainRobotManager->setJointVal(mainRobot->homePos);
+					subRobotManager->setJointVal(jointVal_add);
+					bool isColli_add = subRobotManager->checkCollision();
+					if (!isColli_add)
+					{
+						if (!useSphere)
+							busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(1.0, 1.0, 0.0);
+						else
+							sph[i]->m_ObjLink[0].GetGeomInfo().SetColor(1.0, 1.0, 0.0);
+					}
+					else
+					{
+						if (!useSphere)
+							busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 1.0, 0.0);
+						else
+							sph[i]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 1.0, 0.0);
+					}	
+				}
+				else
+				{
+					if (!useSphere)
+						busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 1.0, 0.0);
+					else
+						sph[i]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 1.0, 0.0);
+				}
+					
+
+				// test gravitational torque at each position
+				if (testMaxTorque)
+				{
+					testJointTorque = mainRobotManager->inverseDyn(jointVal, Zerovec, Zerovec);
+					if (maxTorque2.size() == 0)
+					{
+						maxTorque2 = testJointTorque;
+						maxTorque3 = testJointTorque;
+						maxTorque2Pos = jointVal;
+						maxTorque3Pos = jointVal;
+					}
+					else
+					{
+						if (abs(testJointTorque[1]) > abs(maxTorque2[1]))
+						{
+							maxTorque2 = testJointTorque;
+							maxTorque2Pos = jointVal;
+						}
+						if (abs(testJointTorque[2]) > abs(maxTorque3[2]))
+						{
+							maxTorque3 = testJointTorque;
+							maxTorque3Pos = jointVal;
+						}
+					}
+				}
+			}	
+			if (!useSphere)
+			{
+				if (flags[i] == 1 && !isColli)
+					busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 0.0, 0.1);
+				if (flags[i] == 2 || isColli)
+					busbar[i]->m_ObjLink[0].GetGeomInfo().SetColor(1.0, 0.0, 0.0);
+			}
+			else
+			{
+				if (flags[i] == 1 && !isColli)
+					sph[i]->m_ObjLink[0].GetGeomInfo().SetColor(0.0, 0.0, 0.1);
+				if (flags[i] == 2 || isColli)
+					sph[i]->m_ObjLink[0].GetGeomInfo().SetColor(1.0, 0.0, 0.0);
+			}
+		}
+	}
+	
+	if (testworkspace && !testMaxTorque)
+	{
+		if (!useSphere)
+		{
+			for (unsigned int i = 0; i < busbar.size(); i++)
+				busbar[i]->setBaseLinkFrame(busbarSE3set[i]);
+		}
+		else
+		{
+			for (unsigned int i = 0; i < sph.size(); i++)
+				sph[i]->setBaseLinkFrame(busbarSE3set[i]);
+		}
 	}
 
+	if (testMaxTorque)
+	{
+		robot1->homePos = maxTorque2Pos;
+		robot2->homePos = maxTorque3Pos;
+		printf("tau[2] max: ");
+		cout << maxTorque2.transpose() << endl;
+		printf("tau[3] max: ");
+		cout << maxTorque3.transpose() << endl;
+		printf("tau[2] max jointval: ");
+		cout << maxTorque2Pos.transpose() << endl;
+		printf("tau[3] max jointval: ");
+		cout << maxTorque3Pos.transpose() << endl;
+	}
 	Eigen::VectorXd gripInput(2);
 	gripInput[0] = -0.005;
 	gripInput[1] = 0.005;
@@ -211,32 +328,32 @@ int main(int argc, char **argv)
 	rManager2->setGripperPosition(gripInput);
 
 	///////////////////////////////////////////// check gravity torque
-	Eigen::VectorXd checkVel = 1.0*Eigen::VectorXd::Ones(6);
-	
-	Eigen::VectorXd Zerovec = Eigen::VectorXd::Zero(6);
-	Eigen::VectorXd tau1 = rManager1->inverseDyn(checkPos1, checkVel, Zerovec);
-	Eigen::VectorXd tau2 = rManager2->inverseDyn(checkPos2, checkVel, Zerovec);
-	
-	robot1->homePos = checkPos1;
-	robot2->homePos = checkPos2;
-	printf("tau1 : ");
-	cout << tau1.transpose() << endl << endl;
-	printf("tau2 : ");
-	cout << tau2.transpose() << endl << endl;
+	//Eigen::VectorXd checkVel = 1.0*Eigen::VectorXd::Ones(6);
+	//
+	//
+	//Eigen::VectorXd tau1 = rManager1->inverseDyn(checkPos1, checkVel, Zerovec);
+	//Eigen::VectorXd tau2 = rManager2->inverseDyn(checkPos2, checkVel, Zerovec);
+	//
+	//robot1->homePos = checkPos1;
+	//robot2->homePos = checkPos2;
+	//printf("tau1 : ");
+	//cout << tau1.transpose() << endl << endl;
+	//printf("tau2 : ");
+	//cout << tau2.transpose() << endl << endl;
 
 
-	Eigen::VectorXd checkPos3;
-	int flagg;
-	checkPos3 = rManager2->inverseKin(jigAssem->getBaseLinkFrame() * jigAssem->holeCenter[4] * Tbusbar2gripper_new, &robot2->gLink[Indy_Index::MLINK_GRIP], true, SE3(), flagg, robot2->qInvKinInit);
-	cout << flagg << endl;
-	Eigen::MatrixXd J2 = rManager2->getBodyJacobian(checkPos2, &robot2->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new));
-	Eigen::VectorXd F2(6);
-	F2[0] = 0.0; F2[1] = 0.0; F2[2] = 0.0; F2[3] = 5.0; F2[4] = 5.0; F2[5] = 50.0;
-	Eigen::VectorXd tau_add = J2.transpose() * F2;
-	printf("tau_add : ");
-	cout << tau_add.transpose() << endl;
-	printf("total torque: ");
-	cout << (tau2 - tau_add).transpose() << endl;
+	//Eigen::VectorXd checkPos3;
+	//int flagg;
+	//checkPos3 = rManager2->inverseKin(jigAssem->getBaseLinkFrame() * jigAssem->holeCenter[4] * Tbusbar2gripper_new, &robot2->gLink[Indy_Index::MLINK_GRIP], true, SE3(), flagg, robot2->qInvKinInit);
+	//cout << flagg << endl;
+	//Eigen::MatrixXd J2 = rManager2->getBodyJacobian(checkPos2, &robot2->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new));
+	//Eigen::VectorXd F2(6);
+	//F2[0] = 0.0; F2[1] = 0.0; F2[2] = 0.0; F2[3] = 5.0; F2[4] = 5.0; F2[5] = 50.0;
+	//Eigen::VectorXd tau_add = J2.transpose() * F2;
+	//printf("tau_add : ");
+	//cout << tau_add.transpose() << endl;
+	//printf("total torque: ");
+	//cout << (tau2 - tau_add).transpose() << endl;
 	///////////////////////////////////////////////////////////////////
 
 	rendering(argc, argv);

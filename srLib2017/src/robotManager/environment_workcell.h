@@ -23,3 +23,13 @@ public:
 	int m_mode;			// mode: 0 - no stage, 1 - connect stage to workcell, 2 - attach last stage plate and cylinder
 	double m_height;	// elevation height of robot and frames from default model
 };
+
+class SphereMarker : public Object
+{
+public:
+	SphereMarker(double dim = 0.1);
+	~SphereMarker();
+	void AssembleModel();
+
+	double m_dim;
+};
