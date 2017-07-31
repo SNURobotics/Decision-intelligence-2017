@@ -344,7 +344,7 @@ int main(int argc, char **argv)
 
 	//Eigen::VectorXd checkPos3;
 	//int flagg;
-	//checkPos3 = rManager2->inverseKin(jigAssem->getBaseLinkFrame() * jigAssem->holeCenter[4] * Tbusbar2gripper_new, &robot2->gLink[Indy_Index::MLINK_GRIP], true, SE3(), flagg, robot2->qInvKinInit);
+	//checkPos3 = rManager2->inverseKin(jigAssem->getBaseLinkFrame() * jigAssem->holeCenter[4] * Tbusbar2gripper_new, &robot2->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flagg, robot2->qInvKinInit);
 	//cout << flagg << endl;
 	//Eigen::MatrixXd J2 = rManager2->getBodyJacobian(checkPos2, &robot2->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new));
 	//Eigen::VectorXd F2(6);
@@ -355,6 +355,30 @@ int main(int argc, char **argv)
 	//printf("total torque: ");
 	//cout << (tau2 - tau_add).transpose() << endl;
 	///////////////////////////////////////////////////////////////////
+
+	////////////////////////////////////////////////////// test singularity
+
+	
+	vector<double> testheight(10);
+	vector<Eigen::VectorXd> testPosRobot1(testheight.size());
+	vector<Eigen::VectorXd> testPosRobot2(testheight.size());
+	vector<double> sing1(testheight.size());
+	vector<double> sing2(testheight.size());
+	vector<int> flag1(testheight.size());
+	vector<int> flag2(testheight.size());
+	for (unsigned int i = 0; i < testheight.size(); i++)
+	{
+		testheight[i] = (double) 0.03 * i;
+		testPosRobot1[i] = rManager1->inverseKin(SE3(Vec3(0.0, 0.0, testheight[i])) * jigAssem->getBaseLinkFrame() * jigAssem->holeCenter[4] * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag1[i], robot1->qInvKinInit);
+		testPosRobot2[i] = rManager2->inverseKin(SE3(Vec3(0.0, 0.0, testheight[i])) * jigAssem->getBaseLinkFrame() * jigAssem->holeCenter[3] * Tbusbar2gripper_new, &robot2->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag2[i], robot2->qInvKinInit);
+		sing1[i] = rManager1->manipulability(testPosRobot1[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
+		sing2[i] = rManager2->manipulability(testPosRobot2[i], &robot2->gMarkerLink[Indy_Index::MLINK_GRIP]);
+
+	}
+	robot1->homePos = testPosRobot1[0];
+	robot2->homePos = testPosRobot2[0];
+
+	///////////////////////////////////////////////////////////////////////////
 
 	rendering(argc, argv);
 

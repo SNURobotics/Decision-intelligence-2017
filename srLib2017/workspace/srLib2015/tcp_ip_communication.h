@@ -41,6 +41,7 @@ struct robot_current_data
 	Eigen::VectorXd robot_joint;
 	int robot_isOnWaypoint;
 	int robot_isDead;
+	int robot_isControlFinished;
 	vector<double> robot_pos;
 	vector<double> robot_rot;
 	vector<double> robot_gripper;
@@ -174,8 +175,10 @@ int readRobotCurState(char * hyu_data, robot_current_data & robot_state)
 				robot_state.robot_isOnWaypoint = atoi(recv_data);
 			else if (recv_cnt < 3 + 9 + 1 + 6 + 1 + 1)
 				robot_state.robot_isDead = atoi(recv_data);
+			else if (recv_cnt < 3 + 9 + 1 + 6 + 1 + 1 + 1)
+				robot_state.robot_isControlFinished = atoi(recv_data);
 			else
-				robot_state.robot_joint[recv_cnt - 3 - 9 - 1 - 6 - 1 - 1] = atof(recv_data);
+				robot_state.robot_joint[recv_cnt - 3 - 9 - 1 - 6 - 1 - 1 - 1] = atof(recv_data);
 
 			recv_data = strtok(NULL, "d");
 			recv_cnt += 1;

@@ -311,7 +311,7 @@ void communicationFunc(int argc, char **argv)
 
 			if (hyu_data_output.first == 1 || hyu_data_output.first == 2)
 			{
-				if (hyu_data_output.second[0] == 1 || hyu_data_output.second[0] == 2)
+				if (hyu_data_output.second[0] == 1 || hyu_data_output.second[0] == 2 || hyu_data_output.second[0] == 3)
 				{
 					// send to robot
 					serv.SendMessageToClient(copy);

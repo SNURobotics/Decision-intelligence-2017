@@ -84,9 +84,9 @@ void robotSetting(double height)
 {
 	gSpace.AddSystem((srSystem*)robot1);
 	gSpace.AddSystem((srSystem*)robot2);
-	robot1->GetBaseLink()->SetFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 0.4005 - 0.12, 1.972 + height)));
+	//robot1->GetBaseLink()->SetFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 0.4005 - 0.12, 1.972 + height)));
 	robot2->GetBaseLink()->SetFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 1.6005 + 0.12, 1.972 + height)));
-	//robot1->GetBaseLink()->SetFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 0.4005, 1.972 + height)));
+	robot1->GetBaseLink()->SetFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 0.4005, 1.972 + height)));
 	//robot2->GetBaseLink()->SetFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 1.6005, 1.972 + height)));
 	robot1->SetActType(srJoint::ACTTYPE::TORQUE);
 	robot2->SetActType(srJoint::ACTTYPE::TORQUE);
@@ -129,6 +129,8 @@ void environmentSetting_HYU2(bool connect, bool fixJigPos)
 	double y_trans = (double)rand() / RAND_MAX * 0.1;
 	//SE3 Tbase2jigbase = EulerZYX(Vec3(z_angle, 0.0, 0.0), Vec3(x_trans, y_trans, 0.184));
 	SE3 Tbase2jigbase = EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.184));
+	SE3 Ttempjigbase = Tbase * Tbase2jigbase;
+	//Ttempjigbase[10] = 0.5*(robot1->GetBaseLink()->GetFrame()[10] + robot2->GetBaseLink()->GetFrame()[10]);
 	//for (unsigned int i = 0; i < busbar.size(); i++)
 	//{
 	//	busbar[i] = new BusBar_HYU;
@@ -143,7 +145,7 @@ void environmentSetting_HYU2(bool connect, bool fixJigPos)
 
 	jigAssem->SetBaseLinkType(srSystem::FIXED);
 	if (!useNoVisionTestSettingJig || fixJigPos)
-		jigAssem->setBaseLinkFrame(Tbase*Tbase2jigbase);
+		jigAssem->setBaseLinkFrame(Ttempjigbase);
 	else
 	{
 		//SE3 tempSE3 = Trobotbase1 * SE3(testJigPosFromRobot1);
@@ -161,7 +163,7 @@ void environmentSetting_HYU2(bool connect, bool fixJigPos)
 														//wJoint->SetParentLink(workCell->getStagePlate());
 		wJoint->SetChildLink(jigAssem->GetBaseLink());
 		if (!useNoVisionTestSettingJig || fixJigPos)
-			wJoint->SetParentLinkFrame(Tbase*Tbase2jigbase);
+			wJoint->SetParentLinkFrame(Ttempjigbase);
 		else
 		{
 			//SE3 tempSE3 = Trobotbase1 * SE3(testJigPosFromRobot1);

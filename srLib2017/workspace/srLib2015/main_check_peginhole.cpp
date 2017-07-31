@@ -352,7 +352,7 @@ void setHybridPFCtrl()
 	// assume target object is rigidly attached to robot end-effector
 	hctrl->isSystemSet = hctrl->setSystem((robotManager*) rManager1, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new), busbarlink);
 	hctrl->setTimeStep(rManager1->m_space->m_Timestep_dyn_fixed);
-	double kv_v = 0.25e2, kp_v = 0.25*kv_v*kv_v, ki_v = 0.25e3, kp_f = 1.0e-1, ki_f = 1.0e-1;
+	double kv_v = 0.25e2, kp_v = 0.25*kv_v*kv_v, ki_v = 0.25e3, kp_f = 1.0e-1, ki_f = 5.0e-1;
 	hctrl->setGain(kv_v, kp_v, ki_v, kp_f, ki_f);
 	//hctrl->Kp_v = kp_v * Eigen::MatrixXd::Identity(6, 6);
 	//hctrl->Kv_v = kv_v * Eigen::MatrixXd::Identity(6, 6);
@@ -370,8 +370,9 @@ void setHybridPFCtrl()
 	Eigen::MatrixXd S2 = Eigen::MatrixXd::Zero(1, 6);
 	S2(0, 5) = 1.0;
 	
-	//hctrl->setSelectionMatrix(S);
-	hctrl->setSelectionMatrix(Eigen::MatrixXd());	//Eigen::MatrixXd(), S
+	//hctrl->setSelectionMatrix(S);					// control rot_z, pos_xy, m_xy, f_z
+	hctrl->setSelectionMatrix(S2);					// control rot_xyz, pos_xy, f_z
+	//hctrl->setSelectionMatrix(Eigen::MatrixXd());	// control rot_xyz, pos_xyz
 }
 
 
@@ -403,10 +404,23 @@ void updateFuncTest2()
 	cnt++;
 	hctrl->hybridPFControl();
 	rManager2->setJointVal(robot2->homePos);
-	printf("simulation step: %d\n", cnt);
-	cout << hctrl->m_contactLinks[0]->m_ConstraintImpulse << endl;
-	cout << robot1->gLink[Indy_Index::MLINK_GRIP].m_ConstraintImpulse << endl;
-	cout << rManager1->readSensorValue() << endl;
+	if (cnt % 100 == 0)
+	{
+		printf("simulation step: %d\n", cnt);
+		printf("contact force: ");
+		cout << hctrl->m_contactLinks[0]->m_ConstraintImpulse * (1.0 / gSpace.m_Timestep_dyn_fixed) << endl;
+		//cout << robot1->gMarkerLink[Indy_Index::MLINK_GRIP].m_ConstraintImpulse << endl;
+		//printf("sensor value: ");
+		//cout << rManager1->readSensorValue() << endl;
+		printf("tau: ");
+		cout << rManager1->getJointCommand().transpose() << endl;
+		printf("tau_g: ");
+		Eigen::VectorXd tau_g = rManager1->inverseDyn(rManager1->getJointVal(), Eigen::VectorXd::Zero(6), Eigen::VectorXd::Zero(6));
+		cout << tau_g.transpose() << endl;
+		printf("tau_s: ");
+		Eigen::MatrixXd Jb = rManager1->getBodyJacobian(rManager1->getJointVal(), &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new));
+		cout << (tau_g + Jb.transpose() * dse3toVector(hctrl->Fext_des_trj[0])).transpose() << endl;
+	}
 }
 
 void updateFuncDefault()
@@ -499,7 +513,7 @@ void setInitialConfig()
 	vector<dse3> Fdes(1, dse3(0.0));		// expressed in end-effector frame
 	Fdes[0][0] = 0.00;
 	Fdes[0][1] = 0.0;
-	Fdes[0][5] = -1.0;
+	Fdes[0][5] = -50.0;
 
 
 	hctrl->isDesTrjSet = hctrl->setDesiredTraj(Tdes, Fdes);
@@ -548,7 +562,7 @@ void updateFuncPegInHole()
 {
 	/////////////////////////////////////////// initial setting ////////////////////////////////////////////////////
 	static unsigned int taskIdx = 0;								// index of task
-	static double moveRange = 0.03;
+	static double moveRange = 0.03;									// range of movement
 
 	
 	static vector<int> moveIdx(10, -1);								// direction to move busbar for each task (-1: ignore, 9: x, 10: y, 11: z)
@@ -572,12 +586,12 @@ void updateFuncPegInHole()
 
 	static vector<bool> dirChanged(moveIdx.size(), false);			// denote if moving direction is changed
 
-	static vector<int> task_cnt(moveIdx.size(), 0);								// count control step for each task
+	static vector<int> task_cnt(moveIdx.size(), 0);					// count control step for each task
 
-	static int cnt = 0;
-	static SE3 initialGoal;
-	static SE3 currentGoal;
-	static double sign = -1.0;
+	static int cnt = 0;												// count of simulation step
+	static SE3 initialGoal;											// initial goal of position control
+	static SE3 currentGoal;											// current goal of position control
+	static double sign = -1.0;										// sign of force check direction (1: +dir, -1: -dir), change value when direction changes
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 
@@ -586,9 +600,12 @@ void updateFuncPegInHole()
 	if (cnt == 0)
 		initialGoal = hctrl->T_des_trj[0];
 	cnt++;
-	// hybrid position/force control
+
+	// hybrid position/force control (give joint command to robot)
 	hctrl->hybridPFControl();
 	Eigen::VectorXd tau = rManager1->getJointCommand();
+	// cout << tau.transpose() << endl;		// print joint command
+
 	// hold robot2 in home position
 	rManager2->setJointVal(robot2->homePos);
 	task_cnt[taskIdx]++;

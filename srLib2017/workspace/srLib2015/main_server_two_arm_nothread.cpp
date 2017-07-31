@@ -300,7 +300,7 @@ void communicationFunc(int argc, char **argv)
 			pair<int,vector<int>> hyu_data_output = readRobotCommand(hyu_data, hyu_desired_dataset);
 			if (hyu_data_output.first == 1 || hyu_data_output.first == 2)
 			{
-				if (hyu_data_output.second[0] == 1 || hyu_data_output.second[0] == 2)
+				if (hyu_data_output.second[0] == 1 || hyu_data_output.second[0] == 2 || hyu_data_output.second[0] == 3)
 				{
 					// send to robot
 					serv.SendMessageToClient(copy);
