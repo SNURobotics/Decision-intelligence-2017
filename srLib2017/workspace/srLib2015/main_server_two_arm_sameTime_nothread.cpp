@@ -16,6 +16,11 @@
 // memory leakaage check
 #include <crtdbg.h>
 
+#include "common\dataIO.h"
+#include "srDyn/srDYN.h"
+#include "srGamasot\srURDF.h"
+
+
 
 vector<vector<bool>> attachObjectWaypoint(2);
 bool checkTorque = false;
@@ -55,6 +60,12 @@ int main(int argc, char **argv)
 	srand(time(NULL));
 	// Robot home position
 	robotSetting();
+
+	//Trobotbase1 = robot1->GetBaseLink()->GetFrame();
+	//Trobotbase2 = robot2->GetBaseLink()->GetFrame();
+	//SE3 tmp;
+	//tmp = Inv(Trobotbase2)*Trobotbase1;
+	//cout << tmp << endl;
 	// environment
 	workspaceSetting();
 	objectSetting();
@@ -179,7 +190,7 @@ void communicationFunc(int argc, char **argv)
 
 			// lift objects if collision occur
 			printf("initial collision check: %d\n", (int)gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP());
-			bool liftObjects = false;
+			bool liftObjects = true;
 			if (liftObjects)
 			{
 				Vec3 delta_z = Vec3(0.0, 0.0, 0.0001);
@@ -197,6 +208,11 @@ void communicationFunc(int argc, char **argv)
 						ctCase[i]->KIN_UpdateFrame_All_The_Entity();
 					}
 					liftIter++;
+					if ((double)liftIter * delta_z[2] > 1.0)
+					{
+						printf("check vision data!!! (lifting object too much)\n");
+						break;
+					}
 				}
 				char liftBuf[20];
 				sprintf(liftBuf, "Ld%fd", -(double)liftIter * delta_z[2]);

@@ -417,13 +417,13 @@ void loadVisionResultFromText()
 	// set other objects to far away location
 	for (unsigned int i = bIdx; i < busbar.size(); i++)
 	{
-		busbar[bIdx]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -(double)0.1*i)) * initBusbar);
-		busbar[bIdx]->KIN_UpdateFrame_All_The_Entity();
+		busbar[i]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -(double)0.1*i)) * initBusbar);
+		busbar[i]->KIN_UpdateFrame_All_The_Entity();
 	}
 	for (unsigned int i = cIdx; i < ctCase.size(); i++)
 	{
-		ctCase[cIdx]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 10.0, -(double)0.1*i)) * initBusbar);
-		ctCase[cIdx]->KIN_UpdateFrame_All_The_Entity();
+		ctCase[i]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 10.0, -(double)0.1*i)) * initBusbar);
+		ctCase[i]->KIN_UpdateFrame_All_The_Entity();
 	}
 	// set obstacle (only set by the first vision input)
 	if (!isSystemAssembled)

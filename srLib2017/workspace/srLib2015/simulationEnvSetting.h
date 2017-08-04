@@ -16,8 +16,8 @@ srSpace gSpace;
 
 // Environment
 JigAssem_QB_bar* jigAssem = new JigAssem_QB_bar(false);
-vector<BusBar_HYU*> busbar(8);
-vector<Insert*> ctCase(4);
+vector<BusBar_HYU*> busbar(3);
+vector<Insert*> ctCase(0);
 vector<Object*> objects(busbar.size() + ctCase.size());
 vector<SE3> TobjectsInitSimul(objects.size());
 bool isJigConnectedToWorkCell = true;
@@ -141,7 +141,9 @@ void environmentSetting_HYU2(bool connect, bool fixJigPos)
 	//Vec3 testJigPosFromRobot1(-0.8254, 0.0338, 0.7483);		// 17.06.10 using robot2
 	//Vec3 testJigPosFromRobot1(-0.8277, -0.0536, 0.8620);		// 17.06.10 using robot2
 	//Vec3 testJigPosFromRobot2(-0.5276, -0.032456, 0.869522);		// 17.07.13 using robot2
-	Vec3 testJigPosFromRobot2(-0.551584, -0.073662, 0.865189);		// 17.07.21 using robot2
+	//Vec3 testJigPosFromRobot2(-0.551584, -0.073662, 0.865189);		// 17.07.21 using robot2
+	Vec3 testJigPosFromRobot2(-0.8562, 0.0450, 0.8206);		// 17.07.21 using robot2
+	//Vec3 testJigPosFromRobot2(-0.55, 0.550, 0.5506);		// 17.07.21 using robot2
 
 	jigAssem->SetBaseLinkType(srSystem::FIXED);
 	if (!useNoVisionTestSettingJig || fixJigPos)
@@ -307,13 +309,13 @@ void setEnviromentFromVision(const vision_data & skku_dataset, int& bNum, int& c
 	// set other objects to far away location
 	for (unsigned int i = bIdx; i < busbar.size(); i++)
 	{
-		busbar[bIdx]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -(double)0.1*i)) * initBusbar);
-		busbar[bIdx]->KIN_UpdateFrame_All_The_Entity();
+		busbar[i]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -(double)0.1*i)) * initBusbar);
+		busbar[i]->KIN_UpdateFrame_All_The_Entity();
 	}
 	for (unsigned int i = cIdx; i < ctCase.size(); i++)
 	{
-		ctCase[cIdx]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 10.0, -(double)0.1*i)) * initBusbar);
-		ctCase[cIdx]->KIN_UpdateFrame_All_The_Entity();
+		ctCase[i]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 10.0, -(double)0.1*i)) * initBusbar);
+		ctCase[i]->KIN_UpdateFrame_All_The_Entity();
 	}
 	// set obstacle (only set by the first vision input)
 	if (!isSystemAssembled)
