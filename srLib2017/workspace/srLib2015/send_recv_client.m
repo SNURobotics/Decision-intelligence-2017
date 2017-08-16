@@ -2,6 +2,75 @@ clc;
 clear;
 close all;
 
+%% HYU waypoint 170814
+% load('desired.mat');
+load('desired_fix1.mat');
+joint2 = zeros(6,1);
+joint2(3) = -190/180*pi;
+joint2(4) = pi/2;
+joint2(5) = -100/180*pi;
+I33 = reshape(eye(3),9,1);
+p = zeros(3,1);
+ft = zeros(6,1);
+
+client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
+fopen(client);
+
+while(1)
+    for idx = 1:length(save_snu)
+
+        fwrite(client,'G');
+        pause(0.001);
+        send_data = ['R';'2';'d'];
+        for i = 1:3
+            send_data = [send_data; num2str(p(i))'; 'd'];
+        end
+        for i = 1:9
+            send_data = [send_data; num2str(I33(i))'; 'd'];
+        end
+        send_data = [send_data; num2str(0)'; 'd'];
+        for i = 1:6
+            send_data = [send_data; num2str(ft(i))'; 'd'];
+        end
+        send_data = [send_data; num2str(0)'; 'd'];
+        send_data = [send_data; num2str(0)'; 'd'];
+        send_data = [send_data; num2str(0)'; 'd'];
+        for i = 1:6
+            send_data = [send_data; num2str(joint2(i))'; 'd'];
+        end
+        fwrite(client,send_data);
+        pause(0.01);
+
+        fwrite(client,save_snu{idx}.sendata);       % send S2d...
+        pause(0.01);
+       
+        send_data2 = ['P';'2';'d'];
+        for i = 1:3
+            send_data2 = [send_data2; num2str(p(i))'; 'd'];
+        end
+        for i = 1:9
+            send_data2 = [send_data2; num2str(I33(i))'; 'd'];
+        end
+        send_data2 = [send_data2; num2str(0)'; 'd'];
+        for i = 1:6
+            send_data2 = [send_data2; num2str(ft(i))'; 'd'];
+        end
+        send_data2 = [send_data2; num2str(0)'; 'd'];
+        send_data2 = [send_data2; num2str(0)'; 'd'];
+        send_data2 = [send_data2; num2str(0)'; 'd'];
+        for i = 1:6
+            send_data2 = [send_data2; num2str(joint2(i))'; 'd'];
+        end
+        fwrite(client,send_data2);
+        pause(0.01);
+    end
+    send_data = ['A10']';
+    fwrite(client,send_data);
+    pause(0.01);
+end
+
+
+
 %% HYU waypoint
 load('send_data.mat');
 % 
@@ -78,6 +147,7 @@ while(1)
             end
             send_data = [send_data; num2str(0)'; 'd'];
             send_data = [send_data; num2str(0)'; 'd'];
+            send_data = [send_data; num2str(0)'; 'd'];
             for i = 1:6
                 send_data = [send_data; num2str(joint1(i))'; 'd'];
             end
@@ -101,6 +171,7 @@ while(1)
         end
         send_data = [send_data; num2str(0)'; 'd'];
         send_data = [send_data; num2str(0)'; 'd'];
+        send_data = [send_data; num2str(0)'; 'd'];
         for i = 1:6
             send_data = [send_data; num2str(joint1(i))'; 'd'];
         end
@@ -117,6 +188,7 @@ while(1)
         for i = 1:6
             send_data2 = [send_data2; num2str(ft(i))'; 'd'];
         end
+        send_data2 = [send_data2; num2str(0)'; 'd'];
         send_data2 = [send_data2; num2str(0)'; 'd'];
         send_data2 = [send_data2; num2str(0)'; 'd'];
         for i = 1:6

@@ -97,6 +97,8 @@ void updateFuncPlanning();
 void updateFuncTestSensor();
 void updateFuncTestSensorToRobot();
 void updateFuncLoadJointValAttachStatus();
+void updateFuncLoadSuccessData();
+void loadSuccessData(int nWay, bool connect);
 void environmentSetting_HYU(bool connect, int startLocation, Vec2 goalLocation);
 void environmentSetting_HYU2(bool connect);
 void workspaceSetting();
@@ -116,9 +118,11 @@ Vec2 goalLocation; // busbar insertion location
 
 vector<int> flags(0);
 
+bool loadSuccess = true;
 double planning = 0;
 vector<Eigen::VectorXd> loadJointVal(0);
 vector<Eigen::VectorXd> loadAttachStatus(0);
+vector<Eigen::VectorXd>	loadBusbar(0);
 SE3 Twaypoint;
 SE3 Trobotbase1;
 SE3 Trobotbase2;
@@ -127,6 +131,7 @@ vector<Eigen::VectorXd> testJointVal(0);
 vector<Eigen::VectorXd> testJointVal2(0);
 vector<vector<Eigen::VectorXd>> testJointValVec(2);
 
+srWeldJoint* wJointJig = new srWeldJoint;
 Eigen::VectorXd testjointvalue(6);
 int main(int argc, char **argv)
 {
@@ -139,7 +144,12 @@ int main(int argc, char **argv)
 	workspaceSetting();
 	int startLocation =0;
 	goalLocation = Vec2(1, 1);
-	environmentSetting_HYU2(true);
+	bool connectJig2workcell = true;
+	environmentSetting_HYU2(connectJig2workcell);
+
+
+
+
 	//jigAssem->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -0.5)));
 	////////////////////////////////////////////// for testing workspace
 	SE3 Tbase;
@@ -208,6 +218,12 @@ int main(int argc, char **argv)
 	//cout << TR1R2_vec.transpose() << endl;
 	////////////////
 
+	if (loadSuccess)
+	{
+		int nWaypoint = 4;
+		loadSuccessData(nWaypoint, connectJig2workcell);			// should be called after robotSetting
+		planning = 0.0;
+	}
 
 
 	// initialize srLib
@@ -482,10 +498,17 @@ int main(int argc, char **argv)
 	//}
 	//goalPos[goalPos.size() - 1] = homePos;
 
-	printf("do planning?: ");
-	cin >> planning;
-	if (planning)
-		RRTSolve_HYU(attachObject, stepsize);
+
+
+	
+	if (!loadSuccess)
+	{
+		printf("do planning?: ");
+		cin >> planning;
+		if (planning)
+			RRTSolve_HYU(attachObject, stepsize);
+	}
+	
 	
 	//int flag;
 	//Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
@@ -820,10 +843,16 @@ void rendering(int argc, char **argv)
 
 	//renderer->setUpdateFunc(updateFuncTestSensorToRobot);
 	//renderer->setUpdateFunc(updateFunc);
-	if (planning)
-		renderer->setUpdateFunc(updateFuncPlanning);
+	if (loadSuccess)
+		renderer->setUpdateFunc(updateFuncLoadSuccessData);
 	else
-		renderer->setUpdateFunc(updateFuncInput);
+	{
+		if (planning)
+			renderer->setUpdateFunc(updateFuncPlanning);
+		else
+			renderer->setUpdateFunc(updateFuncInput);
+	}
+	
 	//renderer->setUpdateFunc(updateFuncPlanning);
 	//renderer->setUpdateFunc(updateFuncLoadJointValAttachStatus);
 
@@ -1342,12 +1371,11 @@ void environmentSetting_HYU2(bool connect)
 		gSpace.AddSystem((srSystem*)jigAssem);
 	else
 	{
-		srWeldJoint* wJoint = new srWeldJoint;
-		wJoint->SetParentLink(workCell->GetBaseLink()); // removed stage
-		//wJoint->SetParentLink(workCell->getStagePlate());
-		wJoint->SetChildLink(jigAssem->GetBaseLink());
-		wJoint->SetParentLinkFrame(Tbase*Tbase2jigbase);
-		wJoint->SetChildLinkFrame(SE3());
+		wJointJig->SetParentLink(workCell->GetBaseLink()); // removed stage
+		//wJointJig->SetParentLink(workCell->getStagePlate());
+		wJointJig->SetChildLink(jigAssem->GetBaseLink());
+		wJointJig->SetParentLinkFrame(Tbase*Tbase2jigbase);
+		wJointJig->SetChildLinkFrame(SE3());
 	}
 }
 
@@ -1835,4 +1863,44 @@ void updateFuncLoadJointValAttachStatus()
 		}
 	}
 
+}
+
+void updateFuncLoadSuccessData()
+{
+	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
+	static unsigned int len = loadJointVal.size();
+	static unsigned int cnt = 0;
+
+	rManager1->setJointVal(loadJointVal[cnt % len]);
+	rManager2->setJointVal(robot2->homePos);
+
+	busbar[0]->setBaseLinkFrame(Trobotbase1 * VectorXdtoSE3(loadBusbar[cnt % len]) * busbar[0]->m_visionOffset);
+	busbar[0]->KIN_UpdateFrame_All_The_Entity();
+
+	cnt++;
+}
+
+void loadSuccessData(int nWay, bool connect)
+{
+	string dir_folder = "../../../data/test_traj";
+	vector<Eigen::VectorXd> tempVecTraj;
+	vector<Eigen::VectorXd> tempSE3Traj;
+	loadJointVal.resize(0);
+	loadBusbar.resize(0);
+	for (int i = 0; i < nWay; i++)
+	{
+		tempVecTraj = loadDataFromText(dir_folder + "/jointValTraj" + to_string(i) + ".txt", 6);
+		tempSE3Traj = loadDataFromText(dir_folder + "/busbarTraj_robotbase" + to_string(i) + ".txt", 12);
+
+		for (unsigned int j = 0; j < tempVecTraj.size(); j++)
+		{
+			loadJointVal.push_back(tempVecTraj[j]);
+			loadBusbar.push_back(tempSE3Traj[j]);
+		}
+	}
+	SE3 Tjig = Trobotbase1 * VectorXdtoSE3(loadDataFromText(dir_folder + "/setting_robotbase" + ".txt", 12)[0]) * jigAssem->m_visionOffset;
+	if (connect)
+		wJointJig->SetParentLinkFrame(Tjig);
+	else
+		jigAssem->GetBaseLink()->SetFrame(Tjig);
 }

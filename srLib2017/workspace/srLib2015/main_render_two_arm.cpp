@@ -109,7 +109,6 @@ bool saveTraj = true;
 //void connectJigToWorkCell();
 //void initDynamics();
 //void robotManagerSetting();
-void loadVisionResultFromText();
 
 // rendering functions
 void rendering(int argc, char **argv);
@@ -146,7 +145,7 @@ int main(int argc, char **argv)
 
 	//environmentSetting_HYU2(isJigConnectedToWorkcell);			// temporary environment setting
 	if (loadVisionResult)
-		loadVisionResultFromText();			// should be called after robotSetting, before initDynamics
+		loadVisionResultFromText(loc);			// should be called after robotSetting, before initDynamics
 	initDynamics();								// initialize srLib				
 	isSystemAssembled = true;
 	robotManagerSetting();						// robot manager setting
@@ -182,6 +181,7 @@ void rendering(int argc, char **argv)
 	renderer->InitializeNode_1st(&gSpace);
 	renderer->InitializeNode_2nd();
 	//renderer->setUpdateFunc(updateFuncLoadData);
+	//renderer->setUpdateFunc(updateFuncInit);
 	renderer->setUpdateFunc(updateFunc);
 	renderer->RunRendering();
 }
@@ -381,69 +381,6 @@ void updateFunc()
 //	wJoint->SetChildLinkFrame(SE3());
 //}
 
-void loadVisionResultFromText()
-{
-	vector<Eigen::VectorXd> objData = loadDataFromText(loc + "objInit.txt", 13);
-	vector<Eigen::VectorXd> obsData = loadDataFromText(loc + "obstacle.txt", 6);
-	int bIdx = 0;
-	int cIdx = 0;
-	for (unsigned int i = 0; i < objData.size(); i++)
-	{
-		if (objData[i][0] == 1)
-		{
-			busbar[bIdx]->GetBaseLink()->SetFrame(Trobotbase1 * VectorXdtoSE3(objData[i].segment(1, 12)) * busbar[bIdx]->m_visionOffset);
-			busbar[bIdx]->KIN_UpdateFrame_All_The_Entity();
-			bIdx++;
-		}
-		else if (objData[i][0] == 2)
-		{
-			ctCase[cIdx]->GetBaseLink()->SetFrame(Trobotbase1 * VectorXdtoSE3(objData[i].segment(1, 12)) * ctCase[cIdx]->m_visionOffset);
-			ctCase[cIdx]->KIN_UpdateFrame_All_The_Entity();
-			cIdx++;
-		}
-		else if (objData[i][0] == 3)
-		{
-			jigAssem->GetBaseLink()->SetFrame(Trobotbase1 * VectorXdtoSE3(objData[i].segment(1, 12)) * jigAssem->m_visionOffset);
-			jigAssem->KIN_UpdateFrame_All_The_Entity();
-			if (isJigConnectedToWorkcell)
-				connectJigToWorkCell();
-			else
-				gSpace.AddSystem((srSystem*)jigAssem);
-		}
-		else if (objData[i][0] != 0)
-			printf("object ID is outside range!!!\n");
-	}
-
-	// set other objects to far away location
-	for (unsigned int i = bIdx; i < busbar.size(); i++)
-	{
-		busbar[i]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -(double)0.1*i)) * initBusbar);
-		busbar[i]->KIN_UpdateFrame_All_The_Entity();
-	}
-	for (unsigned int i = cIdx; i < ctCase.size(); i++)
-	{
-		ctCase[i]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 10.0, -(double)0.1*i)) * initBusbar);
-		ctCase[i]->KIN_UpdateFrame_All_The_Entity();
-	}
-	// set obstacle (only set by the first vision input)
-	if (!isSystemAssembled)
-	{
-		obstacle.resize(obsData.size());
-		wJoint.resize(obsData.size());
-		for (unsigned int i = 0; i < obsData.size(); i++)
-		{
-			obstacle[i] = new srLink();
-			wJoint[i] = new srWeldJoint;
-			obstacle[i]->GetGeomInfo().SetDimension(obsData[i][3], obsData[i][4], obsData[i][5]);
-			wJoint[i]->SetParentLink(workCell->GetBaseLink());
-			wJoint[i]->SetParentLinkFrame(robot1->GetBaseLink()->GetFrame()*SE3(Vec3(obsData[i][0], obsData[i][1], obsData[i][2])));
-			wJoint[i]->SetChildLink(obstacle[i]);
-			wJoint[i]->SetChildLinkFrame(SE3());
-			obstacle[i]->GetGeomInfo().SetColor(0.2, 0.2, 0.2);
-		}
-	}
-}
-
 void updateFuncLoadData()
 {
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
@@ -521,4 +458,8 @@ void updateFuncInit()
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 	rManager1->setJointVal(robot1->homePos);
 	rManager2->setJointVal(robot2->homePos);
+	static int cnt_init = 0;
+	if (cnt_init == 0)
+		cout << "collision?  " << gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP() << endl;
+	cnt_init++;
 }

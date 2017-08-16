@@ -16,7 +16,7 @@ srSpace gSpace;
 
 // Environment
 JigAssem_QB_bar* jigAssem = new JigAssem_QB_bar(false);
-vector<BusBar_HYU*> busbar(3);
+vector<BusBar_HYU*> busbar(8);
 vector<Insert*> ctCase(0);
 vector<Object*> objects(busbar.size() + ctCase.size());
 vector<SE3> TobjectsInitSimul(objects.size());
@@ -64,6 +64,7 @@ void initDynamics();
 void robotManagerSetting();
 // communication function
 void setEnviromentFromVision(const vision_data& skku_dataset, int& bNum, int& cNum);
+void loadVisionResultFromText(string loc);
 
 bool saveVisionResult = true;
 
@@ -361,4 +362,68 @@ void setEnviromentFromVision(const vision_data & skku_dataset, int& bNum, int& c
 		saveDataToText(obsData, loc + "obstacle.txt");
 	}
 
+}
+
+
+void loadVisionResultFromText(string loc)
+{
+	vector<Eigen::VectorXd> objData = loadDataFromText(loc + "objInit.txt", 13);
+	vector<Eigen::VectorXd> obsData = loadDataFromText(loc + "obstacle.txt", 6);
+	int bIdx = 0;
+	int cIdx = 0;
+	for (unsigned int i = 0; i < objData.size(); i++)
+	{
+		if (objData[i][0] == 1)
+		{
+			busbar[bIdx]->GetBaseLink()->SetFrame(Trobotbase1 * VectorXdtoSE3(objData[i].segment(1, 12)) * busbar[bIdx]->m_visionOffset);
+			busbar[bIdx]->KIN_UpdateFrame_All_The_Entity();
+			bIdx++;
+		}
+		else if (objData[i][0] == 2)
+		{
+			ctCase[cIdx]->GetBaseLink()->SetFrame(Trobotbase1 * VectorXdtoSE3(objData[i].segment(1, 12)) * ctCase[cIdx]->m_visionOffset);
+			ctCase[cIdx]->KIN_UpdateFrame_All_The_Entity();
+			cIdx++;
+		}
+		else if (objData[i][0] == 3)
+		{
+			jigAssem->GetBaseLink()->SetFrame(Trobotbase1 * VectorXdtoSE3(objData[i].segment(1, 12)) * jigAssem->m_visionOffset);
+			jigAssem->KIN_UpdateFrame_All_The_Entity();
+			if (isJigConnectedToWorkCell)
+				connectJigToWorkCell();
+			else
+				gSpace.AddSystem((srSystem*)jigAssem);
+		}
+		else if (objData[i][0] != 0)
+			printf("object ID is outside range!!!\n");
+	}
+
+	// set other objects to far away location
+	for (unsigned int i = bIdx; i < busbar.size(); i++)
+	{
+		busbar[i]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -(double)0.1*i)) * initBusbar);
+		busbar[i]->KIN_UpdateFrame_All_The_Entity();
+	}
+	for (unsigned int i = cIdx; i < ctCase.size(); i++)
+	{
+		ctCase[i]->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 10.0, -(double)0.1*i)) * initBusbar);
+		ctCase[i]->KIN_UpdateFrame_All_The_Entity();
+	}
+	// set obstacle (only set by the first vision input)
+	if (!isSystemAssembled)
+	{
+		obstacle.resize(obsData.size());
+		wJoint.resize(obsData.size());
+		for (unsigned int i = 0; i < obsData.size(); i++)
+		{
+			obstacle[i] = new srLink();
+			wJoint[i] = new srWeldJoint;
+			obstacle[i]->GetGeomInfo().SetDimension(obsData[i][3], obsData[i][4], obsData[i][5]);
+			wJoint[i]->SetParentLink(workCell->GetBaseLink());
+			wJoint[i]->SetParentLinkFrame(robot1->GetBaseLink()->GetFrame()*SE3(Vec3(obsData[i][0], obsData[i][1], obsData[i][2])));
+			wJoint[i]->SetChildLink(obstacle[i]);
+			wJoint[i]->SetChildLinkFrame(SE3());
+			obstacle[i]->GetGeomInfo().SetColor(0.2, 0.2, 0.2);
+		}
+	}
 }

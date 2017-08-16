@@ -49,12 +49,17 @@ robot_current_data robot_state;
 //char hyu_data[30000];
 char hyu_data_flag;
 bool useSleep = false;
-
-
+///////////////////////////////////
+//string loc = "../../../data/render_traj/";
+//bool isJigConnectedToWorkcell = true;
+///////////////////////////////////
 int main(int argc, char **argv)
 {
 	Eigen::initParallel();
 	bool useVision = false;
+	/////////////////////////////////////////
+	bool loadVisionResult = true;
+	/////////////////////////////////////////
 	if (useVision)
 		useNoVisionTestSetting = false;
 	srand(time(NULL));
@@ -72,7 +77,10 @@ int main(int argc, char **argv)
 	////////////////////////////////////////////// setting environment (replacable from vision data)
 	if (!useVision)
 	{
-		environmentSetting_HYU2(true);				// temporary environment setting
+		if (loadVisionResult)
+			loadVisionResultFromText("../../../data/render_traj/");			// should be called after robotSetting, before initDynamics
+		else
+			environmentSetting_HYU2(true);				// temporary environment setting
 		initDynamics();								// initialize srLib				
 		isSystemAssembled = true;
 		robotManagerSetting();						// robot manager setting
@@ -87,7 +95,7 @@ int main(int argc, char **argv)
 		rManager2->setGripperPosition(gripInput);
 
 		cout << Trobotbase2 % robot2->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() << endl;
-
+		cout << "collision?  " << gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP() << endl;
 
 		// rrt
 		rrtSetting();
@@ -743,4 +751,3 @@ void communicationFunc(int argc, char **argv)
 			Sleep(50);
 	}
 }
-
