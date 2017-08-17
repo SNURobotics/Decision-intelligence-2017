@@ -132,7 +132,7 @@ void RRT_problemSetting_SingleRobot(Eigen::VectorXd init, vector<SE3> wayPoints,
 		RRTManagerVector[robotFlag - 1]->detachObject();
 	bool feas = RRTManagerVector[robotFlag - 1]->checkFeasibility(init);
 	if (feas != 0)
-		printf("initial point not feasible!!!\n");
+		printf("initial point not feasible!!! (collision)\n");
 	Eigen::VectorXd qtemp;
 	waypointFlag.resize(wayPoints.size());
 	qWaypoint[robotFlag - 1].resize(0);
@@ -526,7 +526,7 @@ int getObjectIdx(int robotIdx)
 		}
 	}
 	if (minIdx == -1 || mindist > 0.01)
-		printf("check if robot can grip object\n");
+		printf("\n\ncheck if robot can grip object!!!\n\n\n");
 	return minIdx;
 }
 
