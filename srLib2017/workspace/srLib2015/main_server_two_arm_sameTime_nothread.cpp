@@ -54,7 +54,7 @@ bool useSleep = false;
 int main(int argc, char **argv)
 {
 	Eigen::initParallel();
-	bool useVision = false;
+	bool useVision = true;
 	if (useVision)
 		useNoVisionTestSetting = false;
 	srand(time(NULL));

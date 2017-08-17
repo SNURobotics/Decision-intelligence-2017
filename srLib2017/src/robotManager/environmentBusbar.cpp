@@ -280,12 +280,12 @@ void BusBar_HYU::AssembleModel()
 	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/busbar_3ds/busbar.3ds");
 
 	m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[0].GetGeomInfo().SetDimension(Vec3(0.045, 0.05, 0.01)); //Vec3(0.045, 0.05, 0.01)
+	m_ObjCollision[0].GetGeomInfo().SetDimension(Vec3(0.055, 0.06, 0.01)); //original size: Vec3(0.045, 0.05, 0.01)
 	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.005)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[0]);
 	
 	m_ObjCollision[1].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[1].GetGeomInfo().SetDimension(Vec3(0.01, 0.05, 0.038)); //Vec3(0.01, 0.05, 0.038)
+	m_ObjCollision[1].GetGeomInfo().SetDimension(Vec3(0.02, 0.06, 0.038)); //original size: Vec3(0.01, 0.05, 0.038)
 	m_ObjCollision[1].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.01 + 0.019)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[1]);
 

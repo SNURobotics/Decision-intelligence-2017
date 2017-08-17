@@ -16,7 +16,7 @@ srSpace gSpace;
 
 // Environment
 JigAssem_QB_bar* jigAssem = new JigAssem_QB_bar(false);
-vector<BusBar_HYU*> busbar(3);
+vector<BusBar_HYU*> busbar(8);
 vector<Insert*> ctCase(0);
 vector<Object*> objects(busbar.size() + ctCase.size());
 vector<SE3> TobjectsInitSimul(objects.size());
