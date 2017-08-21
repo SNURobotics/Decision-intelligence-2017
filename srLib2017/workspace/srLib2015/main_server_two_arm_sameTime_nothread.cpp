@@ -202,7 +202,7 @@ void communicationFunc(int argc, char **argv)
 			bool liftObjects = true;
 			if (liftObjects)
 			{
-				Vec3 delta_z = Vec3(0.0, 0.0, 0.0001);
+				Vec3 delta_z = Vec3(0.0, 0.0, 0.00001);
 				int liftIter = 0;
 				while (gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP())
 				{
@@ -267,7 +267,7 @@ void communicationFunc(int argc, char **argv)
 
 			if (robotFlag == 1)
 			{
-				//rManager1->setJointVal(robot_state.robot_joint);
+				rManager1->setJointVal(robot_state.robot_joint);
 
 				serv.SendMessageToClient("T1");
 				if (useSleep)
@@ -275,7 +275,7 @@ void communicationFunc(int argc, char **argv)
 			}
 			else if (robotFlag == 2)
 			{
-				//rManager2->setJointVal(robot_state.robot_joint);
+				rManager2->setJointVal(robot_state.robot_joint);
 				//char pbuffer[100];
 				//char tmp_buffer[255];
 				//int digit_num = 5;
@@ -504,6 +504,7 @@ void communicationFunc(int argc, char **argv)
 			int robotFlag = atoi(temp_char);
 			sprintf(temp_char, "%c", hyu_data[2]);
 			int objectMaintainFlag = atoi(temp_char);
+			printf("\n\n\n");
 			if (objectMaintainFlag == 0)
 			{
 				// initialize all (object, robot)
@@ -574,7 +575,7 @@ void communicationFunc(int argc, char **argv)
 				if (!planTwoArmOkay)
 				{
 					// RRT problem setting for single arm planning
-					// decide initial point (read from robot for initial planning, use last joint val otherwise)
+					// decide initial point (read from robot for initial planning when startPlanningFromCurRobotState is true, use last joint val otherwise)
 					Eigen::VectorXd planningInit;
 					if (initialPlanning[robotFlag - 1])
 						planningInit = robot_state.robot_joint;

@@ -14,6 +14,14 @@ public:
 	rrtVertex(){
 		parentVertex = NULL;
 	}
+	//////////////////////////////////////////
+	//~rrtVertex() {
+	//	parentVertex = NULL;
+	//	posState.resize(0);
+	//	distance2parent = 0.0;
+	//	cost_bw_parent = 0.0;
+	//}
+	//////////////////////////////////////////
 	rrtVertex*					parentVertex;
 	Eigen::VectorXd				posState;
 	double						distance2parent;

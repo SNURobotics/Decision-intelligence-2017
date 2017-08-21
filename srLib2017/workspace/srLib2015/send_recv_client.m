@@ -13,7 +13,7 @@ I33 = reshape(eye(3),9,1);
 p = zeros(3,1);
 ft = zeros(6,1);
 
-client = tcpip('localhost',9000,'InputBufferSize',10000,'OutputBufferSize',10000 );
+client = tcpip('localhost',9000,'InputBufferSize',30000,'OutputBufferSize',30000 );
 fopen(client);
 
 while(1)

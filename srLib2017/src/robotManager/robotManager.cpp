@@ -631,6 +631,10 @@ Eigen::MatrixXd robotManager::getBodyJacobian(const Eigen::VectorXd & jointVal, 
 			}
 		}
 	}
+	////////////////////
+	temp.resize(0);
+	tempJoint.resize(0);
+	////////////////////
 	return Jb;
 }
 
@@ -836,7 +840,7 @@ Eigen::VectorXd robotManager::inverseKin(const vector<SE3>& T, vector<srLink*> l
 	// solve inverse kinematics numerically
 	if (T.size() != link.size() || T.size() != includeOri.size() || T.size() != offset.size())
 		printf("check number of input T, feature index, and includeOri\n");
-	vector<Eigen::VectorXd> qTrj(0);
+	//vector<Eigen::VectorXd> qTrj(0);
 	Eigen::VectorXd q(m_activeArmInfo->m_numJoint);
 	if (initGuess.size() == m_activeArmInfo->m_numJoint)
 		q = initGuess;
@@ -936,6 +940,12 @@ Eigen::VectorXd robotManager::inverseKin(const vector<SE3>& T, vector<srLink*> l
 	//if ((J*J.transpose).determinant() < 1e-5)
 	//	flag = invKinFlag::SINGULARITY;
 
+	/////////////////////////////
+	//J.resize(0, 0);
+	//error.resize(0);
+	//delta_q.resize(0);
+	//rJointVal.resize(0);
+	/////////////////////////////
 	return q;
 }
 

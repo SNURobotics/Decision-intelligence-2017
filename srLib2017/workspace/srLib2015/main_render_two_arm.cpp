@@ -402,6 +402,8 @@ void updateFuncLoadData()
 		printf("select to load data: ");
 		cin >> loadData;
 		printf("\n");
+		updateRobot1 = false;
+		updateRobot2 = false;
 	}
 		
 	if (!renderingStarted || loadData)

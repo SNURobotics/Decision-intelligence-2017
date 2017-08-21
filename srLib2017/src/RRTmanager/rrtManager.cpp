@@ -44,6 +44,13 @@ bool rrtManager::setState(const Eigen::VectorXd& state)
 
 void rrtManager::setStartandGoal(const Eigen::VectorXd& _start, const Eigen::VectorXd& _goal)
 {
+	/////////////////////////////////////
+	//rrtTree::iterator it;
+	//for (it = startTree.begin(); it != startTree.end(); ++it)
+	//	delete (*it);
+	//for (it = goalTree.begin(); it != goalTree.end(); ++it)
+	//	delete (*it);
+	/////////////////////////////////////
 	startTree.clear();
 	goalTree.clear();
 

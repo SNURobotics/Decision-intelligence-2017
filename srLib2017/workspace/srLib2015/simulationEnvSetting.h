@@ -206,6 +206,9 @@ void objectSetting()
 	testInit[1].SetOrientation(SO3());
 	for (int i = 0; i < 6; i++)
 		testInit[i + 2] = SE3(Vec3(0.0, 0.0, -(double)0.1*i)) * initBusbar;
+	// 17.08.18 
+	for (int i = 0; i < 8; i++)
+		testInit[i] = SE3(Vec3(0.0, 0.0, -(double)0.1*i)) * initBusbar;
 
 	for (unsigned int i = 0; i < busbar.size(); i++)
 	{
