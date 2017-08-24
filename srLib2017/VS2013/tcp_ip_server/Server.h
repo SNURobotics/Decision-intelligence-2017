@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <thread>
 
-#define BUFSIZE 30000
-#define BUFFER_SIZE 30000
+#define BUFSIZE 40000
+#define BUFFER_SIZE 40000
 
 static int sendValue;
 static char sendBuf[BUFSIZE];

@@ -107,6 +107,12 @@ void robotSetting(double height)
 	Trobotbase2 = robot2->GetBaseLink()->GetFrame();
 	TrobotbaseVector[0] = Trobotbase1;
 	TrobotbaseVector[1] = Trobotbase2;
+	
+	// 17.08.22 robot home pos change
+	robot1->homePos = Eigen::VectorXd(6);
+	robot1->homePos[0] = DEG2RAD(-25); robot1->homePos[1] = DEG2RAD(15); robot1->homePos[2] = DEG2RAD(-225); robot1->homePos[3] = DEG2RAD(90); robot1->homePos[4] = DEG2RAD(-100); robot1->homePos[5] = DEG2RAD(0);
+	robot2->homePos = Eigen::VectorXd(6);
+	robot2->homePos[0] = DEG2RAD(7); robot2->homePos[1] = DEG2RAD(-28); robot2->homePos[2] = DEG2RAD(-166); robot2->homePos[3] = DEG2RAD(77); robot2->homePos[4] = DEG2RAD(-57); robot2->homePos[5] = DEG2RAD(0);
 
 	homePosRobotVector[0] = robot1->homePos;
 	homePosRobotVector[1] = robot2->homePos;

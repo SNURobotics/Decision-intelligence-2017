@@ -34,7 +34,7 @@ vector<desired_dataset> hyu_desired_dataset;
 vision_data skku_dataset;
 robot_current_data robot_state;
 
-//char hyu_data[30000];
+//char hyu_data[40000];
 char hyu_data_flag;
 bool useSleep = false;
 
@@ -253,8 +253,8 @@ void communicationFunc(int argc, char **argv)
 
 				//char *temp_data = strtok(copy, "d");
 
-				//char* copy2 = (char*)malloc(sizeof(char) * 30000);
-				//memset(copy2, NULL, sizeof(char) * 30000);
+				//char* copy2 = (char*)malloc(sizeof(char) * 40000);
+				//memset(copy2, NULL, sizeof(char) * 40000);
 				//strcat(copy2, temp_data);
 				//strcat(copy2, "d");
 				//for (int i = 0; i < 12; i++)
@@ -336,15 +336,15 @@ void communicationFunc(int argc, char **argv)
 				}
 				else
 				{
-					char* tmp_Data1 = (char*)malloc(sizeof(char)*30000);
-					memset(tmp_Data1, NULL, sizeof(char)*30000);
+					char* tmp_Data1 = (char*)malloc(sizeof(char)*40000);
+					memset(tmp_Data1, NULL, sizeof(char)*40000);
 					strcat(tmp_Data1, "S");
 					sprintf(plus, "%dd", 1);
 					strcat(tmp_Data1, plus);
 					strcpy(plus, "");
 					strcpy(nway_char, "");
 
-					//char tmp_Data1[30000] = "S";
+					//char tmp_Data1[40000] = "S";
 					//sprintf(plus, "%dd", 1);
 					//strcat(tmp_Data1, plus);
 					//strcpy(plus, "");
@@ -389,15 +389,15 @@ void communicationFunc(int argc, char **argv)
 				else
 				{
 
-					char* tmp_Data2 = (char*)malloc(sizeof(char)*30000);
-					memset(tmp_Data2, NULL, sizeof(char)*30000);
+					char* tmp_Data2 = (char*)malloc(sizeof(char)*40000);
+					memset(tmp_Data2, NULL, sizeof(char)*40000);
 					strcat(tmp_Data2, "S");
 					sprintf(plus, "%dd", 2);
 					strcat(tmp_Data2, plus);
 					strcpy(plus, "");
 					strcpy(nway_char, "");
 
-					//char tmp_Data2[30000] = "S";
+					//char tmp_Data2[40000] = "S";
 					//sprintf(plus, "%dd", 2);
 					//strcat(tmp_Data2, plus);
 					//strcpy(plus, "");
@@ -531,13 +531,13 @@ void communicationFunc(int argc, char **argv)
 				{
 					RRTSolve_HYU_SingleRobot(attachobject, stepsize, robotFlag);
 
-					char* send_data = (char*)malloc(sizeof(char)*30000);
-					memset(send_data, NULL, sizeof(char) * 30000);
+					char* send_data = (char*)malloc(sizeof(char)*40000);
+					memset(send_data, NULL, sizeof(char) * 40000);
 					char *add = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
 					strcat(send_data, add);
 					delete(add);
 
-					//char send_data[30000];
+					//char send_data[40000];
 					//strcpy(send_data, "");
 					//strcat(send_data, makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag));
 

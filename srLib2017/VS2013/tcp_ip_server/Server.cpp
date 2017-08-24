@@ -2,7 +2,7 @@
 #include "Server.h"
 
 #define SEOUL "192.168.137.102"
-#define HANYANG "192.168.137.103"
+#define HANYANG "192.168.137.108"
 #define SUNGGEUN "192.168.137.104"
 #define ROBOT01 "192.168.137.100"
 #define ROBOT02 "192.168.137.101"
@@ -321,6 +321,7 @@ void Server::WaitServer()
 void Server::SendMessageToClient(char *buf)
 {
 	strcpy(sendBuf, buf);
+	printf("%s             ...sentData\n", sendBuf);
 	sendValue++;
 	if (sendValue > 2048)
 		sendValue = 0;
@@ -348,9 +349,9 @@ char *Server::RecevData()
 				
 			char *name = (char *)malloc(sizeof(char)*BUFFER_SIZE);
 			memset(name, NULL, sizeof(char)*BUFFER_SIZE);
-			printf(test_str[index]);
-			printf("             ...receivedData\n");
 			strcpy(name, test_str[index]);
+			printf(name);
+			printf("             ...receivedData\n");
 			int len = strlen(name);
 			if (name[len - 1] == '\n')
 				name[len - 1] = '\0';

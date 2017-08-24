@@ -136,8 +136,6 @@ int main(int argc, char **argv)
 	srand(time(NULL));
 	// Robot home position
 	robotSetting();
-	homePosRobotVector[0] = robot1->homePos;
-	homePosRobotVector[1] = robot2->homePos;
 	// environment
 	workspaceSetting();
 	objectSetting();
@@ -396,7 +394,7 @@ void updateFuncLoadData()
 	static vector<vector<Eigen::VectorXd>> objTraj(objects.size());
 	static vector<Eigen::VectorXd> robot1Traj(0);
 	static vector<Eigen::VectorXd> robot2Traj(0);
-	bool loadData = false;
+	int loadData = 0;
 	if (!renderingStarted || renderingFinished)
 	{
 		printf("select to load data: ");
@@ -414,12 +412,12 @@ void updateFuncLoadData()
 		robot2Traj = loadDataFromText(loc + "/jointVal2.txt", 6);
 		for (unsigned int k = 0; k < objects.size(); k++)
 			objTraj[k] = loadDataFromText(loc + "/object" + to_string(k) + ".txt", 6);
-		if (objTraj[0].size() == robot1Traj.size())
+		if (objTraj[0].size() == robot1Traj.size() && loadData == 1)
 		{
 			updateRobot1 = true;
 			lastJointVal_multi[0] = robot1Traj[robot1Traj.size() - 1];
 		}
-		if (objTraj[0].size() == robot2Traj.size())
+		if (objTraj[0].size() == robot2Traj.size() && loadData == 2)
 		{
 			updateRobot2 = true;
 			lastJointVal_multi[1] = robot2Traj[robot2Traj.size() - 1];

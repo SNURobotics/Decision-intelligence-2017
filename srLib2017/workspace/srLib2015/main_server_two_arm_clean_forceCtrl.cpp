@@ -166,8 +166,8 @@ vision_data skku_dataset;
 robot_current_data robot_state;
 
 
-char hyu_data[30000];
-//char copy[30000];
+char hyu_data[40000];
+//char copy[40000];
 //char *pbuffer;
 
 
@@ -997,7 +997,7 @@ void communicationFunc(int argc, char **argv)
 				}
 				else
 				{
-					char tmp_Data1[30000] = "S";
+					char tmp_Data1[40000] = "S";
 					sprintf(plus, "%dd", 1);
 					strcat(tmp_Data1, plus);
 					strcpy(plus, "");
@@ -1061,7 +1061,7 @@ void communicationFunc(int argc, char **argv)
 					
 				else
 				{
-					char tmp_Data2[30000] = "S";
+					char tmp_Data2[40000] = "S";
 					sprintf(plus, "%dd", 2);
 					strcat(tmp_Data2, plus);
 					strcpy(plus, "");
@@ -1214,7 +1214,7 @@ void communicationFunc(int argc, char **argv)
 					isRobotState = false;
 					isWaypoint = false;
 					//m.unlock();
-					char send_data[30000];
+					char send_data[40000];
 					strcpy(send_data, "");
 					strcat(send_data, makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag));
 					//char* send_data = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
@@ -1518,7 +1518,7 @@ void updateFuncPlanning_multi_forceCtrl()
 					}
 					if (writeCnt[i] == renderTraj_multi[i][idx[i]].size())
 					{ 
-						char send_data[30000];
+						char send_data[40000];
 						strcpy(send_data, "");
 						strcat(send_data, makeForceResult(FTtraj[i], i));
 						printf(send_data);

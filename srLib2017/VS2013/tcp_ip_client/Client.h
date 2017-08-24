@@ -5,11 +5,11 @@
 #include <thread>
 
 #ifndef BUFSIZE
-#define BUFSIZE 30000
+#define BUFSIZE 40000
 #endif // !BUFSIZE
 
 #ifndef BUFFER_SIZE
-#define BUFFER_SIZE 30000
+#define BUFFER_SIZE 40000
 #endif // !BUFFER_SIZE
 
 static char recv_str[BUFSIZE + 1];

@@ -229,7 +229,7 @@ void RRTSolve_HYU_SingleRobot(vector<bool> attachObject, vector<double> stepsize
 			stepsize[i] = 0.01;
 		/////////////////////
 		RRTManagerVector[robotFlag - 1]->execute(stepsize[i]);
-		tempTraj = RRTManagerVector[robotFlag - 1]->extractPath(40);
+		tempTraj = RRTManagerVector[robotFlag - 1]->extractPath(60);
 
 		// check collision
 		for (unsigned int j = 0; j < tempTraj.size(); j++)

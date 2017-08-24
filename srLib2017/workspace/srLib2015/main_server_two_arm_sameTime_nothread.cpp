@@ -46,9 +46,11 @@ vector<desired_dataset> hyu_desired_dataset;
 vision_data skku_dataset;
 robot_current_data robot_state;
 
-//char hyu_data[30000];
+//char hyu_data[40000];
 char hyu_data_flag;
 bool useSleep = false;
+int numR1 = 0;
+int numR2 = 0;
 ///////////////////////////////////
 //string loc = "../../../data/render_traj/";
 //bool isJigConnectedToWorkcell = true;
@@ -57,7 +59,7 @@ int main(int argc, char **argv)
 {
 	Eigen::initParallel();
 
-	bool useVision = false;
+	bool useVision = true;
 	/////////////////////////////////////////
 	bool loadVisionResult = true;
 	/////////////////////////////////////////
@@ -82,6 +84,7 @@ int main(int argc, char **argv)
 			loadVisionResultFromText("../../../data/render_traj/");			// should be called after robotSetting, before initDynamics
 		else
 			environmentSetting_HYU2(true);				// temporary environment setting
+
 		initDynamics();								// initialize srLib				
 		isSystemAssembled = true;
 		robotManagerSetting();						// robot manager setting
@@ -164,7 +167,7 @@ void communicationFunc(int argc, char **argv)
 				copy[p] = hyu_data[p];
 			serv.SendMessageToClient(copy);
 			Sleep(50);
-			printf("%s\n", hyu_data);
+			//printf("%s\n", hyu_data);
 			readSKKUvision(hyu_data, skku_dataset);
 
 			int bNum = 0;
@@ -259,6 +262,7 @@ void communicationFunc(int argc, char **argv)
 			for (unsigned int p = 0; p <= strlen(hyu_data); p++)
 				copy[p] = hyu_data[p];
 			serv.SendMessageToClient(copy);
+			Sleep((double) rand()/RAND_MAX * 100);
 			if (useSleep)
 				Sleep(50);
 			printf("%s\n", hyu_data);
@@ -272,6 +276,8 @@ void communicationFunc(int argc, char **argv)
 				serv.SendMessageToClient("T1");
 				if (useSleep)
 					Sleep(50);
+				numR1 += 1;
+				//printf("\nnumber of R1: %d\n\n", numR1);
 			}
 			else if (robotFlag == 2)
 			{
@@ -288,8 +294,8 @@ void communicationFunc(int argc, char **argv)
 
 				//char *temp_data = strtok(copy, "d");
 
-				//char* copy2 = (char*)malloc(sizeof(char) * 30000);
-				//memset(copy2, NULL, sizeof(char) * 30000);
+				//char* copy2 = (char*)malloc(sizeof(char) * 40000);
+				//memset(copy2, NULL, sizeof(char) * 40000);
 				//strcat(copy2, temp_data);
 				//strcat(copy2, "d");
 				//for (int i = 0; i < 12; i++)
@@ -314,6 +320,8 @@ void communicationFunc(int argc, char **argv)
 				serv.SendMessageToClient("T2");
 				if (useSleep)
 					Sleep(50);
+				numR2 += 1;
+				//printf("\nnumber of R2: %d\n\n", numR2);
 			}
 			else
 				printf("Wrong robot flag is given (Flag = 'R')!!!!!!\n");
@@ -336,14 +344,14 @@ void communicationFunc(int argc, char **argv)
 
 			if (hyu_data_output.first == 1 || hyu_data_output.first == 2)
 			{
-				if (hyu_data_output.second[0] == 1 || hyu_data_output.second[0] == 2 || hyu_data_output.second[0] == 3)
+				printf("\n\n");
+				if (hyu_data_output.second[0] != 0)
 				{
 					// send to robot
 					serv.SendMessageToClient(copy);
 					if (useSleep)
 						Sleep(50);
 					printf(copy);
-					printf("\n");
 					if (hyu_data_output.second[0] == 1) // when gripper input comes
 						gripObjectIdx[hyu_data_output.first - 1] = getObjectIdx(hyu_data_output.first);
 				}
@@ -351,7 +359,11 @@ void communicationFunc(int argc, char **argv)
 				{
 					char temp_char[3];
 					sprintf(temp_char, "P%d", hyu_data_output.first);
-					serv.SendMessageToClient(temp_char);
+					for (int iii = 0; iii < 5; iii++)
+					{
+						serv.SendMessageToClient(temp_char);
+						Sleep(50);
+					}
 					if (useSleep)
 						Sleep(50);
 				}
@@ -387,15 +399,15 @@ void communicationFunc(int argc, char **argv)
 					}
 					else
 					{
-						char* tmp_Data1 = (char*)malloc(sizeof(char) * 30000);
-						memset(tmp_Data1, NULL, sizeof(char) * 30000);
+						char* tmp_Data1 = (char*)malloc(sizeof(char) * 40000);
+						memset(tmp_Data1, NULL, sizeof(char) * 40000);
 						strcat(tmp_Data1, "S");
 						sprintf(plus, "%dd", 1);
 						strcat(tmp_Data1, plus);
 						strcpy(plus, "");
 						strcpy(nway_char, "");
 
-						//char tmp_Data1[30000] = "S";
+						//char tmp_Data1[40000] = "S";
 						//sprintf(plus, "%dd", 1);
 						//strcat(tmp_Data1, plus);
 						//strcpy(plus, "");
@@ -423,7 +435,7 @@ void communicationFunc(int argc, char **argv)
 
 						serv.SendMessageToClient(send_data1);
 						Sleep(50);
-						printf(send_data1);
+						//printf(send_data1);
 						printf("\n");
 						free(send_data1);
 						free(tmp_Data1);
@@ -440,15 +452,15 @@ void communicationFunc(int argc, char **argv)
 					else
 					{
 
-						char* tmp_Data2 = (char*)malloc(sizeof(char) * 30000);
-						memset(tmp_Data2, NULL, sizeof(char) * 30000);
+						char* tmp_Data2 = (char*)malloc(sizeof(char) * 40000);
+						memset(tmp_Data2, NULL, sizeof(char) * 40000);
 						strcat(tmp_Data2, "S");
 						sprintf(plus, "%dd", 2);
 						strcat(tmp_Data2, plus);
 						strcpy(plus, "");
 						strcpy(nway_char, "");
 
-						//char tmp_Data2[30000] = "S";
+						//char tmp_Data2[40000] = "S";
 						//sprintf(plus, "%dd", 2);
 						//strcat(tmp_Data2, plus);
 						//strcpy(plus, "");
@@ -485,7 +497,7 @@ void communicationFunc(int argc, char **argv)
 
 						serv.SendMessageToClient(send_data2);
 						Sleep(50);
-						printf(send_data2);
+						//printf(send_data2);
 						printf("\n");
 						free(send_data2);
 						free(tmp_Data2);
@@ -598,7 +610,7 @@ void communicationFunc(int argc, char **argv)
 					{
 						if (waypointFlag[i])
 						{
-							stepsize.push_back(0.1);
+							stepsize.push_back(0.125);
 							attachobject.push_back(attachObject[i]);
 						}
 					}
@@ -610,18 +622,23 @@ void communicationFunc(int argc, char **argv)
 					{
 						RRTSolve_HYU_SingleRobot(attachobject, stepsize, robotFlag);
 
-						char* send_data = (char*)malloc(sizeof(char) * 30000);
-						memset(send_data, NULL, sizeof(char) * 30000);
+						char* send_data = (char*)malloc(sizeof(char) * 40000);
+						memset(send_data, NULL, sizeof(char) * 40000);
 						char *add = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
 						strcat(send_data, add);
 						delete(add);
 
-						//char send_data[30000];
+						//char send_data[40000];
 						//strcpy(send_data, "");
 						//strcat(send_data, makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag));
 
 						//char* send_data = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
-						serv.SendMessageToClient(send_data);
+						for (int iii = 0; iii < 3; iii++)
+						{
+							serv.SendMessageToClient(send_data);
+							Sleep(50);
+						}
+						//serv.SendMessageToClient(send_data);
 						if (useSleep)
 							Sleep(50);
 						printf("%s\n", send_data);
@@ -703,22 +720,22 @@ void communicationFunc(int argc, char **argv)
 						{
 							RRTSolve_HYU_multiRobot(attachobject_twoArm, stepsize);
 
-							char* send_data = (char*)malloc(sizeof(char) * 30000);
+							char* send_data = (char*)malloc(sizeof(char) * 40000);
 							for (int i = 0; i < 2; i++)
 							{
-								memset(send_data, NULL, sizeof(char) * 30000);
+								memset(send_data, NULL, sizeof(char) * 40000);
 								char *add = makeJointCommand_MultiRobot(renderTraj_twoArm, hyu_desired_dataset, i + 1);
 								strcat(send_data, add);
 								delete(add);
 
-								//char send_data[30000];
+								//char send_data[40000];
 								//strcpy(send_data, "");
 								//strcat(send_data, makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag));
 
 								//char* send_data = makeJointCommand_SingleRobot(renderTraj_multi[robotFlag - 1], hyu_desired_dataset[robotFlag - 1], robotFlag);
 								serv.SendMessageToClient(send_data);
 								Sleep(50);
-								printf("%s\n", send_data);
+								//printf("%s\n", send_data);
 							}
 							
 							free(send_data);
