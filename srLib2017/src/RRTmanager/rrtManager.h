@@ -31,6 +31,7 @@ public:
 typedef set<rrtVertex*>		rrtTree;
 
 class rrtConstraint;
+class rrtVectorField;
 
 class rrtManager
 {
@@ -60,11 +61,14 @@ public:
 	void									clearConstraints();
 
 	// vector field
+	void									checkVectorFieldFeasibility();
+	void									addVectorField(rrtVectorField* vectorField);
 	Eigen::VectorXd							getVectorField(const Eigen::VectorXd& pos1);
-	enum VECTOR_FIELD {TRAJFOLLOW, RIVER_2DOF};
-	void									setTrajFollowVectorField(const vector<Eigen::VectorXd>& refTraj);
-	void									setRiver2dofVectorField();
-	Eigen::VectorXd							trajFollowVectorField(const Eigen::VectorXd& pos1, const vector<Eigen::VectorXd>& refTraj);
+	void									setVectorFieldWeight(double weight);
+	//enum VECTOR_FIELD {TRAJFOLLOW, RIVER_2DOF};
+	//void									setTrajFollowVectorField(const vector<Eigen::VectorXd>& refTraj);
+	//void									setRiver2dofVectorField();
+	//Eigen::VectorXd							trajFollowVectorField(const Eigen::VectorXd& pos1, const vector<Eigen::VectorXd>& refTraj);
 	double									getUpstreamCost(const Eigen::VectorXd& vertPos1, const Eigen::VectorXd& vertPos2, int n = 10);
 
 protected:
@@ -108,8 +112,10 @@ protected:
 	rrtVertex*								connectedVertex2;
 
 	bool									_vectorFieldExist;
-	VECTOR_FIELD							_vectorField;
-	vector<Eigen::VectorXd>					_refTraj;
+	//VECTOR_FIELD							_vectorField;
+	vector<rrtVectorField*>					_vectorFields;
+	double									_vectorFieldWeight;
+	//vector<Eigen::VectorXd>					_refTraj;
 	rrtConstraint*							rrtConstraints;
 };
 
@@ -124,6 +130,17 @@ public:
 	virtual		Eigen::VectorXd			getConstraintVector(const Eigen::VectorXd& jointVal) = 0;
 	virtual		Eigen::MatrixXd			getConstraintJacobian(const Eigen::VectorXd& jointVal) = 0;
 	virtual		void					project2ConstraintManifold(Eigen::VectorXd& jointVal) = 0;
+};
+
+class rrtVectorField
+{
+public:
+	rrtVectorField();
+	~rrtVectorField();
+
+	virtual			Eigen::VectorXd			getVectorField(const Eigen::VectorXd& pos1) = 0;
+	virtual			void					checkFeasibility(int nDim) = 0;
+	bool			_isFeasible;
 };
 
 //// planning trajectory of object (Configuration space is SE(3))

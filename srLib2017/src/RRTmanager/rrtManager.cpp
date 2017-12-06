@@ -6,6 +6,8 @@ rrtManager::rrtManager()
 {
 	_vectorFieldExist = false;
 	rrtConstraints = NULL;
+	_vectorFields.resize(0);
+	_vectorFieldWeight = 0.7;
 }
 
 
@@ -78,6 +80,8 @@ void rrtManager::execute(double _step_size)
 	int iter = 0;
 	bool bConnected = false;
 
+	// vector field setting
+	checkVectorFieldFeasibility();
 	// print options
 	bool printIter = true;
 	bool printFinish = true;
@@ -177,9 +181,9 @@ Eigen::VectorXd rrtManager::extendStepSize(const Eigen::VectorXd& vertPos1, cons
 	Eigen::VectorXd temp_vertex_pos;
 	if (!_vectorFieldExist)
 	{
-		if (dir_2_random.norm() < criterion) 
+		if (dir_2_random.norm() < criterion)
 			temp_vertex_pos = vertPos2;
-		else 
+		else
 		{
 			dir_2_random.normalize();
 			temp_vertex_pos = vertPos1 + step_size* dir_2_random;
@@ -187,36 +191,30 @@ Eigen::VectorXd rrtManager::extendStepSize(const Eigen::VectorXd& vertPos1, cons
 	}
 	else
 	{
-		double weight = 0.7;
 		Eigen::VectorXd vec = getVectorField(vertPos1);
 		if (dir_2_random.norm() > 0)
 			dir_2_random.normalize();
 		if (vec.norm() > 0)
 			vec.normalize();
 		bool plusVec;
-		if (_vectorField == VECTOR_FIELD::TRAJFOLLOW)
-			plusVec = true;
+		if (_isTreeSwaped)
+		{
+			if (tree == TARGET_TREE::TREE1)
+				plusVec = false;
+			else
+				plusVec = true;
+		}
 		else
 		{
-			if (_isTreeSwaped)
-			{
-				if (tree == TARGET_TREE::TREE1)
-					plusVec = false;
-				else
-					plusVec = true;
-			}
+			if (tree == TARGET_TREE::TREE1)
+				plusVec = true;
 			else
-			{
-				if (tree == TARGET_TREE::TREE1)
-					plusVec = true;
-				else
-					plusVec = false;
-			}
+				plusVec = false;
 		}
 		if (plusVec)
-			vec = dir_2_random + weight * vec;
+			vec = dir_2_random + _vectorFieldWeight * vec;
 		else
-			vec = dir_2_random - weight * vec;
+			vec = dir_2_random - _vectorFieldWeight * vec;
 		if (vec.norm() > 0)
 			vec.normalize();
 		temp_vertex_pos = vertPos1 + step_size * vec;
@@ -618,38 +616,38 @@ list<Eigen::VectorXd> rrtManager::fillingPath(list<rrtVertex*>& path)
 	
 }
 
-void rrtManager::setTrajFollowVectorField(const vector<Eigen::VectorXd>& refTraj)
-{
-	bool isFeasible = true;
-	for (unsigned int i = 0; i < refTraj.size(); i++)
-	{
-		if (refTraj[i].size() != nDim)
-		{
-			isFeasible = false;
-		}
-		if (!isFeasible)
-			break;
-	}
-	if (isFeasible)
-	{
-		_vectorField = VECTOR_FIELD::TRAJFOLLOW;
-		_refTraj = refTraj;
-		_vectorFieldExist = true;
-	}
-	else
-		printf("check reference trajectory !!!\n");
-}
+//void rrtManager::setTrajFollowVectorField(const vector<Eigen::VectorXd>& refTraj)
+//{
+//	bool isFeasible = true;
+//	for (unsigned int i = 0; i < refTraj.size(); i++)
+//	{
+//		if (refTraj[i].size() != nDim)
+//		{
+//			isFeasible = false;
+//		}
+//		if (!isFeasible)
+//			break;
+//	}
+//	if (isFeasible)
+//	{
+//		_vectorField = VECTOR_FIELD::TRAJFOLLOW;
+//		_refTraj = refTraj;
+//		_vectorFieldExist = true;
+//	}
+//	else
+//		printf("check reference trajectory !!!\n");
+//}
 
-void rrtManager::setRiver2dofVectorField()
-{
-	if (nDim == 2)
-	{
-		_vectorField = VECTOR_FIELD::RIVER_2DOF;
-		_vectorFieldExist = true;
-	}
-	else
-		_vectorFieldExist = false;
-}
+//void rrtManager::setRiver2dofVectorField()
+//{
+//	if (nDim == 2)
+//	{
+//		_vectorField = VECTOR_FIELD::RIVER_2DOF;
+//		_vectorFieldExist = true;
+//	}
+//	else
+//		_vectorFieldExist = false;
+//}
 
 void rrtManager::printTree(TARGET_TREE tree)
 {
@@ -680,51 +678,87 @@ void rrtManager::printTree(TARGET_TREE tree)
 	saveDataToText(treeData, fileName);
 }
 
-Eigen::VectorXd rrtManager::getVectorField(const Eigen::VectorXd & pos1)
+void rrtManager::checkVectorFieldFeasibility()
 {
-	if (_vectorField == VECTOR_FIELD::TRAJFOLLOW)
-		return trajFollowVectorField(pos1, _refTraj);
-	else if (_vectorField == VECTOR_FIELD::RIVER_2DOF)
+	for (unsigned int i = 0; i < _vectorFields.size(); i++)
 	{
-		Eigen::VectorXd vec = Eigen::VectorXd::Zero(2);
-		if (pos1(1) < 0.6*(upperBound(1) - lowerBound(1)) + lowerBound(1) && pos1(1) > 0.4*(upperBound(1) - lowerBound(1)) + lowerBound(1))
-		{
-			vec(0) = 1.0;
-		}
-		else
-		{
-			vec(0) = 0.2;
-		}
-		return vec;
+		_vectorFields[i]->checkFeasibility(nDim);
+			if(_vectorFields[i]->_isFeasible)
+				_vectorFieldExist = true;
 	}
-	else
-		return Eigen::VectorXd::Zero(pos1.size());
+		
 }
 
-Eigen::VectorXd rrtManager::trajFollowVectorField(const Eigen::VectorXd & pos1, const vector<Eigen::VectorXd>& refTraj)
+void rrtManager::addVectorField(rrtVectorField * vectorField)
 {
-	Eigen::VectorXd vec(nDim);
-	double dist;
-	unsigned int minIdx = 0;
-	double minDist;
-	for (unsigned int i = 0; i < refTraj.size(); i++)
-	{
-		dist = (pos1 - refTraj[i]).norm();
-		if (i == 0)
-			minDist = dist;
-		else
-		{
-			if (dist < minDist)
-			{
-				minDist = dist;
-				minIdx = i;
-			}
-		}
-	}
-	vec = refTraj[minIdx] - pos1;
-	//vec.normalize();
-	return vec;
+	_vectorFields.push_back(vectorField);
 }
+
+Eigen::VectorXd rrtManager::getVectorField(const Eigen::VectorXd & pos1)
+{
+	Eigen::VectorXd vec = Eigen::VectorXd::Zero(pos1.size());
+	Eigen::VectorXd temp;
+	for (unsigned int i = 0; i < _vectorFields.size(); i++)
+	{
+		temp = _vectorFields[i]->getVectorField(pos1);
+		if (temp.size() == pos1.size())
+		{
+			vec += temp;
+			//if (_vectorFields[i])
+		}
+			
+	}
+	return vec;
+
+	//if (_vectorField == VECTOR_FIELD::TRAJFOLLOW)
+	//	return trajFollowVectorField(pos1, _refTraj);
+	//else if (_vectorField == VECTOR_FIELD::RIVER_2DOF)
+	//{
+	//	Eigen::VectorXd vec = Eigen::VectorXd::Zero(2);
+	//	if (pos1(1) < 0.6*(upperBound(1) - lowerBound(1)) + lowerBound(1) && pos1(1) > 0.4*(upperBound(1) - lowerBound(1)) + lowerBound(1))
+	//	{
+	//		vec(0) = 1.0;
+	//	}
+	//	else
+	//	{
+	//		vec(0) = 0.2;
+	//	}
+	//	return vec;
+	//}
+	//else
+	//	return Eigen::VectorXd::Zero(pos1.size());
+}
+
+void rrtManager::setVectorFieldWeight(double weight)
+{
+	if (weight > 0)
+		_vectorFieldWeight = weight;
+}
+
+//Eigen::VectorXd rrtManager::trajFollowVectorField(const Eigen::VectorXd & pos1, const vector<Eigen::VectorXd>& refTraj)
+//{
+//	Eigen::VectorXd vec(nDim);
+//	double dist;
+//	unsigned int minIdx = 0;
+//	double minDist;
+//	for (unsigned int i = 0; i < refTraj.size(); i++)
+//	{
+//		dist = (pos1 - refTraj[i]).norm();
+//		if (i == 0)
+//			minDist = dist;
+//		else
+//		{
+//			if (dist < minDist)
+//			{
+//				minDist = dist;
+//				minIdx = i;
+//			}
+//		}
+//	}
+//	vec = refTraj[minIdx] - pos1;
+//	//vec.normalize();
+//	return vec;
+//}
 
 double rrtManager::getUpstreamCost(const Eigen::VectorXd & vertPos1, const Eigen::VectorXd & vertPos2, int n /* = 10*/)
 {
@@ -898,3 +932,11 @@ rrtConstraint::~rrtConstraint()
 //	return SE3path;
 //}
 
+rrtVectorField::rrtVectorField()
+{
+	_isFeasible = true;
+}
+
+rrtVectorField::~rrtVectorField()
+{
+}
