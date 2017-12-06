@@ -140,5 +140,8 @@
     <ClCompile Include="..\..\..\workspace\srLib2015\main_check_peginhole.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\test_vfrrt.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

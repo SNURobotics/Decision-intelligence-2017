@@ -177,7 +177,9 @@ public:
 	Eigen::VectorXd				inverseKin(const vector<SE3>& T, vector<srLink*> link, vector<bool> includeOri, vector<SE3> offset, int& flag, Eigen::VectorXd initGuess = (Eigen::VectorXd()), int maxIter = (500), invKinAlg alg = (invKinAlg::NR), invKinMet metric = (invKinMet::DG));
 	Eigen::VectorXd				inverseKin(const SE3& T, srLink* link, bool includeOri, SE3 offset, int& flag, Eigen::VectorXd initGuess = (Eigen::VectorXd()), int maxIter = (500), invKinAlg alg = (invKinAlg::NR), invKinMet metric = (invKinMet::DG));
 	
-	double						manipulability(const Eigen::VectorXd& jointVal, srLink* link, manipKind kind = manipKind::INVCOND);
+	double						manipulability(const Eigen::VectorXd& jointVal, srLink* link, manipKind kind = manipKind::MIN);
+	Eigen::VectorXd				manipulabilityGradient(const Eigen::VectorXd& jointVal, srLink* link, manipKind kind = manipKind::MIN);
+	Eigen::VectorXd				manipulabilityGradient(const Eigen::VectorXd& jointVal, srLink* link, double& manipulability, manipKind kind = manipKind::MIN);
 
 	// Collision
 	bool						checkCollision();

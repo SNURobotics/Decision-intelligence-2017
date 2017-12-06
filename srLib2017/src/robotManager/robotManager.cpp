@@ -986,6 +986,49 @@ double robotManager::manipulability(const Eigen::VectorXd & jointVal, srLink* li
 	return manip;
 }
 
+Eigen::VectorXd robotManager::manipulabilityGradient(const Eigen::VectorXd & jointVal, srLink * link, manipKind kind)
+{
+	double manip;
+	return manipulabilityGradient(jointVal, link, manip, kind);
+}
+
+Eigen::VectorXd robotManager::manipulabilityGradient(const Eigen::VectorXd & jointVal, srLink * link, double & manipulability, manipKind kind)
+{
+	Eigen::MatrixXd Jb = getBodyJacobian(jointVal, link);
+	Eigen::VectorXd manipGrad = Eigen::VectorXd::Zero(jointVal.size());
+	switch (kind)
+	{
+	case manipKind::INVCOND:
+		// TO DO
+		break;
+	case manipKind::MIN:
+	{
+		Eigen::JacobiSVD<Eigen::MatrixXd> svd(Jb, Eigen::ComputeThinU | Eigen::ComputeThinV);
+		Eigen::VectorXd um, vm;
+		um = svd.matrixU().col(min(Jb.rows(), Jb.cols()) - 1);
+		vm = svd.matrixV().col(min(Jb.rows(), Jb.cols()) - 1);
+		Eigen::VectorXd temp = Eigen::VectorXd::Zero(jointVal.size());
+		Eigen::MatrixXd dJdq_i = Eigen::MatrixXd::Zero(Jb.rows(), Jb.cols());
+		for (unsigned int i = 0; i < jointVal.size(); i++)
+		{
+			if (i > 0)
+				temp[i - 1] = 0.0;
+			temp[i] = 1.0;
+			dJdq_i = getBodyJacobianDot(jointVal, temp, link);
+			manipGrad[i] = um.dot(dJdq_i*vm);
+		}
+		manipulability = svd.singularValues()[min(Jb.rows(), Jb.cols()) - 1];
+		break;
+	}
+	case manipKind::VOL:
+		// TO DO
+		break;
+	default:
+		break;
+	}
+	return manipGrad;
+}
+
 bool robotManager::checkCollision()
 {
 	// true: collision occurs

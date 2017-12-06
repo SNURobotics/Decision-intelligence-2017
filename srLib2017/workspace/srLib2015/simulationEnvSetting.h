@@ -57,11 +57,15 @@ bool isSystemAssembled = false;
 // modelling functions
 void workspaceSetting(double height = 0.0);
 void robotSetting(double height = 0.0);
+void robot1Setting(double height = 0.0);
+void robot2Setting(double height = 0.0);
 void environmentSetting_HYU2(bool connect, bool fixJigPos = false);
 void objectSetting();
 void connectJigToWorkCell();
 void initDynamics();
 void robotManagerSetting();
+void robotManager1Setting();
+void robotManager2Setting();
 // communication function
 void setEnviromentFromVision(const vision_data& skku_dataset, int& bNum, int& cNum);
 void loadVisionResultFromText(string loc);
@@ -83,39 +87,59 @@ void workspaceSetting(double height)
 
 void robotSetting(double height)
 {
+	robot1Setting(height);
+	robot2Setting(height);
+
+	robotVector[0] = robot1;
+	robotVector[1] = robot2;
+	TrobotbaseVector[0] = Trobotbase1;
+	TrobotbaseVector[1] = Trobotbase2;
+	homePosRobotVector[0] = robot1->homePos;
+	homePosRobotVector[1] = robot2->homePos;
+}
+
+void robot1Setting(double height)
+{
 	gSpace.AddSystem((srSystem*)robot1);
-	gSpace.AddSystem((srSystem*)robot2);
 	//robot1->GetBaseLink()->SetFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 0.4005 - 0.12, 1.972 + height)));
-	robot2->GetBaseLink()->SetFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 1.6005 + 0.12, 1.972 + height)));
 	robot1->GetBaseLink()->SetFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 0.4005, 1.972 + height)));
-	//robot2->GetBaseLink()->SetFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 1.6005, 1.972 + height)));
 	robot1->SetActType(srJoint::ACTTYPE::TORQUE);
-	robot2->SetActType(srJoint::ACTTYPE::TORQUE);
+	
 	vector<int> gpIdx(2);
 	gpIdx[0] = 0;
 	gpIdx[1] = 1;
 	robot1->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
-	robot2->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
+	
 	gpIdx[0] = 2;
 	gpIdx[1] = 3;
 	robot1->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
-	robot2->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
-
-	robotVector[0] = robot1;
-	robotVector[1] = robot2;
+	
 	Trobotbase1 = robot1->GetBaseLink()->GetFrame();
-	Trobotbase2 = robot2->GetBaseLink()->GetFrame();
-	TrobotbaseVector[0] = Trobotbase1;
-	TrobotbaseVector[1] = Trobotbase2;
 	
 	// 17.08.22 robot home pos change
 	robot1->homePos = Eigen::VectorXd(6);
 	robot1->homePos[0] = DEG2RAD(-25); robot1->homePos[1] = DEG2RAD(15); robot1->homePos[2] = DEG2RAD(-225); robot1->homePos[3] = DEG2RAD(90); robot1->homePos[4] = DEG2RAD(-100); robot1->homePos[5] = DEG2RAD(0);
+}
+
+void robot2Setting(double height)
+{
+	gSpace.AddSystem((srSystem*)robot2);
+	robot2->GetBaseLink()->SetFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 1.6005 + 0.12, 1.972 + height)));
+	//robot2->GetBaseLink()->SetFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0205, 1.6005, 1.972 + height)));
+	robot2->SetActType(srJoint::ACTTYPE::TORQUE);
+	vector<int> gpIdx(2);
+	gpIdx[0] = 0;
+	gpIdx[1] = 1;
+	robot2->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
+	gpIdx[0] = 2;
+	gpIdx[1] = 3;
+	robot2->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
+
+	Trobotbase2 = robot2->GetBaseLink()->GetFrame();
+	
+	// 17.08.22 robot home pos change
 	robot2->homePos = Eigen::VectorXd(6);
 	robot2->homePos[0] = DEG2RAD(7); robot2->homePos[1] = DEG2RAD(-28); robot2->homePos[2] = DEG2RAD(-166); robot2->homePos[3] = DEG2RAD(77); robot2->homePos[4] = DEG2RAD(-57); robot2->homePos[5] = DEG2RAD(0);
-
-	homePosRobotVector[0] = robot1->homePos;
-	homePosRobotVector[1] = robot2->homePos;
 }
 
 void environmentSetting_HYU2(bool connect, bool fixJigPos)
@@ -270,14 +294,22 @@ void initDynamics()
 void robotManagerSetting()
 {
 	// robot 1
-	rManager1 = new indyRobotManager(robot1, &gSpace);
-
+	robotManager1Setting();
 	// robot 2
-	rManager2 = new indyRobotManager(robot2, &gSpace);
-
+	robotManager2Setting();
 
 	rManagerVector[0] = rManager1;
 	rManagerVector[1] = rManager2;
+}
+
+void robotManager1Setting()
+{
+	rManager1 = new indyRobotManager(robot1, &gSpace);
+}
+
+void robotManager2Setting()
+{
+	rManager2 = new indyRobotManager(robot2, &gSpace);
 }
 
 void setEnviromentFromVision(const vision_data & skku_dataset, int& bNum, int& cNum)

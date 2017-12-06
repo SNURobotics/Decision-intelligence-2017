@@ -63,6 +63,7 @@ public:
 	// vector field
 	void									checkVectorFieldFeasibility();
 	void									addVectorField(rrtVectorField* vectorField);
+	void									clearVectorField();
 	Eigen::VectorXd							getVectorField(const Eigen::VectorXd& pos1);
 	void									setVectorFieldWeight(double weight);
 	//enum VECTOR_FIELD {TRAJFOLLOW, RIVER_2DOF};
@@ -141,6 +142,7 @@ public:
 	virtual			Eigen::VectorXd			getVectorField(const Eigen::VectorXd& pos1) = 0;
 	virtual			void					checkFeasibility(int nDim) = 0;
 	bool			_isFeasible;
+	double			_C;		// parameter to control the scale of vector field
 };
 
 //// planning trajectory of object (Configuration space is SE(3))

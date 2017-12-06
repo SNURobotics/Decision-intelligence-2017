@@ -200,7 +200,7 @@ Eigen::VectorXd rrtManager::extendStepSize(const Eigen::VectorXd& vertPos1, cons
 		if (_isTreeSwaped)
 		{
 			if (tree == TARGET_TREE::TREE1)
-				plusVec = false;
+				plusVec = false;	// false
 			else
 				plusVec = true;
 		}
@@ -209,7 +209,7 @@ Eigen::VectorXd rrtManager::extendStepSize(const Eigen::VectorXd& vertPos1, cons
 			if (tree == TARGET_TREE::TREE1)
 				plusVec = true;
 			else
-				plusVec = false;
+				plusVec = false;	// false
 		}
 		if (plusVec)
 			vec = dir_2_random + _vectorFieldWeight * vec;
@@ -694,6 +694,12 @@ void rrtManager::addVectorField(rrtVectorField * vectorField)
 	_vectorFields.push_back(vectorField);
 }
 
+void rrtManager::clearVectorField()
+{
+	_vectorFieldExist = false;
+	_vectorFields.resize(0);
+}
+
 Eigen::VectorXd rrtManager::getVectorField(const Eigen::VectorXd & pos1)
 {
 	Eigen::VectorXd vec = Eigen::VectorXd::Zero(pos1.size());
@@ -704,9 +710,7 @@ Eigen::VectorXd rrtManager::getVectorField(const Eigen::VectorXd & pos1)
 		if (temp.size() == pos1.size())
 		{
 			vec += temp;
-			//if (_vectorFields[i])
 		}
-			
 	}
 	return vec;
 
@@ -935,6 +939,7 @@ rrtConstraint::~rrtConstraint()
 rrtVectorField::rrtVectorField()
 {
 	_isFeasible = true;
+	_C = 1.0;
 }
 
 rrtVectorField::~rrtVectorField()

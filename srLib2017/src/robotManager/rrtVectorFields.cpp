@@ -38,6 +38,7 @@ Eigen::VectorXd trajFollowVectorField::getVectorField(const Eigen::VectorXd & po
 		}
 		vec = _refTraj[minIdx] - pos1;
 		//vec.normalize();
+		vec *= _C;
 		return vec;
 	}
 	else
@@ -64,6 +65,10 @@ river2dofVectorField::river2dofVectorField()
 {
 }
 
+river2dofVectorField::~river2dofVectorField()
+{
+}
+
 void river2dofVectorField::setBound(const Eigen::VectorXd & lowerBound, const Eigen::VectorXd & upperBound)
 {
 	_lowerBound = lowerBound;
@@ -82,6 +87,7 @@ Eigen::VectorXd river2dofVectorField::getVectorField(const Eigen::VectorXd & pos
 			vec(0) = 1.0;
 		else
 			vec(0) = 0.2;
+		vec *= _C;
 		return vec;
 	}
 	else
@@ -92,4 +98,66 @@ void river2dofVectorField::checkFeasibility(int nDim)
 {
 	if (nDim != 2 || _lowerBound.size() < 2 || _upperBound.size() < 2)
 		_isFeasible = false;
+}
+
+singularityAvoidanceVectorField::singularityAvoidanceVectorField()
+{
+	_kind = robotManager::manipKind::MIN;
+	_eps = 1e-6;
+	_C = 50.0;
+}
+
+singularityAvoidanceVectorField::~singularityAvoidanceVectorField()
+{
+}
+
+void singularityAvoidanceVectorField::setRobotEndeffector(robotManager * rManager, srLink * link)
+{
+	_rManager = rManager;
+	_link = link;
+}
+
+void singularityAvoidanceVectorField::setManipulabilityKind(robotManager::manipKind kind)
+{
+	_kind = kind;
+}
+
+Eigen::VectorXd singularityAvoidanceVectorField::getVectorField(const Eigen::VectorXd & pos1)
+{
+	if (_isFeasible)
+	{
+		// assume the potential function to be in the form of -log(manipulability + epsilon)
+		double manip;
+		Eigen::VectorXd grad = _rManager->manipulabilityGradient(pos1, _link, manip, _kind);
+		grad /= (manip + _eps);
+		grad *= _C;
+		//cout << "manip: " << manip << endl;
+		//cout << grad.transpose() << endl;
+		return grad;
+	}
+	else
+		return Eigen::VectorXd();
+}
+
+void singularityAvoidanceVectorField::checkFeasibility(int nDim)
+{
+	if (_rManager->m_activeArmInfo->m_numJoint != nDim)
+		_isFeasible = false;
+}
+
+workspaceConstantVectorField::workspaceConstantVectorField()
+{
+}
+
+workspaceConstantVectorField::~workspaceConstantVectorField()
+{
+}
+
+Eigen::VectorXd workspaceConstantVectorField::getVectorField(const Eigen::VectorXd & pos1)
+{
+	return Eigen::VectorXd();
+}
+
+void workspaceConstantVectorField::checkFeasibility(int nDim)
+{
 }

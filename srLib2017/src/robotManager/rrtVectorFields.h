@@ -1,5 +1,6 @@
 #pragma once
 #include "../RRTmanager/rrtManager.h"
+#include "robotManager.h"
 
 class trajFollowVectorField : public rrtVectorField
 {
@@ -30,7 +31,33 @@ public:
 
 class singularityAvoidanceVectorField : public rrtVectorField
 {
+public:
+	singularityAvoidanceVectorField();
+	~singularityAvoidanceVectorField();
 
+	void								setRobotEndeffector(robotManager* rManager, srLink* link);
+	void								setManipulabilityKind(robotManager::manipKind kind);
+	virtual Eigen::VectorXd				getVectorField(const Eigen::VectorXd& pos1);
+	virtual void						checkFeasibility(int nDim);
+public:
+	robotManager*						_rManager;
+	srLink*								_link;
+	robotManager::manipKind				_kind;
+	double								_eps;		// parameter for numerical stability in potential function
+};
+
+class workspaceConstantVectorField : public rrtVectorField
+{
+public:
+	workspaceConstantVectorField();
+	~workspaceConstantVectorField();
+
+	virtual Eigen::VectorXd				getVectorField(const Eigen::VectorXd& pos1);
+	virtual void						checkFeasibility(int nDim);
+public:
+	robotManager*						_rManager;
+	srLink*								_link;
+	Eigen::VectorXd						_workspaceVector;
 };
 
 class objectClearanceVectorField : public rrtVectorField
