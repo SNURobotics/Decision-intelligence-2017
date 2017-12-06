@@ -126,11 +126,11 @@ public:
 	rrtConstraint();
 	~rrtConstraint();
 
-	int			nDim;
+	int								nDim;
 
-	virtual		Eigen::VectorXd			getConstraintVector(const Eigen::VectorXd& jointVal) = 0;
-	virtual		Eigen::MatrixXd			getConstraintJacobian(const Eigen::VectorXd& jointVal) = 0;
-	virtual		void					project2ConstraintManifold(Eigen::VectorXd& jointVal) = 0;
+	virtual	Eigen::VectorXd			getConstraintVector(const Eigen::VectorXd& jointVal) = 0;
+	virtual	Eigen::MatrixXd			getConstraintJacobian(const Eigen::VectorXd& jointVal) = 0;
+	virtual	void					project2ConstraintManifold(Eigen::VectorXd& jointVal) = 0;
 };
 
 class rrtVectorField
@@ -139,10 +139,10 @@ public:
 	rrtVectorField();
 	~rrtVectorField();
 
-	virtual			Eigen::VectorXd			getVectorField(const Eigen::VectorXd& pos1) = 0;
-	virtual			void					checkFeasibility(int nDim) = 0;
-	bool			_isFeasible;
-	double			_C;		// parameter to control the scale of vector field
+	virtual	Eigen::VectorXd			getVectorField(const Eigen::VectorXd& pos1) = 0;
+	virtual	void					checkFeasibility(int nDim) = 0;
+	bool							_isFeasible;
+	double							_C;		// parameter to control the scale of vector field
 };
 
 //// planning trajectory of object (Configuration space is SE(3))

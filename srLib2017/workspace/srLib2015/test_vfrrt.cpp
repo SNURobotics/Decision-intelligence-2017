@@ -19,8 +19,15 @@ int main(int argc, char **argv)
 
 	rrtSetting();
 
-	singularityAvoidanceVectorField* singAvoidVF = new singularityAvoidanceVectorField;
-	singAvoidVF->setRobotEndeffector(rManager1, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
+	//singularityAvoidanceVectorField* singAvoidVF = new singularityAvoidanceVectorField;
+	//singAvoidVF->setRobotEndeffector(rManager1, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
+
+	workspaceConstantPositionVectorField* workspaceVF = new workspaceConstantPositionVectorField;
+	workspaceVF->setRobotEndeffector(rManager1, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
+	Eigen::VectorXd workspaceVec = Eigen::VectorXd::Zero(3);
+	workspaceVec[2] = 1.0;
+	workspaceVF->setWorkspaceVector(workspaceVec);
+	workspaceVF->_fixOri = true;
 
 	double epsilon = 1e-6;
 	Eigen::VectorXd testPos(6);
@@ -28,68 +35,85 @@ int main(int argc, char **argv)
 	Eigen::VectorXd testVel(6);
 	testVel.setZero();
 
-	Eigen::VectorXd singPos(6);
-	singPos.setZero();
-	singPos[1] = -SR_PI_HALF; singPos[2] = DEG2RAD(0.0); singPos[3] = SR_PI_HALF; singPos[4] = DEG2RAD(0);
-	rManager1->setJointVal(singPos);
-	cout << rManager1->manipulability(singPos, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]) << endl;
-	cout << rManager1->manipulabilityGradient(singPos, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]).transpose() << endl;
-	
-	//Eigen::VectorXd dir = singAvoidVF->getVectorField(singPos);
+	// set init and goal pos for singavoid vf rrt
+	//Eigen::VectorXd singPos(6);
+	//singPos.setZero();
+	//singPos[1] = -SR_PI_HALF; singPos[2] = DEG2RAD(0.0); singPos[3] = SR_PI_HALF; singPos[4] = DEG2RAD(0);
+	//rManager1->setJointVal(singPos);
+	//cout << rManager1->manipulability(singPos, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]) << endl;
+	//cout << rManager1->manipulabilityGradient(singPos, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]).transpose() << endl;
+	//
+	//
+	//Eigen::VectorXd singPos2(6);
+	//singPos2.setZero();
+	//singPos2[1] = -SR_PI_HALF; singPos2[2] = DEG2RAD(0.0); singPos2[3] = SR_PI_HALF; singPos2[4] = DEG2RAD(0);
+	//
+	//Eigen::VectorXd initPos = singPos;
+	//initPos[2] -= 0.5;
+	//cout << initPos.transpose() << endl;
+	//cout << rManager1->manipulability(initPos, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]) << endl;
+	//cout << initPos.transpose() << endl;
+	//Eigen::VectorXd goalPos = singPos;
+	//goalPos[2] += 0.5;
+	//cout << rManager1->manipulability(goalPos, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]) << endl;
 
-	//cout << dir.transpose() << endl;
+	//Eigen::MatrixXd Jtest = rManager1->getBodyJacobian(goalPos, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
+	//Eigen::JacobiSVD<Eigen::MatrixXd> svdtest(Jtest, Eigen::ComputeThinU | Eigen::ComputeThinV);
+	//cout << "U: " << endl << svdtest.matrixU() << endl;
+	//cout << "V: " << endl << svdtest.matrixV() << endl;
+	//cout << "S: " << svdtest.singularValues().transpose() << endl;
 
-	//for (int i = 0; i < 10; i++)
-	//{
-	//	testPos.setRandom();
-	//	dir = singAvoidVF->getVectorField(testPos);
-	//	cout << dir.transpose() << endl;
-	//}
+	// set init and goal pos for workspace vf rrt
 
-	Eigen::VectorXd singPos2(6);
-	singPos2.setZero();
-	singPos2[1] = -SR_PI_HALF; singPos2[2] = DEG2RAD(0.0); singPos2[3] = SR_PI_HALF; singPos2[4] = DEG2RAD(0);
-	
-	Eigen::VectorXd initPos = singPos;
-	initPos[2] -= 0.5;
-	cout << initPos.transpose() << endl;
-	cout << rManager1->manipulability(initPos, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]) << endl;
-	cout << initPos.transpose() << endl;
-	Eigen::VectorXd goalPos = singPos;
-	goalPos[2] += 0.5;
-	cout << rManager1->manipulability(goalPos, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]) << endl;
-
-	Eigen::MatrixXd Jtest = rManager1->getBodyJacobian(goalPos, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
-	Eigen::JacobiSVD<Eigen::MatrixXd> svdtest(Jtest, Eigen::ComputeThinU | Eigen::ComputeThinV);
-	cout << "U: " << endl << svdtest.matrixU() << endl;
-	cout << "V: " << endl << svdtest.matrixV() << endl;
-	cout << "S: " << svdtest.singularValues().transpose() << endl;
-	vector<bool> feas = RRTManager1->checkFeasibility(initPos, goalPos);
-	RRTManager1->setStartandGoal(initPos, goalPos);
-
-	RRTManager1->execute(0.05);
-	traj1 = RRTManager1->extractPath(60);
-
+	//rManager1->setJointVal(robot1->homePos);
+	SE3 tempSE3 = rManager1->forwardKin(robot1->homePos, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
+	//cout << tempSE3 << endl;
+	SE3 tempSE3_1 = EulerZYX(Vec3(0.0, SR_PI, 0.0), Vec3(-0.3, 0.8, 1.1));
+	SE3 tempSE3_2 = EulerZYX(Vec3(0.0, SR_PI, 0.0), Vec3(-0.7, 0.2, 1.1));
+	int flag1, flag2;
+	Eigen::VectorXd initPos = rManager1->inverseKin(tempSE3_1, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag1, robot1->homePos);
+	Eigen::VectorXd goalPos = rManager1->inverseKin(tempSE3_2, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag2, robot1->homePos);
+	cout << flag1 << endl;
+	cout << flag2 << endl;
+	goalPos[0] -= 0.5;
 	rManager1->setJointVal(initPos);
 
-	double manipCost1 = 0.0;
-	for (unsigned int i = 0; i < traj1.size(); i++)
-	{
-		manipCost1 += rManager1->manipulability(traj1[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
-	}
-	cout << "manip cost1: " << manipCost1 << endl;
+	// do planning
+	vector<bool> feas = RRTManager1->checkFeasibility(initPos, goalPos);
+	RRTManager1->setStartandGoal(initPos, goalPos);
+	RRTManager1->execute(0.1);
+	traj1 = RRTManager1->extractPath(200);
+	rManager1->setJointVal(initPos);
+
 	
-	RRTManager1->addVectorField(singAvoidVF);
+	// do planning (vf rrt)
+	//RRTManager1->addVectorField(singAvoidVF);
+	RRTManager1->addVectorField(workspaceVF);
 	RRTManager1->setVectorFieldWeight(1.0);
 	RRTManager1->setStartandGoal(initPos, goalPos);
-	RRTManager1->execute(0.05);
-	traj2 = RRTManager1->extractPath(60);
-	double manipCost2 = 0.0;
+	RRTManager1->execute(0.1);
+	traj2 = RRTManager1->extractPath(200);
+	
+	// check cost
+	double cost1 = 0.0;
+	for (unsigned int i = 0; i < traj1.size(); i++)
+	{
+		//cost1 += rManager1->manipulability(traj1[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
+		cost1 += rManager1->forwardKin(traj1[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP])[11];
+	}
+	cout << "cost1: " << (double) cost1 / traj1.size() << endl;
+	
+	double cost2 = 0.0;
 	for (unsigned int i = 0; i < traj2.size(); i++)
 	{
-		manipCost2 += rManager1->manipulability(traj2[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
+		//cost2 += rManager1->manipulability(traj2[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
+		cost2 += rManager1->forwardKin(traj2[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP])[11];
 	}
-	cout << "manip cost2: " << manipCost2 << endl;
+	cout << "cost2: " << (double) cost2 / traj2.size() << endl;
+
+
+
+
 
 	rendering(argc, argv);
 
@@ -191,7 +215,8 @@ void updateFunc()
 			if (trjIdx == 1)
 				cout << endl << "trajectory 1" << endl;
 			rManager1->setJointVal(traj1[(trjIdx - 1) % traj1.size()]);
-			cout << rManager1->manipulability(traj1[(trjIdx - 1) % traj1.size()], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]) << endl;
+			//cout << rManager1->manipulability(traj1[(trjIdx - 1) % traj1.size()], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]) << endl;
+			cout << rManager1->forwardKin(traj1[(trjIdx - 1) % traj1.size()], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP])[11] << endl;
 			if (trjIdx  == traj1.size() + 1)
 			{
 				trjIdx = 0;
@@ -207,7 +232,8 @@ void updateFunc()
 			if (trjIdx == 1)
 				cout << endl << "trajectory 2" << endl;
 			rManager1->setJointVal(traj2[(trjIdx - 1) % traj2.size()]);
-			cout << rManager1->manipulability(traj2[(trjIdx - 1) % traj2.size()], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]) << endl;
+			//cout << rManager1->manipulability(traj2[(trjIdx - 1) % traj2.size()], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]) << endl;
+			cout << rManager1->forwardKin(traj2[(trjIdx - 1) % traj2.size()], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP])[11] << endl;
 			if (trjIdx == traj2.size() + 1)
 			{
 				trjIdx = 0;

@@ -29,35 +29,47 @@ public:
 	Eigen::VectorXd						_upperBound;
 };
 
-class singularityAvoidanceVectorField : public rrtVectorField
+class robotRRTVectorField : public rrtVectorField
+{
+public:
+	robotRRTVectorField();
+	~robotRRTVectorField();
+
+	void								setRobotEndeffector(robotManager* rManager, srLink* link);
+	virtual Eigen::VectorXd				getVectorField(const Eigen::VectorXd& pos1) = 0;
+	virtual void						checkFeasibility(int nDim);
+public:
+	robotManager*						_rManager;
+	srLink*								_link;
+};
+
+class singularityAvoidanceVectorField : public robotRRTVectorField
 {
 public:
 	singularityAvoidanceVectorField();
 	~singularityAvoidanceVectorField();
 
-	void								setRobotEndeffector(robotManager* rManager, srLink* link);
 	void								setManipulabilityKind(robotManager::manipKind kind);
 	virtual Eigen::VectorXd				getVectorField(const Eigen::VectorXd& pos1);
-	virtual void						checkFeasibility(int nDim);
+
 public:
-	robotManager*						_rManager;
-	srLink*								_link;
 	robotManager::manipKind				_kind;
 	double								_eps;		// parameter for numerical stability in potential function
 };
 
-class workspaceConstantVectorField : public rrtVectorField
+class workspaceConstantPositionVectorField : public robotRRTVectorField
 {
 public:
-	workspaceConstantVectorField();
-	~workspaceConstantVectorField();
+	workspaceConstantPositionVectorField();
+	~workspaceConstantPositionVectorField();
 
+	void								setWorkspaceVector(const Eigen::VectorXd& vec);
 	virtual Eigen::VectorXd				getVectorField(const Eigen::VectorXd& pos1);
 	virtual void						checkFeasibility(int nDim);
+
 public:
-	robotManager*						_rManager;
-	srLink*								_link;
-	Eigen::VectorXd						_workspaceVector;
+	Eigen::VectorXd						_workspaceVector;		// vector to follow in workspace expressed in global coordinate
+	bool								_fixOri;				// true: generate vector field to perserve orientation
 };
 
 class objectClearanceVectorField : public rrtVectorField

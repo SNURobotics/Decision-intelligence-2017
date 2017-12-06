@@ -100,6 +100,26 @@ void river2dofVectorField::checkFeasibility(int nDim)
 		_isFeasible = false;
 }
 
+robotRRTVectorField::robotRRTVectorField()
+{
+}
+
+robotRRTVectorField::~robotRRTVectorField()
+{
+}
+
+void robotRRTVectorField::setRobotEndeffector(robotManager * rManager, srLink * link)
+{
+	_rManager = rManager;
+	_link = link;
+}
+
+void robotRRTVectorField::checkFeasibility(int nDim)
+{
+	if (_rManager->m_activeArmInfo->m_numJoint != nDim)
+		_isFeasible = false;
+}
+
 singularityAvoidanceVectorField::singularityAvoidanceVectorField()
 {
 	_kind = robotManager::manipKind::MIN;
@@ -109,12 +129,6 @@ singularityAvoidanceVectorField::singularityAvoidanceVectorField()
 
 singularityAvoidanceVectorField::~singularityAvoidanceVectorField()
 {
-}
-
-void singularityAvoidanceVectorField::setRobotEndeffector(robotManager * rManager, srLink * link)
-{
-	_rManager = rManager;
-	_link = link;
 }
 
 void singularityAvoidanceVectorField::setManipulabilityKind(robotManager::manipKind kind)
@@ -139,25 +153,50 @@ Eigen::VectorXd singularityAvoidanceVectorField::getVectorField(const Eigen::Vec
 		return Eigen::VectorXd();
 }
 
-void singularityAvoidanceVectorField::checkFeasibility(int nDim)
+workspaceConstantPositionVectorField::workspaceConstantPositionVectorField()
+{
+	_C = 1.0;
+	_fixOri = false;
+}
+
+workspaceConstantPositionVectorField::~workspaceConstantPositionVectorField()
+{
+}
+
+void workspaceConstantPositionVectorField::setWorkspaceVector(const Eigen::VectorXd & vec)
+{
+	_workspaceVector = vec;
+}
+
+Eigen::VectorXd workspaceConstantPositionVectorField::getVectorField(const Eigen::VectorXd & pos1)
+{
+	if (_isFeasible)
+	{
+		if (_fixOri)
+		{
+			Eigen::MatrixXd J = _rManager->getAnalyticJacobian(pos1, _link, true);
+			Eigen::VectorXd vec = Eigen::VectorXd::Zero(6);
+			vec.tail(3) = _workspaceVector;
+			vec = pinv(J) * vec;
+			return _C*vec;
+		}
+		else
+		{
+			Eigen::MatrixXd J_pos = _rManager->getAnalyticJacobian(pos1, _link);
+			Eigen::VectorXd vec = pinv(J_pos) * _workspaceVector;
+			return _C*vec;
+		}
+	}
+	else
+		return Eigen::VectorXd();
+}
+
+void workspaceConstantPositionVectorField::checkFeasibility(int nDim)
 {
 	if (_rManager->m_activeArmInfo->m_numJoint != nDim)
 		_isFeasible = false;
+
+	if (_workspaceVector.size() != 3)
+		_isFeasible = false;
 }
 
-workspaceConstantVectorField::workspaceConstantVectorField()
-{
-}
-
-workspaceConstantVectorField::~workspaceConstantVectorField()
-{
-}
-
-Eigen::VectorXd workspaceConstantVectorField::getVectorField(const Eigen::VectorXd & pos1)
-{
-	return Eigen::VectorXd();
-}
-
-void workspaceConstantVectorField::checkFeasibility(int nDim)
-{
-}
