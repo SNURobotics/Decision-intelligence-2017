@@ -69,6 +69,7 @@ public:
 
 public:
 	Eigen::VectorXd						_workspaceVector;		// vector to follow in workspace expressed in global coordinate
+	Eigen::VectorXd						_centerPoint;			// point where potential is maximum
 	bool								_fixOri;				// true: generate vector field to perserve orientation
 };
 

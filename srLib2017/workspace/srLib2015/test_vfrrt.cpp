@@ -78,38 +78,42 @@ int main(int argc, char **argv)
 	goalPos[0] -= 0.5;
 	rManager1->setJointVal(initPos);
 
-	// do planning
-	vector<bool> feas = RRTManager1->checkFeasibility(initPos, goalPos);
-	RRTManager1->setStartandGoal(initPos, goalPos);
-	RRTManager1->execute(0.1);
-	traj1 = RRTManager1->extractPath(200);
-	rManager1->setJointVal(initPos);
+	for (int ii = 0; ii < 10; ii++)
+	{
+		// do planning
+		vector<bool> feas = RRTManager1->checkFeasibility(initPos, goalPos);
+		RRTManager1->setStartandGoal(initPos, goalPos);
+		RRTManager1->execute(0.1);
+		traj1 = RRTManager1->extractPath(200);
+		rManager1->setJointVal(initPos);
 
-	
-	// do planning (vf rrt)
-	//RRTManager1->addVectorField(singAvoidVF);
-	RRTManager1->addVectorField(workspaceVF);
-	RRTManager1->setVectorFieldWeight(1.0);
-	RRTManager1->setStartandGoal(initPos, goalPos);
-	RRTManager1->execute(0.1);
-	traj2 = RRTManager1->extractPath(200);
-	
-	// check cost
-	double cost1 = 0.0;
-	for (unsigned int i = 0; i < traj1.size(); i++)
-	{
-		//cost1 += rManager1->manipulability(traj1[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
-		cost1 += rManager1->forwardKin(traj1[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP])[11];
+
+		// do planning (vf rrt)
+		//RRTManager1->addVectorField(singAvoidVF);
+		RRTManager1->addVectorField(workspaceVF);
+		RRTManager1->setVectorFieldWeight(1.0);
+		RRTManager1->setStartandGoal(initPos, goalPos);
+		RRTManager1->execute(0.1);
+		traj2 = RRTManager1->extractPath(200);
+
+		// check cost
+		double cost1 = 0.0;
+		for (unsigned int i = 0; i < traj1.size(); i++)
+		{
+			//cost1 += rManager1->manipulability(traj1[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
+			cost1 += rManager1->forwardKin(traj1[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP])[11];
+		}
+		cout << "cost1: " << (double)cost1 / traj1.size() << endl;
+
+		double cost2 = 0.0;
+		for (unsigned int i = 0; i < traj2.size(); i++)
+		{
+			//cost2 += rManager1->manipulability(traj2[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
+			cost2 += rManager1->forwardKin(traj2[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP])[11];
+		}
+		cout << "cost2: " << (double)cost2 / traj2.size() << endl;
 	}
-	cout << "cost1: " << (double) cost1 / traj1.size() << endl;
 	
-	double cost2 = 0.0;
-	for (unsigned int i = 0; i < traj2.size(); i++)
-	{
-		//cost2 += rManager1->manipulability(traj2[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
-		cost2 += rManager1->forwardKin(traj2[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP])[11];
-	}
-	cout << "cost2: " << (double) cost2 / traj2.size() << endl;
 
 
 

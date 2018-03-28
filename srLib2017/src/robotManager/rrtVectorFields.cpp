@@ -157,6 +157,7 @@ workspaceConstantPositionVectorField::workspaceConstantPositionVectorField()
 {
 	_C = 1.0;
 	_fixOri = false;
+	_centerPoint = Eigen::VectorXd::Zero(3);
 }
 
 workspaceConstantPositionVectorField::~workspaceConstantPositionVectorField()
@@ -196,7 +197,7 @@ void workspaceConstantPositionVectorField::checkFeasibility(int nDim)
 	if (_rManager->m_activeArmInfo->m_numJoint != nDim)
 		_isFeasible = false;
 
-	if (_workspaceVector.size() != 3)
+	if (_workspaceVector.size() != 3 || _centerPoint.size() != 3)
 		_isFeasible = false;
 }
 
