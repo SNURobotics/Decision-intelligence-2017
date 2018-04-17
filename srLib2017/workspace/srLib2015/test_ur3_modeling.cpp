@@ -140,6 +140,7 @@ void updateFunc()
 
 	static double JointVal = 0;
 	//((srStateJoint*)URRobot->m_KIN_Joints[activeJointIdx])->m_State.m_rValue[0] = JointVal;
+	//((srStateJoint*)URRobot->m_KIN_Joints[0])->m_State.m_rValue[0] = JointVal;
 	JointVal += 0.01;
 
 	static int cnt = 0;

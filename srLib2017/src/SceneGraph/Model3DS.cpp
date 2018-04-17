@@ -611,7 +611,14 @@ void Model3DS::EditChunkProcessor(long length, long findex)
 
 		// Zero out the number of texture coords
 		for (int n = 0; n < numObjects; n++)
+		{
 			Objects[n].numTexCoords = 0;
+			// cj edit (18.04.17)
+			Objects[n].numVerts = 0;
+			//
+		}
+			
+
 
 		fseek(bin3ds, findex, SEEK_SET);
 
