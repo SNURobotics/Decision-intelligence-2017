@@ -54,6 +54,9 @@
     <ClCompile Include="..\..\src\robotManager\rrtVectorFields.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\robotManager\environment_4th.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\robotManager\robotManager.h">
@@ -96,6 +99,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\robotManager\rrtVectorFields.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\robotManager\environment_4th.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
