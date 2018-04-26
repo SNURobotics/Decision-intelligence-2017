@@ -5,15 +5,15 @@
 
 #include "srDyn/srDYN.h"
 #include "srGamasot\srURDF.h"
-#include "robotManager\UR3RobotManager.h"
-#include "robotManager\UR3Robot.h"
+#include "robotManager\MH12RobotManager.h"
+#include "robotManager\MH12Robot.h"
 #include "robotManager\environment_4th.h"
 #include <time.h>
 
 
 // Robot
-UR3Robot* URRobot = new UR3Robot;
-UR3RobotManager* rManager1;
+MH12Robot* MHRobot = new MH12Robot;
+MH12RobotManager* rManager1;
 Bin* bin = new Bin(0.01);
 
 Eigen::VectorXd qval;
@@ -28,8 +28,8 @@ SE3 Trobotbase1;
 void initDynamics();
 void rendering(int argc, char **argv);
 void updateFunc();
-void URrobotSetting();
-void URrobotManagerSetting();
+void MHRobotSetting();
+void MHRobotManagerSetting();
 void URrrtSetting();
 int activeJointIdx =0;
 vector<Eigen::VectorXd> traj(0);
@@ -37,7 +37,7 @@ vector<Eigen::VectorXd> traj(0);
 int main(int argc, char **argv)
 {
 
-    URrobotSetting();
+    MHRobotSetting();
 
 	ee->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
 	ee->GetGeomInfo().SetDimension(0.01);
@@ -49,17 +49,17 @@ int main(int argc, char **argv)
 	initDynamics();
 
 	
-	URrobotManagerSetting();
+	MHRobotManagerSetting();
 
 	rManager1->setGripperDistance(0.0);
-	//busbar->setBaseLinkFrame(URRobot->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() * Inv(Tbusbar2gripper_ur));
-	//ctCase->setBaseLinkFrame(URRobot->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() * Inv(TctCase2gripper_ur));
+	//busbar->setBaseLinkFrame(MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() * Inv(Tbusbar2gripper_ur));
+	//ctCase->setBaseLinkFrame(MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() * Inv(TctCase2gripper_ur));
 	qval.setZero(6);
 	qval[1] = -SR_PI_HALF;
 	qval[3] = -SR_PI_HALF;
 	qval[4] = SR_PI_HALF;
 	rManager1->setJointVal(qval);
-	obs->GetBaseLink()->SetFrame(URRobot->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame());
+	obs->GetBaseLink()->SetFrame(MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame());
 	bin->setBaseLinkFrame(SE3(Vec3(1.0, 0.0, 0.0)));
 	
 	int flag;
@@ -100,8 +100,8 @@ void updateFunc()
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 
 	static double JointVal = 0;
-	//((srStateJoint*)URRobot->m_KIN_Joints[activeJointIdx])->m_State.m_rValue[0] = JointVal;
-	//((srStateJoint*)URRobot->m_KIN_Joints[0])->m_State.m_rValue[0] = JointVal;
+	//((srStateJoint*)MHRobot->m_KIN_Joints[activeJointIdx])->m_State.m_rValue[0] = JointVal;
+	//((srStateJoint*)MHRobot->m_KIN_Joints[0])->m_State.m_rValue[0] = JointVal;
 	JointVal += 0.01;
 
 	static int cnt = 0;
@@ -114,8 +114,8 @@ void updateFunc()
 		rManager1->setJointVal(traj[trajcnt % traj.size()]);
 
 	
-	//cout << URRobot->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() << endl;
-	//cout << URRobot->gLink[UR3_Index::GRIPPER].GetFrame() << endl;
+	//cout << MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() << endl;
+	//cout << MHRobot->gLink[MH12_Index::GRIPPER].GetFrame() << endl;
 	//rManager1->setJointVal(qval);
 
 	// check inv dyn with gripper
@@ -151,18 +151,18 @@ void updateFunc()
 }
 
 
-void URrobotSetting()
+void MHRobotSetting()
 {
-	gSpace.AddSystem((srSystem*)URRobot);
-	URRobot->GetBaseLink()->SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
-	URRobot->SetActType(srJoint::ACTTYPE::HYBRID);
+	gSpace.AddSystem((srSystem*)MHRobot);
+	MHRobot->GetBaseLink()->SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	MHRobot->SetActType(srJoint::ACTTYPE::HYBRID);
 
 	vector<int> gpIdx(2);
 	gpIdx[0] = 0;
 	gpIdx[1] = 1;
-	URRobot->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
+	MHRobot->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
 
-	Trobotbase1 = URRobot->GetBaseLink()->GetFrame() * URRobot->TsrLinkbase2robotbase;
+	Trobotbase1 = MHRobot->GetBaseLink()->GetFrame() * MHRobot->TsrLinkbase2robotbase;
 	//robot1->SetActType(srJoint::ACTTYPE::HYBRID);
 	//robot2->SetActType(srJoint::ACTTYPE::TORQUE);
 	//vector<int> gpIdx(2);
@@ -176,7 +176,7 @@ void URrobotSetting()
 	//robot2->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
 }
 
-void URrobotManagerSetting()
+void MHRobotManagerSetting()
 {
 
 	//rManager2 = new robotManager();
@@ -196,6 +196,6 @@ void URrobotManagerSetting()
 	//// sensor setting
 	//rManager2->setFTSensor(robot2->gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]);
 
-	rManager1 = new UR3RobotManager(URRobot, &gSpace);
+	rManager1 = new MH12RobotManager(MHRobot, &gSpace);
 
 }
