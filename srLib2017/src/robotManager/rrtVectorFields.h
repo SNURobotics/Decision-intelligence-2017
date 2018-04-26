@@ -1,33 +1,6 @@
 #pragma once
-#include "../RRTmanager/rrtManager.h"
+#include "../RRTmanager/vfrrtManager.h"
 #include "robotManager.h"
-
-class trajFollowVectorField : public rrtVectorField
-{
-public:
-	trajFollowVectorField();
-	~trajFollowVectorField();
-
-	void								setRefTraj(const vector<Eigen::VectorXd>& refTraj);
-	virtual Eigen::VectorXd				getVectorField(const Eigen::VectorXd& pos1);
-	virtual	void						checkFeasibility(int nDim);
-public:
-	vector<Eigen::VectorXd>				_refTraj;
-};
-
-class river2dofVectorField : public rrtVectorField
-{
-public:
-	river2dofVectorField();
-	~river2dofVectorField();
-	
-	void								setBound(const Eigen::VectorXd& lowerBound, const Eigen::VectorXd& upperBound);
-	virtual Eigen::VectorXd				getVectorField(const Eigen::VectorXd& pos1);
-	virtual	void						checkFeasibility(int nDim);
-public:
-	Eigen::VectorXd						_lowerBound;
-	Eigen::VectorXd						_upperBound;
-};
 
 class robotRRTVectorField : public rrtVectorField
 {
@@ -73,7 +46,19 @@ public:
 	bool								_fixOri;				// true: generate vector field to perserve orientation
 };
 
-class objectClearanceVectorField : public rrtVectorField
+class objectClearanceVectorField : public robotRRTVectorField
 {
+public:
+	objectClearanceVectorField();
+	~objectClearanceVectorField();
 
+	void								setObjects(vector<Vec3> objectLoc);
+	void								setWeights(vector<double> weight);
+	virtual Eigen::VectorXd				getVectorField(const Eigen::VectorXd& pos1);
+	virtual void						checkFeasibility(int nDim);
+
+public:
+	vector<Vec3>						_objectCenters;			// location of point objects to avoid
+	vector<double>						_objectWeights;			// coefficient for vectors from each object
+	SE3									_endeffectorOffset;		// offset for end-effector
 };

@@ -1,105 +1,5 @@
 #include "rrtVectorFields.h""
 
-trajFollowVectorField::trajFollowVectorField()
-{
-}
-
-trajFollowVectorField::~trajFollowVectorField()
-{
-	_refTraj.resize(0);
-}
-
-void trajFollowVectorField::setRefTraj(const vector<Eigen::VectorXd>& refTraj)
-{
-	_refTraj = refTraj;
-}
-
-Eigen::VectorXd trajFollowVectorField::getVectorField(const Eigen::VectorXd & pos1)
-{
-	if (_isFeasible)
-	{
-		Eigen::VectorXd vec(pos1.size());
-		double dist;
-		unsigned int minIdx = 0;
-		double minDist;
-		for (unsigned int i = 0; i < _refTraj.size(); i++)
-		{
-			dist = (pos1 - _refTraj[i]).norm();
-			if (i == 0)
-				minDist = dist;
-			else
-			{
-				if (dist < minDist)
-				{
-					minDist = dist;
-					minIdx = i;
-				}
-			}
-		}
-		vec = _refTraj[minIdx] - pos1;
-		//vec.normalize();
-		vec *= _C;
-		return vec;
-	}
-	else
-		return Eigen::VectorXd();
-}
-
-void trajFollowVectorField::checkFeasibility(int nDim)
-{
-	for (unsigned int i = 0; i < _refTraj.size(); i++)
-	{
-		if (_refTraj[i].size() != nDim)
-		{
-			_isFeasible = false;
-		}
-		if (!_isFeasible)
-		{
-			printf("check reference trajectory !!!\n");
-			break;
-		}
-	}
-}
-
-river2dofVectorField::river2dofVectorField()
-{
-}
-
-river2dofVectorField::~river2dofVectorField()
-{
-}
-
-void river2dofVectorField::setBound(const Eigen::VectorXd & lowerBound, const Eigen::VectorXd & upperBound)
-{
-	_lowerBound = lowerBound;
-	_upperBound = upperBound;
-
-}
-
-Eigen::VectorXd river2dofVectorField::getVectorField(const Eigen::VectorXd & pos1)
-{
-	if (pos1.size() != 2)
-		_isFeasible = false;
-	if (_isFeasible)
-	{
-		Eigen::VectorXd vec = Eigen::VectorXd::Zero(2);
-		if (pos1(1) < 0.6*(_upperBound(1) - _lowerBound(1)) + _lowerBound(1) && pos1(1) > 0.4*(_upperBound(1) - _lowerBound(1)) + _lowerBound(1))
-			vec(0) = 1.0;
-		else
-			vec(0) = 0.2;
-		vec *= _C;
-		return vec;
-	}
-	else
-		return Eigen::VectorXd();
-}
-
-void river2dofVectorField::checkFeasibility(int nDim)
-{
-	if (nDim != 2 || _lowerBound.size() < 2 || _upperBound.size() < 2)
-		_isFeasible = false;
-}
-
 robotRRTVectorField::robotRRTVectorField()
 {
 }
@@ -201,3 +101,56 @@ void workspaceConstantPositionVectorField::checkFeasibility(int nDim)
 		_isFeasible = false;
 }
 
+objectClearanceVectorField::objectClearanceVectorField()
+{
+}
+
+objectClearanceVectorField::~objectClearanceVectorField()
+{
+}
+
+void objectClearanceVectorField::setObjects(vector<Vec3> objectLoc)
+{
+	_objectCenters = objectLoc;
+}
+
+void objectClearanceVectorField::setWeights(vector<double> weight)
+{
+	_objectWeights = weight;
+}
+
+Eigen::VectorXd objectClearanceVectorField::getVectorField(const Eigen::VectorXd & pos1)
+{
+	if (_isFeasible)
+	{
+		Vec3 endeffectorPos = _rManager->forwardKin(pos1, _link, _endeffectorOffset).GetPosition();
+		Vec3 workspaceVector(0.0);
+		double norm_inv;
+		for (unsigned int i = 0; i < _objectCenters.size(); i++)
+		{
+			norm_inv = 1.0 / Norm(endeffectorPos - _objectCenters[i]);
+			workspaceVector += _objectWeights[i] * (endeffectorPos - _objectCenters[i]) * norm_inv * norm_inv * norm_inv;
+		}
+		Eigen::VectorXd qdot = pinv(_rManager->getAnalyticJacobian(pos1, _link, false, _endeffectorOffset)) * Vec3toVector(workspaceVector);
+		qdot *= _C;
+		return qdot;
+	}
+	else
+		return Eigen::VectorXd();
+}
+
+void objectClearanceVectorField::checkFeasibility(int nDim)
+{
+	if (_objectCenters.size() != _objectWeights.size())
+		_isFeasible = false;
+	if (_rManager->m_activeArmInfo->m_numJoint != nDim)
+		_isFeasible = false;
+	for (unsigned int i = 0; i < _objectWeights.size(); i++)
+	{
+		if (_objectWeights[i] < 0)
+		{
+			_isFeasible = false;
+			break;
+		}
+	}
+}

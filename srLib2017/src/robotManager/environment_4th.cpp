@@ -22,6 +22,7 @@ void Bin::AssembleModel()
 		srLink* temp = new srLink;
 		m_ObjLink.push_back(*temp);
 	}
+	
 	for (int i = 0; i < m_numCollision; i++)
 	{
 		srCollision* temp = new srCollision;
@@ -51,6 +52,7 @@ void Bin::AssembleModel()
 		m_ObjLink[i].GetGeomInfo().SetDimension(dims[i]);
 		m_ObjLink[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	}
+
 	// xy plane
 	m_ObjWeldJoint[0].SetParentLink(&m_ObjLink[0]);
 	m_ObjWeldJoint[0].SetParentLinkFrame();
@@ -82,7 +84,16 @@ void Bin::AssembleModel()
 		m_ObjLink[i].AddCollision(&m_ObjCollision[i]);
 	}
 	
+	// dummy link
+	srLink* temp = new srLink;
+	m_ObjLink.push_back(*temp);
+	m_ObjLink[m_numLink].GetGeomInfo().SetDimension(0.0);
+	srWeldJoint* temp1 = new srWeldJoint;
+	m_ObjWeldJoint.push_back(*temp1);
+	m_ObjWeldJoint[m_numWeldJoint].SetParentLink(&m_ObjLink[m_numLink]);
+	m_ObjWeldJoint[m_numWeldJoint].SetChildLink(&m_ObjLink[0]);
+
 	this->SetSelfCollision(false);
-	this->SetBaseLink(&m_ObjLink[0]);
+	this->SetBaseLink(&m_ObjLink[m_numLink]);
 	this->SetBaseLinkType(srSystem::KINEMATIC);
 }

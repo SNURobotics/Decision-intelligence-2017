@@ -86,6 +86,7 @@ public:
 	enum invKinFlag
 	{
 		SOLVED, SOLVED_BUT_EXCEED_JOINT_LIM, EXCEED_MAX_ITER, SINGULARITY
+		// EXCEED_MAX_ITER usually due to impossible end-effector SE(3) for given robot
 	};
 
 	enum manipKind

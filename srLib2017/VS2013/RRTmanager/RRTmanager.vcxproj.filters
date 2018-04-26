@@ -18,9 +18,21 @@
     <ClCompile Include="..\..\src\RRTmanager\rrtManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\RRTmanager\vfrrtManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\RRTmanager\cbirrtManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\RRTmanager\rrtManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\RRTmanager\vfrrtManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\RRTmanager\cbirrtManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

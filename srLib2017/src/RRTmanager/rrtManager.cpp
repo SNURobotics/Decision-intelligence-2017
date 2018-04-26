@@ -4,10 +4,6 @@
 
 rrtManager::rrtManager()
 {
-	_vectorFieldExist = false;
-	rrtConstraints = NULL;
-	_vectorFields.resize(0);
-	_vectorFieldWeight = 0.7;
 }
 
 
@@ -69,6 +65,20 @@ void rrtManager::setStartandGoal(const Eigen::VectorXd& _start, const Eigen::Vec
 	pTargetTree2 = &goalTree;
 }
 
+bool rrtManager::checkStartGoalFeasibility()
+{
+	rrtTree::iterator iter;
+	iter = startTree.begin();
+	bool startFeasible = !setState((*iter)->posState);
+	iter = goalTree.begin();
+	bool goalFeasible = !setState((*iter)->posState);
+	return startFeasible && goalFeasible;
+}
+
+bool rrtManager::isProblemFeasible()
+{
+	return checkStartGoalFeasibility();
+}
 
 void rrtManager::execute(double _step_size)
 {
@@ -80,26 +90,31 @@ void rrtManager::execute(double _step_size)
 	int iter = 0;
 	bool bConnected = false;
 
-	// vector field setting
-	checkVectorFieldFeasibility();
-	// print options
-	bool printIter = true;
-	bool printFinish = true;
-	///////////////////////////
-	while (!bConnected)
+	// check feasibility of the problem
+	if (isProblemFeasible())
 	{
-		bConnected = innerloop();
-		swapTree();
-		
-		if (printIter == true)
-			cout << "iteration # = " << iter++ << endl;
-	}
-	
-	if (printFinish == true)
-		cout << "end of RRT " << endl;
+		// print options
+		bool printIter = true;
+		bool printFinish = true;
+		///////////////////////////
+		while (!bConnected)
+		{
+			bConnected = innerloop();
+			swapTree();
 
-	//printTree(TARGET_TREE::TREE1);
-	//printTree(TARGET_TREE::TREE2);
+			if (printIter == true)
+				cout << "iteration # = " << iter++ << endl;
+		}
+
+		if (printFinish == true)
+			cout << "end of RRT " << endl;
+
+		//printTree(TARGET_TREE::TREE1);
+		//printTree(TARGET_TREE::TREE2);
+	}
+	else
+		printf("RRT planning problem is not feasible!!!\n\n");
+
 }
 
 bool rrtManager::innerloop()
@@ -119,8 +134,8 @@ bool rrtManager::innerloop()
 		Eigen::VectorXd temp_vertex_pos = extendStepSize(nearest_vertex_pos, random_vertex_pos, eps, TREE1);
 		
 		// 4. (optional) constraint projection
-		if (rrtConstraints != NULL)
-			rrtConstraints->project2ConstraintManifold(temp_vertex_pos);
+		//if (rrtConstraints != NULL)
+		//	rrtConstraints->project2ConstraintManifold(temp_vertex_pos);
 
 		// 5. collision checking 
 		new_vertex = generateNewVertex(nearest_vertex, temp_vertex_pos, step_size*0.1);
@@ -138,8 +153,8 @@ bool rrtManager::innerloop()
 
 	Eigen::VectorXd temp_tree2_vertex_pos = extendStepSize(nearest_tree2_vertex->posState, new_vertex->posState, step_size, TREE2);
 	// (optional) constraint projection
-	if (rrtConstraints != NULL)
-		rrtConstraints->project2ConstraintManifold(temp_tree2_vertex_pos);
+	//if (rrtConstraints != NULL)
+	//	rrtConstraints->project2ConstraintManifold(temp_tree2_vertex_pos);
 	rrtVertex* new_tree2_vertex = NULL;
 
 	// collision checking
@@ -179,46 +194,16 @@ Eigen::VectorXd rrtManager::extendStepSize(const Eigen::VectorXd& vertPos1, cons
 {
 	Eigen::VectorXd dir_2_random = (vertPos2 - vertPos1);
 	Eigen::VectorXd temp_vertex_pos;
-	if (!_vectorFieldExist)
-	{
-		if (dir_2_random.norm() < criterion)
-			temp_vertex_pos = vertPos2;
-		else
-		{
-			dir_2_random.normalize();
-			temp_vertex_pos = vertPos1 + step_size* dir_2_random;
-		}
-	}
+
+	if (dir_2_random.norm() < criterion)
+		temp_vertex_pos = vertPos2;
 	else
 	{
-		Eigen::VectorXd vec = getVectorField(vertPos1);
-		if (dir_2_random.norm() > 0)
-			dir_2_random.normalize();
-		if (vec.norm() > 0)
-			vec.normalize();
-		bool plusVec;
-		if (_isTreeSwaped)
-		{
-			if (tree == TARGET_TREE::TREE1)
-				plusVec = false;	// false
-			else
-				plusVec = true;
-		}
-		else
-		{
-			if (tree == TARGET_TREE::TREE1)
-				plusVec = true;
-			else
-				plusVec = false;	// false
-		}
-		if (plusVec)
-			vec = dir_2_random + _vectorFieldWeight * vec;
-		else
-			vec = dir_2_random - _vectorFieldWeight * vec;
-		if (vec.norm() > 0)
-			vec.normalize();
-		temp_vertex_pos = vertPos1 + step_size * vec;
+		dir_2_random.normalize();
+		temp_vertex_pos = vertPos1 + step_size* dir_2_random;
 	}
+
+
 	return temp_vertex_pos;
 }
 
@@ -291,7 +276,6 @@ vector<Eigen::VectorXd> rrtManager::generateIntermediateVertex(Eigen::VectorXd p
 	}
 	return checkSet;
 }
-
 
 rrtVertex* rrtManager::generateNewVertex(rrtVertex* nearest_vertex, const Eigen::VectorXd& pos2, double step_size_collision /*= 0.01*/)
 {
@@ -388,15 +372,9 @@ vector<Eigen::VectorXd> rrtManager::extractPath(int smoothingNum /*= 200*/)
 	for (iter; iter != iter_end; iter++)
 	{
 		advance(iter, 1);
-		iter2 = iter;
-		advance(iter, -1);
-
-		(*iter)->parentVertex = (*iter2);
-		(*iter)->distance2parent = getDistance((*iter2)->posState, (*iter)->posState);
-		if (_vectorFieldExist)
-			(*iter)->cost_bw_parent = getUpstreamCost((*iter2)->posState, (*iter)->posState);
-		else
-			(*iter)->cost_bw_parent = 0.0;
+		iter2 = iter;				// parent vertex
+		advance(iter, -1);			// child vertex
+		connectParentAndChild((*iter2), (*iter));
 	}
 
 	path = smoothingPath(path, smoothingNum);
@@ -410,177 +388,209 @@ vector<Eigen::VectorXd> rrtManager::extractPath(int smoothingNum /*= 200*/)
 	return outputPath;
 }
 
+void rrtManager::connectParentAndChild(rrtVertex * parentVertex, rrtVertex * childVertex)
+{
+	childVertex->parentVertex = parentVertex;
+	childVertex->distance2parent = getDistance(parentVertex->posState, childVertex->posState);
+}
+
+vector<rrtVertex*> rrtManager::getRandomVertices(list<rrtVertex*>& path)
+{
+	int n = path.size();
+
+	int idx1, idx2;
+	while (1)
+	{
+		idx1 = randomInt(0, n - 1);
+		idx2 = randomInt(0, n - 1);
+		if (idx1 != idx2)
+			break;
+	}
+
+	if (idx1 > idx2)
+	{
+		int temp = idx1;
+		idx1 = idx2;
+		idx2 = temp;
+	}
+
+	list<rrtVertex*>::iterator iter = path.begin();
+	advance(iter, idx1);
+	rrtVertex* vertex1 = *iter;
+
+	iter = path.begin();
+	advance(iter, idx2);
+	rrtVertex* vertex2 = *iter;
+	vector<rrtVertex*> randomVertices(2);
+	randomVertices[0] = vertex1;
+	randomVertices[1] = vertex2;
+	return randomVertices;
+}
+
+vector<rrtVertex*> rrtManager::getCandidateVertices(vector<rrtVertex*> vertices)
+{
+	// check collision of the path of candidate vertices
+	for (unsigned int i = 0; i < vertices.size() - 1; i++)
+	{
+		if (collisionChecking(vertices[i]->posState, vertices[i + 1]->posState, step_size*0.1))
+			return vector<rrtVertex*>();
+	}
+	return vertices;
+}
+
+double rrtManager::getCost(rrtVertex * pos1, rrtVertex * pos2)
+{
+	return 0.0;
+}
+
+double rrtManager::getRRTpathSmoothingCost(rrtVertex * vertex1, rrtVertex * vertex2, vector<rrtVertex*>& removedVertex)
+{
+	double dist_rrtpath = 0;
+	//double cost_rrtpath = 0;
+	rrtVertex* currentVertex = vertex2;
+	while (currentVertex != vertex1)
+	{
+		dist_rrtpath += currentVertex->distance2parent;
+		//cost_rrtpath += currentVertex->cost_bw_parent;
+		currentVertex = currentVertex->parentVertex;
+		removedVertex.push_back(currentVertex);
+	}
+	return dist_rrtpath;
+}
+
+double rrtManager::getNewPathSmoothingCost(vector<rrtVertex*> vertices)
+{
+	double smoothingCost = 0.0;
+	for (unsigned int i = 0; i < vertices.size() - 1; i++)
+		smoothingCost += getDistance(vertices[i]->posState, vertices[i+1]->posState);
+	return smoothingCost;
+}
+
+bool rrtManager::replaceVertices(list<rrtVertex*>& path, vector<rrtVertex*>& vertices, vector<rrtVertex*>& removedVertex)
+{
+	rrtVertex* vertex1;
+	rrtVertex* vertex2;
+	
+	// connect vertices
+	for (unsigned int i = 0; i < vertices.size() - 1; i++)
+	{
+		vertex1 = vertices[i];
+		vertex2 = vertices[i + 1];
+		vertex2->parentVertex = vertex1;
+		vertex2->distance2parent = getDistance(vertex1->posState, vertex2->posState);
+		vertex2->cost_bw_parent = getCost(vertex1, vertex2);
+	}
+	// remove vertices on original RRT path
+	for (unsigned int i = 0; i < removedVertex.size() - 1; i++)
+		path.remove(removedVertex[i]);
+	return true;
+}
+
+
 list<rrtVertex*> rrtManager::smoothingPath(list<rrtVertex*>& path, int smoothingnum)
 {
 	list<rrtVertex*> tmpPath;
-	for (int iterSmoothing = 0; iterSmoothing < smoothingnum; iterSmoothing++){
-		int n = path.size();
-
-		int idx1, idx2;
-		while (1)
-		{
-			idx1 = randomInt(0, n - 1);
-			idx2 = randomInt(0, n - 1);
-			if (idx1 != idx2)
-				break;
-		}
-
-		if (idx1 > idx2)
-		{
-			int temp = idx1;
-			idx1 = idx2;
-			idx2 = temp;
-		}
-
-		list<rrtVertex*>::iterator iter = path.begin();
-		advance(iter, idx1);
-		rrtVertex* vertex1 = *iter;
-
-		iter = path.begin();
-		advance(iter, idx2);
-		rrtVertex* vertex2 = *iter;
-		double dist_rrtpath = 0;
-		double cost_rrtpath = 0;
-		rrtVertex* currentVertex = vertex2;
-		vector<rrtVertex*>		removedVertex;
-		while (currentVertex != vertex1)
-		{
-			dist_rrtpath += currentVertex->distance2parent;
-			cost_rrtpath += currentVertex->cost_bw_parent;
-			currentVertex = currentVertex->parentVertex;
-			removedVertex.push_back(currentVertex);
-		}
+	for (int iterSmoothing = 0; iterSmoothing < smoothingnum; iterSmoothing++)
+	{
+		// pick two random vertices
+		vector<rrtVertex*> vertices = getRandomVertices(path);
+		rrtVertex* vertex1 = vertices[0];
+		rrtVertex* vertex2 = vertices[1];
 		
+		// calculate rrtpath smoothing cost between two vertices
+		vector<rrtVertex*> removedVertex;
+		double cmp_rrtpath = getRRTpathSmoothingCost(vertex1, vertex2, removedVertex);
 		double cmp;
-		double cmp_rrtpath;
-		/////////////////////////////////////////////////////////////
-		if (rrtConstraints == NULL)
-		{
-			//////////////////////////////////////// without constraint
-			double dist = getDistance(vertex1->posState, vertex2->posState);
-			double cost;
-			
-			if (!_vectorFieldExist)
-			{
-				cost = 0.0;
-				cmp = dist;
-				cmp_rrtpath = dist_rrtpath;
-			}
-			else
-			{
-				cost = getUpstreamCost(vertex1->posState, vertex2->posState);
-				cmp = cost;
-				cmp_rrtpath = cost_rrtpath;
-			}
+		
+		// get candidate vertices without collision
+		vector<rrtVertex*> tempVertices = getCandidateVertices(vertices);
 
-			if (cmp < cmp_rrtpath && !collisionChecking(vertex1->posState, vertex2->posState, step_size*0.1))
-			{
-				vertex2->parentVertex = vertex1;
-				vertex2->distance2parent = dist;
-				vertex2->cost_bw_parent = cost;
-				for (unsigned int i = 0; i < removedVertex.size() - 1; i++)
-					path.remove(removedVertex[i]);
-			}
-		}
-		else
+		if (tempVertices.size() > 0)
 		{
-			//////////////////////////////////////// with constraint
-			vector<rrtVertex*> extendedVertex;
-			rrtVertex* firstExtenedVertex = new rrtVertex;
-			firstExtenedVertex->posState = vertex1->posState;
-			extendedVertex.push_back(firstExtenedVertex);
-			double eps = 0.5*step_size;
-			while (true)
-			{
-				Eigen::VectorXd diff = vertex2->posState - extendedVertex[extendedVertex.size() - 1]->posState;
-				double diffnorm = diff.norm();
-				if (diffnorm < eps && !collisionChecking(vertex2->posState, extendedVertex[extendedVertex.size() - 1]->posState, step_size*0.1))
-					break;
-				if (extendedVertex.size() > 2 && diffnorm > (vertex2->posState - extendedVertex[extendedVertex.size() - 2]->posState).norm())
-				{
-					// if distance b/w neighboring vertices is bigger than distance b/w vertices apart, end the extension
-					extendedVertex.resize(extendedVertex.size() - 1);
-					break;
-				}
-				Eigen::VectorXd temp_vertex = extendedVertex[extendedVertex.size() - 1]->posState + min(step_size, diffnorm)*diff;
-				rrtConstraints->project2ConstraintManifold(temp_vertex);
-				if (!collisionChecking(temp_vertex, extendedVertex[extendedVertex.size() - 1]->posState, step_size*0.1))
-				{
-					rrtVertex* tempVertex = new rrtVertex;
-					tempVertex->posState = temp_vertex;
-					tempVertex->parentVertex = extendedVertex[extendedVertex.size() - 1];
-					tempVertex->distance2parent = (extendedVertex[extendedVertex.size() - 1]->posState - temp_vertex).norm();
-					if (!_vectorFieldExist)
-						tempVertex->cost_bw_parent = 0.0;
-					else
-						tempVertex->cost_bw_parent = getUpstreamCost(extendedVertex[extendedVertex.size() - 1]->posState, temp_vertex);
-					extendedVertex.push_back(tempVertex);
-				}
-				else
-					break;
-			}
-			double dist_cur = (vertex2->posState - extendedVertex[extendedVertex.size() - 1]->posState).norm();
-			if (dist_cur < eps)
-			{
-				double dist = 0;
-				double cost = 0;
-				double cost_cur = 0;
-				if (_vectorFieldExist)
-					cost_cur = getUpstreamCost(extendedVertex[extendedVertex.size() - 1]->posState, vertex2->posState);
-				for (unsigned int i = 1; i < extendedVertex.size(); i++)
-				{
-					dist += extendedVertex[i]->distance2parent;
-					cost += extendedVertex[i]->cost_bw_parent;
-				}
-				dist += dist_cur;
-				cost += cost_cur;
-				if (!_vectorFieldExist)
-				{
-					cmp = dist;
-					cmp_rrtpath = dist_rrtpath;
-				}
-				else
-				{
-					cmp = cost;
-					cmp_rrtpath = cost_rrtpath;
-				}
-				if (cmp < cmp_rrtpath)
-				{
-					if (extendedVertex.size() == 1)
-					{
-						vertex2->parentVertex = vertex1;
-					}
-					else
-					{
-						vertex2->parentVertex = extendedVertex[extendedVertex.size() - 1];
-						extendedVertex[1]->parentVertex = vertex1;
-					}
-					
-					vertex2->distance2parent = dist_cur;
-					vertex2->cost_bw_parent = cost_cur;
-					
-					for (unsigned int i = 0; i < removedVertex.size() - 1; i++)
-						path.remove(removedVertex[i]);
-					// add new vertices
-					n = path.size();
-					tmpPath.resize(0);
-					list<rrtVertex*>::reverse_iterator tmpriter = tmpPath.rbegin();
-					list<rrtVertex*>::reverse_iterator riter = path.rbegin();
-					tmpPath.push_back(*riter);
-					
-					for (unsigned int i = 1; i < n + extendedVertex.size() - 1; i++, tmpriter++)
-						tmpPath.push_front((*tmpriter)->parentVertex);
-					path = tmpPath;
-					delete firstExtenedVertex;
-				}
-				else
-				{
-					// delete extended vertices
-					for (unsigned int i = 0; i < extendedVertex.size(); i++)
-						delete extendedVertex[i];
-				}
-			}
+			cmp = getNewPathSmoothingCost(tempVertices);
+
+			if (cmp < cmp_rrtpath)
+				replaceVertices(path, tempVertices, removedVertex);
 		}
+		/////////////////////////////////////////////////////////////
+		//if (rrtConstraints == NULL)
+		//{
+		//	//////////////////////////////////////// without constraint
+		//	
+		//	
+
+		//	//double dist = getDistance(vertex1->posState, vertex2->posState);
+		//	//double cost = getCost(vertex1, vertex2);
+		//	//if (cmp < cmp_rrtpath && !collisionChecking(vertex1->posState, vertex2->posState, step_size*0.1))
+		//	//{
+		//	//	vertex2->parentVertex = vertex1;
+		//	//	vertex2->distance2parent = dist;
+		//	//	vertex2->cost_bw_parent = cost;
+		//	//	for (unsigned int i = 0; i < removedVertex.size() - 1; i++)
+		//	//		path.remove(removedVertex[i]);
+		//	//}
+		//}
+		//else
+		//{
+		//	//////////////////////////////////////// with constraint
+		//	// temporary vertices which will connect vertex1 and vertex2 while maintaining constraints
+		//	double eps = 0.5*step_size;
+		//	vector<rrtVertex*> extendedVertex = getConstrainedPathConnectingTwoVertices(vertex1, vertex2, eps);
+		//	
+
+		//	double dist_cur = (vertex2->posState - extendedVertex[extendedVertex.size() - 1]->posState).norm();
+		//	// replace temp vertices to original path if the cost is smaller
+		//	if (dist_cur < eps)
+		//	{
+		//		double dist = 0;
+		//		double cost = 0;
+		//		double cost_cur = getCost(extendedVertex[extendedVertex.size() - 1], vertex2);
+		//		
+		//		for (unsigned int i = 1; i < extendedVertex.size(); i++)
+		//		{
+		//			dist += extendedVertex[i]->distance2parent;
+		//			cost += extendedVertex[i]->cost_bw_parent;
+		//		}
+		//		dist += dist_cur;
+		//		cost += cost_cur;
+		//		
+		//			cmp = dist;
+		//		
+		//		if (cmp < cmp_rrtpath)
+		//		{
+		//			if (extendedVertex.size() == 1)
+		//				vertex2->parentVertex = vertex1;
+		//			else
+		//			{
+		//				vertex2->parentVertex = extendedVertex[extendedVertex.size() - 1];
+		//				extendedVertex[1]->parentVertex = vertex1;
+		//			}
+		//			
+		//			vertex2->distance2parent = dist_cur;
+		//			vertex2->cost_bw_parent = cost_cur;
+		//			
+		//			for (unsigned int i = 0; i < removedVertex.size() - 1; i++)
+		//				path.remove(removedVertex[i]);
+		//			// add new vertices
+		//			n = path.size();
+		//			tmpPath.resize(0);
+		//			list<rrtVertex*>::reverse_iterator tmpriter = tmpPath.rbegin();
+		//			list<rrtVertex*>::reverse_iterator riter = path.rbegin();
+		//			tmpPath.push_back(*riter);
+		//			
+		//			for (unsigned int i = 1; i < n + extendedVertex.size() - 1; i++, tmpriter++)
+		//				tmpPath.push_front((*tmpriter)->parentVertex);
+		//			path = tmpPath;
+		//			delete extendedVertex[0];
+		//		}
+		//		else
+		//		{
+		//			// delete extended vertices
+		//			for (unsigned int i = 0; i < extendedVertex.size(); i++)
+		//				delete extendedVertex[i];
+		//		}
+		//	}
+		//}
 		/////////////////////////////////////////////////////////////
 	}
 	
@@ -678,66 +688,6 @@ void rrtManager::printTree(TARGET_TREE tree)
 	saveDataToText(treeData, fileName);
 }
 
-void rrtManager::checkVectorFieldFeasibility()
-{
-	for (unsigned int i = 0; i < _vectorFields.size(); i++)
-	{
-		_vectorFields[i]->checkFeasibility(nDim);
-			if(_vectorFields[i]->_isFeasible)
-				_vectorFieldExist = true;
-	}
-		
-}
-
-void rrtManager::addVectorField(rrtVectorField * vectorField)
-{
-	_vectorFields.push_back(vectorField);
-}
-
-void rrtManager::clearVectorField()
-{
-	_vectorFieldExist = false;
-	_vectorFields.resize(0);
-}
-
-Eigen::VectorXd rrtManager::getVectorField(const Eigen::VectorXd & pos1)
-{
-	Eigen::VectorXd vec = Eigen::VectorXd::Zero(pos1.size());
-	Eigen::VectorXd temp;
-	for (unsigned int i = 0; i < _vectorFields.size(); i++)
-	{
-		temp = _vectorFields[i]->getVectorField(pos1);
-		if (temp.size() == pos1.size())
-		{
-			vec += temp;
-		}
-	}
-	return vec;
-
-	//if (_vectorField == VECTOR_FIELD::TRAJFOLLOW)
-	//	return trajFollowVectorField(pos1, _refTraj);
-	//else if (_vectorField == VECTOR_FIELD::RIVER_2DOF)
-	//{
-	//	Eigen::VectorXd vec = Eigen::VectorXd::Zero(2);
-	//	if (pos1(1) < 0.6*(upperBound(1) - lowerBound(1)) + lowerBound(1) && pos1(1) > 0.4*(upperBound(1) - lowerBound(1)) + lowerBound(1))
-	//	{
-	//		vec(0) = 1.0;
-	//	}
-	//	else
-	//	{
-	//		vec(0) = 0.2;
-	//	}
-	//	return vec;
-	//}
-	//else
-	//	return Eigen::VectorXd::Zero(pos1.size());
-}
-
-void rrtManager::setVectorFieldWeight(double weight)
-{
-	if (weight > 0)
-		_vectorFieldWeight = weight;
-}
 
 //Eigen::VectorXd rrtManager::trajFollowVectorField(const Eigen::VectorXd & pos1, const vector<Eigen::VectorXd>& refTraj)
 //{
@@ -764,45 +714,8 @@ void rrtManager::setVectorFieldWeight(double weight)
 //	return vec;
 //}
 
-double rrtManager::getUpstreamCost(const Eigen::VectorXd & vertPos1, const Eigen::VectorXd & vertPos2, int n /* = 10*/)
-{
-	Eigen::VectorXd dir = vertPos2 - vertPos1;
-	double dist = dir.norm() / (double) n;
-	dir.normalize();
-	Eigen::VectorXd tmpVec;
-	double cost = 0.0;
-	for (int i = 0; i < n + 1; i++)
-	{
-		tmpVec = vertPos1 + (double)i / (double)n * (vertPos2 - vertPos1);
-		tmpVec = getVectorField(tmpVec);
-
-		if (i == 0 || i == n)
-			cost += 0.5*(tmpVec.norm() - tmpVec.transpose()*dir)*dist;
-		else
-			cost += (tmpVec.norm() - tmpVec.transpose()*dir)*dist;
-	}
-	return cost;
-}
-
-void rrtManager::addConstraint(rrtConstraint* constraint)
-{
-	rrtConstraints = constraint;
-}
-
-void rrtManager::clearConstraints()
-{
-	rrtConstraints = NULL;
-}
 
 
-rrtConstraint::rrtConstraint()
-{
-}
-
-
-rrtConstraint::~rrtConstraint()
-{
-}
 
 
 //void ObjectrrtManager::setSystem(srSystem* _pSystem)
@@ -936,12 +849,3 @@ rrtConstraint::~rrtConstraint()
 //	return SE3path;
 //}
 
-rrtVectorField::rrtVectorField()
-{
-	_isFeasible = true;
-	_C = 1.0;
-}
-
-rrtVectorField::~rrtVectorField()
-{
-}

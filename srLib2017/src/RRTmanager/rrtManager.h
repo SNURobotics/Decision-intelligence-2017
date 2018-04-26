@@ -5,6 +5,7 @@
 #include <set>
 #include <list>
 #include <vector>
+#include <utility>
 
 using namespace std;
 
@@ -30,8 +31,6 @@ public:
 
 typedef set<rrtVertex*>		rrtTree;
 
-class rrtConstraint;
-class rrtVectorField;
 
 class rrtManager
 {
@@ -46,9 +45,12 @@ public:
 	void									setStartandGoal(const Eigen::VectorXd& _start, const Eigen::VectorXd& _goal);
 	void									setStateBound(const Eigen::VectorXd& _lowerbound, const Eigen::VectorXd& _upperbound);
 	virtual bool							setState(const Eigen::VectorXd& state);
+	
+	bool									checkStartGoalFeasibility();
+	virtual bool							isProblemFeasible();
+
 	void									execute(double _step_size);
 	vector<Eigen::VectorXd>					extractPath(int smoothingNum = 200);
-	
 	
 	bool									collisionChecking(const Eigen::VectorXd& pos1, const Eigen::VectorXd& pos2, double step_size_collision = 0.01);
 
@@ -56,27 +58,14 @@ public:
 	// print tree
 	void									printTree(TARGET_TREE tree);
 
-	// constrained
-	void									addConstraint(rrtConstraint* constraint);
-	void									clearConstraints();
 
-	// vector field
-	void									checkVectorFieldFeasibility();
-	void									addVectorField(rrtVectorField* vectorField);
-	void									clearVectorField();
-	Eigen::VectorXd							getVectorField(const Eigen::VectorXd& pos1);
-	void									setVectorFieldWeight(double weight);
-	//enum VECTOR_FIELD {TRAJFOLLOW, RIVER_2DOF};
-	//void									setTrajFollowVectorField(const vector<Eigen::VectorXd>& refTraj);
-	//void									setRiver2dofVectorField();
-	//Eigen::VectorXd							trajFollowVectorField(const Eigen::VectorXd& pos1, const vector<Eigen::VectorXd>& refTraj);
-	double									getUpstreamCost(const Eigen::VectorXd& vertPos1, const Eigen::VectorXd& vertPos2, int n = 10);
 
 protected:
 	
 	bool									innerloop();
 
 	void									swapTree();
+	virtual void							connectParentAndChild(rrtVertex* parentVertex, rrtVertex* childVertex);
 	int										randomInt(int LB, int UB);
 	list<rrtVertex*>						smoothingPath(list<rrtVertex*>& path, int smoothingnum);
 	virtual double							getDistance(const Eigen::VectorXd& vertPos1, const Eigen::VectorXd& vertPos2);
@@ -89,7 +78,15 @@ protected: // innerloop function
 	rrtVertex*								nearestVertex(const Eigen::VectorXd& _vertex, TARGET_TREE treeNum);
 	rrtVertex*								generateNewVertex(rrtVertex* pos1, const Eigen::VectorXd& pos2, double step_size_collision = 0.01);
 	virtual vector<Eigen::VectorXd>			generateIntermediateVertex(Eigen::VectorXd pos1, Eigen::VectorXd pos2, int numMidPoint);
-	
+
+protected: // smoothing function
+	vector<rrtVertex*>						getRandomVertices(list<rrtVertex*>& path);
+	virtual vector<rrtVertex*>				getCandidateVertices(vector<rrtVertex*> vertices);
+	virtual double							getCost(rrtVertex* pos1, rrtVertex* pos2);
+	virtual double							getRRTpathSmoothingCost(rrtVertex* pos1, rrtVertex* pos2, vector<rrtVertex*>& removedVertex);
+	virtual double							getNewPathSmoothingCost(vector<rrtVertex*> vertices);
+	virtual bool							replaceVertices(list<rrtVertex*>& path, vector<rrtVertex*>& tempVertices, vector<rrtVertex*>& removedVertex);
+
 protected:
 	srSpace*								pSpace;
 	srSystem*								pSystem;
@@ -112,38 +109,10 @@ protected:
 	rrtVertex*								connectedVertex1;
 	rrtVertex*								connectedVertex2;
 
-	bool									_vectorFieldExist;
-	//VECTOR_FIELD							_vectorField;
-	vector<rrtVectorField*>					_vectorFields;
-	double									_vectorFieldWeight;
-	//vector<Eigen::VectorXd>					_refTraj;
-	rrtConstraint*							rrtConstraints;
+
 };
 
-class rrtConstraint
-{
-public:
-	rrtConstraint();
-	~rrtConstraint();
 
-	int								nDim;
-
-	virtual	Eigen::VectorXd			getConstraintVector(const Eigen::VectorXd& jointVal) = 0;
-	virtual	Eigen::MatrixXd			getConstraintJacobian(const Eigen::VectorXd& jointVal) = 0;
-	virtual	void					project2ConstraintManifold(Eigen::VectorXd& jointVal) = 0;
-};
-
-class rrtVectorField
-{
-public:
-	rrtVectorField();
-	~rrtVectorField();
-
-	virtual	Eigen::VectorXd			getVectorField(const Eigen::VectorXd& pos1) = 0;
-	virtual	void					checkFeasibility(int nDim) = 0;
-	bool							_isFeasible;
-	double							_C;		// parameter to control the scale of vector field
-};
 
 //// planning trajectory of object (Configuration space is SE(3))
 //class ObjectrrtManager : public rrtManager

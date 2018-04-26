@@ -11,6 +11,7 @@ void rendering(int argc, char **argv);
 void updateFunc();
 int main(int argc, char **argv)
 {
+	
 	srand(time(NULL));
 	robot1Setting();
 	initDynamics();
@@ -90,8 +91,8 @@ int main(int argc, char **argv)
 
 		// do planning (vf rrt)
 		//RRTManager1->addVectorField(singAvoidVF);
-		RRTManager1->addVectorField(workspaceVF);
-		RRTManager1->setVectorFieldWeight(1.0);
+		//RRTManager1->addVectorField(workspaceVF);
+		//RRTManager1->setVectorFieldWeight(1.0);
 		RRTManager1->setStartandGoal(initPos, goalPos);
 		RRTManager1->execute(0.1);
 		traj2 = RRTManager1->extractPath(200);

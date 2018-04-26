@@ -1009,7 +1009,7 @@ Eigen::VectorXd robotManager::manipulabilityGradient(const Eigen::VectorXd & joi
 		vm = svd.matrixV().col(min(Jb.rows(), Jb.cols()) - 1);
 		Eigen::VectorXd temp = Eigen::VectorXd::Zero(jointVal.size());
 		Eigen::MatrixXd dJdq_i = Eigen::MatrixXd::Zero(Jb.rows(), Jb.cols());
-		for (unsigned int i = 0; i < jointVal.size(); i++)
+		for (int i = 0; i < jointVal.size(); i++)
 		{
 			if (i > 0)
 				temp[i - 1] = 0.0;
