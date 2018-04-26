@@ -18,3 +18,11 @@ public:
 	double m_collision_offset;
 };
 
+// Temporary working object
+class workingObject : public Object
+{
+public:
+	workingObject();
+	~workingObject();
+	void AssembleModel();
+};

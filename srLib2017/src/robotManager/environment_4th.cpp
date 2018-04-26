@@ -86,3 +86,67 @@ void Bin::AssembleModel()
 	this->SetBaseLink(&m_ObjLink[0]);
 	this->SetBaseLinkType(srSystem::KINEMATIC);
 }
+
+workingObject::workingObject()
+{
+	AssembleModel();
+}
+
+workingObject::~workingObject()
+{
+}
+
+void workingObject::AssembleModel()
+{
+	m_numLink = 2;
+	m_numCollision = 1;
+	m_numWeldJoint = 1;
+
+	// dimension
+	Vec3 dim(0.1, 0.1, 0.025);
+
+	for (int i = 0; i < m_numLink; i++)
+	{
+		srLink* temp = new srLink;
+		m_ObjLink.push_back(*temp);
+	}
+	for (int i = 0; i < m_numCollision; i++)
+	{
+		srCollision* temp = new srCollision;
+		m_ObjCollision.push_back(*temp);
+	}
+	for (int i = 0; i < m_numWeldJoint; i++)
+	{
+		srWeldJoint* temp = new srWeldJoint;
+		m_ObjWeldJoint.push_back(*temp);
+	}
+
+	m_ObjLink[0].GetGeomInfo().SetColor(0.3, 0.4, 0.3); 
+	m_ObjLink[0].GetGeomInfo().SetDimension(dim);
+	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjLink[0].SetFrame(SE3(Vec3(0.0, 0.0, 0.5*0.05)));
+
+	// dummy link
+	m_ObjLink[1].GetGeomInfo().SetDimension(Vec3(0.0, 0.0, 0.0));
+
+
+
+	m_ObjWeldJoint[0].SetParentLink(&m_ObjLink[1]);
+	m_ObjWeldJoint[0].SetParentLinkFrame();
+	m_ObjWeldJoint[0].SetChildLink(&m_ObjLink[0]);
+	m_ObjWeldJoint[0].SetChildLinkFrame();
+
+	///// set collision
+	for (int i = 0; i < 1; i++)
+	{
+		m_ObjCollision[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+		m_ObjCollision[i].GetGeomInfo().SetDimension(dim);
+		m_ObjCollision[i].SetLocalFrame(SE3());
+		m_ObjLink[i].AddCollision(&m_ObjCollision[i]);
+	}
+
+
+	this->SetSelfCollision(false);
+	this->SetBaseLink(&m_ObjLink[1]);
+	this->SetBaseLinkType(srSystem::KINEMATIC);
+}

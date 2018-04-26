@@ -21,45 +21,51 @@ using namespace std;
 
 // Environment
 Base_HYU* busbarBase = new Base_HYU;
-JigAssem_QB* jigAssem = new JigAssem_QB;
+JigAssem_QB_bar* jigAssem = new JigAssem_QB_bar(false);
 vector<Jig_HYU*> jig(4);
 vector<SE3> jigSE3(4);
 vector<SE3> jig2busbar(2);
+//vector<BusBar_HYU*> busbar(8);
+//vector<SE3>	initSE3(8);
+//vector<SE3>	goalSE3(8);
+//vector<SE3> allSE3_busbar(2 * busbar.size());
 
 vector<BusBar_HYU*> busbar(1);
+vector<Insert*> ctCase(1);
 vector<SE3>	initSE3(2);
 vector<SE3>	goalSE3(2);
 vector<SE3> allSE3_busbar(2 * initSE3.size());
 
 // Workspace
-WorkCell* workCell = new WorkCell();
+int workcell_mode = 2;
+WorkCell* workCell = new WorkCell(workcell_mode);
 Eigen::VectorXd stageVal(3);
 
 // Robot
-IndyRobot* robot1 = new IndyRobot;
-IndyRobot* robot2 = new IndyRobot;
-vector<IndyRobot*> robotArray(2);
-
+IndyRobot* robot1 = new IndyRobot(false);
+IndyRobot* robot2 = new IndyRobot(false);
 Eigen::VectorXd jointVal(6);
 Eigen::VectorXd jointAcc(6);
 Eigen::VectorXd jointVel(6);
 srSpace gSpace;
 myRenderer* renderer;
 SE3 Tbusbar2gripper = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
-SE3 Tbusbar2gripper_new = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.04));
+SE3 Tbusbar2gripper_new = EulerZYX(Vec3(SR_PI_HALF, 0.0, SR_PI), Vec3(0.0, 0.0, 0.015));
+SE3 TctCase2gripper = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.006, 0.031625, 0.01));
 SE3 Thole2busbar = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.0, 0.0, 0.0));
 
 // Planning
-vector<vector<vector<Eigen::VectorXd>>> traj(2);
-vector<vector<vector<SE3>>>	Ttraj(2);
-vector<vector<bool>> attachObject(2);
+vector<vector<Eigen::VectorXd>> traj(0);
+vector<vector<SE3>>	Ttraj(0);
+
+
+vector<bool> attachObject;
 
 vector<vector<int>> idxTraj(0);
 vector<vector<int>> totalFlag(0);
 vector<Eigen::VectorXd> initPos(0);
 vector<Eigen::VectorXd> goalPos(0);
-
-vector<vector<SE3>> wayPoints(2);
+vector<SE3> wayPoints(0);
 
 Eigen::VectorXd homePos = Eigen::VectorXd::Zero(6);
 
@@ -68,19 +74,19 @@ SE3 initBusbar;
 // Measure F/T sensor
 dse3 Ftsensor;
 Eigen::VectorXd ftsensor(6);
+
 // save data
-vector<vector<vector<Eigen::VectorXd>>> FTtraj(2);
-vector<vector<vector<Eigen::VectorXd>>> TtrajVec(2);
+vector<vector<Eigen::VectorXd>> FTtraj;
+vector<vector<Eigen::VectorXd>> TtrajVec;
+vector<vector<Eigen::VectorXd>> TtrajFromJoint(2);
+
 vector<vector<Eigen::VectorXd>> busbarTraj;
 vector<Eigen::VectorXd> goalJigLocation(1);
 
 indyRobotManager* rManager1;
 indyRobotManager* rManager2;
-vector<indyRobotManager*> rManagerArray(2);
-
-
-
 robotRRTManager* RRTManager1 = new robotRRTManager;
+robotRRTManager* RRTManager2 = new robotRRTManager;
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::HYBRID;
 hybridPFCtrlManager_6dof* hctrl = new hybridPFCtrlManager_6dof;
 void initDynamics();
@@ -91,6 +97,8 @@ void updateFuncPlanning();
 void updateFuncTestSensor();
 void updateFuncTestSensorToRobot();
 void updateFuncLoadJointValAttachStatus();
+void updateFuncLoadSuccessData();
+void loadSuccessData(int nWay, bool connect);
 void environmentSetting_HYU(bool connect, int startLocation, Vec2 goalLocation);
 void environmentSetting_HYU2(bool connect);
 void workspaceSetting();
@@ -98,9 +106,11 @@ void robotSetting();
 void robotManagerSetting();
 void RRT_problemSetting_HYU();
 void RRT_problemSetting();
-void RRT_problemSetting(vector<Eigen::VectorXd> init, vector<vector<SE3>> wayPoints, vector<vector<bool>> includeOri, vector<vector<bool>> attachObject, vector<vector<bool>>& waypointFlag);
+void RRT_problemSetting(Eigen::VectorXd init, vector<SE3> wayPoints, vector<bool> includeOri, vector<bool> attachObject);
+void RRT_problemSetting_robot2(Eigen::VectorXd init, vector<SE3> wayPoints, vector<bool> includeOri, vector<bool> attachObject);
 void RRTSolve();
-void RRTSolve_HYU(vector<vector<bool>> attachObject, vector<double> stepsize);
+void RRTSolve_HYU(vector<bool> attachObject, vector<double> stepsize);
+void RRTSolve_HYU_robot2(vector<bool> attachObject, vector<double> stepsize);
 void rrtSetting();
 void setHybridPFCtrl();
 
@@ -108,32 +118,61 @@ Vec2 goalLocation; // busbar insertion location
 
 vector<int> flags(0);
 
+bool loadSuccess = true;
 double planning = 0;
 vector<Eigen::VectorXd> loadJointVal(0);
 vector<Eigen::VectorXd> loadAttachStatus(0);
+vector<Eigen::VectorXd>	loadBusbar(0);
 SE3 Twaypoint;
 SE3 Trobotbase1;
+SE3 Trobotbase2;
 Eigen::VectorXd testWaypoint;
 vector<Eigen::VectorXd> testJointVal(0);
+vector<Eigen::VectorXd> testJointVal2(0);
+vector<vector<Eigen::VectorXd>> testJointValVec(2);
+
+srWeldJoint* wJointJig = new srWeldJoint;
 Eigen::VectorXd testjointvalue(6);
 int main(int argc, char **argv)
 {
 	srand(time(NULL));
 	// Robot home position
-	homePos[1] = -SR_PI_HALF; homePos[3] = SR_PI_HALF; homePos[4] = -0.5 * SR_PI;
+	//homePos[1] = -SR_PI_HALF; homePos[3] = SR_PI_HALF; homePos[4] = -0.5 * SR_PI;
+	homePos = robot1->homePos;
 	//homePos[4] = -0.5 * SR_PI;		// match to robot workcell
 	// environment
 	workspaceSetting();
 	int startLocation =0;
 	goalLocation = Vec2(1, 1);
-	environmentSetting_HYU2(true);
+	bool connectJig2workcell = true;
+	environmentSetting_HYU2(connectJig2workcell);
+
+
+
+
+	//jigAssem->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -0.5)));
+	////////////////////////////////////////////// for testing workspace
+	SE3 Tbase;
+	if (workcell_mode == 1)
+		Tbase = SE3(Vec3(0.025, 1.095, 1.176));		// when stage attached
+	else if (workcell_mode == 2)
+		Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.099 + 0.009));	// when only stage4 is used
+	else
+		Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.009));		// when stage removed
+	SE3 Tbase2jigbase = EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.184));
+	vector<SE3> busbarSE3set(0);
+
 
 	robotSetting();
-	robotArray[0] = robot1;
-	robotArray[1] = robot2;
-
 	Trobotbase1 = robot1->GetBaseLink()->GetFrame();
+	Trobotbase2 = robot2->GetBaseLink()->GetFrame();
 
+	if (loadSuccess)
+	{
+		int nWaypoint = 4;
+		loadSuccessData(nWaypoint, connectJig2workcell);			// should be called after robotSetting
+		planning = 0.0;
+	}
 
 
 	// initialize srLib
@@ -141,117 +180,62 @@ int main(int argc, char **argv)
 
 	// robot manager setting
 	robotManagerSetting();
-	rManagerArray[0] = rManager1;
-	rManagerArray[1] = rManager2;
+	rManager1->setJointVal(robot1->homePos);
+	rManager2->setJointVal(robot2->homePos);
 
-	// workcell robot initial config
-	jointVal.setZero();
-	jointVal[0] = 0.0; jointVal[1] = -SR_PI_HALF; jointVal[2] = 80.0 / 90.0*SR_PI_HALF; jointVal[3] = SR_PI_HALF;
-	//rManager2->setJointVal(jointVal);
-	rManager2->setJointVal(homePos);
-	rManager1->setJointVal(homePos);
 	Eigen::VectorXd gripInput(2);
-	gripInput[0] = -0.009;
-	gripInput[1] = 0.009;
+	gripInput[0] = -0.005;
+	gripInput[1] = 0.005;
 	rManager1->setGripperPosition(gripInput);
 	rManager2->setGripperPosition(gripInput);
 
 	// rrt
 	rrtSetting();
 
-	vector<vector<bool>> includeOri(2);
-	vector<double> stepsize;
-
-	// -------- robot 1 way points
-	int nWay = 3;
-	includeOri[0].resize(nWay);
-	for (int i = 0; i < nWay; i++)
-	{
-		includeOri[0][i] = true;
-	}
 	
-	wayPoints[0].resize(nWay);
-	int holeNum = 2;
-	double tran_x = -(double)rand() / RAND_MAX * 0.3;
-	double tran_y = (double)rand() / RAND_MAX * 0.12;
-	double tran_z = (double)rand() / RAND_MAX * 0.01;
-	double z_angle = -(double)rand() / RAND_MAX * 0.2;
-	double y_angle = -(double)rand() / RAND_MAX * 0.2;
-	double x_angle = -(double)rand() / RAND_MAX * 0.2;
+	/////////////////////////////////////////////////////////////////////// 170513 success data
+	int nWay = 4;
+	vector<bool> includeOri(nWay, true);
+	wayPoints.resize(nWay);
+	int holeNum = 4;
+	double tran_x = -(double)rand() / RAND_MAX * 0.15;
+	double tran_y = -(double)rand() / RAND_MAX * 0.1;
+	double tran_z = (double)rand() / RAND_MAX * 0.05;
+	double z_angle = -(double)rand() / RAND_MAX * 0.15;
+	double y_angle = (double)rand() / RAND_MAX * 0.15;
+	double x_angle = -(double)rand() / RAND_MAX * 0.15;
 
-	initBusbar = EulerZYX(Vec3(z_angle, y_angle, x_angle), Vec3(0.0 + tran_x, -0.4 + tran_y, 0.06 + tran_z))* jigAssem->GetBaseLink()->GetFrame();
+	initBusbar = EulerZYX(Vec3(z_angle, y_angle, x_angle), Vec3(0.0 + tran_x, -0.4 + tran_y, -0.06 + tran_z))* jigAssem->GetBaseLink()->GetFrame();
 	
+	//initBusbar = SE3(Vec3(0.0 + tran_x, -0.4 + tran_y,  -0.06+tran_z)) * jigAssem->GetBaseLink()->GetFrame();
 	initSE3[0] = initBusbar;
 	busbar[0]->GetBaseLink()->SetFrame(initBusbar);
-	wayPoints[0][0] = initBusbar;
-	wayPoints[0][1] = SE3(Vec3(0.0, 0.0, 0.02)) * jigAssem->GetBaseLink()->GetFrame() * jigAssem->holeCenter[holeNum] * Thole2busbar;
-	wayPoints[0][2] = SE3(Vec3(0.0, 0.0, -0.025)) * wayPoints[0][1];
+	wayPoints[0] = SE3(Vec3(0.0, 0.0, 0.04))*initBusbar;
+	wayPoints[1] = initBusbar;
+	wayPoints[2] = SE3(Vec3(0.0, 0.0, 0.02)) * jigAssem->GetBaseLink()->GetFrame() * jigAssem->holeCenter[holeNum] * Thole2busbar;
+	wayPoints[3] = SE3(Vec3(0.0, 0.0, -0.025)) * wayPoints[2];
 
-	attachObject[0].resize(nWay);
-	attachObject[0][0] = false;
-	attachObject[0][1] = true;
-	attachObject[0][2] = true;
+	attachObject.resize(nWay);
+	attachObject[0] = false;
+	attachObject[1] = false;
+	attachObject[2] = true;
+	attachObject[3] = true;
 
+	vector<double> stepsize(nWay, 0.05);
+	stepsize[1] = 0.005;
+	stepsize[3] = 0.005;
 
-
+	RRT_problemSetting(homePos, wayPoints, includeOri, attachObject);
+	
 	busbar[0]->setBaseLinkFrame(initBusbar);
 
-
-
-	// -------------------- robot 2 way points
-	nWay = 3;
-	includeOri[1].resize(nWay);
-	for (int i = 0; i < nWay; i++)
+	if (!loadSuccess)
 	{
-		includeOri[1][i] = true;
+		printf("do planning?: ");
+		cin >> planning;
+		if (planning)
+			RRTSolve_HYU(attachObject, stepsize);
 	}
-
-	wayPoints[1].resize(nWay);
-	int holeNum = 8;
-	double tran_x = -(double)rand() / RAND_MAX * 0.1;
-	double tran_y = (double)rand() / RAND_MAX * 0.12;
-	double tran_z = (double)rand() / RAND_MAX * 0.01;
-	double z_angle = -(double)rand() / RAND_MAX * 0.2;
-	double y_angle = -(double)rand() / RAND_MAX * 0.2;
-	double x_angle = -(double)rand() / RAND_MAX * 0.2;
-	initBusbar = EulerZYX(Vec3(z_angle, y_angle, x_angle), Vec3(0.0 + tran_x, 0.4 + tran_y, 0.06 + tran_z))* jigAssem->GetBaseLink()->GetFrame();
-	wayPoints[1][0] = initBusbar;
-	wayPoints[1][1] = SE3(Vec3(0.0, 0.0, 0.02)) * jigAssem->GetBaseLink()->GetFrame() * jigAssem->holeCenter[holeNum] * Thole2busbar;
-	wayPoints[1][2] = SE3(Vec3(0.0, 0.0, -0.025)) * wayPoints[0][1];
-
-	attachObject[1].resize(nWay);
-	attachObject[1][0] = false;
-	attachObject[1][1] = false;
-	attachObject[1][2] = false;
-	
-
-	vector<vector<bool>> waypointFlag(2);
-	vector<Eigen::VectorXd> planningInitialPos(2);
-	planningInitialPos[0] = homePos;
-	planningInitialPos[1] = homePos;
-
-
-	RRT_problemSetting(planningInitialPos, wayPoints, includeOri, attachObject, waypointFlag);
-
-    // step size (consider the number of feasible way points)
-
-	stepsize.resize(initPos.size());
-	for (unsigned int i = 0; i < stepsize.size(); i++)
-	{
-		stepsize[i] = 0.05;
-	}
-	stepsize[stepsize.size()] = 0.005;
-
-
-
-	printf("do planning?: ");
-	cin >> planning;
-	if (planning)
-		RRTSolve_HYU(attachObject, stepsize);
-	
-
-
-
 	FTtraj.resize(initPos.size());
 	TtrajVec.resize(initPos.size());
 	busbarTraj.resize(initPos.size());
@@ -259,7 +243,7 @@ int main(int argc, char **argv)
 	{
 		printf("%d-th traj length: %d\n", i, traj[i].size());
 	}
-	
+
 	rendering(argc, argv);
 
 	return 0;
@@ -277,12 +261,21 @@ void rendering(int argc, char **argv)
 	renderer->InitializeNode(&gSpace);
 
 	//renderer->setUpdateFunc(updateFuncTestSensorToRobot);
-	renderer->setUpdateFunc(updateFunc);
-	//if (planning)
-	//	renderer->setUpdateFunc(updateFuncPlanning);
-	//else
-	//	renderer->setUpdateFunc(updateFuncInput);
+	//renderer->setUpdateFunc(updateFunc);
+	if (loadSuccess)
+		renderer->setUpdateFunc(updateFuncLoadSuccessData);
+	else
+	{
+		if (planning)
+			renderer->setUpdateFunc(updateFuncPlanning);
+		else
+			renderer->setUpdateFunc(updateFuncInput);
+	}
+	
+	//renderer->setUpdateFunc(updateFuncPlanning);
+	//renderer->setUpdateFunc(updateFuncLoadJointValAttachStatus);
 
+	//renderer->setUpdateFunc(updateFunc);
 	renderer->RunRendering();
 }
 
@@ -298,13 +291,59 @@ void updateFunc()
 {
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 	
-	rManager2->setJointVal(homePos);
+	busbar[0]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, -10.0)));
 	static int cnt = 0;
-	rManager1->setJointVal(homePos);
+	static int temp_cnt = 0;
+	//rManager1->setJointVal(testJointValVec[0][cnt % (testJointValVec[0].size() - 1)]);
+	//rManager2->setJointVal(testJointValVec[1][cnt % (testJointValVec[1].size() - 1)]);
+	Eigen::VectorXd testpos = homePos;
+	testpos[5] += 1.0;
+	Eigen::VectorXd testpos1 = Eigen::VectorXd::Zero(6);
+	testpos1[1] = DEG2RAD(30); testpos1[2] = DEG2RAD(-90); testpos1[3] = DEG2RAD(90); testpos1[4] = DEG2RAD(-100);
+	static double q3 = DEG2RAD(-235);
+
+	Eigen::VectorXd testpos2 = robot2->homePos;
+	static double q2 = robot2->homePos[1];
+	q2 -= 0.01;
+	testpos2[1] = q2;
+	//q3 += 0.01;
+	//testpos1[2] = q3;
+	//rManager1->setJointVal(robot1->qInvKinInit);
+	//cout << jointVal << endl;
+	//rManager1->setJointVal(testJointVal[temp_cnt % testJointVal.size()]);
+	//rManager1->setJointVal(testJointVal[testJointVal.size() - 1]);
+	rManager1->setJointVal(robot1->homePos);
+	//rManager1->setJointVal(jointVal);
+	rManager2->setJointVal(robot2->homePos);
+	//cout << Trobotbase1 % robot1->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() << endl;
+	//cout << Trobotbase2 % robot2->gMarkerLink[Indy_Index::MLINK_GRIP].GetFrame() << endl;
+	cout << gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP() << endl;
+
+	if (gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP())
+	{
+		cout << q2 << endl;
+		int stop = 1;
+	}
+		
+
+	//cout << testJointVal[testJointVal.size() - 1].transpose() << endl;
 	//rManager1->setJointVal(testjointvalue);
 	//rManager1->setJointVal(testWaypoint);
 	//rManager1->setJointVal(traj[0][cnt%(traj[0].size()-1)]);
 	cnt++;
+	if (cnt % 100 == 0)
+		temp_cnt++;
+
+
+	//workCell->m_ObjWeldJoint[3].SetParentLinkFrame(SE3(Vec3(0.0, 0.0, (double)cnt * 0.01)));
+	//workCell->KIN_UpdateFrame_All_The_Entity();
+	//gSpace.KIN_MODE_PRESTEP();
+	//if (!gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP())
+	//{
+	//	cout << RAD2DEG(q3) << endl;
+	//	int stop = 1;
+	//}
+
 	//if (loadJointVal.size() > 0)
 	//	rManager1->setJointVal(loadJointVal[cnt % loadJointVal.size()]);
 	//else
@@ -391,7 +430,7 @@ void updateFuncPlanning()
 	gripInput[1] = 0.009;
 	rManager1->setGripperPosition(gripInput);
 	rManager2->setGripperPosition(gripInput);
-	rManager2->setJointVal(jointVal);
+	rManager2->setJointVal(robot2->homePos);
 
 	static int cnt = 0;
 	static int writeCnt = 0;
@@ -517,15 +556,16 @@ void updateFuncPlanning()
      		FTtraj[idx].push_back(ftsensor);
 			// See from the robot base like frame
 			TtrajVec[idx].push_back(SE3toVectorXd(Inv(robot1->GetBaseLink()->GetFrame())*Ttraj[idx][trjIdx]));
+			//TtrajVec[idx].push_back(SE3toVectorXd(Ttraj[idx][trjIdx]));
      		busbarTraj[idx].push_back(SE3toVectorXd(Inv(robot1->GetBaseLink()->GetFrame())*(busbar[0]->GetBaseLink()->GetFrame())));
-			goalJigLocation[0] = SE3toVectorXd(Inv(robot1->GetBaseLink()->GetFrame())*jigAssem->GetBaseLink()->GetFrame());
+			goalJigLocation[0] = SE3toVectorXd(Inv(robot1->GetBaseLink()->GetFrame())*jigAssem->GetBaseLink()->GetFrame()*Inv(jigAssem->m_visionOffset));
 			
 			writeCnt++;
 			
 		}
 		if (writeCnt == traj[idx].size())
 		{
-			string dir_folder = "../../../data/HYU_success7";
+			string dir_folder = "../../../data/test_traj";
 			// save
 			string dir_temp = dir_folder;
 			saveDataToText(traj[idx], dir_temp.append("/jointValTraj").append(to_string(idx)).append(".txt"));
@@ -641,6 +681,7 @@ void updateFuncInput()
 {
 	gSpace.m_Gravity = Vec3(0.0, 0.0, 0.0);
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
+	rManager2->setJointVal(robot2->homePos);
 	static int cnt = 0;
 	int taskNum;
 	if (cnt % 300 == 0)
@@ -717,13 +758,18 @@ void updateFuncTestSensor()
 
 void environmentSetting_HYU2(bool connect)
 {
-	//SE3 Tbase = SE3(Vec3(0.025, 1.095, 1.176));		// when stage attached
-	SE3 Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.009));		// when stage removed
+	SE3 Tbase;
+	if (workcell_mode == 1)
+		Tbase = SE3(Vec3(0.025, 1.095, 1.176));		// when stage attached
+	else if (workcell_mode == 2)
+		Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.099 + 0.009));	// when only stage4 is used
+	else
+		Tbase = SE3(Vec3(0.025, 1.095, 0.910 + 0.009));		// when stage removed
 	double z_angle = (double)rand() / RAND_MAX * 0.0;
 	double x_trans = -(double)rand() / RAND_MAX * 0.1;
-	double y_trans = (double)rand() / RAND_MAX * 0.1;
-	//SE3 Tbase2jigbase = EulerZYX(Vec3(z_angle, 0.0, 0.0), Vec3(x_trans, y_trans, 0.184));
-	SE3 Tbase2jigbase = EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.184));
+	double y_trans = -(double)rand() / RAND_MAX * 0.1;
+	SE3 Tbase2jigbase = EulerZYX(Vec3(z_angle, 0.0, 0.0), Vec3(x_trans, y_trans, 0.184));
+	//SE3 Tbase2jigbase = EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.184));
 	for (unsigned int i = 0; i < busbar.size(); i++)
 	{
 		busbar[i] = new BusBar_HYU;
@@ -731,18 +777,24 @@ void environmentSetting_HYU2(bool connect)
 		busbar[i]->setBaseLinkFrame(SE3(Vec3(0.0, 0.0, 10.0*(i+1))));
 		gSpace.AddSystem(busbar[i]);
 	}
+	for (unsigned int i = 0; i < ctCase.size(); i++)
+	{
+		ctCase[i] = new Insert;
+		ctCase[i]->SetBaseLinkType(srSystem::FIXED);
+		ctCase[i]->setBaseLinkFrame(SE3(Vec3(0.0, 10.0, (double) 10.0 * (i + 1))));
+		gSpace.AddSystem(ctCase[i]);
+	}
 	jigAssem->SetBaseLinkType(srSystem::FIXED);
 	jigAssem->setBaseLinkFrame(Tbase*Tbase2jigbase);
 	if (!connect)
 		gSpace.AddSystem((srSystem*)jigAssem);
 	else
 	{
-		srWeldJoint* wJoint = new srWeldJoint;
-		wJoint->SetParentLink(workCell->GetBaseLink()); // removed stage
-		//wJoint->SetParentLink(workCell->getStagePlate());
-		wJoint->SetChildLink(jigAssem->GetBaseLink());
-		wJoint->SetParentLinkFrame(Tbase*Tbase2jigbase);
-		wJoint->SetChildLinkFrame(SE3());
+		wJointJig->SetParentLink(workCell->GetBaseLink()); // removed stage
+		//wJointJig->SetParentLink(workCell->getStagePlate());
+		wJointJig->SetChildLink(jigAssem->GetBaseLink());
+		wJointJig->SetParentLinkFrame(Tbase*Tbase2jigbase);
+		wJointJig->SetChildLinkFrame(SE3());
 	}
 }
 
@@ -782,37 +834,21 @@ void workspaceSetting()
 
 void rrtSetting()
 {
-	//vector<srStateJoint*> planningJoints(6);
-	vector<srStateJoint*> planningJoints(12);
-	for (unsigned int i = 0; i <DEGREE_OF_FREEDOM_INDY_JOINT/* planningJoints.size()*/; i++)
+	vector<srStateJoint*> planningJoints(6);
+	vector<srStateJoint*> planningJoints2(6);
+	for (unsigned int i = 0; i < planningJoints.size(); i++)
 	{
 		planningJoints[i] = (srStateJoint*)robot1->gJoint[i];
-		planningJoints[i+6] = (srStateJoint*)robot2->gJoint[i];
+		planningJoints2[i] = (srStateJoint*)robot2->gJoint[i];
 	}
 		
-	
 	RRTManager1->setSystem(planningJoints);
 	RRTManager1->setSpace(&gSpace);
+	RRTManager1->setStateBound(robot1->getLowerJointLimit(), robot1->getUpperJointLimit());
 
-	Eigen::VectorXd LowerJointLimit(12);
-	Eigen::VectorXd UpperJointLimit(12);
-
-
-
-	Eigen::VectorXd LowerJointLimitRobot1 = robot1->getLowerJointLimit();
-	Eigen::VectorXd LowerJointLimitRobot2 = robot2->getLowerJointLimit();
-	Eigen::VectorXd UpperJointLimitRobot1 = robot1->getUpperJointLimit();
-	Eigen::VectorXd UpperJointLimitRobot2 = robot2->getUpperJointLimit();
-
-	for (int i = 0; i <DEGREE_OF_FREEDOM_INDY_JOINT; i++) {
-		LowerJointLimit(i) = LowerJointLimitRobot1[i];
-		LowerJointLimit(i + DEGREE_OF_FREEDOM_INDY_JOINT) = LowerJointLimitRobot2[i];
-		UpperJointLimit(i) = UpperJointLimitRobot1[i];
-		UpperJointLimit(i + DEGREE_OF_FREEDOM_INDY_JOINT) = UpperJointLimitRobot2[i];
-	}
-
-	//RRTManager->setStateBound(robot1->getLowerJointLimit(), robot1->getUpperJointLimit());
-	RRTManager1->setStateBound(LowerJointLimit, UpperJointLimit);
+	RRTManager2->setSystem(planningJoints2);
+	RRTManager2->setSpace(&gSpace);
+	RRTManager2->setStateBound(robot2->getLowerJointLimit(), robot2->getUpperJointLimit());
 }
 
 
@@ -846,251 +882,205 @@ void setHybridPFCtrl()
 	//hctrl->setSelectionMatrix(S);
 	hctrl->setSelectionMatrix(Eigen::MatrixXd());	//Eigen::MatrixXd(), S
 }
-//
-//void RRT_problemSetting()
-//{
-//	Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
-//	qInit[1] = 0.65*SR_PI;
-//	qInit[2] = -1.1*SR_PI;
-//
-//	for (unsigned int i = 0; i < initSE3.size(); i++)
-//	{
-//		allSE3_busbar[2 * i] = initSE3[i];
-//		allSE3_busbar[2 * i + 1] = goalSE3[i];
-//	}
-//
-//	int flag;
-//	initPos.push_back(rManager1->inverseKin(allSE3_busbar[0] * Tbusbar2gripper, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit));
-//	cout << initPos[0].transpose() << endl;
-//	printf("%d-th init inv kin flag: %d\n", 0, flag);
-//	for (unsigned int i = 1; i < allSE3_busbar.size(); i++)
-//	{
-//		qInit = initPos[i - 1];
-//		goalPos.push_back(rManager1->inverseKin(allSE3_busbar[i] * Tbusbar2gripper, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit));
-//		cout << goalPos[i - 1].transpose() << endl;
-//		initPos.push_back(goalPos[i - 1]);
-//		if (i % 2 == 0)
-//			printf("%d-th init inv kin flag: %d\n", i / 2, flag);
-//		else
-//			printf("%d-th goal inv kin flag: %d\n", i / 2, flag);
-//	}
-//}
-//
-//void RRT_problemSetting_HYU()
-//{
-//	Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
-//	// elbow up
-//	qInit[1] = -0.65*SR_PI;
-//	qInit[2] = 0.3*SR_PI;
-//	// elbow down
-//	//qInit[2] = 0.6*SR_PI_HALF;
-//	//qInit[4] = 0.6*SR_PI_HALF;
-//	//qInit[3] = SR_PI_HALF;
-//	for (unsigned int i = 0; i < initSE3.size(); i++)
-//	{
-//		allSE3_busbar[2 * i] = initSE3[i];
-//		allSE3_busbar[2 * i + 1] = goalSE3[i];
-//	}
-//
-//	int flag;
-//	initPos.push_back(rManager1->inverseKin(allSE3_busbar[0] * Tbusbar2gripper, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit,1500));
-//	cout << initPos[0].transpose() << endl;
-//	printf("%d-th init inv kin flag: %d\n", 0, flag);
-//
-//	qInit = initPos[0];
-//	goalPos.push_back(rManager1->inverseKin(allSE3_busbar[1] * Tbusbar2gripper, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit));
-//	cout << goalPos[0].transpose() << endl;
-//	initPos.push_back(goalPos[0]);
-//	printf("%d-th init inv kin flag: %d\n", 1, flag);
-//
-//	qInit = initPos[1];
-//	goalPos.push_back(rManager1->inverseKin(allSE3_busbar[3] * Tbusbar2gripper, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit));
-//	cout << goalPos[1].transpose() << endl;
-//
-//	//for (unsigned int i = 1; i < allSE3_busbar.size(); i++)
-//	//{
-//	//	qInit = initPos[i - 1];
-//	//	goalPos.push_back(rManager1->inverseKin(allSE3_busbar[i] * Tbusbar2gripper, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit));
-//	//	cout << goalPos[i - 1].transpose() << endl;
-//	//	initPos.push_back(goalPos[i - 1]);
-//	//	if (i % 2 == 0)
-//	//		printf("%d-th init inv kin flag: %d\n", i / 2, flag);
-//	//	else
-//	//		printf("%d-th goal inv kin flag: %d\n", i / 2, flag);
-//	//}
-//
-//
-//}
 
-//void RRTSolve()
-//{
-//	int nDim = 6;
-//	vector<Eigen::VectorXd> tempTraj;
-//	vector<int> tempIdxTraj(0);
-//	vector<SE3> tempTtraj(0);
-//	int start = 0;		//  >= 0
-//	int end = wayPoints.size();		// <= 15
-//	vector<bool> feas(2);
-//	unsigned int objNum;
-//	bool isAttached = false;
-//
-//	traj.resize(0);
-//	Ttraj.resize(0);
-//	idxTraj.resize(0);
-//	for (int i = start; i < end; i++)
-//	{
-//		objNum = i / 2;
-//		RRTManager->setStartandGoal(initPos[i], goalPos[i]);
-//
-//		for (unsigned int j = 0; j < goalSE3.size(); j++)
-//		{
-//			if (j < objNum)
-//				busbar[j]->setBaseLinkFrame(goalSE3[j]);
-//			else
-//				busbar[j]->setBaseLinkFrame(initSE3[j]);
-//		}
-//		if (i % 2 == 0)
-//		{
-//			isAttached = true;
-//			RRTManager->attachObject(busbar[objNum], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper));
-//			printf("%d-th busbar moving...\n", objNum);
-//		}
-//		else
-//		{
-//			isAttached = false;
-//			RRTManager->detachObject();
-//			busbar[objNum]->setBaseLinkFrame(goalSE3[objNum]);
-//			printf("%d-th busbar moved, reaching to next one...\n", objNum);
-//		}
-//
-//		feas = RRTManager->checkFeasibility(initPos[i], goalPos[i]);
-//		cout << feas[0] << feas[1] << endl;
-//		RRTManager->execute(0.05);
-//		tempTraj = RRTManager->extractPath();
-//
-//		// check collision
-//		for (unsigned int j = 0; j < tempTraj.size(); j++)
-//			if (RRTManager->setState(tempTraj[j]))
-//				cout << "collide at " << j << "th point!!!" << endl;
-//
-//		traj.push_back(tempTraj);
-//
-//		tempIdxTraj.resize(tempTraj.size());
-//		for (unsigned int j = 0; j < tempIdxTraj.size(); j++)
-//		{
-//			if (isAttached)
-//				tempIdxTraj[j] = objNum;
-//			else
-//				tempIdxTraj[j] = 100;
-//		}
-//
-//		idxTraj.push_back(tempIdxTraj);
-//
-//		tempTtraj.resize(tempTraj.size());
-//		for (unsigned int i = 0; i < traj.size(); i++)
-//		{
-//			for (unsigned int j = 0; j < traj[i].size(); j++)
-//				tempTtraj[j] = rManager1->forwardKin(traj[i][j], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
-//			Ttraj.push_back(tempTtraj);
-//		}
-//			
-//
-//
-//		
-//	}
-//}
+void RRT_problemSetting()
+{
+	Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
+	qInit[1] = 0.65*SR_PI;
+	qInit[2] = -1.1*SR_PI;
 
+	for (unsigned int i = 0; i < initSE3.size(); i++)
+	{
+		allSE3_busbar[2 * i] = initSE3[i];
+		allSE3_busbar[2 * i + 1] = goalSE3[i];
+	}
 
-void RRT_problemSetting(vector<Eigen::VectorXd> init, vector<vector<SE3>> wayPoints, vector<vector<bool>> includeOri, vector<vector<bool>> attachObject, vector<vector<bool>>& waypointFlag)
+	int flag;
+	initPos.push_back(rManager1->inverseKin(allSE3_busbar[0] * Tbusbar2gripper, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit));
+	cout << initPos[0].transpose() << endl;
+	printf("%d-th init inv kin flag: %d\n", 0, flag);
+	for (unsigned int i = 1; i < allSE3_busbar.size(); i++)
+	{
+		qInit = initPos[i - 1];
+		goalPos.push_back(rManager1->inverseKin(allSE3_busbar[i] * Tbusbar2gripper, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit));
+		cout << goalPos[i - 1].transpose() << endl;
+		initPos.push_back(goalPos[i - 1]);
+		if (i % 2 == 0)
+			printf("%d-th init inv kin flag: %d\n", i / 2, flag);
+		else
+			printf("%d-th goal inv kin flag: %d\n", i / 2, flag);
+	}
+}
+
+void RRT_problemSetting_HYU()
 {
 	Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
 	// elbow up
-	qInit[1] = -0.65*SR_PI;
-	qInit[2] = 0.3*SR_PI;
-	qInit[3] = 0.5*SR_PI_HALF;
+	//qInit[1] = -0.65*SR_PI;
+	//qInit[2] = 0.3*SR_PI;
 	// elbow down
-	//qInit[2] = 0.6*SR_PI_HALF;
-	//qInit[4] = 0.6*SR_PI_HALF;
-	//qInit[3] = SR_PI_HALF;
-
-	Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
-	qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
-	bool feas;
-	for (int i = 0; i < 2; i++)
+	qInit[2] = 0.6*SR_PI_HALF;
+	qInit[4] = 0.6*SR_PI_HALF;
+	qInit[3] = SR_PI_HALF;
+	for (unsigned int i = 0; i < initSE3.size(); i++)
 	{
-		feas = RRTManager1->checkFeasibility(init[i]);
-		if (feas != 0)
-			printf("robot %d's initial point not feasible!!!!\n", i);
+		allSE3_busbar[2 * i] = initSE3[i];
+		allSE3_busbar[2 * i + 1] = goalSE3[i];
 	}
-
 
 	int flag;
+	initPos.push_back(rManager1->inverseKin(allSE3_busbar[0] * Tbusbar2gripper, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit,1500));
+	cout << initPos[0].transpose() << endl;
+	printf("%d-th init inv kin flag: %d\n", 0, flag);
 
-	initPos.resize(0);
-	goalPos.resize(0);
+	qInit = initPos[0];
+	goalPos.push_back(rManager1->inverseKin(allSE3_busbar[1] * Tbusbar2gripper, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit));
+	cout << goalPos[0].transpose() << endl;
+	initPos.push_back(goalPos[0]);
+	printf("%d-th init inv kin flag: %d\n", 1, flag);
 
-	initPos.push_back(concatenateVec6(init[0], init[1]));
+	qInit = initPos[1];
+	goalPos.push_back(rManager1->inverseKin(allSE3_busbar[3] * Tbusbar2gripper, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit));
+	cout << goalPos[1].transpose() << endl;
 
-	
-	vector<vector<Eigen::VectorXd>> initPosTemp(2);
-	vector<vector<Eigen::VectorXd>> goalPosTemp(2);
+	//for (unsigned int i = 1; i < allSE3_busbar.size(); i++)
+	//{
+	//	qInit = initPos[i - 1];
+	//	goalPos.push_back(rManager1->inverseKin(allSE3_busbar[i] * Tbusbar2gripper, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], true, SE3(), flag, qInit));
+	//	cout << goalPos[i - 1].transpose() << endl;
+	//	initPos.push_back(goalPos[i - 1]);
+	//	if (i % 2 == 0)
+	//		printf("%d-th init inv kin flag: %d\n", i / 2, flag);
+	//	else
+	//		printf("%d-th goal inv kin flag: %d\n", i / 2, flag);
+	//}
 
-	Eigen::VectorXd qtemp;
-
-	for (int i = 0; i < 2; i++)
-	{
-		waypointFlag[i].resize(wayPoints[i].size());
-		initPosTemp[i].resize(0);
-		goalPosTemp[i].resize(0);
-		initPosTemp[i].push_back(init[i]);
-	}
-
-
-
-	for (unsigned int i = 0; i < wayPoints.size(); i++)
-	{
-		for (unsigned int j = 0; j < wayPoints[i].size(); j++)
-		{
-			qtemp = rManagerArray[i]->inverseKin(Trobotbase1 * wayPoints[i][j], &robotArray[i]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i][j], SE3(), flag, qInit2);
-			if (flag != 0)
-				qtemp = rManagerArray[i]->inverseKin(Trobotbase1 * wayPoints[i][j], &robotArray[i]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i][j], SE3(), flag, qInit);
-			if (flag != 0)
-				qtemp = rManagerArray[i]->inverseKin(Trobotbase1 * wayPoints[i][j], &robotArray[i]->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i][j], SE3(), flag, initPosTemp[i][initPosTemp[i].size() - 1]);
-			printf("%d-th init inv kin flag: %d\n", i, flag);
-
-			if (attachObject[i][j])
-				RRTManager1->attachObject(busbar[0], &robotArray[i]->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper));
-			else
-				RRTManager1->detachObject();
-
-
-			feas = RRTManager1->checkFeasibility(qtemp);
-
-			if (feas == 0 && flag == 0)
-			{
-				waypointFlag[i][j] = true;
-				goalPosTemp[i].push_back(qtemp);
-				if (j < wayPoints[i].size() - 1)
-					initPosTemp[i].push_back(goalPosTemp[i][goalPosTemp[i].size() - 1]);
-			}
-			else
-			{
-				waypointFlag[i][j] = false;
-				if (j == wayPoints[i].size() - 1)
-					printf("final waypoint not feasible!!!\n");
-				else
-					printf("%d-th waypoint not feasible!!!\n", j + 1);
-				if (j > 0 && attachObject[i][j] != attachObject[i][j - 1])
-					printf("grasp point is not feasible!!!\n");
-			}
-		}
-	}
-
-	
 
 }
+void RRTSolve()
+{
+	int nDim = 6;
+	vector<Eigen::VectorXd> tempTraj;
+	vector<int> tempIdxTraj(0);
+	vector<SE3> tempTtraj(0);
+	int start = 0;		//  >= 0
+	int end = wayPoints.size();		// <= 15
+	vector<bool> feas(2);
+	unsigned int objNum;
+	bool isAttached = false;
 
-void RRTSolve_HYU(vector<vector<bool>> attachObject, vector<double> stepsize)
+	traj.resize(0);
+	Ttraj.resize(0);
+	idxTraj.resize(0);
+	for (int i = start; i < end; i++)
+	{
+		objNum = i / 2;
+		RRTManager1->setStartandGoal(initPos[i], goalPos[i]);
+
+		for (unsigned int j = 0; j < goalSE3.size(); j++)
+		{
+			if (j < objNum)
+				busbar[j]->setBaseLinkFrame(goalSE3[j]);
+			else
+				busbar[j]->setBaseLinkFrame(initSE3[j]);
+		}
+		if (i % 2 == 0)
+		{
+			isAttached = true;
+			RRTManager1->attachObject(busbar[objNum], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper));
+			printf("%d-th busbar moving...\n", objNum);
+		}
+		else
+		{
+			isAttached = false;
+			RRTManager1->detachObject();
+			busbar[objNum]->setBaseLinkFrame(goalSE3[objNum]);
+			printf("%d-th busbar moved, reaching to next one...\n", objNum);
+		}
+
+		feas = RRTManager1->checkFeasibility(initPos[i], goalPos[i]);
+		cout << feas[0] << feas[1] << endl;
+		RRTManager1->execute(0.05);
+		tempTraj = RRTManager1->extractPath();
+
+		// check collision
+		for (unsigned int j = 0; j < tempTraj.size(); j++)
+			if (RRTManager1->setState(tempTraj[j]))
+				cout << "collide at " << j << "th point!!!" << endl;
+
+		traj.push_back(tempTraj);
+
+		tempIdxTraj.resize(tempTraj.size());
+		for (unsigned int j = 0; j < tempIdxTraj.size(); j++)
+		{
+			if (isAttached)
+				tempIdxTraj[j] = objNum;
+			else
+				tempIdxTraj[j] = 100;
+		}
+
+		idxTraj.push_back(tempIdxTraj);
+
+		tempTtraj.resize(tempTraj.size());
+		for (unsigned int i = 0; i < traj.size(); i++)
+		{
+			for (unsigned int j = 0; j < traj[i].size(); j++)
+				tempTtraj[j] = rManager1->forwardKin(traj[i][j], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP]);
+			Ttraj.push_back(tempTtraj);
+		}
+			
+
+
+		
+	}
+}
+
+
+void RRT_problemSetting(Eigen::VectorXd init, vector<SE3> wayPoints, vector<bool> includeOri, vector<bool> attachObject)
+{
+	//Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
+	//// elbow up
+	//qInit[1] = -0.65*SR_PI;
+	//qInit[2] = 0.3*SR_PI;
+	//qInit[3] = 0.5*SR_PI_HALF;
+	//// elbow down
+	////qInit[2] = 0.6*SR_PI_HALF;
+	////qInit[4] = 0.6*SR_PI_HALF;
+	////qInit[3] = SR_PI_HALF;
+	//
+	//Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
+	//qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
+
+	int flag;
+	initPos.resize(0);
+	goalPos.resize(0);
+	initPos.push_back(init);
+	vector<bool> feas(2);
+	for (unsigned int i = 0; i < wayPoints.size(); i++)
+	{
+		//qInit = initPos[i];
+		goalPos.push_back(rManager1->inverseKin(wayPoints[i] * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, robot1->qInvKinInit));
+		//goalPos.push_back(rManager1->inverseKin(wayPoints[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, qInit)); // ONLY END-EFFECTOR POS/ORI
+		if (flag != 0)
+			goalPos[i] = rManager1->inverseKin(wayPoints[i] * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag);
+		if (flag != 0)
+			goalPos[i] = rManager1->inverseKin(wayPoints[i] * Tbusbar2gripper_new, &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, initPos[i]);
+		printf("%d-th init inv kin flag: %d\n", i, flag);
+		cout << goalPos[i].transpose() << endl;
+		if (i < wayPoints.size() - 1)
+			initPos.push_back(goalPos[i]);
+		if (attachObject[i])
+			RRTManager1->attachObject(busbar[0], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new));
+		else
+			RRTManager1->detachObject();
+
+
+		feas = RRTManager1->checkFeasibility(initPos[i], goalPos[i]);
+		cout << feas[0] << feas[1] << endl;
+	}
+}
+
+void RRTSolve_HYU(vector<bool> attachObject, vector<double> stepsize)
 {
 	int nDim = 6;
 	vector<Eigen::VectorXd> tempTraj;
@@ -1100,12 +1090,8 @@ void RRTSolve_HYU(vector<vector<bool>> attachObject, vector<double> stepsize)
 	int end = stepsize.size(); 		// <= 15
 	vector<bool> feas(2);
 
-	for (unsigned int i = 0; i < 2; i++)
-	{
-		traj[i].resize(0);
-		Ttraj[i].resize(0);
-	}
-	
+	traj.resize(0);
+	Ttraj.resize(0);
 	idxTraj.resize(0);
 	
 	clock_t begin_time, end_time;
@@ -1150,6 +1136,107 @@ void RRTSolve_HYU(vector<vector<bool>> attachObject, vector<double> stepsize)
 	}
 }
 
+void RRT_problemSetting_robot2(Eigen::VectorXd init, vector<SE3> wayPoints, vector<bool> includeOri, vector<bool> attachObject)
+{
+	Eigen::VectorXd qInit = Eigen::VectorXd::Zero(6);
+	// elbow up
+	qInit[1] = -0.65*SR_PI;
+	qInit[2] = 0.3*SR_PI;
+	qInit[3] = 0.5*SR_PI_HALF;
+	// elbow down
+	//qInit[2] = 0.6*SR_PI_HALF;
+	//qInit[4] = 0.6*SR_PI_HALF;
+	//qInit[3] = SR_PI_HALF;
+
+	Eigen::VectorXd qInit2 = Eigen::VectorXd::Zero(6);
+	qInit2[0] = -0.224778; qInit2[1] = -1.91949; qInit2[2] = -0.384219; qInit2[3] = 1.5708; qInit2[4] = -0.73291; qInit2[5] = 1.79557;
+
+	int flag;
+	initPos.resize(0);
+	goalPos.resize(0);
+	initPos.push_back(init);
+	vector<bool> feas(2);
+	for (unsigned int i = 0; i < wayPoints.size(); i++)
+	{
+		//qInit = initPos[i];
+		goalPos.push_back(rManager2->inverseKin(wayPoints[i] * Tbusbar2gripper_new, &robot2->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, qInit2));
+		//goalPos.push_back(rManager1->inverseKin(wayPoints[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, qInit)); // ONLY END-EFFECTOR POS/ORI
+		if (flag != 0)
+			goalPos[i] = rManager2->inverseKin(wayPoints[i] * Tbusbar2gripper_new, &robot2->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, qInit);
+		if (flag != 0)
+			goalPos[i] = rManager2->inverseKin(wayPoints[i] * Tbusbar2gripper_new, &robot2->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, initPos[i]);
+		printf("%d-th init inv kin flag: %d\n", i, flag);
+		cout << goalPos[i].transpose() << endl;
+		if (i < wayPoints.size() - 1)
+			initPos.push_back(goalPos[i]);
+		if (attachObject[i])
+			RRTManager2->attachObject(busbar[0], &robot2->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new));
+		else
+			RRTManager2->detachObject();
+
+
+		feas = RRTManager2->checkFeasibility(initPos[i], goalPos[i]);
+		cout << feas[0] << feas[1] << endl;
+	}
+}
+
+void RRTSolve_HYU_robot2(vector<bool> attachObject, vector<double> stepsize)
+{
+	int nDim = 6;
+	vector<Eigen::VectorXd> tempTraj;
+	vector<int> tempIdxTraj(0);
+	vector<SE3> tempTtraj(0);
+	int start = 0;		//  >= 0
+	int end = stepsize.size(); 		// <= 15
+	vector<bool> feas(2);
+
+	traj.resize(0);
+	Ttraj.resize(0);
+	idxTraj.resize(0);
+
+	clock_t begin_time, end_time;
+
+
+	for (int i = start; i < end; i++)
+	{
+		begin_time = clock();
+		RRTManager2->setStartandGoal(initPos[i], goalPos[i]);
+
+		cout << "initpos:  " << initPos[i].transpose() << endl;
+		cout << "goalPos:  " << goalPos[i].transpose() << endl << endl;;
+
+		if (attachObject[i])
+			RRTManager2->attachObject(busbar[0], &robot2->gMarkerLink[Indy_Index::MLINK_GRIP], Inv(Tbusbar2gripper_new));
+		else
+			RRTManager2->detachObject();
+
+
+		feas = RRTManager2->checkFeasibility(initPos[i], goalPos[i]);
+		cout << feas[0] << feas[1] << endl;
+		RRTManager2->execute(stepsize[i]);
+		tempTraj = RRTManager2->extractPath();
+		end_time = clock();
+
+		cout << "way point RRT time: " << end_time - begin_time << endl;
+
+		// check collision
+		for (unsigned int j = 0; j < tempTraj.size(); j++)
+			if (RRTManager2->setState(tempTraj[j]))
+				cout << "collide at " << j << "th point!!!" << endl;
+
+		traj.push_back(tempTraj);
+
+
+		tempTtraj.resize(tempTraj.size());
+
+
+		for (unsigned int j = 0; j < traj[i].size(); j++)
+			tempTtraj[j] = rManager2->forwardKin(traj[i][j], &robot2->gMarkerLink[Indy_Index::MLINK_GRIP]);
+		Ttraj.push_back(tempTtraj);
+	}
+}
+
+
 void updateFuncTestSensorToRobot()
 {
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
@@ -1173,13 +1260,66 @@ void updateFuncLoadJointValAttachStatus()
 {
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 	static int cnt = 0;
-	rManager1->setJointVal(loadJointVal[cnt % loadJointVal.size()]);
-
-	if (abs(loadAttachStatus[cnt % loadAttachStatus.size()][0]) < DBL_EPSILON)
-	{ }
-	else
+	///////////////////////////// read from text
+	if (cnt == 0)
 	{
-		busbar[0]->setBaseLinkFrame(rManager1->forwardKin(loadJointVal[cnt % loadJointVal.size()], 
-			&robot1->gMarkerLink[Indy_Index::MLINK_GRIP])*Inv(Tbusbar2gripper_new));
+		string dir_folder = "../../../data/communication_test";
+		loadJointVal = loadDataFromText(dir_folder + "/testJointValTraj_robot2.txt", 6);
 	}
+	
+	rManager1->setJointVal(jointVal);
+	rManager2->setJointVal(loadJointVal[cnt % loadJointVal.size()]);
+	cnt++;
+	if (loadAttachStatus.size() > 0)
+	{
+		if (abs(loadAttachStatus[cnt % loadAttachStatus.size()][0]) < DBL_EPSILON)
+		{
+		}
+		else
+		{
+			busbar[0]->setBaseLinkFrame(rManager1->forwardKin(loadJointVal[cnt % loadJointVal.size()],
+				&robot1->gMarkerLink[Indy_Index::MLINK_GRIP])*Inv(Tbusbar2gripper_new));
+		}
+	}
+
+}
+
+void updateFuncLoadSuccessData()
+{
+	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
+	static unsigned int len = loadJointVal.size();
+	static unsigned int cnt = 0;
+
+	rManager1->setJointVal(loadJointVal[cnt % len]);
+	rManager2->setJointVal(robot2->homePos);
+
+	busbar[0]->setBaseLinkFrame(Trobotbase1 * VectorXdtoSE3(loadBusbar[cnt % len]) * busbar[0]->m_visionOffset);
+	busbar[0]->KIN_UpdateFrame_All_The_Entity();
+
+	cnt++;
+}
+
+void loadSuccessData(int nWay, bool connect)
+{
+	string dir_folder = "../../../data/test_traj";
+	vector<Eigen::VectorXd> tempVecTraj;
+	vector<Eigen::VectorXd> tempSE3Traj;
+	loadJointVal.resize(0);
+	loadBusbar.resize(0);
+	for (int i = 0; i < nWay; i++)
+	{
+		tempVecTraj = loadDataFromText(dir_folder + "/jointValTraj" + to_string(i) + ".txt", 6);
+		tempSE3Traj = loadDataFromText(dir_folder + "/busbarTraj_robotbase" + to_string(i) + ".txt", 12);
+
+		for (unsigned int j = 0; j < tempVecTraj.size(); j++)
+		{
+			loadJointVal.push_back(tempVecTraj[j]);
+			loadBusbar.push_back(tempSE3Traj[j]);
+		}
+	}
+	SE3 Tjig = Trobotbase1 * VectorXdtoSE3(loadDataFromText(dir_folder + "/setting_robotbase" + ".txt", 12)[0]) * jigAssem->m_visionOffset;
+	if (connect)
+		wJointJig->SetParentLinkFrame(Tjig);
+	else
+		jigAssem->GetBaseLink()->SetFrame(Tjig);
 }

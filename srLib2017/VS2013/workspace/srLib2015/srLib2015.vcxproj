@@ -99,8 +99,22 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\test_mh12_modeling.cpp" />
+    <ClCompile Include="..\..\..\workspace\srLib2015\main_4th_year_video.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\test_mh12_modeling.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\test_planning_workcell.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\test_ur3_modeling.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\test_ur3_modeling_with_4th_objects.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -121,6 +135,7 @@
     <ClInclude Include="..\..\..\workspace\srLib2015\myRenderer.h" />
     <ClInclude Include="..\..\..\workspace\srLib2015\serverPlanningSetting.h" />
     <ClInclude Include="..\..\..\workspace\srLib2015\serverRenderer.h" />
+    <ClInclude Include="..\..\..\workspace\srLib2015\sort_external_lib.h" />
     <ClInclude Include="..\..\..\workspace\srLib2015\tcp_ip_communication.h" />
     <ClInclude Include="..\..\..\workspace\srLib2015\vrepConnect.h" />
     <ClInclude Include="..\..\..\workspace\srLib2015\simulationEnvSetting.h" />

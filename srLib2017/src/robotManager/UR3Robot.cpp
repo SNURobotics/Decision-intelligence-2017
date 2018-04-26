@@ -424,26 +424,31 @@ void UR3Robot::AssembleCollision()
 
 	gLink[UR3_Index::COUPLING].AddCollision(&gCollision[m_numCollision]);
 	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.075, 0.075, 0.005));
+	//gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.075, 0.075, 0.005));
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.03, 0.03, 0.005));
 	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.0)));
 
 
 
 	gLink[UR3_Index::GRIPPER_FINGER_P].AddCollision(&gCollision[m_numCollision]);
 	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.03, 0.048, 0.02));
+	//gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.03, 0.048, 0.02));
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.01, 0.048, 0.01));
 	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(0.03*0.5 + 0.04385, 0.01 + 0.05285 - 0.5*0.048, 0.0)));
 
 	gLink[UR3_Index::GRIPPER_FINGER_M].AddCollision(&gCollision[m_numCollision]);
-	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.03, 0.048, 0.02));
+	//gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.03, 0.048, 0.02));
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.01, 0.048, 0.01));
 	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-(0.03*0.5 + 0.04385), 0.01 + 0.05285 - 0.5*0.048, 0.0)));
 
 	gLink[UR3_Index::GRIPPER].AddCollision(&gCollision[m_numCollision]);
-	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.15, 0.05 + 0.01485, 0.05));
+	//gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.15, 0.05 + 0.01485, 0.05));
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.05, 0.05 + 0.01485, 0.025));
 	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(0.0, 0.5*(0.01485 - 0.05), 0.0)));
 	
 	gLink[UR3_Index::GRIPPER].AddCollision(&gCollision[m_numCollision]);
-	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.15, 0.04, 0.085));
+	//gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.15, 0.04, 0.085));
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.05, 0.04, 0.085));
 	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(0.0, 0.5*0.04 - 0.09, 0.0)));
 }
 
