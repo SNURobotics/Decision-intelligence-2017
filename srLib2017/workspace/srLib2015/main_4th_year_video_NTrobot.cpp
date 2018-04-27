@@ -9,18 +9,19 @@
 
 #include "srDyn/srDYN.h"
 #include "srGamasot\srURDF.h"
-#include "robotManager\UR3RobotManager.h"
-#include "robotManager\UR3Robot.h"
+#include "robotManager\MH12Robot.h"
+#include "robotManager\MH12RobotManager.h"
 #include "robotManager\environment_4th.h"
 #include "robotManager\robotRRTManager.h"
 #include "sort_external_lib.h"
+
 #include <time.h>
 #include <random>
 
 
 // Robot
-UR3Robot* URRobot = new UR3Robot;
-UR3RobotManager* rManager1;
+MH12Robot* NTRobot = new MH12Robot;
+MH12RobotManager* rManager1;
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::TORQUE;
 SE3 Trobotbase1;
 Eigen::VectorXd homePos;
@@ -86,7 +87,7 @@ int main(int argc, char **argv)
 	rManager1->setJointVal(homePos);
 
 	// bin location
-	bin->setBaseLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.0, 0.5, 0.3)));
+	bin->setBaseLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(1.0, 0.0, 0.5)));
 
 	// randomly generate working object location
 	vector<pair<double, double>> randNumRangeSet_obj;
@@ -101,7 +102,7 @@ int main(int argc, char **argv)
 	vector<pair<double, double>> randNumRangeSet_bin;
 	randNumRangeSet_bin.push_back(make_pair(-0.5, 0.5));// x range
 	randNumRangeSet_bin.push_back(make_pair(-0.5, 0.5));// y range
-	randNumRangeSet_bin.push_back(make_pair(0.0, 0.5));// z range
+	randNumRangeSet_bin.push_back(make_pair(-0.5, 0.5));// z range
 	randNumRangeSet_bin.push_back(make_pair(0.0, 2 * SR_PI));// theta z range 
 	double randNumSet_bin[4];
 	bool isNoCollision= false;
@@ -166,7 +167,7 @@ int main(int argc, char **argv)
 			{
 				wayPoints[2 * i] = workingObj[positionZ_ordered_index[i]]->getBaseLinkFrame() * TworkingObj2robotEE;
 				attachObject[2 * i] = false;
-				SE3 Tbin2objPlacement = EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.4, 0.12 - 0.12*i, 0.1));
+				SE3 Tbin2objPlacement = EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.15 - 0.15*i, 1.0, 0.5));
 				wayPoints[2 * i + 1] = Tbin2objPlacement * TworkingObj2robotEE;
 				attachObject[2 * i + 1] = true;
 			}
@@ -299,16 +300,16 @@ void updateFunc()
 
 void URrobotSetting()
 {
-	gSpace.AddSystem((srSystem*)URRobot);
-	URRobot->GetBaseLink()->SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
-	URRobot->SetActType(srJoint::ACTTYPE::HYBRID);
+	gSpace.AddSystem((srSystem*)NTRobot);
+	NTRobot->GetBaseLink()->SetFrame(EulerZYX(Vec3(SR_PI, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	NTRobot->SetActType(srJoint::ACTTYPE::HYBRID);
 
 	vector<int> gpIdx(2);
 	gpIdx[0] = 0;
 	gpIdx[1] = 1;
-	URRobot->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
+	NTRobot->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
 
-	Trobotbase1 = URRobot->GetBaseLink()->GetFrame() * URRobot->TsrLinkbase2robotbase;
+	Trobotbase1 = NTRobot->GetBaseLink()->GetFrame() * NTRobot->TsrLinkbase2robotbase;
 	//robot1->SetActType(srJoint::ACTTYPE::HYBRID);
 	//robot2->SetActType(srJoint::ACTTYPE::TORQUE);
 	//vector<int> gpIdx(2);
@@ -342,7 +343,7 @@ void URrobotManagerSetting()
 	//// sensor setting
 	//rManager2->setFTSensor(robot2->gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]);
 
-	rManager1 = new UR3RobotManager(URRobot, &gSpace);
+	rManager1 = new MH12RobotManager(NTRobot, &gSpace);
 }
 
 void URrrtSetting()
@@ -350,9 +351,9 @@ void URrrtSetting()
 	RRTManager->setSpace(&gSpace);
 	vector<srStateJoint*> planningJoint(6);
 	for (int i = 0; i < 6; i++)
-		planningJoint[i] = (srStateJoint*)URRobot->gJoint[i];
+		planningJoint[i] = (srStateJoint*)NTRobot->gJoint[i];
 	RRTManager->setSystem(planningJoint);
-	RRTManager->setStateBound(URRobot->getLowerJointLimit(), URRobot->getUpperJointLimit());
+	RRTManager->setStateBound(NTRobot->getLowerJointLimit(), NTRobot->getUpperJointLimit());
 }
 
 pair<vector<int>, vector<vector<bool>>>  RRT_problemSetting(Eigen::VectorXd init, vector<SE3> wayPoints, vector<bool> includeOri, vector<bool> attachObject, vector<size_t> objectIdx)
@@ -382,18 +383,18 @@ pair<vector<int>, vector<vector<bool>>>  RRT_problemSetting(Eigen::VectorXd init
 	for (unsigned int i = 0; i < wayPoints.size(); i++)
 	{
 		//qInit = initPos[i];
-		goalPos.push_back(rManager1->inverseKin(wayPoints[i], &URRobot->gMarkerLink[UR3_Index::MLINK_GRIP], includeOri[i], SE3(), flag, URRobot->qInvKinInit));
+		goalPos.push_back(rManager1->inverseKin(wayPoints[i], &NTRobot->gMarkerLink[MH12_Index::MLINK_GRIP], includeOri[i], SE3(), flag, NTRobot->qInvKinInit));
 		//goalPos.push_back(rManager1->inverseKin(wayPoints[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, qInit)); // ONLY END-EFFECTOR POS/ORI
 		if (flag != 0)
-			goalPos[i] = rManager1->inverseKin(wayPoints[i], &URRobot->gMarkerLink[UR3_Index::MLINK_GRIP], includeOri[i], SE3(), flag);
+			goalPos[i] = rManager1->inverseKin(wayPoints[i], &NTRobot->gMarkerLink[MH12_Index::MLINK_GRIP], includeOri[i], SE3(), flag);
 		if (flag != 0)
-			goalPos[i] = rManager1->inverseKin(wayPoints[i], &URRobot->gMarkerLink[UR3_Index::MLINK_GRIP], includeOri[i], SE3(), flag, initPos[i]);
+			goalPos[i] = rManager1->inverseKin(wayPoints[i], &NTRobot->gMarkerLink[MH12_Index::MLINK_GRIP], includeOri[i], SE3(), flag, initPos[i]);
 		printf("%d-th init inv kin flag: %d\n", i, flag);
 		cout << goalPos[i].transpose() << endl;
 		if (i < wayPoints.size() - 1)
 			initPos.push_back(goalPos[i]);
 		if (attachObject[i])
-			RRTManager->attachObject(workingObj[objectIdx[(i-1)/2]], &URRobot->gMarkerLink[UR3_Index::MLINK_GRIP], Inv(TworkingObj2robotEE));
+			RRTManager->attachObject(workingObj[objectIdx[(i-1)/2]], &NTRobot->gMarkerLink[MH12_Index::MLINK_GRIP], Inv(TworkingObj2robotEE));
 		else
 			RRTManager->detachObject();
 
@@ -433,7 +434,7 @@ void RRTSolve_HYU(vector<bool> attachObject, vector<double> stepsize, vector<siz
 		cout << "goalPos:  " << goalPos[i].transpose() << endl << endl;;
 
 		if (attachObject[i])
-			RRTManager->attachObject(workingObj[objectIdx[(i - 1) / 2]], &URRobot->gMarkerLink[UR3_Index::MLINK_GRIP], Inv(TworkingObj2robotEE));
+			RRTManager->attachObject(workingObj[objectIdx[(i - 1) / 2]], &NTRobot->gMarkerLink[MH12_Index::MLINK_GRIP], Inv(TworkingObj2robotEE));
 		else
 			RRTManager->detachObject();
 
@@ -492,7 +493,7 @@ void updateFuncPlanning()
 	else
 		jointAcc = (traj[idx][trjIdx + 2] - 2.0*traj[idx][trjIdx + 1] + traj[idx][trjIdx]) / (gSpace.m_Timestep_dyn_fixed*gSpace.m_Timestep_dyn_fixed);
 
-	SE3 renderEndeff = rManager1->forwardKin(traj[idx][trjIdx], &URRobot->gMarkerLink[UR3_Index::MLINK_GRIP]);
+	SE3 renderEndeff = rManager1->forwardKin(traj[idx][trjIdx], &NTRobot->gMarkerLink[MH12_Index::MLINK_GRIP]);
 
 
 	// Calculate init vel

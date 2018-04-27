@@ -5,9 +5,9 @@
 
 #include "srDyn/srDYN.h"
 #include "srGamasot\srURDF.h"
-#include "robotManager\UR3RobotManager.h"
+#include "robotManager\MH12RobotManager.h"
 #include "robotManager/IndyRobot.h"
-#include "robotManager\UR3Robot.h"
+#include "robotManager\MH12Robot.h"
 #include <time.h>
 #include "robotManager\environmentBusbar.h"
 #include "robotManager\environment_QBtech.h"
@@ -18,8 +18,8 @@
 #include <random>
 
 // Robot
-UR3Robot* URRobot = new UR3Robot;
-UR3RobotManager* rManager1;
+MH12Robot* NTRobot = new MH12Robot;
+MH12RobotManager* rManager1;
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::TORQUE;
 SE3 Trobotbase1;
 Eigen::VectorXd homePos;
@@ -96,10 +96,11 @@ int main(int argc, char **argv)
 	qval.setZero(6);
 	qval[1] = -SR_PI_HALF;
 	qval[3] = -SR_PI_HALF;
+	qval[4] = SR_PI_HALF;
 	rManager1->setJointVal(qval);
 
 	// bin location
-	bin->setBaseLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.0, 0.42, 0.05)));
+	bin->setBaseLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(1.0, 0.0,0.5)));
 
 
 	// randomly generate working object location
@@ -166,7 +167,7 @@ int main(int argc, char **argv)
 	int flag;
 
 	//Eigen::VectorXd goal = rManager1->inverseKin(workingObj[0]->getBaseLinkFrame() * TworkingObj2robotEE, &URRobot->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag);
-	Eigen::VectorXd goal = rManager1->inverseKin(wayPoints[0], &URRobot->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag);
+	Eigen::VectorXd goal = rManager1->inverseKin(wayPoints[0], &NTRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag);
 	cout << "goal position inverse kinematics flag: " << flag << endl;
 	rManager1->setJointVal(goal);
 	cout << "collision check at the goal position: "<<gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP() << endl;
@@ -285,16 +286,16 @@ void updateFunc()
 
 void URrobotSetting()
 {
-	gSpace.AddSystem((srSystem*)URRobot);
-	URRobot->GetBaseLink()->SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
-	URRobot->SetActType(srJoint::ACTTYPE::HYBRID);
+	gSpace.AddSystem((srSystem*)NTRobot);
+	NTRobot->GetBaseLink()->SetFrame(EulerZYX(Vec3(SR_PI, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	NTRobot->SetActType(srJoint::ACTTYPE::HYBRID);
 
 	vector<int> gpIdx(2);
 	gpIdx[0] = 0;
 	gpIdx[1] = 1;
-	URRobot->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
+	NTRobot->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
 
-	Trobotbase1 = URRobot->GetBaseLink()->GetFrame() * URRobot->TsrLinkbase2robotbase;
+	Trobotbase1 = NTRobot->GetBaseLink()->GetFrame() * NTRobot->TsrLinkbase2robotbase;
 	//robot1->SetActType(srJoint::ACTTYPE::HYBRID);
 	//robot2->SetActType(srJoint::ACTTYPE::TORQUE);
 	//vector<int> gpIdx(2);
@@ -328,7 +329,7 @@ void URrobotManagerSetting()
 	//// sensor setting
 	//rManager2->setFTSensor(robot2->gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]);
 
-	rManager1 = new UR3RobotManager(URRobot, &gSpace);
+	rManager1 = new MH12RobotManager(NTRobot, &gSpace);
 
 }
 
@@ -337,7 +338,7 @@ void URrrtSetting()
 	RRTManager->setSpace(&gSpace);
 	vector<srStateJoint*> planningJoint(6);
 	for (int i = 0; i < 6; i++)
-		planningJoint[i] = (srStateJoint*)URRobot->gJoint[i];
+		planningJoint[i] = (srStateJoint*)NTRobot->gJoint[i];
 	RRTManager->setSystem(planningJoint);
-	RRTManager->setStateBound(URRobot->getLowerJointLimit(), URRobot->getUpperJointLimit());
+	RRTManager->setStateBound(NTRobot->getLowerJointLimit(), NTRobot->getUpperJointLimit());
 }

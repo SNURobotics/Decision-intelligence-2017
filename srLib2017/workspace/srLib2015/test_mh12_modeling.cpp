@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     MHRobotSetting();
 
 	ee->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
-	ee->GetGeomInfo().SetDimension(0.01);
+	ee->GetGeomInfo().SetDimension(0.3);
 	ee->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
 	obs->SetBaseLink(ee);
 	obs->SetBaseLinkType(srSystem::FIXED);
@@ -101,9 +101,9 @@ void updateFunc()
 
 	static double JointVal = 0;
 	//((srStateJoint*)MHRobot->m_KIN_Joints[activeJointIdx])->m_State.m_rValue[0] = JointVal;
-	//((srStateJoint*)MHRobot->m_KIN_Joints[0])->m_State.m_rValue[0] = JointVal;
+	((srStateJoint*)MHRobot->m_KIN_Joints[5])->m_State.m_rValue[0] = JointVal;
 	JointVal += 0.01;
-
+	obs->GetBaseLink()->SetFrame(MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame());
 	static int cnt = 0;
 	static int trajcnt = 0;
 	cnt++;
@@ -154,7 +154,7 @@ void updateFunc()
 void MHRobotSetting()
 {
 	gSpace.AddSystem((srSystem*)MHRobot);
-	MHRobot->GetBaseLink()->SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	MHRobot->GetBaseLink()->SetFrame(EulerZYX(Vec3(SR_PI, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 	MHRobot->SetActType(srJoint::ACTTYPE::HYBRID);
 
 	vector<int> gpIdx(2);

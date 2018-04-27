@@ -74,6 +74,12 @@
     <ClCompile Include="..\..\..\workspace\srLib2015\test_planning_workcell.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\main_4th_year_video_NTrobot.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\test_mh12_modeling_with_4th_objects.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\test_ur3_modeling_with_4th_objects.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
