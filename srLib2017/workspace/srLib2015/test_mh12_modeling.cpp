@@ -55,9 +55,12 @@ int main(int argc, char **argv)
 	//busbar->setBaseLinkFrame(MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() * Inv(Tbusbar2gripper_ur));
 	//ctCase->setBaseLinkFrame(MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() * Inv(TctCase2gripper_ur));
 	qval.setZero(6);
-	qval[1] = -SR_PI_HALF;
-	qval[3] = -SR_PI_HALF;
-	qval[4] = SR_PI_HALF;
+	//qval[0] = SR_PI_HALF/3;
+	//qval[1] = SR_PI_HALF/4;
+	//qval[2] = SR_PI_HALF/7;
+	//qval[3] = SR_PI_HALF/2;
+	//qval[4] = SR_PI_HALF/6;
+	//qval[5] = SR_PI_HALF/5;
 	rManager1->setJointVal(qval);
 	obs->GetBaseLink()->SetFrame(MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame());
 	bin->setBaseLinkFrame(SE3(Vec3(1.0, 0.0, 0.0)));

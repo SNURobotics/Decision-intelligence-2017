@@ -7,8 +7,8 @@ MH12Robot::MH12Robot(bool elbowUp, double gripperRot)
 	for (int i = 0; i < NUM_OF_RJOINT_MH12; i++)
 		gJoint[i] = new srRevoluteJoint;
 	
-	for (int i = 0; i < NUM_OF_GRIPERJOINT_MH12; i++)
-		gGripJoint[i] = new srPrismaticJoint;
+	//for (int i = 0; i < NUM_OF_GRIPERJOINT_MH12; i++)
+	//	gGripJoint[i] = new srPrismaticJoint;
 
 	for (int i = 0; i < NUM_OF_WJOINT_UR3; i++)
 		gWeldJoint[i] = new srWeldJoint;
@@ -40,8 +40,8 @@ MH12Robot::~MH12Robot()
 {
 	for (int i = 0; i<NUM_OF_RJOINT_MH12; i++)
 		SR_SAFE_DELETE(gJoint[i]);
-	for (int i = 0; i<NUM_OF_GRIPERJOINT_MH12; i++)
-		SR_SAFE_DELETE(gGripJoint[i]);
+	//for (int i = 0; i<NUM_OF_GRIPERJOINT_MH12; i++)
+	//	SR_SAFE_DELETE(gGripJoint[i]);
 
 }
 
@@ -53,14 +53,14 @@ void MH12Robot::SetActType(srJoint::ACTTYPE actType /*= srJoint::HYBRID*/)
 
 void MH12Robot::SetGripperActType(srJoint::ACTTYPE actType /*= srJoint::HYBRID*/)
 {
-	for (int i = 0; i < NUM_OF_GRIPERJOINT_MH12; i++)
-		gGripJoint[i]->SetActType(actType);
+	//for (int i = 0; i < NUM_OF_GRIPERJOINT_MH12; i++)
+	//	gGripJoint[i]->SetActType(actType);
 }
 
 void MH12Robot::SetGripperActType(srJoint::ACTTYPE actType, vector<int> gpJointIdx)
 {
-	for (unsigned int i = 0; i < gpJointIdx.size(); i++)
-		gGripJoint[gpJointIdx[i]]->SetActType(actType);
+	//for (unsigned int i = 0; i < gpJointIdx.size(); i++)
+	//	gGripJoint[gpJointIdx[i]]->SetActType(actType);
 }
 
 void MH12Robot::SetJointLimit(bool elbowUp)
@@ -165,7 +165,7 @@ void MH12Robot::AssembleModel(double gripperRot)
 	gJoint[MH12_Index::JOINT_2]->SetChildLink(&gLink[MH12_Index::LINK_3]);
 	gJoint[MH12_Index::JOINT_2]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(-0.155, 0.0, 0.450)));
 	//gJoint[MH12_Index::JOINT_2]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(0.0, 0.0, 0.1519)));
-	gJoint[MH12_Index::JOINT_2]->SetChildLinkFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, SR_PI_HALF), Vec3(-0.155, 0.0, 0.450)));
+	gJoint[MH12_Index::JOINT_2]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(-0.155, 0.0, 0.450)));
 	gJoint[MH12_Index::JOINT_2]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[MH12_Index::JOINT_2]->MakePositionLimit(false);
 
@@ -192,7 +192,7 @@ void MH12Robot::AssembleModel(double gripperRot)
 	gJoint[MH12_Index::JOINT_4]->SetChildLink(&gLink[MH12_Index::LINK_5]);
 	gJoint[MH12_Index::JOINT_4]->SetParentLinkFrame(EulerZYX(Vec3(0.0, -SR_PI_HALF, 0.0), Vec3(-0.255, 0.0, 1.264)));
 	//gJoint[MH12_Index::JOINT_4]->SetChildLinkFrame(EulerZYX(Vec3(0.0,0.0, -SR_PI_HALF), Vec3(0.0, 0.0, 0.60855)));
-	gJoint[MH12_Index::JOINT_4]->SetChildLinkFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF), Vec3(-0.255, 0.0, 1.264)));
+	gJoint[MH12_Index::JOINT_4]->SetChildLinkFrame(EulerZYX(Vec3(0.0, -SR_PI_HALF, 0.0), Vec3(-0.255, 0.0, 1.264)));
 	gJoint[MH12_Index::JOINT_4]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[MH12_Index::JOINT_4]->MakePositionLimit(false);
 
@@ -205,7 +205,7 @@ void MH12Robot::AssembleModel(double gripperRot)
 	gJoint[MH12_Index::JOINT_5]->SetParentLink(&gLink[MH12_Index::LINK_5]);
 	gJoint[MH12_Index::JOINT_5]->SetChildLink(&gLink[MH12_Index::LINK_6]);
 	gJoint[MH12_Index::JOINT_5]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(-0.795, 0.0, 1.264)));
-	gJoint[MH12_Index::JOINT_5]->SetChildLinkFrame(EulerZYX(Vec3(0.0, -SR_PI_HALF, SR_PI_HALF), Vec3(-0.795, 0.0, 1.264)));
+	gJoint[MH12_Index::JOINT_5]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(-0.795, 0.0, 1.264)));
 	gJoint[MH12_Index::JOINT_5]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[MH12_Index::JOINT_5]->MakePositionLimit(false);
 
@@ -238,37 +238,37 @@ void MH12Robot::AssembleModel(double gripperRot)
 	gLink[MH12_Index::COUPLING].GetGeomInfo().SetLocalFrame(SE3());
 	gLink[MH12_Index::COUPLING].GetGeomInfo().SetFileName("../../../workspace/robot/mh12_3ds/coupling.3ds");
 
-	gGripJoint[MH12_Index::GRIPJOINT_1]->SetParentLink(&gLink[MH12_Index::COUPLING]);
-	gGripJoint[MH12_Index::GRIPJOINT_1]->SetChildLink(&gLink[MH12_Index::GRIPPER_1]);
-	gGripJoint[MH12_Index::GRIPJOINT_1]->SetParentLinkFrame(SE3());
-	gGripJoint[MH12_Index::GRIPJOINT_1]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
-	gGripJoint[MH12_Index::GRIPJOINT_1]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gWeldJoint[MH12_Index::WELDJOINT_GRIPJOINT_1]->SetParentLink(&gLink[MH12_Index::COUPLING]);
+	gWeldJoint[MH12_Index::WELDJOINT_GRIPJOINT_1]->SetChildLink(&gLink[MH12_Index::GRIPPER_1]);
+	gWeldJoint[MH12_Index::WELDJOINT_GRIPJOINT_1]->SetParentLinkFrame(SE3());
+	gWeldJoint[MH12_Index::WELDJOINT_GRIPJOINT_1]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	gWeldJoint[MH12_Index::WELDJOINT_GRIPJOINT_1]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 
 	gLink[MH12_Index::GRIPPER_1].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	gLink[MH12_Index::GRIPPER_1].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.8253)));
+	gLink[MH12_Index::GRIPPER_1].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 	gLink[MH12_Index::GRIPPER_1].GetGeomInfo().SetColor(0.2, 0.2, 0.2);
 	gLink[MH12_Index::GRIPPER_1].GetGeomInfo().SetFileName("../../../workspace/robot/mh12_3ds/gripper1.3ds");
 
 
-	gGripJoint[MH12_Index::GRIPJOINT_2]->SetParentLink(&gLink[MH12_Index::COUPLING]);
-	gGripJoint[MH12_Index::GRIPJOINT_2]->SetChildLink(&gLink[MH12_Index::GRIPPER_2]);
-	gGripJoint[MH12_Index::GRIPJOINT_2]->SetParentLinkFrame(SE3());
-	gGripJoint[MH12_Index::GRIPJOINT_1]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
-	gGripJoint[MH12_Index::GRIPJOINT_2]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gWeldJoint[MH12_Index::WELDJOINT_GRIPJOINT_2]->SetParentLink(&gLink[MH12_Index::COUPLING]);
+	gWeldJoint[MH12_Index::WELDJOINT_GRIPJOINT_2]->SetChildLink(&gLink[MH12_Index::GRIPPER_2]);
+	gWeldJoint[MH12_Index::WELDJOINT_GRIPJOINT_2]->SetParentLinkFrame(SE3());
+	gWeldJoint[MH12_Index::WELDJOINT_GRIPJOINT_2]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	gWeldJoint[MH12_Index::WELDJOINT_GRIPJOINT_2]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 
 	gLink[MH12_Index::GRIPPER_2].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	gLink[MH12_Index::GRIPPER_2].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.8253)));
+	gLink[MH12_Index::GRIPPER_2].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 	gLink[MH12_Index::GRIPPER_2].GetGeomInfo().SetColor(0.2, 0.2, 0.2);
 	gLink[MH12_Index::GRIPPER_2].GetGeomInfo().SetFileName("../../../workspace/robot/mh12_3ds/gripper2.3ds");
 
-	gGripJoint[MH12_Index::GRIPJOINT_3]->SetParentLink(&gLink[MH12_Index::COUPLING]);
-	gGripJoint[MH12_Index::GRIPJOINT_3]->SetChildLink(&gLink[MH12_Index::GRIPPER_3]);
-	gGripJoint[MH12_Index::GRIPJOINT_3]->SetParentLinkFrame(SE3());
-	gGripJoint[MH12_Index::GRIPJOINT_1]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
-	gGripJoint[MH12_Index::GRIPJOINT_3]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gWeldJoint[MH12_Index::WELDJOINT_GRIPJOINT_3]->SetParentLink(&gLink[MH12_Index::COUPLING]);
+	gWeldJoint[MH12_Index::WELDJOINT_GRIPJOINT_3]->SetChildLink(&gLink[MH12_Index::GRIPPER_3]);
+	gWeldJoint[MH12_Index::WELDJOINT_GRIPJOINT_3]->SetParentLinkFrame(SE3());
+	gWeldJoint[MH12_Index::WELDJOINT_GRIPJOINT_3]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	gWeldJoint[MH12_Index::WELDJOINT_GRIPJOINT_3]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 
 	gLink[MH12_Index::GRIPPER_3].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	gLink[MH12_Index::GRIPPER_3].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.8253)));
+	gLink[MH12_Index::GRIPPER_3].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 	gLink[MH12_Index::GRIPPER_3].GetGeomInfo().SetColor(0.2, 0.2, 0.2);
 	gLink[MH12_Index::GRIPPER_3].GetGeomInfo().SetFileName("../../../workspace/robot/mh12_3ds/gripper3.3ds");
 
@@ -276,8 +276,8 @@ void MH12Robot::AssembleModel(double gripperRot)
 	gWeldJoint[MH12_Index::WELDJOINT_GRIP_MARKER]->SetActType(srJoint::PASSIVE);
 	gWeldJoint[MH12_Index::WELDJOINT_GRIP_MARKER]->SetParentLink(&gLink[MH12_Index::ENDEFFECTOR]);
 	gWeldJoint[MH12_Index::WELDJOINT_GRIP_MARKER]->SetChildLink(&gMarkerLink[MH12_Index::MLINK_GRIP]);
-	gWeldJoint[MH12_Index::WELDJOINT_GRIP_MARKER]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(0.0, 0.0, 0.69195)));
-	gWeldJoint[MH12_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(SE3(Vec3(0.0, 0.0, -(0.1928 + 0.2003 + 0.001))));		// consider offset for gripper assembly
+	gWeldJoint[MH12_Index::WELDJOINT_GRIP_MARKER]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.0)));
+	gWeldJoint[MH12_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(SE3(Vec3(1.036, 0.0, 1.264)));		// consider offset for gripper assembly
 																															//gWeldJoint[UR3_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(SE3(Vec3(0.0, 0.00195, -(0.1928 + 0.2003 + 0.001))));		// consider offset for gripper assembly
 	// marker links
 	gMarkerLink[MH12_Index::MLINK_GRIP].GetGeomInfo().SetDimension(Vec3(0.00, 0.00, 0.00));
@@ -406,17 +406,17 @@ void MH12Robot::AssembleCollision()
 	gLink[MH12_Index::GRIPPER_1].AddCollision(&gCollision[m_numCollision]);
 	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.02, 0.014, 0.014));
-	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-1.026, 1.269, 0.834)));
+	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-1.026, 1.269, 0.0087)));
 
 	gLink[MH12_Index::GRIPPER_2].AddCollision(&gCollision[m_numCollision]);
 	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.02, 0.014, 0.014));
-	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-1.026, 1.254, 0.8253)));
+	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-1.026, 1.254, 0.0)));
 
 	gLink[MH12_Index::GRIPPER_3].AddCollision(&gCollision[m_numCollision]);
 	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.02, 0.014, 0.014));
-	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-1.026, 1.269, -0.834)));
+	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-1.026, 1.269, -0.0087)));
 	
 }
 
