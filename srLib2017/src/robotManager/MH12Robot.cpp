@@ -165,7 +165,7 @@ void MH12Robot::AssembleModel(double gripperRot)
 	gJoint[MH12_Index::JOINT_2]->SetChildLink(&gLink[MH12_Index::LINK_3]);
 	gJoint[MH12_Index::JOINT_2]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(-0.155, 0.0, 0.450)));
 	//gJoint[MH12_Index::JOINT_2]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(0.0, 0.0, 0.1519)));
-	gJoint[MH12_Index::JOINT_2]->SetChildLinkFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, SR_PI_HALF), Vec3(-0.155, 0.0, 0.450)));
+	gJoint[MH12_Index::JOINT_2]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(-0.155, 0.0, 0.450)));
 	gJoint[MH12_Index::JOINT_2]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[MH12_Index::JOINT_2]->MakePositionLimit(false);
 
@@ -192,7 +192,7 @@ void MH12Robot::AssembleModel(double gripperRot)
 	gJoint[MH12_Index::JOINT_4]->SetChildLink(&gLink[MH12_Index::LINK_5]);
 	gJoint[MH12_Index::JOINT_4]->SetParentLinkFrame(EulerZYX(Vec3(0.0, -SR_PI_HALF, 0.0), Vec3(-0.255, 0.0, 1.264)));
 	//gJoint[MH12_Index::JOINT_4]->SetChildLinkFrame(EulerZYX(Vec3(0.0,0.0, -SR_PI_HALF), Vec3(0.0, 0.0, 0.60855)));
-	gJoint[MH12_Index::JOINT_4]->SetChildLinkFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF), Vec3(-0.255, 0.0, 1.264)));
+	gJoint[MH12_Index::JOINT_4]->SetChildLinkFrame(EulerZYX(Vec3(0.0, -SR_PI_HALF, 0.0), Vec3(-0.255, 0.0, 1.264)));
 	gJoint[MH12_Index::JOINT_4]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[MH12_Index::JOINT_4]->MakePositionLimit(false);
 
@@ -205,7 +205,7 @@ void MH12Robot::AssembleModel(double gripperRot)
 	gJoint[MH12_Index::JOINT_5]->SetParentLink(&gLink[MH12_Index::LINK_5]);
 	gJoint[MH12_Index::JOINT_5]->SetChildLink(&gLink[MH12_Index::LINK_6]);
 	gJoint[MH12_Index::JOINT_5]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(-0.795, 0.0, 1.264)));
-	gJoint[MH12_Index::JOINT_5]->SetChildLinkFrame(EulerZYX(Vec3(0.0, -SR_PI_HALF, SR_PI_HALF), Vec3(-0.795, 0.0, 1.264)));
+	gJoint[MH12_Index::JOINT_5]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(-0.795, 0.0, 1.264)));
 	gJoint[MH12_Index::JOINT_5]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[MH12_Index::JOINT_5]->MakePositionLimit(false);
 
