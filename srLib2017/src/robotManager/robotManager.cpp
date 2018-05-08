@@ -572,7 +572,6 @@ SE3 robotManager::forwardKin(const Eigen::VectorXd& jointVal, srLink * link, SE3
 
 vector<SE3> robotManager::forwardKin(const Eigen::VectorXd & jointVal, vector<srLink*> link, vector<SE3> offset)
 {
-	setJointVal(jointVal);
 	vector<SE3> forKinSol(link.size());
 	for (unsigned int i = 0; i < link.size(); i++)
 		forKinSol[i] = forwardKin(jointVal, link[i])*offset[i];

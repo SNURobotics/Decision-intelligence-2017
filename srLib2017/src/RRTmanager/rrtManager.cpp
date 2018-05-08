@@ -163,7 +163,7 @@ bool rrtManager::innerloop()
 		pTargetTree2->insert(new_tree2_vertex);
 
 	/* -------------------------------------------------------------  CHECK CONNECTIVITY -------------------------------------------------------------*/
-	bool printDist = false;
+	bool printDist = true;
 	if (new_tree2_vertex == NULL)
 		return false;
 

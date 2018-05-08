@@ -6,6 +6,7 @@ class robotRRTVectorField : public rrtVectorField
 {
 public:
 	robotRRTVectorField();
+	robotRRTVectorField(robotManager* rManager, srLink* link);
 	~robotRRTVectorField();
 
 	void								setRobotEndeffector(robotManager* rManager, srLink* link);
@@ -19,7 +20,7 @@ public:
 class singularityAvoidanceVectorField : public robotRRTVectorField
 {
 public:
-	singularityAvoidanceVectorField();
+	singularityAvoidanceVectorField(robotManager* rManager, srLink* link);
 	~singularityAvoidanceVectorField();
 
 	void								setManipulabilityKind(robotManager::manipKind kind);
@@ -33,7 +34,7 @@ public:
 class workspaceConstantPositionVectorField : public robotRRTVectorField
 {
 public:
-	workspaceConstantPositionVectorField();
+	workspaceConstantPositionVectorField(robotManager* rManager, srLink* link);
 	~workspaceConstantPositionVectorField();
 
 	void								setWorkspaceVector(const Eigen::VectorXd& vec);
@@ -49,16 +50,21 @@ public:
 class objectClearanceVectorField : public robotRRTVectorField
 {
 public:
-	objectClearanceVectorField();
+	objectClearanceVectorField(robotManager* rManager, srLink* link);
 	~objectClearanceVectorField();
 
-	void								setObjects(vector<Vec3> objectLoc);
+	void								setObjectLocation(Vec3 objectLoc);
 	void								setWeights(vector<double> weight);
+	void								setLinks(vector<srLink*> links);
+	void								setOffsets(vector<SE3> offsets);
 	virtual Eigen::VectorXd				getVectorField(const Eigen::VectorXd& pos1);
 	virtual void						checkFeasibility(int nDim);
 
 public:
-	vector<Vec3>						_objectCenters;			// location of point objects to avoid
-	vector<double>						_objectWeights;			// coefficient for vectors from each object
+	double								_eps;					// epsilon value to avoid zero denominator
+	Vec3								_objectLoc;				// location of point object to avoid
+	vector<srLink*>						_links;					// links which should also avoid object
+	vector<SE3>							_offsets;				// offsets of the location of avoidance from link fixed frame
+	vector<double>						_weights;				// coefficient for vectors from each link (end-effector weight is 1.0)
 	SE3									_endeffectorOffset;		// offset for end-effector
 };

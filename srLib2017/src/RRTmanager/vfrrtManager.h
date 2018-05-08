@@ -7,6 +7,7 @@ class rrtVectorField;
 
 class vfrrtManager : public rrtManager
 {
+public:
 	vfrrtManager();
 	~vfrrtManager();
 
@@ -17,7 +18,8 @@ public:
 	};
 	virtual bool							isProblemFeasible();
 	virtual void							connectParentAndChild(rrtVertex* parentVertex, rrtVertex* childVertex);
-
+	void									setAlgorithmMode(MODE mode);
+	void									setLambda(double lambda);
 	// vector field
 	bool									checkVectorFieldFeasibility();
 	void									addVectorField(rrtVectorField* vectorField);
@@ -45,8 +47,10 @@ protected:
 	bool									_vectorFieldExist;
 	vector<rrtVectorField*>					_vectorFields;
 	double									_vectorFieldWeight;
-	double									_lambda;
 	vfrrtManager::MODE						_algorithmMode;
+
+public:
+	double									_lambda;
 };
 
 

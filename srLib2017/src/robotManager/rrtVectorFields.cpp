@@ -4,6 +4,11 @@ robotRRTVectorField::robotRRTVectorField()
 {
 }
 
+robotRRTVectorField::robotRRTVectorField(robotManager * rManager, srLink * link)
+{
+	setRobotEndeffector(rManager, link);
+}
+
 robotRRTVectorField::~robotRRTVectorField()
 {
 }
@@ -20,8 +25,9 @@ void robotRRTVectorField::checkFeasibility(int nDim)
 		_isFeasible = false;
 }
 
-singularityAvoidanceVectorField::singularityAvoidanceVectorField()
+singularityAvoidanceVectorField::singularityAvoidanceVectorField(robotManager* rManager, srLink* link)
 {
+	setRobotEndeffector(rManager, link);
 	_kind = robotManager::manipKind::MIN;
 	_eps = 1e-6;
 	_C = 50.0;
@@ -53,8 +59,9 @@ Eigen::VectorXd singularityAvoidanceVectorField::getVectorField(const Eigen::Vec
 		return Eigen::VectorXd();
 }
 
-workspaceConstantPositionVectorField::workspaceConstantPositionVectorField()
+workspaceConstantPositionVectorField::workspaceConstantPositionVectorField(robotManager* rManager, srLink* link)
 {
+	setRobotEndeffector(rManager, link);
 	_C = 1.0;
 	_fixOri = false;
 	_centerPoint = Eigen::VectorXd::Zero(3);
@@ -101,22 +108,35 @@ void workspaceConstantPositionVectorField::checkFeasibility(int nDim)
 		_isFeasible = false;
 }
 
-objectClearanceVectorField::objectClearanceVectorField()
+objectClearanceVectorField::objectClearanceVectorField(robotManager* rManager, srLink* link)
 {
+	setRobotEndeffector(rManager, link);
+	_endeffectorOffset = SE3();
+	_eps = 1.0e-5;
 }
 
 objectClearanceVectorField::~objectClearanceVectorField()
 {
 }
 
-void objectClearanceVectorField::setObjects(vector<Vec3> objectLoc)
+void objectClearanceVectorField::setObjectLocation(Vec3 objectLoc)
 {
-	_objectCenters = objectLoc;
+	_objectLoc = objectLoc;
 }
 
 void objectClearanceVectorField::setWeights(vector<double> weight)
 {
-	_objectWeights = weight;
+	_weights = weight;
+}
+
+void objectClearanceVectorField::setLinks(vector<srLink*> links)
+{
+	_links = links;
+}
+
+void objectClearanceVectorField::setOffsets(vector<SE3> offsets)
+{
+	_offsets = offsets;
 }
 
 Eigen::VectorXd objectClearanceVectorField::getVectorField(const Eigen::VectorXd & pos1)
@@ -126,12 +146,19 @@ Eigen::VectorXd objectClearanceVectorField::getVectorField(const Eigen::VectorXd
 		Vec3 endeffectorPos = _rManager->forwardKin(pos1, _link, _endeffectorOffset).GetPosition();
 		Vec3 workspaceVector(0.0);
 		double norm_inv;
-		for (unsigned int i = 0; i < _objectCenters.size(); i++)
-		{
-			norm_inv = 1.0 / Norm(endeffectorPos - _objectCenters[i]);
-			workspaceVector += _objectWeights[i] * (endeffectorPos - _objectCenters[i]) * norm_inv * norm_inv * norm_inv;
-		}
+		norm_inv = 1.0 / (Norm(endeffectorPos - _objectLoc) + _eps);
+		workspaceVector = (endeffectorPos - _objectLoc) * norm_inv * norm_inv * norm_inv;
 		Eigen::VectorXd qdot = pinv(_rManager->getAnalyticJacobian(pos1, _link, false, _endeffectorOffset)) * Vec3toVector(workspaceVector);
+		vector<SE3> linkPos = _rManager->forwardKin(pos1, _links, _offsets);
+		for (unsigned int i = 0; i < _weights.size(); i++)
+		{
+			//cout << qdot.transpose() << endl;
+			norm_inv = 1.0 / (Norm(linkPos[i].GetPosition() - _objectLoc) + _eps);
+			workspaceVector = _weights[i] * (linkPos[i].GetPosition() - _objectLoc) * norm_inv * norm_inv * norm_inv;
+			qdot += pinv(_rManager->getAnalyticJacobian(pos1, _links[i], false, _offsets[i])) * Vec3toVector(workspaceVector);
+		}
+		//cout << qdot.transpose() << endl;
+		//cout << endl;
 		qdot *= _C;
 		return qdot;
 	}
@@ -141,13 +168,15 @@ Eigen::VectorXd objectClearanceVectorField::getVectorField(const Eigen::VectorXd
 
 void objectClearanceVectorField::checkFeasibility(int nDim)
 {
-	if (_objectCenters.size() != _objectWeights.size())
+	if (_offsets.size() != _weights.size())
+		_isFeasible = false;
+	if (_offsets.size() != _links.size())
 		_isFeasible = false;
 	if (_rManager->m_activeArmInfo->m_numJoint != nDim)
 		_isFeasible = false;
-	for (unsigned int i = 0; i < _objectWeights.size(); i++)
+	for (unsigned int i = 0; i < _weights.size(); i++)
 	{
-		if (_objectWeights[i] < 0)
+		if (_weights[i] < 0)
 		{
 			_isFeasible = false;
 			break;

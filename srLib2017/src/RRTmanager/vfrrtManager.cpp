@@ -53,7 +53,7 @@ Eigen::VectorXd vfrrtManager::extendStepSize_simple(const Eigen::VectorXd& vertP
 			vec.normalize();
 		
 		bool isTree1 = (tree == TARGET_TREE::TREE1);
-		bool plusVec = isTree1^_isTreeSwaped;		// XOR
+		bool plusVec = (!isTree1 && _isTreeSwaped) || (isTree1 && !_isTreeSwaped);		// XOR
 		
 		if (plusVec)
 			vec = dir_2_random + _vectorFieldWeight * vec;
@@ -73,29 +73,54 @@ Eigen::VectorXd vfrrtManager::extendStepSize_genuine(const Eigen::VectorXd & ver
 	{
 		Eigen::VectorXd dir_2_random = (vertPos2 - vertPos1);
 		bool isTree1 = (tree == TARGET_TREE::TREE1);
-		bool plusVec = isTree1 ^ _isTreeSwaped;		// XOR
+		bool plusVec = (!isTree1 && _isTreeSwaped) || (isTree1 && !_isTreeSwaped);		// XOR
 		Eigen::VectorXd vec = getVectorField(vertPos1);
 		if (!plusVec)
 			vec *= -1.0;
 		if (dir_2_random.norm() > 0)
 			dir_2_random.normalize();
 		double vec_norm = vec.norm();
-		if (vec.norm() > 0)
+		if (vec_norm > 0)
+		{
 			vec.normalize();
+			// get weight for input (v_new = v_field + w*v_input)
+			double lambda = vec_norm * _lambda;
+			double zmax = 0.5*(dir_2_random - vec).squaredNorm();
+			////////////////// version 0 //////////////////////
+			double phi_lambda_inv = (1 - exp(-2.0 * lambda)) / lambda;
+			double sigma = 0.25 * (dir_2_random - vec).squaredNorm(); //(in paper)
+			double z = -log(1.0 - sigma * lambda*phi_lambda_inv) / lambda;
+			if (z > zmax)
+				z = zmax;
+			///////////////////////////////////////////////////
+			////////////////// version 1 //////////////////////
+			//double phi_lambda_inv = (1 - exp(-2.0*lambda)) / lambda;
+			//double sigma = ((double)rand() / RAND_MAX);  //0.25 * (dir_2_random - vec).squaredNorm(); //(in paper)
+			//double z = -log(1.0 - sigma * lambda*phi_lambda_inv) / lambda;
+			//if (z > zmax)
+			//	z = zmax;
+			///////////////////////////////////////////////////
+			////////////////// version 2 //////////////////////
+			//double phi_lambda_inv = (1 - exp(-zmax*lambda)) / lambda;
+			//double sigma = ((double)rand() / RAND_MAX);  //0.25 * (dir_2_random - vec).squaredNorm(); //(in paper)
+			//double z = -log(1.0 - sigma * lambda*phi_lambda_inv) / lambda;
+			//if (z > zmax)
+			//	z = zmax;
+			///////////////////////////////////////////////////
+			double w = sqrt(2.0*z);
 
-		// get weight for input (v_new = v_field + w*v_input)
-		double lambda = vec_norm * _lambda;
-		double phi_lambda_inv = (1 - exp(-2.0*lambda)) / lambda;
-		double sigma = 0.5 * (dir_2_random - vec).squaredNorm();
-		double z = -log(1.0 - sigma * lambda*phi_lambda_inv) / lambda;
-		double w = sqrt(2.0*z);
-
-		// get v_new = alpha*v_field + beta*v_rand = v_field + w*v_input
-		Eigen::VectorXd n = dir_2_random - vec.dot(dir_2_random) * vec;
-		n.normalize();
-		double theta = 2.0*asin(0.5*w);
-		Eigen::VectorXd update_vec = cos(theta) * vec + sin(theta) * n;
-		return vertPos1 + step_size * update_vec;
+			// get v_new = alpha*v_field + beta*v_rand = v_field + w*v_input
+			Eigen::VectorXd n = dir_2_random - vec.dot(dir_2_random) * vec;
+			n.normalize();
+			double theta = 2.0*asin(0.5*w);
+			double theta_ = acos(dir_2_random.dot(vec));
+			cout << theta << ", " << theta_ << endl;
+			Eigen::VectorXd update_vec = cos(theta) * vec + sin(theta) * n;
+			//cout << (vertPos1 + step_size * update_vec).transpose();
+			return vertPos1 + step_size * update_vec;
+		}
+		else
+			return extendStepSize_noVectorField(vertPos1, vertPos2, criterion);
 	}
 }
 
@@ -107,6 +132,16 @@ void vfrrtManager::connectParentAndChild(rrtVertex* parentVertex, rrtVertex* chi
 		childVertex->cost_bw_parent = getUpstreamCost(parentVertex->posState, childVertex->posState);
 	else
 		childVertex->cost_bw_parent = 0.0;
+}
+
+void vfrrtManager::setAlgorithmMode(MODE mode)
+{
+	_algorithmMode = mode;
+}
+
+void vfrrtManager::setLambda(double lambda)
+{
+	_lambda = lambda;
 }
 
 double vfrrtManager::getCost(rrtVertex * pos1, rrtVertex * pos2)
