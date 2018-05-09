@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     MHRobotSetting();
 
 	ee->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
-	ee->GetGeomInfo().SetDimension(0.3);
+	ee->GetGeomInfo().SetDimension(0.03);
 	ee->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
 	obs->SetBaseLink(ee);
 	obs->SetBaseLinkType(srSystem::FIXED);

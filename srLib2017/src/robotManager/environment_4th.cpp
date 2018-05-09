@@ -103,7 +103,7 @@ void workingObject::AssembleModel()
 	m_numWeldJoint = 1;
 
 	// dimension
-	Vec3 dim(0.1, 0.1, 0.025);
+	Vec3 dim(0.1, 0.07, 0.025); // change to exact value later
 
 	for (int i = 0; i < m_numLink; i++)
 	{
@@ -132,7 +132,7 @@ void workingObject::AssembleModel()
 
 
 	m_ObjWeldJoint[0].SetParentLink(&m_ObjLink[1]);
-	m_ObjWeldJoint[0].SetParentLinkFrame();
+	m_ObjWeldJoint[0].SetParentLinkFrame(SE3(Vec3(-0.01, 0.0, dim[2] - 0.0004))); // change to exact value later
 	m_ObjWeldJoint[0].SetChildLink(&m_ObjLink[0]);
 	m_ObjWeldJoint[0].SetChildLinkFrame();
 

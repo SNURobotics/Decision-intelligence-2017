@@ -90,7 +90,7 @@ int main(int argc, char **argv)
 
 	URrobotManagerSetting();
 
-	rManager1->setGripperDistance(0.01);
+	
 	//busbar->setBaseLinkFrame(URRobot->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() * Inv(Tbusbar2gripper_ur));
 	//ctCase->setBaseLinkFrame(URRobot->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() * Inv(TctCase2gripper_ur));
 	qval.setZero(6);

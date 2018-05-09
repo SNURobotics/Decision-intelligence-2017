@@ -31,7 +31,7 @@ MH12Robot::MH12Robot(bool elbowUp, double gripperRot)
 	{
 		//qInvKinInit[0] = -0.074913; qInvKinInit[1] = -0.612778; qInvKinInit[2] = -2.488023; qInvKinInit[3] = 1.570796; qInvKinInit[4] = -1.530005; qInvKinInit[5] = 1.645710;
 	}
-	TsrLinkbase2robotbase = EulerZYX(Vec3(SR_PI, 0.0, 0.0), Vec3(0.0, 0.0, 0.69195 - 0.69511));
+	TsrLinkbase2robotbase = SE3();
 	//TsrLinkbase2robotbase = EulerZYX(Vec3(SR_PI, 0.0, 0.0), Vec3(0.0, 0.0, 0.69195 - 0.69511 + 0.00195));
 	this->SetSelfCollision(true);
 }
@@ -176,8 +176,8 @@ void MH12Robot::AssembleModel(double gripperRot)
 	gJoint[MH12_Index::JOINT_3]->SetActType(srJoint::HYBRID);
 	gJoint[MH12_Index::JOINT_3]->SetParentLink(&gLink[MH12_Index::LINK_3]);
 	gJoint[MH12_Index::JOINT_3]->SetChildLink(&gLink[MH12_Index::LINK_4]);
-	gJoint[MH12_Index::JOINT_3]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(-0.155, 0.0, 1.064)));
-	gJoint[MH12_Index::JOINT_3]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(-0.155, 0.0, 1.064)));
+	gJoint[MH12_Index::JOINT_3]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(-0.155, 0.0, 1.064)));
+	gJoint[MH12_Index::JOINT_3]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(-0.155, 0.0, 1.064)));
 	gJoint[MH12_Index::JOINT_3]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[MH12_Index::JOINT_3]->MakePositionLimit(false);
 
@@ -190,9 +190,9 @@ void MH12Robot::AssembleModel(double gripperRot)
 	gJoint[MH12_Index::JOINT_4]->SetActType(srJoint::HYBRID);
 	gJoint[MH12_Index::JOINT_4]->SetParentLink(&gLink[MH12_Index::LINK_4]);
 	gJoint[MH12_Index::JOINT_4]->SetChildLink(&gLink[MH12_Index::LINK_5]);
-	gJoint[MH12_Index::JOINT_4]->SetParentLinkFrame(EulerZYX(Vec3(0.0, -SR_PI_HALF, 0.0), Vec3(-0.255, 0.0, 1.264)));
+	gJoint[MH12_Index::JOINT_4]->SetParentLinkFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(-0.255, 0.0, 1.264)));
 	//gJoint[MH12_Index::JOINT_4]->SetChildLinkFrame(EulerZYX(Vec3(0.0,0.0, -SR_PI_HALF), Vec3(0.0, 0.0, 0.60855)));
-	gJoint[MH12_Index::JOINT_4]->SetChildLinkFrame(EulerZYX(Vec3(0.0, -SR_PI_HALF, 0.0), Vec3(-0.255, 0.0, 1.264)));
+	gJoint[MH12_Index::JOINT_4]->SetChildLinkFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(-0.255, 0.0, 1.264)));
 	gJoint[MH12_Index::JOINT_4]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[MH12_Index::JOINT_4]->MakePositionLimit(false);
 
@@ -204,8 +204,8 @@ void MH12Robot::AssembleModel(double gripperRot)
 	gJoint[MH12_Index::JOINT_5]->SetActType(srJoint::HYBRID);
 	gJoint[MH12_Index::JOINT_5]->SetParentLink(&gLink[MH12_Index::LINK_5]);
 	gJoint[MH12_Index::JOINT_5]->SetChildLink(&gLink[MH12_Index::LINK_6]);
-	gJoint[MH12_Index::JOINT_5]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(-0.795, 0.0, 1.264)));
-	gJoint[MH12_Index::JOINT_5]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(-0.795, 0.0, 1.264)));
+	gJoint[MH12_Index::JOINT_5]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(-0.795, 0.0, 1.264)));
+	gJoint[MH12_Index::JOINT_5]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(-0.795, 0.0, 1.264)));
 	gJoint[MH12_Index::JOINT_5]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[MH12_Index::JOINT_5]->MakePositionLimit(false);
 
@@ -217,8 +217,8 @@ void MH12Robot::AssembleModel(double gripperRot)
 	gJoint[MH12_Index::JOINT_6]->SetActType(srJoint::HYBRID);
 	gJoint[MH12_Index::JOINT_6]->SetParentLink(&gLink[MH12_Index::LINK_6]);
 	gJoint[MH12_Index::JOINT_6]->SetChildLink(&gLink[MH12_Index::ENDEFFECTOR]);
-	gJoint[MH12_Index::JOINT_6]->SetParentLinkFrame(EulerZYX(Vec3(0.0, -SR_PI_HALF, 0.0), Vec3(-0.895, 0.0, 1.264)));
-	gJoint[MH12_Index::JOINT_6]->SetChildLinkFrame(EulerZYX(Vec3(0.0, -SR_PI_HALF, 0.0), Vec3(-0.895, 0.0, 1.264)));
+	gJoint[MH12_Index::JOINT_6]->SetParentLinkFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(-0.895, 0.0, 1.264)));
+	gJoint[MH12_Index::JOINT_6]->SetChildLinkFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(-0.895, 0.0, 1.264)));
 	gJoint[MH12_Index::JOINT_6]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[MH12_Index::JOINT_6]->MakePositionLimit(false);
 
@@ -277,7 +277,8 @@ void MH12Robot::AssembleModel(double gripperRot)
 	gWeldJoint[MH12_Index::WELDJOINT_GRIP_MARKER]->SetParentLink(&gLink[MH12_Index::ENDEFFECTOR]);
 	gWeldJoint[MH12_Index::WELDJOINT_GRIP_MARKER]->SetChildLink(&gMarkerLink[MH12_Index::MLINK_GRIP]);
 	gWeldJoint[MH12_Index::WELDJOINT_GRIP_MARKER]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.0)));
-	gWeldJoint[MH12_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(SE3(Vec3(1.036, 0.0, 1.264)));		// consider offset for gripper assembly
+	//gWeldJoint[MH12_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(1.036, 0.0, 1.264)));
+	gWeldJoint[MH12_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, SR_PI), Vec3(-1.264, 0.0, -1.036)));// consider offset for gripper assembly
 																															//gWeldJoint[UR3_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(SE3(Vec3(0.0, 0.00195, -(0.1928 + 0.2003 + 0.001))));		// consider offset for gripper assembly
 	// marker links
 	gMarkerLink[MH12_Index::MLINK_GRIP].GetGeomInfo().SetDimension(Vec3(0.00, 0.00, 0.00));
