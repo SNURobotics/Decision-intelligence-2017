@@ -18,6 +18,15 @@ public:
 	double m_collision_offset;
 };
 
+class Table4th : public Object
+{
+public:
+	Table4th(double collision_offset = 0.01);
+	~Table4th();
+	void AssembleModel();
+	double m_collision_offset;
+};
+
 // Temporary working object
 class workingObject : public Object
 {

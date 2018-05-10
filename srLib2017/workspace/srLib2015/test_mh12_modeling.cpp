@@ -51,7 +51,6 @@ int main(int argc, char **argv)
 	
 	MHRobotManagerSetting();
 
-	rManager1->setGripperDistance(0.0);
 	//busbar->setBaseLinkFrame(MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() * Inv(Tbusbar2gripper_ur));
 	//ctCase->setBaseLinkFrame(MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() * Inv(TctCase2gripper_ur));
 	qval.setZero(6);

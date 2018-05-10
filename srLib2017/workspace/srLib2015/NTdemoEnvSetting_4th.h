@@ -15,11 +15,13 @@ public:
 	SE3 Trobotbase2link1;
 	SE3 Tworld2camera;
 	Bin* bin;
+	Table4th* table;
 	unsigned int objectNum;
 	vector<workingObject*> objects;
 	SE3 Trobotbase2camera;
 	SE3 Tcamera2robotbase;
 	Vec3 Plink12bin;
+	Vec3 Plink12table;
 };
 
 
@@ -41,6 +43,11 @@ demoEnvironment::demoEnvironment() {
 	bin = new Bin(0.01);
 	Plink12bin = Vec3(0.89, 0.14, 0.45);
 	bin->setBaseLinkFrame(SE3(Trobotbase2link1.GetPosition()) * EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Plink12bin));	// change to exact value later
+
+	table = new Table4th(0.01);
+	Plink12table = Vec3(0.89, 0.0, 0.412);
+	table->setBaseLinkFrame(SE3(Trobotbase2link1.GetPosition()) * EulerZYX(Vec3(0.0, 0.0, 0.0), Plink12table));	// change to exact value later
+
 
 	// set objects
 	objectNum = 5;

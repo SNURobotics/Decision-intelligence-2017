@@ -101,6 +101,93 @@ void Bin::AssembleModel()
 	this->SetBaseLinkType(srSystem::KINEMATIC);
 }
 
+Table4th::Table4th(double collision_offset /*= 0.01*/)
+{
+	m_collision_offset = collision_offset;
+	AssembleModel();
+}
+
+Table4th::~Table4th()
+{
+}
+
+void Table4th::AssembleModel()
+{
+	m_numLink = 5;
+	m_numCollision = 5;
+	m_numWeldJoint = 4;
+	for (int i = 0; i < m_numLink; i++)
+	{
+		srLink* temp = new srLink;
+		m_ObjLink.push_back(*temp);
+	}
+
+	for (int i = 0; i < m_numCollision; i++)
+	{
+		srCollision* temp = new srCollision;
+		m_ObjCollision.push_back(*temp);
+	}
+	for (int i = 0; i < m_numWeldJoint; i++)
+	{
+		srWeldJoint* temp = new srWeldJoint;
+		m_ObjWeldJoint.push_back(*temp);
+	}
+
+	// base
+	Vec3 dim0(0.6, 1.0, 0.05);
+	Vec3 dim1(0.05, 0.05, 0.6);
+
+	vector<Vec3> dims(m_numLink);
+	dims[0] = dim0;
+	dims[1] = dim1;
+	dims[2] = dim1;
+	dims[3] = dim1;
+	dims[4] = dim1;
+
+	for (int i = 0; i < m_numLink; i++)
+	{
+		m_ObjLink[i].GetGeomInfo().SetColor(0.3, 0.3, 0.3);
+		m_ObjLink[i].GetGeomInfo().SetDimension(dims[i]);
+		m_ObjLink[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	}
+
+	// xy plane
+	m_ObjWeldJoint[0].SetParentLink(&m_ObjLink[0]);
+	m_ObjWeldJoint[0].SetParentLinkFrame();
+	m_ObjWeldJoint[0].SetChildLink(&m_ObjLink[1]);
+	m_ObjWeldJoint[0].SetChildLinkFrame(SE3(Vec3(-0.5*(0.6 - 0.05), -0.5*(1.0 - 0.05), 0.5*(0.6 + 0.05))));
+
+	m_ObjWeldJoint[1].SetParentLink(&m_ObjLink[0]);
+	m_ObjWeldJoint[1].SetParentLinkFrame();
+	m_ObjWeldJoint[1].SetChildLink(&m_ObjLink[2]);
+	m_ObjWeldJoint[1].SetChildLinkFrame(SE3(Vec3(-0.5*(0.6 - 0.05), 0.5*(1.0 - 0.05), 0.5*(0.6 + 0.05))));
+	// yz plane
+	m_ObjWeldJoint[2].SetParentLink(&m_ObjLink[0]);
+	m_ObjWeldJoint[2].SetParentLinkFrame();
+	m_ObjWeldJoint[2].SetChildLink(&m_ObjLink[3]);
+	m_ObjWeldJoint[2].SetChildLinkFrame(SE3(Vec3(0.5*(0.6 - 0.05), -0.5*(1.0 - 0.05), 0.5*(0.6 + 0.05))));
+
+	m_ObjWeldJoint[3].SetParentLink(&m_ObjLink[0]);
+	m_ObjWeldJoint[3].SetParentLinkFrame();
+	m_ObjWeldJoint[3].SetChildLink(&m_ObjLink[4]);
+	m_ObjWeldJoint[3].SetChildLinkFrame(SE3(Vec3(0.5*(0.6 - 0.05), 0.5*(1.0 - 0.05), 0.5*(0.6 + 0.05))));
+
+	///// set collision
+	Vec3 colli_offset(m_collision_offset);
+	for (int i = 0; i < m_numLink; i++)
+	{
+		m_ObjCollision[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+		m_ObjCollision[i].GetGeomInfo().SetDimension(dims[i] + colli_offset);
+		m_ObjCollision[i].SetLocalFrame(SE3());
+		m_ObjLink[i].AddCollision(&m_ObjCollision[i]);
+	}
+	
+	this->SetSelfCollision(false);
+	//this->SetBaseLink(&m_ObjLink[m_numLink]);
+	this->SetBaseLink(&m_ObjLink[0]);
+	this->SetBaseLinkType(srSystem::KINEMATIC);
+}
+
 workingObject::workingObject()
 {
 	AssembleModel();
@@ -113,7 +200,7 @@ workingObject::~workingObject()
 void workingObject::AssembleModel()
 {
 	m_numLink = 2;
-	m_numCollision = 1;
+	m_numCollision = 10;
 	m_numWeldJoint = 1;
 
 	// dimension
@@ -136,30 +223,90 @@ void workingObject::AssembleModel()
 	}
 
 	m_ObjLink[0].GetGeomInfo().SetColor(0.3, 0.4, 0.3); 
-	m_ObjLink[0].GetGeomInfo().SetDimension(dim);
-	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjLink[0].SetFrame(SE3(Vec3(0.0, 0.0, 0.5*0.05)));
+	//m_ObjLink[0].GetGeomInfo().SetDimension(dim);
+	//m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	//m_ObjLink[0].SetFrame(SE3(Vec3(0.0, 0.0, 0.5*0.05)));
+
+	m_ObjLink[0].SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF), Vec3(-0.01675, 0.0, -0.0004)));
+	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/mh12_3ds/cover.3ds");
+
+	
+	//m_ObjWeldJoint[0].SetParentLink(&m_ObjLink[0]);
+	//m_ObjWeldJoint[0].SetChildLink(&m_ObjLink[1]);
+	//m_ObjWeldJoint[0].SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	//m_ObjWeldJoint[0].SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 
 	// dummy link
 	m_ObjLink[1].GetGeomInfo().SetDimension(Vec3(0.0, 0.0, 0.0));
 
-
-
 	m_ObjWeldJoint[0].SetParentLink(&m_ObjLink[1]);
-	m_ObjWeldJoint[0].SetParentLinkFrame(SE3(Vec3(-0.01, 0.0, dim[2] - 0.0004))); // change to exact value later
+	//m_ObjWeldJoint[0].SetParentLinkFrame(SE3(Vec3(-0.01, 0.0, dim[2] - 0.0004))); // change to exact value later
+	m_ObjWeldJoint[0].SetParentLinkFrame(); // change to exact value later
 	m_ObjWeldJoint[0].SetChildLink(&m_ObjLink[0]);
 	m_ObjWeldJoint[0].SetChildLinkFrame();
 
 	///// set collision
-	for (int i = 0; i < 1; i++)
-	{
-		m_ObjCollision[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-		m_ObjCollision[i].GetGeomInfo().SetDimension(dim);
-		m_ObjCollision[i].SetLocalFrame(SE3());
-		m_ObjLink[i].AddCollision(&m_ObjCollision[i]);
-	}
+	//m_ObjCollision[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	//m_ObjCollision[i].GetGeomInfo().SetDimension(dim);
+	//m_ObjCollision[i].SetLocalFrame(SE3());
+	//m_ObjLink[i].AddCollision(&m_ObjCollision[i]);
+
+	m_numCollision = 0;
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[m_numCollision]);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.0645, 0.063, 0.004));
+	m_ObjCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-0.01575, 0.0, 0.0016)));
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[m_numCollision]);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.0165, 0.092, 0.007));
+	m_ObjCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(0.02525, 0.0, 0.0021)));
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[m_numCollision]);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.027, 0.014, 0.009));
+	m_ObjCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-0.0535, 0.039, 0.0031)));
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[m_numCollision]);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.027, 0.014, 0.009));
+	m_ObjCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-0.0535, -0.039, 0.0031)));
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[m_numCollision]);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.056, 0.0085, 0.005));
+	m_ObjCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-0.0115, 0.03625, 0.0011)));
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[m_numCollision]);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.056, 0.0085, 0.005));
+	m_ObjCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-0.0115, -0.03625, 0.0011)));
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[m_numCollision]);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.056, 0.00963769416, 0.0035));
+	m_ObjCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(DEG2RAD(-22.38013505), 0.0, 0.0), Vec3(-0.0115, 0.02565255445, 0.00585)));
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[m_numCollision]);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.058, 0.00963769416, 0.0035));
+	m_ObjCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(DEG2RAD(22.38013505), 0.0, 0.0), Vec3(-0.0115, -0.02565255445, 0.00585)));
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[m_numCollision]);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.028, 0.00855461015, 0.0035));
+	m_ObjCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(0.0025, 0.03622269493, 0.00585)));
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[m_numCollision]);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.028, 0.00855461015, 0.0035));
+	m_ObjCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(0.0025, -0.03622269493, 0.00585)));
 
 
+	
 	this->SetSelfCollision(false);
 	this->SetBaseLink(&m_ObjLink[1]);
 	this->SetBaseLinkType(srSystem::KINEMATIC);

@@ -399,25 +399,27 @@ void MH12Robot::AssembleCollision()
 
 	gLink[MH12_Index::COUPLING].AddCollision(&gCollision[m_numCollision]);
 	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.09, 0.08, 0.08));
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.08, 0.08, 0.08));
 	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-0.965, 1.264, 0.0)));
 
 
 
 	gLink[MH12_Index::GRIPPER_1].AddCollision(&gCollision[m_numCollision]);
-	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.02, 0.014, 0.014));
-	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-1.026, 1.269, 0.0087)));
+	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::CYLINDER);
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.015, 0.02, 0.0));
+	//gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-1.019, 1.269, 0.0087)));
+	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(-1.019, 1.269, 0.0087)));
+	
 
 	gLink[MH12_Index::GRIPPER_2].AddCollision(&gCollision[m_numCollision]);
-	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.02, 0.014, 0.014));
-	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-1.026, 1.254, 0.0)));
+	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::CYLINDER);
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.015, 0.02, 0.0));
+	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(-1.019, 1.254, 0.0)));
 
 	gLink[MH12_Index::GRIPPER_3].AddCollision(&gCollision[m_numCollision]);
-	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.02, 0.014, 0.014));
-	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-1.026, 1.269, -0.0087)));
+	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::CYLINDER);
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.015, 0.02, 0.0));
+	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(-1.019, 1.269, -0.0087)));
 	
 }
 
