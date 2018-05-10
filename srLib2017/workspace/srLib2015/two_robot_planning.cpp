@@ -25,10 +25,6 @@ JigAssem_QB* jigAssem = new JigAssem_QB;
 vector<Jig_HYU*> jig(4);
 vector<SE3> jigSE3(4);
 vector<SE3> jig2busbar(2);
-//vector<BusBar_HYU*> busbar(8);
-//vector<SE3>	initSE3(8);
-//vector<SE3>	goalSE3(8);
-//vector<SE3> allSE3_busbar(2 * busbar.size());
 
 vector<BusBar_HYU*> busbar(1);
 vector<SE3>	initSE3(2);
@@ -43,7 +39,6 @@ Eigen::VectorXd stageVal(3);
 IndyRobot* robot1 = new IndyRobot;
 IndyRobot* robot2 = new IndyRobot;
 vector<IndyRobot*> robotArray(2);
-
 
 Eigen::VectorXd jointVal(6);
 Eigen::VectorXd jointAcc(6);

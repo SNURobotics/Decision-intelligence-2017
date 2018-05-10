@@ -53,6 +53,8 @@
     <ClCompile Include="..\..\src\robotManager\environment_workcell.cpp" />
     <ClCompile Include="..\..\src\robotManager\IndyRobot.cpp" />
     <ClCompile Include="..\..\src\robotManager\indyRobotManager.cpp" />
+    <ClCompile Include="..\..\src\robotManager\MH12Robot.cpp" />
+    <ClCompile Include="..\..\src\robotManager\MH12RobotManager.cpp" />
     <ClCompile Include="..\..\src\robotManager\robotManager.cpp" />
     <ClCompile Include="..\..\src\robotManager\robotRRTManager.cpp" />
     <ClCompile Include="..\..\src\robotManager\robotTaskManager.cpp" />
@@ -73,6 +75,8 @@
     <ClInclude Include="..\..\src\robotManager\IndyRobot.h" />
     <ClInclude Include="..\..\src\robotManager\indyRobotManager.h" />
     <ClInclude Include="..\..\src\robotManager\makeSpecialCol.h" />
+    <ClInclude Include="..\..\src\robotManager\MH12Robot.h" />
+    <ClInclude Include="..\..\src\robotManager\MH12RobotManager.h" />
     <ClInclude Include="..\..\src\robotManager\robotManager.h" />
     <ClInclude Include="..\..\src\robotManager\robotRRTManager.h" />
     <ClInclude Include="..\..\src\robotManager\robotTaskManager.h" />

@@ -45,6 +45,12 @@
     <ClInclude Include="..\..\..\workspace\srLib2015\serverPlanningSetting.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\workspace\srLib2015\sort_external_lib.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\workspace\srLib2015\NTdemoEnvSetting_4th.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\workspace\srLib2015\extApi.c">
@@ -63,6 +69,27 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\test_mh12_modeling.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\main_4th_year_video.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\test_planning_workcell.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\main_4th_year_video_NTrobot.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\test_mh12_modeling_with_4th_objects.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\test_ur3_modeling_with_4th_objects.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\main_NTdemo.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\main_server_render.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\test_vfrrt_ur.cpp">
