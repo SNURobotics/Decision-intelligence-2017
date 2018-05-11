@@ -1,6 +1,4 @@
 #include <cstdio>
-#include "../../VS2013/tcp_ip_server/stdafx.h"
-#include "../../VS2013/tcp_ip_server/Server.h"
 #include "myRenderer.h"
 #include "NTdemoEnvSetting_4th.h"
 //#include "2ndRenderer.h"
@@ -42,7 +40,6 @@ vector<Eigen::VectorXd> traj(0);
 Server serv = Server::Server(); 
 char communication_flag;
 void communicationFunc(int argc, char **argv);
-void Eliminate(char *str, char ch);
 
 int main(int argc, char **argv)
 {
@@ -84,19 +81,6 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-
-void Eliminate(char *str, char ch)
-{
-	for (; *str != '\0'; str++)//종료 문자를 만날 때까지 반복
-	{
-		if (*str == ch)//ch와 같은 문자일 때
-		{
-			strcpy(str, str + 1);
-			str--;
-		}
-	}
-}
-
 void communicationFunc(int argc, char **argv)
 {
 	static int goalNum = 0;
@@ -126,7 +110,7 @@ void communicationFunc(int argc, char **argv)
 			serv.SendMessageToClient(copy);
 			Sleep(50);
 			printf("%s\n", received_data);
-			demoTask->curObjectData.setObjectDataFromString(received_data);
+			//demoTask->curObjectData.setObjectDataFromString(received_data);
 			
 			//////////////////////////////////////////////////////////////////////
 			//m.lock();

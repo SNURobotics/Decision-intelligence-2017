@@ -138,6 +138,7 @@
     </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\test_vfrrt_ur.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\two_robot_planning.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -154,7 +155,7 @@
     <ClInclude Include="..\..\..\workspace\srLib2015\serverPlanningSetting.h" />
     <ClInclude Include="..\..\..\workspace\srLib2015\serverRenderer.h" />
     <ClInclude Include="..\..\..\workspace\srLib2015\sort_external_lib.h" />
-    <ClInclude Include="..\..\..\workspace\srLib2015\tcp_ip_communication.h" />
+    <ClInclude Include="..\..\..\workspace\srLib2015\tcp_ip_communication_4th.h" />
     <ClInclude Include="..\..\..\workspace\srLib2015\vrepConnect.h" />
     <ClInclude Include="..\..\..\workspace\srLib2015\simulationEnvSetting.h" />
   </ItemGroup>

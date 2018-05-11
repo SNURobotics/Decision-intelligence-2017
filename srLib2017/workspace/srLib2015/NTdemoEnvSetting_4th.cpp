@@ -54,6 +54,51 @@ void demoEnvironment::setObjectFromRobot2ObjectText(string loc, bool print /*= f
 	}
 }
 
+
+void demoEnvironment::setObjectFromRobot2VisionData(vector<SE3> objectSE3)
+{
+	if (objectSE3.size() == 0)
+	{
+		printf("current object data does not exist!\n");
+		return;
+	}
+
+	for (unsigned int i = 0; i < objectNum; i++)
+	{
+		objects[i]->setBaseLinkFrame(Trobotbase * objectSE3[i]);
+	}
+
+	return;
+}
+
+
+SKKUobjectData::SKKUobjectData()
+{
+	objectNum = 5;
+	objectSE3.resize(objectNum);
+	isHead.resize(objectNum);
+	objectGraspCandidatePos.resize(objectNum);
+}
+
+SKKUobjectData::~SKKUobjectData()
+{
+	objectSE3.clear();
+	isHead.clear();
+	objectGraspCandidatePos.clear();
+}
+
+void SKKUobjectData::setObjectDataFromString(vector<SE3> _objectSE3, vector<bool> _isHead, vector<vector<Vec3>> _objectGraspCandidatePos)
+{
+	objectSE3.clear();
+	isHead.clear();
+	objectGraspCandidatePos.clear();
+
+	objectSE3 = _objectSE3;
+	isHead = _isHead;
+	objectGraspCandidatePos = _objectGraspCandidatePos;
+}
+
+
 demoTaskManager::demoTaskManager()
 {
 	int maxTimeDuration = 60000;		// means max 60000ms per movement
@@ -63,6 +108,73 @@ demoTaskManager::demoTaskManager()
 demoTaskManager::~demoTaskManager()
 {
 }
+
+void demoTaskManager::updateEnv(char* stringfromSKKU)
+{
+	// read vision data by readSKKUvision function from tcp_ip_communication header
+	vision_data skku_dataset;
+	readSKKUvision(stringfromSKKU, skku_dataset);
+
+	vector<SE3> objectSE3;
+	vector<bool> isHead;
+	vector<vector<Vec3>> objectGraspCandidatePos;
+
+	objectSE3.resize(objectNum);
+	isHead.resize(objectNum);
+	objectGraspCandidatePos.resize(objectNum);
+
+	for (unsigned int i = 0; i < objectNum; i++)
+	{
+		SE3 objSE3_Camera = SE3(skku_dataset.objOri[i][0], skku_dataset.objOri[i][1], skku_dataset.objOri[i][2], skku_dataset.objOri[i][3], skku_dataset.objOri[i][4], skku_dataset.objOri[i][5], skku_dataset.objOri[i][6], skku_dataset.objOri[i][7], skku_dataset.objOri[i][8], skku_dataset.objPos[i][0], skku_dataset.objPos[i][1], skku_dataset.objPos[i][2]);
+		
+		// coordinate change
+		objectSE3[i] = Tcamera2robotbase * objSE3_Camera;
+		
+		// is z direcition of objectSE3 is upward
+		isHead[i] = (objectSE3[i][11] > 0);
+
+		objectGraspCandidatePos[i].resize(skku_dataset.objCand[i]);
+		for (unsigned int j = 0; j < (unsigned int)skku_dataset.objCand[i]; j++)
+			objectGraspCandidatePos[i][j] = Vec3(skku_dataset.objCandPos[i][j][0], skku_dataset.objCandPos[i][j][1], skku_dataset.objCandPos[i][j][2]);
+	}
+
+	curObjectData.setObjectDataFromString(objectSE3, isHead, objectGraspCandidatePos);
+
+	return;
+}
+
+
+
+bool demoTaskManager::setObjectNum(MH12Robot* robot, MH12RobotManager* rManager1)
+{
+	int flag;
+	int nWay = 3 * objectNum;
+	vector<bool> includeOri(nWay, true);
+
+	if (curObjectData.objectSE3.size() == 0)
+	{
+		printf("current object data does not exist!\n");
+		return false;
+	}
+
+	for (unsigned int i = 0; i < objectNum; i++)
+	{
+		for (unsigned int j = 0; j < size(curObjectData.objectGraspCandidatePos[i]); j++)
+		{
+			SE3 targetObject = curObjectData.objectSE3[i] * SE3(curObjectData.objectGraspCandidatePos[i][j]);
+			rManager1->inverseKin(targetObject, &robot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag);
+			if (flag == 0)
+			{
+				curObjID = i;
+				curGraspOffset = SE3(curObjectData.objectGraspCandidatePos[i][j]);
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 
 void demoTaskManager::setGoalNum(int goalNum)
 {
@@ -154,14 +266,3 @@ bool demoTaskManager::sendError()
 	return false;
 }
 
-SKKUobjectData::SKKUobjectData()
-{
-}
-
-SKKUobjectData::~SKKUobjectData()
-{
-}
-
-void SKKUobjectData::setObjectDataFromString(string _string)
-{
-}

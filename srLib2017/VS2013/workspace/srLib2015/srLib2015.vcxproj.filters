@@ -30,9 +30,6 @@
     <ClInclude Include="..\..\..\workspace\srLib2015\extApiPlatform.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\workspace\srLib2015\tcp_ip_communication.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\workspace\srLib2015\serverRenderer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -49,6 +46,9 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\workspace\srLib2015\NTdemoEnvSetting_4th.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\workspace\srLib2015\tcp_ip_communication_4th.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

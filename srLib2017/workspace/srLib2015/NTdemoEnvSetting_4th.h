@@ -1,7 +1,11 @@
 #pragma once
 #include "common\dataIO.h"
 #include "robotManager\environment_4th.h"
+#include "tcp_ip_communication_4th.h"
 #include <Windows.h>
+#include "robotManager\MH12Robot.h"
+#include "robotManager\MH12RobotManager.h"
+
 class demoEnvironment
 {
 public:
@@ -9,6 +13,7 @@ public:
 	~demoEnvironment();
 
 	void setObjectFromRobot2ObjectText(string loc, bool print = false);
+	void setObjectFromRobot2VisionData(vector<SE3> objectSE3);
 
 public:
 	SE3 Trobotbase;
@@ -32,12 +37,14 @@ public:
 	SKKUobjectData();
 	~SKKUobjectData();
 
-	void setObjectDataFromString(string _string);
+	void setObjectDataFromString(vector<SE3> _objectSE3, vector<bool> _isHead, vector<vector<Vec3>> _objectGraspCandidatePos);
 public:
+	unsigned int objectNum;
 	vector<SE3> objectSE3;
 	vector<bool> isHead;
 	vector<vector<Vec3>> objectGraspCandidatePos;		// first vector: object ID, second vector: candidates per object
 };
+
 
 class demoTaskManager
 {
@@ -47,8 +54,8 @@ public:
 
 public:
 	// Vision information functions
-	bool updateEnv();		// get vision data from SKKU, and update object locations
-	bool setObjectNum();	// select object to move from object SE3 and grasp candidates (return true if object is reachable, false if none of the objects are reachable)
+	void updateEnv(char* stringfromSKKU);		// get vision data from SKKU, and update object locations
+	bool setObjectNum(MH12Robot* robot, MH12RobotManager* rManager1);	// select object to move from object SE3 and grasp candidates (return true if object is reachable, false if none of the objects are reachable)
 	bool sendError();				// send error when none of the objects are reachable
 
 	// Pick and place task functions
@@ -70,8 +77,14 @@ public:
 	
 
 public:
+	// Vision-Robot coordinate change SE3
+	SE3 Tworld2camera;
+	SE3 Trobotbase2camera;
+	SE3 Tcamera2robotbase;
+
 	// SKKU vision data related variables
 	SKKUobjectData curObjectData;
+	unsigned int objectNum;
 	int curObjID;					// current object ID (0~4)
 	SE3 curGraspOffset;				// current SE3 from object frame to grasp frame
 
@@ -89,3 +102,7 @@ public:
 private:
 	int curGoalID;					// current goal ID 
 };
+
+
+
+
