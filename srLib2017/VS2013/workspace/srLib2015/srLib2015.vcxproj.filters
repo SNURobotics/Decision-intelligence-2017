@@ -89,9 +89,6 @@
     <ClCompile Include="..\..\..\workspace\srLib2015\main_NTdemo.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\main_server_render.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\test_vfrrt_ur.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>

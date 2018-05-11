@@ -77,3 +77,46 @@ void demoEnvironment::setObjectFromRobot2ObjectText(string loc, bool print /*= f
 		objects[i]->setBaseLinkFrame(Trobotbase * tempSE3);
 	}
 }
+
+class demoTaskManager
+{
+public:
+	demoTaskManager();
+	~demoTaskManager();
+
+public:
+	bool updateEnv();		// get vision data from SKKU, and update object locations
+	bool setObjectNum();	// select object to move from object SE3 and grasp candidates (return true if object is reachable, false if none of the objects are reachable)
+	bool setGoalNum();		// select goal to place object
+	bool doJob(int reachNum, int moveNum);
+
+	// do job functions (all functions send waypoints to robot, and return true when robot moved successfully)
+	bool reachObject();		// plan to reach candidate SE3
+	bool graspObject();		// go to object and actuate gripper
+	bool moveObject();		// plan to goal SE3
+	bool releaseObject();	// go to exact goal and release object
+	bool returnHomepos();	// return to home position
+
+	
+							// Yaskawa client communication functions
+	bool goToWaypoint(SE3 Twaypoint);	// send robot waypoint commands after planning
+	bool checkWaypointReached();		// check if robot reached to the waypoint
+
+	bool sendError();				// send error when none of the objects are reachable
+
+public:
+	vector<SE3> reachCandidateSE3;	// candidate points to grasp objects
+	vector<SE3> goalSE3;			// goal SE3 of objects (should be predefined and be the same as workspace)
+	double posThreshold;			// threshold to decide whether waypoints are reached
+	SE3 homePosition;
+
+	SE3 reachOffset;				// offset between grasp point and waypoint right before grasp point (to reach vertically to object)
+	SE3 goalOffset;					// offset between goal point and waypoint right before goal point (to reach vertically to object)
+
+	int curObjID;					// current object ID (0~4)
+	SE3 curGraspOffset;				// current SE3 from object frame to grasp frame
+	int curGoalID;					// current goal ID 
+
+	vector<SE3> curWaypointSet;		// waypoint set of subtasks
+	int curWaypointNum;				// current waypoint number of subtask
+};
