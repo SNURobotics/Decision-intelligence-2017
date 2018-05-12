@@ -24,7 +24,7 @@ Eigen::VectorXd qval;
 // demo environment
 demoEnvironment* demoEnv = new demoEnvironment;
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::TORQUE;
-demoTaskManager* demoTask = new demoTaskManager;
+demoTaskManager* demoTask;
 
 void initDynamics();
 void rendering(int argc, char **argv);
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 	envSetting();
 	initDynamics();
 	MHRobotManagerSetting();
-
+	demoTask = new demoTaskManager(demoEnv, rManager1);
 	qval.setZero(6);
 	qval[0] = DEG2RAD(0.0);
 	qval[1] = DEG2RAD(0.0);

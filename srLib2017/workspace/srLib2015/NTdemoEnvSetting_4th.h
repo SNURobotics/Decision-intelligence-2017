@@ -5,6 +5,7 @@
 #include <Windows.h>
 #include "robotManager\MH12Robot.h"
 #include "robotManager\MH12RobotManager.h"
+#include "robotManager/robotRRTManager.h"
 
 class demoEnvironment
 {
@@ -49,13 +50,16 @@ public:
 class demoTaskManager
 {
 public:
-	demoTaskManager();
+	demoTaskManager(demoEnvironment* _demoEnv, MH12RobotManager* _rManager);
 	~demoTaskManager();
 
 public:
+	// Set robotRRTManager
+	void setRobotRRTManager();
+
 	// Vision information functions
 	void updateEnv(char* stringfromSKKU);		// get vision data from SKKU, and update object locations
-	bool setObjectNum(MH12Robot* robot, MH12RobotManager* rManager1);	// select object to move from object SE3 and grasp candidates (return true if object is reachable, false if none of the objects are reachable)
+	bool setObjectNum();	// select object to move from object SE3 and grasp candidates (return true if object is reachable, false if none of the objects are reachable)
 	bool sendError();				// send error when none of the objects are reachable
 
 	// Pick and place task functions
@@ -63,20 +67,30 @@ public:
 	bool doJob(int goalNum);
 
 	// do job functions (all functions send waypoints to robot, and return true when robot moved successfully)
-	bool reachObject();		// plan to reach candidate SE3
+	bool reachObject(bool usePlanning = false);		// plan to reach candidate SE3
 	bool graspObject();		// go to object and actuate gripper
-	bool moveObject();		// plan to goal SE3
+	bool moveObject(bool usePlanning = false);		// plan to goal SE3
 	bool releaseObject();	// go to exact goal and release object
-	bool goHomepos();	// return to home position
+	bool goHomepos(bool usePlanning = false);	// return to home position
 
-	
+	vector<SE3> planBetweenWaypoints(SE3 Tinit, SE3 Tgoal, unsigned int midNum = 1);
+	SE3 YKpos2SE3(const Eigen::VectorXd YKpos);
+
 	// Yaskawa client communication functions
 	bool goToWaypoint(SE3 Twaypoint);	// send robot waypoint commands after planning
 	bool goThroughWaypoints(vector<SE3> Twaypoints);
 	bool checkWaypointReached(SE3 Twaypoint);		// check if robot reached to the waypoint
-	
+	bool getCurPos();						// send robot read cur pos command and set curRobotPos and TcurRobot
 
 public:
+	// demo environemnt
+	demoEnvironment * demoEnv;
+
+	// robotManager and robotRRTManager model
+	MH12Robot* robot;
+	MH12RobotManager* rManager;
+	robotRRTManager* robotrrtManager;
+
 	// Vision-Robot coordinate change SE3
 	SE3 Tworld2camera;
 	SE3 Trobotbase2camera;
@@ -94,10 +108,10 @@ public:
 	SE3 homeSE3;
 	SE3 reachOffset;				// offset between grasp point and waypoint right before grasp point (to reach vertically to object)
 	SE3 goalOffset;					// offset between goal point and waypoint right before goal point (to reach vertically to object)
-	
-
 
 	Eigen::VectorXd curRobotPos;	// current robot pos (Rx, Ry, Rz, px, py, pz)
+	SE3 TcurRobot;
+	Eigen::VectorXd lastPlanningJointVal;
 	int maxTimeDuration;
 private:
 	int curGoalID;					// current goal ID 

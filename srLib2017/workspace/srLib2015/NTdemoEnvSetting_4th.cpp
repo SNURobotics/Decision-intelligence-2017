@@ -99,14 +99,29 @@ void SKKUobjectData::setObjectDataFromString(vector<SE3> _objectSE3, vector<bool
 }
 
 
-demoTaskManager::demoTaskManager()
+demoTaskManager::demoTaskManager(demoEnvironment* _demoEnv, MH12RobotManager* _rManager)
 {
 	int maxTimeDuration = 60000;		// means max 60000ms per movement
 	double posThreshold = 0.0001;		// threshold to check if a waypoint is reached
+	demoEnv = _demoEnv;
+	rManager = _rManager;
+	robot = (MH12Robot*)rManager->m_robot;
+	robotrrtManager = NULL;
 }
 
 demoTaskManager::~demoTaskManager()
 {
+	if (robotrrtManager != NULL)
+		delete robotrrtManager;
+}
+
+void demoTaskManager::setRobotRRTManager()
+{
+	robotrrtManager = new robotRRTManager;
+	vector<srStateJoint*> planningJoints(DEGREE_OF_FREEDOM_MH12_JOINT);
+	robotrrtManager->setSystem(rManager->m_robot);
+	robotrrtManager->setSpace(rManager->m_space);
+	robotrrtManager->setStateBound(robot->getLowerJointLimit(), robot->getUpperJointLimit());
 }
 
 void demoTaskManager::updateEnv(char* stringfromSKKU)
@@ -145,7 +160,7 @@ void demoTaskManager::updateEnv(char* stringfromSKKU)
 
 
 
-bool demoTaskManager::setObjectNum(MH12Robot* robot, MH12RobotManager* rManager1)
+bool demoTaskManager::setObjectNum()
 {
 	int flag;
 	int nWay = 3 * objectNum;
@@ -162,7 +177,7 @@ bool demoTaskManager::setObjectNum(MH12Robot* robot, MH12RobotManager* rManager1
 		for (unsigned int j = 0; j < size(curObjectData.objectGraspCandidatePos[i]); j++)
 		{
 			SE3 targetObject = curObjectData.objectSE3[i] * SE3(curObjectData.objectGraspCandidatePos[i][j]);
-			rManager1->inverseKin(targetObject, &robot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag);
+			rManager->inverseKin(targetObject, &robot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag);
 			if (flag == 0)
 			{
 				curObjID = i;
@@ -192,44 +207,97 @@ bool demoTaskManager::doJob(int goalNum)
 	return (reached && grasped && moved && released && returned);
 }
 
-bool demoTaskManager::reachObject()
+bool demoTaskManager::reachObject(bool usePlanning /*= false*/)
 {
-	return goToWaypoint(curObjectData.objectSE3[curObjID] * curGraspOffset * reachOffset);
+	if (robotrrtManager == NULL || !usePlanning)
+		return goToWaypoint(curObjectData.objectSE3[curObjID] * curGraspOffset * reachOffset);
+	else
+	{
+		getCurPos();
+		vector<SE3> Twaypoints = planBetweenWaypoints(TcurRobot, curObjectData.objectSE3[curObjID] * curGraspOffset * reachOffset);
+		return goThroughWaypoints(Twaypoints);
+	}
 }
 
 bool demoTaskManager::graspObject()
 {
-	bool moved = goToWaypoint(curObjectData.objectSE3[curObjID] * curGraspOffset);
+	bool moved = false;
+	moved = goToWaypoint(curObjectData.objectSE3[curObjID] * curGraspOffset);
+
 	// send message to robot to grasp (gripper command ??)
 	bool grasped = false;
 	////////////////////////////////////////////////////////
 	return moved && grasped;
 }
 
-bool demoTaskManager::moveObject()
+bool demoTaskManager::moveObject(bool usePlanning /*= false*/)
 {
-	return goToWaypoint(goalSE3[curGoalID] * goalOffset);
+	if (robotrrtManager == NULL || !usePlanning)
+		return goToWaypoint(goalSE3[curGoalID] * goalOffset);
+	else
+	{
+		getCurPos();
+		robotrrtManager->attachObject(demoEnv->objects[curObjID], &robot->gMarkerLink[MH12_Index::MLINK_GRIP], curGraspOffset);
+		vector<SE3> Twaypoints = planBetweenWaypoints(TcurRobot, curObjectData.objectSE3[curObjID] * curGraspOffset * reachOffset);
+		return goThroughWaypoints(Twaypoints);
+	}
 }
 
 bool demoTaskManager::releaseObject()
 {
-	bool moved = goToWaypoint(goalSE3[curGoalID]);
+	bool moved = false;
+	moved = goToWaypoint(goalSE3[curGoalID]);
 	// send message to robot to release (gripper command ??)
 	bool released = false;
 	////////////////////////////////////////////////////////
 	return moved && released;
 }
 
-bool demoTaskManager::goHomepos()
+bool demoTaskManager::goHomepos(bool usePlanning /*= false*/)
 {
-	return goToWaypoint(homeSE3);
+	if (robotrrtManager == NULL || !usePlanning)
+		return goToWaypoint(homeSE3);
+	else
+	{
+		getCurPos();
+		robotrrtManager->detachObject();
+		vector<SE3> Twaypoints = planBetweenWaypoints(TcurRobot, curObjectData.objectSE3[curObjID] * curGraspOffset * reachOffset);
+		return goThroughWaypoints(Twaypoints);
+	}
+}
+
+vector<SE3> demoTaskManager::planBetweenWaypoints(SE3 Tinit, SE3 Tgoal, unsigned int midNum /* = 1*/)
+{
+	int flag;
+	Eigen::VectorXd qInit = rManager->inverseKin(Tinit, &robot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, lastPlanningJointVal);
+	Eigen::VectorXd qGoal = rManager->inverseKin(Tinit, &robot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, lastPlanningJointVal);
+
+	robotrrtManager->setStartandGoal(qInit, qGoal);
+	robotrrtManager->execute(0.1);
+	vector<Eigen::VectorXd> traj = robotrrtManager->extractPath();
+
+	if (traj.size() < midNum + 2)
+		midNum = traj.size() - 2;
+	vector<SE3> TwaypointSet(midNum + 1);
+	int bin = traj.size() / (midNum + 1);
+	for (unsigned int i = 0; i < midNum; i++)
+		TwaypointSet[i] = rManager->forwardKin(traj[(i + 1)*bin], &robot->gMarkerLink[MH12_Index::MLINK_GRIP]);
+	TwaypointSet[midNum] = Tgoal;
+	lastPlanningJointVal = traj[traj.size() - 1];
+	return TwaypointSet;
+}
+
+SE3 demoTaskManager::YKpos2SE3(const Eigen::VectorXd YKpos)
+{
+	return EulerXYZ(Vec3(YKpos[0], YKpos[1], YKpos[2]), Vec3(YKpos[3], YKpos[4], YKpos[5]));
 }
 
 bool demoTaskManager::goToWaypoint(SE3 Twaypoint)
 {
+	getCurPos();
 	// send message to robot (imov command) here
-	vector<double> tempOri = SO3ToEulerXYZ(Twaypoint.GetOrientation());
-	Vec3 tempPos = Twaypoint.GetPosition();
+	vector<double> tempOri = SO3ToEulerXYZ((TcurRobot % Twaypoint).GetOrientation());
+	Vec3 tempPos = (TcurRobot % Twaypoint).GetPosition();
 	/////////////////////////////////////////////
 	int cnt = 0;
 	while (cnt < maxTimeDuration)
@@ -253,12 +321,19 @@ bool demoTaskManager::goThroughWaypoints(vector<SE3> Twaypoints)
 
 bool demoTaskManager::checkWaypointReached(SE3 Twaypoint)
 {
-	// send message to robot (read cur pos command) here
-	curRobotPos;
-	////////////////////////////////////////////////////
-	if (distSE3(Twaypoint, EulerXYZ(Vec3(curRobotPos[0], curRobotPos[1], curRobotPos[2]), Vec3(curRobotPos[3], curRobotPos[4], curRobotPos[5]))) < posThreshold)
+	getCurPos();
+	if (distSE3(Twaypoint, TcurRobot) < posThreshold)
 		return true;
 	return false;
+}
+
+bool demoTaskManager::getCurPos()
+{
+	// send message to robot (read cur pos command) here
+	curRobotPos;
+	TcurRobot = YKpos2SE3(curRobotPos);
+	////////////////////////////////////////////////////
+	return true;
 }
 
 bool demoTaskManager::sendError()
