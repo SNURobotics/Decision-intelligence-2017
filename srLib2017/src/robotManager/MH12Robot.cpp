@@ -278,7 +278,7 @@ void MH12Robot::AssembleModel(double gripperRot)
 	gWeldJoint[MH12_Index::WELDJOINT_GRIP_MARKER]->SetChildLink(&gMarkerLink[MH12_Index::MLINK_GRIP]);
 	gWeldJoint[MH12_Index::WELDJOINT_GRIP_MARKER]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.0)));
 	//gWeldJoint[MH12_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(1.036, 0.0, 1.264)));
-	gWeldJoint[MH12_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, SR_PI), Vec3(-1.264, 0.0, -1.036)));// consider offset for gripper assembly
+	gWeldJoint[MH12_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, SR_PI), Vec3(-1.264, 0.0, -1.029)));// consider offset for gripper assembly
 																															//gWeldJoint[UR3_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(SE3(Vec3(0.0, 0.00195, -(0.1928 + 0.2003 + 0.001))));		// consider offset for gripper assembly
 	// marker links
 	gMarkerLink[MH12_Index::MLINK_GRIP].GetGeomInfo().SetDimension(Vec3(0.00, 0.00, 0.00));
@@ -410,7 +410,6 @@ void MH12Robot::AssembleCollision()
 	//gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-1.019, 1.269, 0.0087)));
 	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(-1.019, 1.269, 0.0087)));
 	
-
 	gLink[MH12_Index::GRIPPER_2].AddCollision(&gCollision[m_numCollision]);
 	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::CYLINDER);
 	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.015, 0.02, 0.0));

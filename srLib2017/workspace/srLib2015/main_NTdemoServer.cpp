@@ -22,7 +22,7 @@ MH12RobotManager* rManager1;
 Eigen::VectorXd qval;
 
 // demo environment
-demoEnvironment* demoEnv = new demoEnvironment;
+demoEnvironment* demoEnv;
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::TORQUE;
 demoTaskManager* demoTask;
 
@@ -46,6 +46,8 @@ int main(int argc, char **argv)
 	////////////////////////////////////////////////////////////////
 	////////////////////// initialize //////////////////////////////
 	////////////////////////////////////////////////////////////////
+	// set the number of objects in demoEnvirionment function
+	demoEnv = new demoEnvironment(5);
 	// add robot to system
     MHRobotSetting();
 	// add bin and objects to system

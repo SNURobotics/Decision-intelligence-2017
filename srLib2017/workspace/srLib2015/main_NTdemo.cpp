@@ -21,9 +21,9 @@ MH12RobotManager* rManager1;
 Eigen::VectorXd qval;
 
 // demo environment
-demoEnvironment* demoEnv = new demoEnvironment;
-
+demoEnvironment* demoEnv;
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::TORQUE;
+demoTaskManager* demoTask;
 
 void initDynamics();
 void rendering(int argc, char **argv);
@@ -40,12 +40,15 @@ int main(int argc, char **argv)
 	////////////////////////////////////////////////////////////////
 	////////////////////// initialize //////////////////////////////
 	////////////////////////////////////////////////////////////////
+	// set the number of objects in demoEnvirionment function (Since object data is now using dummy data, set the number as 1)
+	demoEnv = new demoEnvironment(1);
 	// add robot to system
     MHRobotSetting();
 	// add bin and objects to system
 	envSetting();
 	initDynamics();
 	MHRobotManagerSetting();
+	demoTask = new demoTaskManager(demoEnv, rManager1);
 
 	qval.setZero(6);
 	qval[0] = DEG2RAD(0.0);
@@ -54,12 +57,35 @@ int main(int argc, char **argv)
 	qval[3] = DEG2RAD(0.0);
 	qval[4] = DEG2RAD(-93.472);
 	qval[5] = DEG2RAD(0.08);
-	rManager1->setJointVal(qval);
+	//rManager1->setJointVal(qval);
 	cout << MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() << endl;
 	int flag;
 	cout << EulerXYZ(Vec3(DEG2RAD(179), DEG2RAD(-2), DEG2RAD(9)), Vec3(0.0, 0.0, 0.0)) << endl;
 	// set object SE(3) from text
 	//demoEnv->setObjectFromRobot2ObjectText("C:/Users/snurobotics/Documents/판단지능/4차년도/PoseData180504/data00/Pose.txt", false);
+
+	// dummy for front side
+	char dummy_oneobj[] = "d0.0d0.0d1.0d1.0d0.0d0.0d0.0d-1.0d0.0d0.0d0.0d-1.0d1d-0.02d0.0d0.0036d";
+
+	// dummy for back side
+	//char dummy_oneobj[] = "d0.0d0.0d1.0d1.0d0.0d0.0d0.0d1.0d0.0d0.0d0.0d1.0d1d-0.02d0.0d-0.0004d";
+
+	char dummy[1000];
+	strcpy(dummy, "Vd0"); strcat(dummy, dummy_oneobj);
+	strcat(dummy, "1"); strcat(dummy, dummy_oneobj);
+	strcat(dummy, "2"); strcat(dummy, dummy_oneobj);
+	strcat(dummy, "3"); strcat(dummy, dummy_oneobj);
+	strcat(dummy, "4"); strcat(dummy, dummy_oneobj);
+	
+	demoTask->updateEnv(dummy);
+	demoTask->setObjectNum();
+
+	bool collision = rManager1->checkCollision();
+
+	if (~collision)
+		cout << "collision free!" << endl;
+	else
+		cout << "collision OCCURED!" << endl;
 
 
 	rendering(argc, argv);
@@ -97,10 +123,10 @@ void updateFunc()
 
 	static double JointVal = 0;
 	//((srStateJoint*)MHRobot->m_KIN_Joints[activeJointIdx])->m_State.m_rValue[0] = JointVal;
-	((srStateJoint*)MHRobot->m_KIN_Joints[5])->m_State.m_rValue[0] = JointVal;
-	JointVal += 0.01;
+	//((srStateJoint*)MHRobot->m_KIN_Joints[5])->m_State.m_rValue[0] = JointVal;
+	//JointVal += 0.01;
 	//qval[5] = JointVal;
-	rManager1->setJointVal(qval);
+	//rManager1->setJointVal(qval);
 	static int cnt = 0;
 	static int trajcnt = 0;
 	cnt++;

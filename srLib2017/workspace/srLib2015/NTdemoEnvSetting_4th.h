@@ -1,7 +1,6 @@
 #pragma once
 #include "common\dataIO.h"
 #include "robotManager\environment_4th.h"
-#include "tcp_ip_communication_4th.h"
 #include <Windows.h>
 #include "robotManager\MH12Robot.h"
 #include "robotManager\MH12RobotManager.h"
@@ -10,7 +9,7 @@
 class demoEnvironment
 {
 public:
-	demoEnvironment();
+	demoEnvironment(unsigned int _objectNum);
 	~demoEnvironment();
 
 	void setObjectFromRobot2ObjectText(string loc, bool print = false);
@@ -59,6 +58,8 @@ public:
 
 	// Vision information functions
 	void updateEnv(char* stringfromSKKU);		// get vision data from SKKU, and update object locations
+	void readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vector<bool>& isHead, vector<vector<Vec3>>& objectGraspCandidatePos);
+
 	bool setObjectNum();	// select object to move from object SE3 and grasp candidates (return true if object is reachable, false if none of the objects are reachable)
 	bool sendError();				// send error when none of the objects are reachable
 

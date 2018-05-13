@@ -1,7 +1,7 @@
 #include "NTdemoEnvSetting_4th.h"
 
 
-demoEnvironment::demoEnvironment() {
+demoEnvironment::demoEnvironment(unsigned int _objectNum) {
 
 	Trobotbase = SE3();		// same as world frame origin
 	Trobotbase2link1 = EulerZYX(Vec3(SR_PI, 0.0, 0.0), Vec3(0.0, 0.0, -0.450));		// change to exact value later
@@ -20,13 +20,13 @@ demoEnvironment::demoEnvironment() {
 	Plink12bin = Vec3(0.89, 0.14, 0.45);
 	bin->setBaseLinkFrame(SE3(Trobotbase2link1.GetPosition()) * EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Plink12bin));	// change to exact value later
 
+	// set table
 	table = new Table4th(0.01);
-	Plink12table = Vec3(0.89, 0.0, 0.412);
+	Plink12table = Vec3(0.89, 0.0, 0.41);
 	table->setBaseLinkFrame(SE3(Trobotbase2link1.GetPosition()) * EulerZYX(Vec3(0.0, 0.0, 0.0), Plink12table));	// change to exact value later
-
-
+	
 																												// set objects
-	objectNum = 5;
+	objectNum = _objectNum;
 	objects.resize(objectNum);
 	for (unsigned int i = 0; i < objectNum; i++)
 		objects[i] = new workingObject;
@@ -74,7 +74,7 @@ void demoEnvironment::setObjectFromRobot2VisionData(vector<SE3> objectSE3)
 
 SKKUobjectData::SKKUobjectData()
 {
-	objectNum = 5;
+	objectNum = 1;
 	objectSE3.resize(objectNum);
 	isHead.resize(objectNum);
 	objectGraspCandidatePos.resize(objectNum);
@@ -107,6 +107,7 @@ demoTaskManager::demoTaskManager(demoEnvironment* _demoEnv, MH12RobotManager* _r
 	rManager = _rManager;
 	robot = (MH12Robot*)rManager->m_robot;
 	robotrrtManager = NULL;
+	objectNum = 5;
 }
 
 demoTaskManager::~demoTaskManager()
@@ -127,8 +128,6 @@ void demoTaskManager::setRobotRRTManager()
 void demoTaskManager::updateEnv(char* stringfromSKKU)
 {
 	// read vision data by readSKKUvision function from tcp_ip_communication header
-	vision_data skku_dataset;
-	readSKKUvision(stringfromSKKU, skku_dataset);
 
 	vector<SE3> objectSE3;
 	vector<bool> isHead;
@@ -137,34 +136,149 @@ void demoTaskManager::updateEnv(char* stringfromSKKU)
 	objectSE3.resize(objectNum);
 	isHead.resize(objectNum);
 	objectGraspCandidatePos.resize(objectNum);
-
-	for (unsigned int i = 0; i < objectNum; i++)
-	{
-		SE3 objSE3_Camera = SE3(skku_dataset.objOri[i][0], skku_dataset.objOri[i][1], skku_dataset.objOri[i][2], skku_dataset.objOri[i][3], skku_dataset.objOri[i][4], skku_dataset.objOri[i][5], skku_dataset.objOri[i][6], skku_dataset.objOri[i][7], skku_dataset.objOri[i][8], skku_dataset.objPos[i][0], skku_dataset.objPos[i][1], skku_dataset.objPos[i][2]);
-		
-		// coordinate change
-		objectSE3[i] = Tcamera2robotbase * objSE3_Camera;
-		
-		// is z direcition of objectSE3 is upward
-		isHead[i] = (objectSE3[i][11] > 0);
-
-		objectGraspCandidatePos[i].resize(skku_dataset.objCand[i]);
-		for (unsigned int j = 0; j < (unsigned int)skku_dataset.objCand[i]; j++)
-			objectGraspCandidatePos[i][j] = Vec3(skku_dataset.objCandPos[i][j][0], skku_dataset.objCandPos[i][j][1], skku_dataset.objCandPos[i][j][2]);
-	}
+	
+	readSKKUvision(stringfromSKKU, objectSE3, isHead, objectGraspCandidatePos);
 
 	curObjectData.setObjectDataFromString(objectSE3, isHead, objectGraspCandidatePos);
 
+	demoEnv->setObjectFromRobot2VisionData(curObjectData.objectSE3);
+
 	return;
 }
+
+static void Eliminate(char *str, char ch)
+{
+	for (; *str != '\0'; str++)//종료 문자를 만날 때까지 반복
+	{
+		if (*str == ch)//ch와 같은 문자일 때
+		{
+			strcpy(str, str + 1);
+			str--;
+		}
+	}
+}
+
+void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vector<bool>& isHead, vector<vector<Vec3>>& objectGraspCandidatePos)
+{
+	// read vision data
+	Eliminate(hyu_data, 'V');
+
+	// temporary vector variables
+	vector<int>	v_objID;
+	vector<vector<double>> v_objPos;					//id, (x, y, z)
+	vector<vector<double>> v_objOri;					//id, (R_x, R_y, R_z)
+	vector<int> v_objCand;							//id, (number of candidate)
+	vector<vector<double>> v_objCandPos;		//id, cand_id, (x, y, z)
+	vector<vector<double>> v_obsInfo;					//id, (center, size)
+
+	// read char data and save it to vector double format
+	char *recv_data = strtok(hyu_data, "d");
+	int recv_cnt = 0;
+	int nway_cnt = 0;
+	v_objID.resize(0);
+	v_objPos.resize(0);
+	v_objOri.resize(0);
+	v_objCand.resize(0);
+	v_objCandPos.resize(0);
+	v_obsInfo.resize(0);
+	int objIdx = 0;
+	int objID;
+	int obsID = 0;
+	int max_recv_cnt = 14;
+	bool obsData = false;
+
+	while (recv_data != NULL)
+	{
+		//cout << recv_data << endl;
+		if (!obsData && recv_cnt < 1)
+		{
+			objID = atoi(recv_data);
+			if (objID == -1)
+				obsData = true;
+			else
+			{
+				v_objID.push_back(objID);
+				v_objPos.resize(objID + 1);
+				v_objOri.resize(objID + 1);
+				v_objCandPos.resize(objID + 1);
+			}
+		}
+		if (obsData && recv_cnt < 1)
+		{
+			objID = atoi(recv_data);
+			if (objID == 0)
+				break;
+			else
+			{
+				vector<double> temp(0);
+				v_obsInfo.push_back(temp);
+			}
+		}
+
+		if (!obsData)
+		{
+			if (1 <= recv_cnt && recv_cnt < 4)
+				v_objPos[objIdx].push_back(atof(recv_data));
+			else if (4 <= recv_cnt && recv_cnt < 13)
+			{
+				v_objOri[objIdx].push_back(atof(recv_data));
+			}
+			else if (13 <= recv_cnt && recv_cnt < 14)
+			{
+				v_objCand.push_back(atoi(recv_data));
+				max_recv_cnt = 14 + 3 * v_objCand[objIdx];
+			}
+			else if (14 <= recv_cnt && recv_cnt < max_recv_cnt)
+			{
+				v_objCandPos[objIdx].push_back(atof(recv_data));
+			}
+
+		}
+		else if (recv_cnt > 0)
+		{
+			v_obsInfo[v_obsInfo.size() - 1].push_back(atof(recv_data));
+		}
+
+		recv_data = strtok(NULL, "d");
+		recv_cnt += 1;
+
+		if (!obsData && recv_cnt == max_recv_cnt)
+		{
+			recv_cnt = 0;
+			objIdx++;
+		}
+		if (obsData && recv_cnt == 7)
+			recv_cnt = 0;
+	}
+
+
+
+	// transform vector data into Vec3 and SE3 format
+	for (unsigned int i = 0; i < objectNum; i++)
+	{
+		SE3 objSE3_Camera = SE3(v_objOri[i][0], v_objOri[i][1], v_objOri[i][2], v_objOri[i][3], v_objOri[i][4], v_objOri[i][5], v_objOri[i][6], v_objOri[i][7], v_objOri[i][8], v_objPos[i][0], v_objPos[i][1], v_objPos[i][2]);
+
+		// coordinate change
+		objectSE3[i] = demoEnv->Tcamera2robotbase * objSE3_Camera;
+
+		// is z direcition of objectSE3 is upward
+		isHead[i] = (objectSE3[i][8] > 0);
+
+		objectGraspCandidatePos[i].resize(v_objCand[i]);
+		for (unsigned int j = 0; j < (unsigned int)v_objCand[i]; j++)
+			objectGraspCandidatePos[i][j] = Vec3(v_objCandPos[i][0 + 3 * j], v_objCandPos[i][1 + 3 * j], v_objCandPos[i][2 + 3 * j]);
+	}
+
+}
+
 
 
 
 bool demoTaskManager::setObjectNum()
 {
 	int flag;
-	int nWay = 3 * objectNum;
-	vector<bool> includeOri(nWay, true);
+	SE3 headSE3 = SE3();
+	Eigen::VectorXd qval;
 
 	if (curObjectData.objectSE3.size() == 0)
 	{
@@ -176,17 +290,37 @@ bool demoTaskManager::setObjectNum()
 	{
 		for (unsigned int j = 0; j < size(curObjectData.objectGraspCandidatePos[i]); j++)
 		{
-			SE3 targetObject = curObjectData.objectSE3[i] * SE3(curObjectData.objectGraspCandidatePos[i][j]);
-			rManager->inverseKin(targetObject, &robot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag);
+
+			if (curObjectData.isHead[i])
+			{
+				if (curObjectData.objectGraspCandidatePos[i][j][2] < 0)
+				{
+					printf("Cannot reach the underside!\n");
+					break;
+				}
+				headSE3 = EulerZYX(Vec3(0.0, 0.0, SR_PI), curObjectData.objectGraspCandidatePos[i][j]);
+			}
+			else
+				headSE3 = SE3(curObjectData.objectGraspCandidatePos[i][j]);
+				
+			SE3 targetObject = curObjectData.objectSE3[i] * headSE3;
+			qval = rManager->inverseKin(targetObject, &robot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag);
+						
 			if (flag == 0)
 			{
 				curObjID = i;
+
+				// Need to be deleted at actual simulation
+				rManager->setJointVal(qval);
+
+				printf("object number %d is set!\n", curObjID+1);
 				curGraspOffset = SE3(curObjectData.objectGraspCandidatePos[i][j]);
 				return true;
 			}
 		}
 	}
 
+	printf("none of objects are not reachable!\n");
 	return false;
 }
 
