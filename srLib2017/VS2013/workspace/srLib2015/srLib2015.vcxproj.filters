@@ -98,5 +98,8 @@
     <ClCompile Include="..\..\..\workspace\srLib2015\NTdemoEnvSetting_4th.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\main_NTdemo_planning.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

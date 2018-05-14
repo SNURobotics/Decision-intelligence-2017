@@ -110,7 +110,10 @@
     <ClCompile Include="..\..\..\workspace\srLib2015\main_NTdemo.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\main_NTdemoServer.cpp" />
+    <ClCompile Include="..\..\..\workspace\srLib2015\main_NTdemoServer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\main_NTdemo_planning.cpp" />
     <ClCompile Include="..\..\..\workspace\srLib2015\NTdemoEnvSetting_4th.cpp" />
     <ClCompile Include="..\..\..\workspace\srLib2015\test_mh12_modeling.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>

@@ -108,6 +108,13 @@ demoTaskManager::demoTaskManager(demoEnvironment* _demoEnv, MH12RobotManager* _r
 	robot = (MH12Robot*)rManager->m_robot;
 	robotrrtManager = NULL;
 	objectNum = 5;
+
+	// constants for task (should be modified later!!!)
+	goalSE3.resize(1);
+	goalSE3[0] = SE3(Vec3(0.1, 0.8, 0.0));
+	homeSE3 = EulerZYX(Vec3(SR_PI, -SR_PI_HALF, 0.0), Vec3(1.029, 0.0, 0.814));		// where robot goes when job is done (should be modified)
+	reachOffset = SE3(Vec3(0.0, 0.0, -0.03));
+	goalOffset = SE3(Vec3(0.0, 0.0, 0.03));
 }
 
 demoTaskManager::~demoTaskManager()
@@ -314,7 +321,9 @@ bool demoTaskManager::setObjectNum()
 				rManager->setJointVal(qval);
 
 				printf("object number %d is set!\n", curObjID+1);
-				curGraspOffset = SE3(curObjectData.objectGraspCandidatePos[i][j]);
+				cout << qval.transpose() << endl;
+				//curGraspOffset = SE3(curObjectData.objectGraspCandidatePos[i][j]);
+				curGraspOffset = headSE3;
 				return true;
 			}
 		}
@@ -371,8 +380,8 @@ bool demoTaskManager::moveObject(bool usePlanning /*= false*/)
 	else
 	{
 		getCurPos();
-		robotrrtManager->attachObject(demoEnv->objects[curObjID], &robot->gMarkerLink[MH12_Index::MLINK_GRIP], curGraspOffset);
-		vector<SE3> Twaypoints = planBetweenWaypoints(TcurRobot, curObjectData.objectSE3[curObjID] * curGraspOffset * reachOffset);
+		robotrrtManager->attachObject(demoEnv->objects[curObjID], &robot->gMarkerLink[MH12_Index::MLINK_GRIP], Inv(curGraspOffset));
+		vector<SE3> Twaypoints = planBetweenWaypoints(TcurRobot, goalSE3[curGoalID] * goalOffset * curGraspOffset);
 		return goThroughWaypoints(Twaypoints);
 	}
 }
@@ -380,7 +389,7 @@ bool demoTaskManager::moveObject(bool usePlanning /*= false*/)
 bool demoTaskManager::releaseObject()
 {
 	bool moved = false;
-	moved = goToWaypoint(goalSE3[curGoalID]);
+	moved = goToWaypoint(goalSE3[curGoalID] * curGraspOffset);
 	// send message to robot to release (gripper command ??)
 	bool released = false;
 	////////////////////////////////////////////////////////
@@ -395,30 +404,52 @@ bool demoTaskManager::goHomepos(bool usePlanning /*= false*/)
 	{
 		getCurPos();
 		robotrrtManager->detachObject();
-		vector<SE3> Twaypoints = planBetweenWaypoints(TcurRobot, curObjectData.objectSE3[curObjID] * curGraspOffset * reachOffset);
+		vector<SE3> Twaypoints = planBetweenWaypoints(TcurRobot, homeSE3);
 		return goThroughWaypoints(Twaypoints);
 	}
 }
 
 vector<SE3> demoTaskManager::planBetweenWaypoints(SE3 Tinit, SE3 Tgoal, unsigned int midNum /* = 1*/)
 {
+	// planning
+	tempObjTraj.resize(0);
 	int flag;
 	Eigen::VectorXd qInit = rManager->inverseKin(Tinit, &robot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, lastPlanningJointVal);
-	Eigen::VectorXd qGoal = rManager->inverseKin(Tinit, &robot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, lastPlanningJointVal);
-
+	cout << flag << endl;
+	Eigen::VectorXd qGoal = rManager->inverseKin(Tgoal, &robot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, lastPlanningJointVal);
+	cout << flag << endl;
 	robotrrtManager->setStartandGoal(qInit, qGoal);
 	robotrrtManager->execute(0.1);
-	vector<Eigen::VectorXd> traj = robotrrtManager->extractPath();
+	
+	if (robotrrtManager->isExecuted())
+	{
+		// save planning results
+		tempTraj = robotrrtManager->extractPath();
+		lastPlanningJointVal = tempTraj[tempTraj.size() - 1];
+		tempObjTraj.resize(tempTraj.size());
+		for (unsigned int i = 0; i < tempTraj.size(); i++)
+		{
+			robotrrtManager->setState(tempTraj[i]);
+			tempObjTraj[i] = demoEnv->objects[curObjID]->getBaseLinkFrame();
+		}
+		lastObjectSE3 = tempObjTraj[tempObjTraj.size() - 1];
 
-	if (traj.size() < midNum + 2)
-		midNum = traj.size() - 2;
-	vector<SE3> TwaypointSet(midNum + 1);
-	int bin = traj.size() / (midNum + 1);
-	for (unsigned int i = 0; i < midNum; i++)
-		TwaypointSet[i] = rManager->forwardKin(traj[(i + 1)*bin], &robot->gMarkerLink[MH12_Index::MLINK_GRIP]);
-	TwaypointSet[midNum] = Tgoal;
-	lastPlanningJointVal = traj[traj.size() - 1];
-	return TwaypointSet;
+		// save waypoints
+		if (tempTraj.size() < midNum + 2)
+			midNum = tempTraj.size() - 2;
+		vector<SE3> TwaypointSet(midNum + 1);
+		int bin = tempTraj.size() / (midNum + 1);
+		for (unsigned int i = 0; i < midNum; i++)
+			TwaypointSet[i] = rManager->forwardKin(tempTraj[(i + 1)*bin], &robot->gMarkerLink[MH12_Index::MLINK_GRIP]);
+		TwaypointSet[midNum] = Tgoal;
+
+		return TwaypointSet;
+	}
+	else
+	{
+		vector<SE3> TwaypointSet(1, Tgoal);
+		return TwaypointSet;
+	}
 }
 
 SE3 demoTaskManager::YKpos2SE3(const Eigen::VectorXd YKpos)

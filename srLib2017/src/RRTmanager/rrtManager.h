@@ -50,10 +50,11 @@ public:
 	virtual bool							isProblemFeasible();
 
 	void									execute(double _step_size);
+	bool									isExecuted();
 	vector<Eigen::VectorXd>					extractPath(int smoothingNum = 200);
 	
 	bool									collisionChecking(const Eigen::VectorXd& pos1, const Eigen::VectorXd& pos2, double step_size_collision = 0.01);
-
+	
 
 	// print tree
 	void									printTree(TARGET_TREE tree);
@@ -97,7 +98,7 @@ protected:
 	Eigen::VectorXd							upperBound;
 	int										nDim;
 	double									step_size;
-
+	bool									_isExecuted;
 protected:
 	rrtTree									startTree;
 	rrtTree									goalTree;

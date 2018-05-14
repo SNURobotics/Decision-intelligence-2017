@@ -4,6 +4,7 @@
 
 rrtManager::rrtManager()
 {
+	_isExecuted = false;
 }
 
 
@@ -84,6 +85,7 @@ void rrtManager::execute(double _step_size)
 {
 	step_size = _step_size;
 	_isTreeSwaped = false;
+	_isExecuted = false;
 	// seed
 	//srand((unsigned)time(NULL));
 
@@ -108,13 +110,18 @@ void rrtManager::execute(double _step_size)
 
 		if (printFinish == true)
 			cout << "end of RRT " << endl;
-
+		_isExecuted = true;
 		//printTree(TARGET_TREE::TREE1);
 		//printTree(TARGET_TREE::TREE2);
 	}
 	else
 		printf("RRT planning problem is not feasible!!!\n\n");
 
+}
+
+bool rrtManager::isExecuted()
+{
+	return _isExecuted;
 }
 
 bool rrtManager::innerloop()

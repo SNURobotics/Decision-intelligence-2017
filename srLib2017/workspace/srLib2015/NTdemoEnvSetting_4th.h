@@ -1,4 +1,6 @@
 #pragma once
+#include "../../VS2013/tcp_ip_server/stdafx.h"
+#include "../../VS2013/tcp_ip_server/Server.h"
 #include "common\dataIO.h"
 #include "robotManager\environment_4th.h"
 #include <Windows.h>
@@ -75,9 +77,10 @@ public:
 	bool goHomepos(bool usePlanning = false);	// return to home position
 
 	vector<SE3> planBetweenWaypoints(SE3 Tinit, SE3 Tgoal, unsigned int midNum = 1);
-	SE3 YKpos2SE3(const Eigen::VectorXd YKpos);
+	
 
 	// Yaskawa client communication functions
+	SE3 YKpos2SE3(const Eigen::VectorXd YKpos);
 	bool goToWaypoint(SE3 Twaypoint);	// send robot waypoint commands after planning
 	bool goThroughWaypoints(vector<SE3> Twaypoints);
 	bool checkWaypointReached(SE3 Twaypoint);		// check if robot reached to the waypoint
@@ -110,10 +113,16 @@ public:
 	SE3 reachOffset;				// offset between grasp point and waypoint right before grasp point (to reach vertically to object)
 	SE3 goalOffset;					// offset between goal point and waypoint right before goal point (to reach vertically to object)
 
+	// Robot communication related variables
 	Eigen::VectorXd curRobotPos;	// current robot pos (Rx, Ry, Rz, px, py, pz)
 	SE3 TcurRobot;
-	Eigen::VectorXd lastPlanningJointVal;
 	int maxTimeDuration;
+
+	// Planning related variables
+	Eigen::VectorXd lastPlanningJointVal;
+	SE3 lastObjectSE3;
+	vector<Eigen::VectorXd> tempTraj;
+	vector<SE3> tempObjTraj;
 private:
 	int curGoalID;					// current goal ID 
 };
