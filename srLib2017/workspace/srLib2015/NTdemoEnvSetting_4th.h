@@ -75,6 +75,7 @@ public:
 	bool moveObject(bool usePlanning = false);		// plan to goal SE3
 	bool releaseObject();	// go to exact goal and release object
 	bool goHomepos(bool usePlanning = false);	// return to home position
+	bool moveWorkspaceDisplacement(Vec3 disp);
 
 	vector<SE3> planBetweenWaypoints(SE3 Tinit, SE3 Tgoal, unsigned int midNum = 1);
 	

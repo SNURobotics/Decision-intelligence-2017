@@ -344,10 +344,12 @@ bool demoTaskManager::doJob(int goalNum)
 	setGoalNum(goalNum);
 	bool reached = reachObject();
 	bool grasped = graspObject();
+	bool lifted1 = moveWorkspaceDisplacement(Vec3(0.0, 0.0, 0.05));
 	bool moved = moveObject();
 	bool released = releaseObject();
+	bool lifted2 = moveWorkspaceDisplacement(Vec3(0.0, 0.0, 0.05));
 	bool returned = goHomepos();
-	return (reached && grasped && moved && released && returned);
+	return (reached && grasped && lifted1 && moved && released && lifted2 && returned);
 }
 
 bool demoTaskManager::reachObject(bool usePlanning /*= false*/)
@@ -404,9 +406,16 @@ bool demoTaskManager::goHomepos(bool usePlanning /*= false*/)
 	{
 		getCurPos();
 		robotrrtManager->detachObject();
+		demoEnv->objects[curObjID]->setBaseLinkFrame(goalSE3[curGoalID]);
 		vector<SE3> Twaypoints = planBetweenWaypoints(TcurRobot, homeSE3);
 		return goThroughWaypoints(Twaypoints);
 	}
+}
+
+bool demoTaskManager::moveWorkspaceDisplacement(Vec3 disp)
+{
+	getCurPos();
+	return goToWaypoint(SE3(disp) * TcurRobot);
 }
 
 vector<SE3> demoTaskManager::planBetweenWaypoints(SE3 Tinit, SE3 Tgoal, unsigned int midNum /* = 1*/)
