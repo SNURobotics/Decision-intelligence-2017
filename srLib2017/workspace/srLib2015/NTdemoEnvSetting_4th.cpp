@@ -524,12 +524,13 @@ bool demoTaskManager::goToWaypoint(SE3 Twaypoint)
 			Vec3 tempPos = (TcurRobot % Twaypoint).GetPosition();
 
 			MOVE_POS posForSend;
-			strcpy(posForSend.Rx, to_string_custom(tempOri[0]).c_str());
-			strcpy(posForSend.Ry, to_string_custom(tempOri[1]).c_str());
-			strcpy(posForSend.Rz, to_string_custom(tempOri[2]).c_str());
-			strcpy(posForSend.X, to_string_custom(tempPos[0]).c_str());
-			strcpy(posForSend.Y, to_string_custom(tempPos[1]).c_str());
-			strcpy(posForSend.Z, to_string_custom(tempPos[2]).c_str());
+			// convert rad -> deg, m -> mm
+			strcpy(posForSend.Rx, to_string_custom(tempOri[0]*(180.0/SR_PI)).c_str());
+			strcpy(posForSend.Ry, to_string_custom(tempOri[1]*(180.0/SR_PI)).c_str());
+			strcpy(posForSend.Rz, to_string_custom(tempOri[2]*(180.0/SR_PI)).c_str());
+			strcpy(posForSend.X, to_string_custom(tempPos[0]*1000.0).c_str());
+			strcpy(posForSend.Y, to_string_custom(tempPos[1]*1000.0).c_str());
+			strcpy(posForSend.Z, to_string_custom(tempPos[2]*1000.0).c_str());
 			HWND hTargetWnd = FindWindow(NULL, L"ESF_Client_Example_JOB_IMOV");
 
 			COPYDATASTRUCT cds;

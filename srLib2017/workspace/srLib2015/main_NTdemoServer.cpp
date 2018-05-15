@@ -65,12 +65,13 @@ LRESULT CALLBACK getMessageFromRobot(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 		COPYDATASTRUCT* pcds = (COPYDATASTRUCT*)lParam;
 		memcpy_s(&cur_pos, sizeof(cur_pos), pcds->lpData, pcds->cbData);
 		vector<double> curPos(0);
-		curPos.push_back(atof(cur_pos.Rx));
-		curPos.push_back(atof(cur_pos.Ry));
-		curPos.push_back(atof(cur_pos.Rz));
-		curPos.push_back(atof(cur_pos.X));
-		curPos.push_back(atof(cur_pos.Y));
-		curPos.push_back(atof(cur_pos.Z));
+		// convert deg -> rad, mm -> m
+		curPos.push_back(atof(cur_pos.Rx)*(SR_PI/180.0));
+		curPos.push_back(atof(cur_pos.Ry)*(SR_PI/180.0));
+		curPos.push_back(atof(cur_pos.Rz)*(SR_PI/180.0));
+		curPos.push_back(atof(cur_pos.X)*0.001);
+		curPos.push_back(atof(cur_pos.Y)*0.001);
+		curPos.push_back(atof(cur_pos.Z)*0.001);
 		demoTask->setCurPos(curPos);
 
 		std::cout << "==================" << std::endl;
@@ -129,8 +130,6 @@ int main(int argc, char **argv)
 	cout << EulerXYZ(Vec3(DEG2RAD(179), DEG2RAD(-2), DEG2RAD(9)), Vec3(0.0, 0.0, 0.0)) << endl;
 	// set object SE(3) from text
 	//demoEnv->setObjectFromRobot2ObjectText("C:/Users/snurobotics/Documents/판단지능/4차년도/PoseData180504/data00/Pose.txt", false);
-	SE3 dummySE3 = EulerXYZ(Vec3(DEG2RAD(179), DEG2RAD(-2), DEG2RAD(9)), Vec3(0.0, 0.0, 0.0));
-	demoTask->goToWaypoint(dummySE3);
 
 	//rendering(argc, argv);
 	
