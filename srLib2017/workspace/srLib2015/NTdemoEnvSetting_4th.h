@@ -67,14 +67,15 @@ public:
 
 	// Pick and place task functions
 	void setGoalNum(int goalNum);		// select goal to place object
-	bool doJob(int goalNum);
+	bool moveJob(int goalNum);
+	bool returnJob();
 
 	// do job functions (all functions send waypoints to robot, and return true when robot moved successfully)
 	bool reachObject(bool usePlanning = false);		// plan to reach candidate SE3
 	bool graspObject();		// go to object and actuate gripper
 	bool moveObject(bool usePlanning = false);		// plan to goal SE3
 	bool releaseObject();	// go to exact goal and release object
-	bool goHomepos(bool usePlanning = false);	// return to home position
+	bool goHomepos(bool usePlanning = false);	// when object is released, return to home position
 	bool moveWorkspaceDisplacement(Vec3 disp);
 
 	vector<SE3> planBetweenWaypoints(SE3 Tinit, SE3 Tgoal, unsigned int midNum = 1);

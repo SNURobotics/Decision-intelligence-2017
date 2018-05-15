@@ -120,10 +120,15 @@ void communicationFunc(int argc, char **argv)
 			free(copy);
 
 
-			bool isJobFinished = demoTask->doJob(goalNum);
+			bool isJobFinished = demoTask->moveJob(goalNum);
 			if (isJobFinished)
-				goalNum++;
-
+				while (1)
+				{
+					// when dual arm robot task is finished
+					break;
+					/////////////////////////////////////////////
+				}
+			bool isReturned = demoTask->returnJob();
 		}
 
 	}

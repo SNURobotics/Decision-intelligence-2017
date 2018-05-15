@@ -111,10 +111,10 @@ demoTaskManager::demoTaskManager(demoEnvironment* _demoEnv, MH12RobotManager* _r
 
 	// constants for task (should be modified later!!!)
 	goalSE3.resize(1);
-	goalSE3[0] = SE3(Vec3(0.1, 0.8, 0.0));
+	goalSE3[0] = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.226026, 0.888197, 0.466843));
 	homeSE3 = EulerZYX(Vec3(SR_PI, -SR_PI_HALF, 0.0), Vec3(1.029, 0.0, 0.814));		// where robot goes when job is done (should be modified)
 	reachOffset = SE3(Vec3(0.0, 0.0, -0.03));
-	goalOffset = SE3(Vec3(0.0, 0.0, 0.03));
+	goalOffset = SE3(Vec3(0.0, 0.0, 0.0));
 }
 
 demoTaskManager::~demoTaskManager()
@@ -339,17 +339,21 @@ void demoTaskManager::setGoalNum(int goalNum)
 	curGoalID = goalNum;
 }
 
-bool demoTaskManager::doJob(int goalNum)
+bool demoTaskManager::moveJob(int goalNum)
 {
 	setGoalNum(goalNum);
 	bool reached = reachObject();
 	bool grasped = graspObject();
 	bool lifted1 = moveWorkspaceDisplacement(Vec3(0.0, 0.0, 0.05));
 	bool moved = moveObject();
+	return (reached && grasped && lifted1 && moved);
+}
+
+bool demoTaskManager::returnJob()
+{
 	bool released = releaseObject();
-	bool lifted2 = moveWorkspaceDisplacement(Vec3(0.0, 0.0, 0.05));
 	bool returned = goHomepos();
-	return (reached && grasped && lifted1 && moved && released && lifted2 && returned);
+	return (released && returned);
 }
 
 bool demoTaskManager::reachObject(bool usePlanning /*= false*/)
@@ -390,12 +394,10 @@ bool demoTaskManager::moveObject(bool usePlanning /*= false*/)
 
 bool demoTaskManager::releaseObject()
 {
-	bool moved = false;
-	moved = goToWaypoint(goalSE3[curGoalID] * curGraspOffset);
 	// send message to robot to release (gripper command ??)
 	bool released = false;
 	////////////////////////////////////////////////////////
-	return moved && released;
+	return released;
 }
 
 bool demoTaskManager::goHomepos(bool usePlanning /*= false*/)
