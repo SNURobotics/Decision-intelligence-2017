@@ -65,13 +65,12 @@ LRESULT CALLBACK getMessageFromRobot(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 		COPYDATASTRUCT* pcds = (COPYDATASTRUCT*)lParam;
 		memcpy_s(&cur_pos, sizeof(cur_pos), pcds->lpData, pcds->cbData);
 		vector<double> curPos(0);
-		// convert deg -> rad, mm -> m
-		curPos.push_back(atof(cur_pos.Rx)*(SR_PI/180.0));
-		curPos.push_back(atof(cur_pos.Ry)*(SR_PI/180.0));
-		curPos.push_back(atof(cur_pos.Rz)*(SR_PI/180.0));
-		curPos.push_back(atof(cur_pos.X)*0.001);
-		curPos.push_back(atof(cur_pos.Y)*0.001);
-		curPos.push_back(atof(cur_pos.Z)*0.001);
+		curPos.push_back(atof(cur_pos.Rx));
+		curPos.push_back(atof(cur_pos.Ry));
+		curPos.push_back(atof(cur_pos.Rz));
+		curPos.push_back(atof(cur_pos.X));
+		curPos.push_back(atof(cur_pos.Y));
+		curPos.push_back(atof(cur_pos.Z));
 		demoTask->setCurPos(curPos);
 
 		std::cout << "==================" << std::endl;
@@ -128,14 +127,32 @@ int main(int argc, char **argv)
 	cout << MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() << endl;
 	int flag;
 	cout << EulerXYZ(Vec3(DEG2RAD(179), DEG2RAD(-2), DEG2RAD(9)), Vec3(0.0, 0.0, 0.0)) << endl;
-
+	// set object SE(3) from text
+	//demoEnv->setObjectFromRobot2ObjectText("C:/Users/snurobotics/Documents/판단지능/4차년도/PoseData180504/data00/Pose.txt", false);
 
 	//rendering(argc, argv);
 	
-	communicationFunc(argc, argv);
+	//communicationFunc(argc, argv);
 
 	//만약 while 루프를 돌리지 않을 경우 무한정 서버를 기다리는 함수, 실제 사용하지는 않는다.
 	//serv.WaitServer(); 
+
+
+	demoTask->getCurPosSignal();
+	while (1)
+	{
+		if (demoTask->isGetPos)
+			break;
+	}
+	cout << demoTask->TcurRobot << endl;
+
+	SE3 Ttemp = SE3(Vec3(0.0, 0.0, 0.05)) * demoTask->TcurRobot;
+	demoTask->goToWaypoint(Ttemp);
+
+	vector<SE3> Ttemps(2);
+	Ttemps[0] = SE3(Vec3(0.0, 0.0, 0.05)) * Ttemp;
+	Ttemps[1] = SE3(Vec3(0.05, 0.0, 0.0)) * Ttemps[0];
+	demoTask->goThroughWaypoints(Ttemps);
 
 	// 서버를 종료 시킴
 	serv.~Server();
