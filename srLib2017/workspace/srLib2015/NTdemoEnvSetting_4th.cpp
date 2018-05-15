@@ -1,6 +1,5 @@
 #include "NTdemoEnvSetting_4th.h"
 
-
 demoEnvironment::demoEnvironment(unsigned int _objectNum) {
 
 	Trobotbase = SE3();		// same as world frame origin
@@ -362,12 +361,19 @@ bool demoTaskManager::reachObject(bool usePlanning /*= false*/)
 		return goToWaypoint(curObjectData.objectSE3[curObjID] * curGraspOffset * reachOffset);
 	else
 	{
-		getCurPos();
-		vector<SE3> Twaypoints = planBetweenWaypoints(TcurRobot, curObjectData.objectSE3[curObjID] * curGraspOffset * reachOffset);
-		return goThroughWaypoints(Twaypoints);
+		getCurPosSignal();
+		while (1)
+		{
+			if (isGetPos==true)
+			{
+				vector<SE3> Twaypoints = planBetweenWaypoints(TcurRobot, curObjectData.objectSE3[curObjID] * curGraspOffset * reachOffset);
+				return goThroughWaypoints(Twaypoints);
+			}
+
+		}
+
 	}
 }
-
 bool demoTaskManager::graspObject()
 {
 	bool moved = false;
@@ -385,10 +391,17 @@ bool demoTaskManager::moveObject(bool usePlanning /*= false*/)
 		return goToWaypoint(goalSE3[curGoalID] * goalOffset);
 	else
 	{
-		getCurPos();
-		robotrrtManager->attachObject(demoEnv->objects[curObjID], &robot->gMarkerLink[MH12_Index::MLINK_GRIP], Inv(curGraspOffset));
-		vector<SE3> Twaypoints = planBetweenWaypoints(TcurRobot, goalSE3[curGoalID] * goalOffset * curGraspOffset);
-		return goThroughWaypoints(Twaypoints);
+		getCurPosSignal();
+		while (1)
+		{
+			if (isGetPos == true)
+			{
+				robotrrtManager->attachObject(demoEnv->objects[curObjID], &robot->gMarkerLink[MH12_Index::MLINK_GRIP], Inv(curGraspOffset));
+				vector<SE3> Twaypoints = planBetweenWaypoints(TcurRobot, goalSE3[curGoalID] * goalOffset * curGraspOffset);
+				return goThroughWaypoints(Twaypoints);
+			}
+		}
+
 	}
 }
 
@@ -406,11 +419,17 @@ bool demoTaskManager::goHomepos(bool usePlanning /*= false*/)
 		return goToWaypoint(homeSE3);
 	else
 	{
-		getCurPos();
-		robotrrtManager->detachObject();
-		demoEnv->objects[curObjID]->setBaseLinkFrame(goalSE3[curGoalID]);
-		vector<SE3> Twaypoints = planBetweenWaypoints(TcurRobot, homeSE3);
-		return goThroughWaypoints(Twaypoints);
+		getCurPosSignal();
+		while (1)
+		{
+			if (isGetPos == true)
+			{
+				robotrrtManager->detachObject();
+				demoEnv->objects[curObjID]->setBaseLinkFrame(goalSE3[curGoalID]);
+				vector<SE3> Twaypoints = planBetweenWaypoints(TcurRobot, homeSE3);
+				return goThroughWaypoints(Twaypoints);
+			}
+		}
 	}
 }
 
@@ -468,12 +487,43 @@ SE3 demoTaskManager::YKpos2SE3(const Eigen::VectorXd YKpos)
 	return EulerXYZ(Vec3(YKpos[0], YKpos[1], YKpos[2]), Vec3(YKpos[3], YKpos[4], YKpos[5]));
 }
 
+std::string to_string_custom(double x)
+{
+	std::ostringstream ss;
+	ss << x;
+	return ss.str();
+}
 bool demoTaskManager::goToWaypoint(SE3 Twaypoint)
 {
-	getCurPos();
-	// send message to robot (imov command) here
-	vector<double> tempOri = SO3ToEulerXYZ((TcurRobot % Twaypoint).GetOrientation());
-	Vec3 tempPos = (TcurRobot % Twaypoint).GetPosition();
+	getCurPosSignal();
+	while (1) 
+	{
+		if (isGetPos == true)
+		{
+			// send message to robot (imov command) here
+			vector<double> tempOri = SO3ToEulerXYZ((TcurRobot % Twaypoint).GetOrientation());
+			Vec3 tempPos = (TcurRobot % Twaypoint).GetPosition();
+
+			MOVE_POS posForSend;
+			strcpy(posForSend.Rx, to_string_custom(tempOri[0]).c_str());
+			strcpy(posForSend.Ry, to_string_custom(tempOri[1]).c_str());
+			strcpy(posForSend.Rz, to_string_custom(tempOri[2]).c_str());
+			strcpy(posForSend.X, to_string_custom(tempPos[0]).c_str());
+			strcpy(posForSend.Y, to_string_custom(tempPos[1]).c_str());
+			strcpy(posForSend.Z, to_string_custom(tempPos[2]).c_str());
+			HWND hTargetWnd = FindWindow(NULL, L"ESF_Client_Example_JOB_IMOV");
+
+			COPYDATASTRUCT cds;
+			cds.dwData = 1;
+			cds.cbData = sizeof(posForSend);
+			cds.lpData = &posForSend;
+			SendMessage(hTargetWnd, WM_COPYDATA, NULL, reinterpret_cast<LPARAM>(&cds));
+			std::cout << "isGetPos == true and send goToWaypoint message (goToWaypoint())" << std::endl;
+			break;
+
+		}
+	}
+
 	/////////////////////////////////////////////
 	int cnt = 0;
 	while (cnt < maxTimeDuration)
@@ -497,23 +547,56 @@ bool demoTaskManager::goThroughWaypoints(vector<SE3> Twaypoints)
 
 bool demoTaskManager::checkWaypointReached(SE3 Twaypoint)
 {
-	getCurPos();
-	if (distSE3(Twaypoint, TcurRobot) < posThreshold)
-		return true;
-	return false;
+	getCurPosSignal();
+	while (1)
+	{
+		if (isGetPos == true)
+		{
+			std::cout<< "isGetPos == true at checkWaypointReached() function" << std::endl;
+			if (distSE3(Twaypoint, TcurRobot) < posThreshold)
+				return true;
+			return false;
+		}
+	}
+
 }
 
-bool demoTaskManager::getCurPos()
+void demoTaskManager::getCurPosSignal()
 {
+	std::cout << "getCurPosSignal() called" << std::endl;
+	// send flag 2
+	char dummyMsg[256] = "dummy message";
+	isGetPos = false;
+	HWND hTargetWnd = FindWindow(NULL, L"ESF_Client_Example_JOB_IMOV");
+	COPYDATASTRUCT cds;
+	cds.dwData = 2;
+	cds.cbData = sizeof(dummyMsg);
+	cds.lpData = dummyMsg;
+	SendMessage(hTargetWnd, WM_COPYDATA, NULL, reinterpret_cast<LPARAM>(&cds));
+	
 	// send message to robot (read cur pos command) here
-	curRobotPos;
-	TcurRobot = YKpos2SE3(curRobotPos);
+	//curRobotPos;
+	//TcurRobot = YKpos2SE3(curRobotPos);
 	////////////////////////////////////////////////////
-	return true;
+
 }
+
+void demoTaskManager::setCurPos(vector<double> values)
+{
+	std::cout << "setCurPos() called" << std::endl;
+	curRobotPos.resize(6);
+	for (int i = 0; i < 6; i++)
+	{
+		curRobotPos(i) = values[i];
+	}
+	TcurRobot = YKpos2SE3(curRobotPos);
+	isGetPos = true;
+
+}
+
+
 
 bool demoTaskManager::sendError()
 {
 	return false;
 }
-

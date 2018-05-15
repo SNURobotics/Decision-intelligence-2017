@@ -10,6 +10,7 @@
 #include "robotManager\MH12Robot.h"
 #include <time.h>
 
+
 // srSpace and renderer
 srSpace gSpace;
 myRenderer* renderer;
@@ -35,8 +36,11 @@ void URrrtSetting();
 int activeJointIdx =0;
 vector<Eigen::VectorXd> traj(0);
 
+
 int main(int argc, char **argv)
 {
+
+
 	////////////////////////////////////////////////////////////////
 	////////////////////// initialize //////////////////////////////
 	////////////////////////////////////////////////////////////////
@@ -49,6 +53,7 @@ int main(int argc, char **argv)
 	initDynamics();
 	MHRobotManagerSetting();
 	demoTask = new demoTaskManager(demoEnv, rManager1);
+
 
 	qval.setZero(6);
 	qval[0] = DEG2RAD(0.0);

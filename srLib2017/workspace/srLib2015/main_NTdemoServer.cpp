@@ -10,6 +10,11 @@
 #include <time.h>
 
 
+// for communication
+#include <iostream>
+#include <Windows.h>
+#include <windowsx.h>
+
 
 // srSpace and renderer
 srSpace gSpace;
@@ -41,6 +46,45 @@ Server serv = Server::Server();
 char communication_flag;
 void communicationFunc(int argc, char **argv);
 
+
+
+struct CUR_POS
+{
+	char Rx[256];
+	char Ry[256];
+	char Rz[256];
+	char X[256];
+	char Y[256];
+	char Z[256];
+};
+LRESULT CALLBACK getMessageFromRobot(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (uMsg == WM_COPYDATA)
+	{
+		CUR_POS cur_pos;
+		COPYDATASTRUCT* pcds = (COPYDATASTRUCT*)lParam;
+		memcpy_s(&cur_pos, sizeof(cur_pos), pcds->lpData, pcds->cbData);
+		vector<double> curPos(0);
+		curPos.push_back(atof(cur_pos.Rx));
+		curPos.push_back(atof(cur_pos.Ry));
+		curPos.push_back(atof(cur_pos.Rz));
+		curPos.push_back(atof(cur_pos.X));
+		curPos.push_back(atof(cur_pos.Y));
+		curPos.push_back(atof(cur_pos.Z));
+		demoTask->setCurPos(curPos);
+
+		std::cout << "==================" << std::endl;
+		std::cout << "getMessageFromRobot function" << std::endl;
+		for(int i = 0; i < 6; i++)
+		{
+			std::cout << "curPos: " << curPos[i] << std::endl;
+		}
+	}
+
+	return DefWindowProc(hWnd, uMsg, wParam, lParam);
+}
+
+
 int main(int argc, char **argv)
 {
 	////////////////////////////////////////////////////////////////
@@ -55,6 +99,23 @@ int main(int argc, char **argv)
 	initDynamics();
 	MHRobotManagerSetting();
 	demoTask = new demoTaskManager(demoEnv, rManager1);
+
+	// for communication (dummy window dialog)
+	WNDCLASS windowClass = {};
+	//windowClass.lpfnWndProc = demoTask->WindowProcedure;
+	windowClass.lpfnWndProc = getMessageFromRobot;
+	LPCWSTR windowClassName = L"srLibServer";
+	windowClass.lpszClassName = windowClassName;
+	if (!RegisterClass(&windowClass)) {
+		std::cout << "Failed to register window class" << std::endl;
+		return 1;
+	}
+	HWND messageWindow = CreateWindow(windowClassName, 0, 0, 0, 0, 0, 0, HWND_MESSAGE, 0, 0, 0);
+	if (!messageWindow) {
+		std::cout << "Failed to create message-only window" << std::endl;
+		return 1;
+	}
+
 	qval.setZero(6);
 	qval[0] = DEG2RAD(0.0);
 	qval[1] = DEG2RAD(0.0);
@@ -68,10 +129,11 @@ int main(int argc, char **argv)
 	cout << EulerXYZ(Vec3(DEG2RAD(179), DEG2RAD(-2), DEG2RAD(9)), Vec3(0.0, 0.0, 0.0)) << endl;
 	// set object SE(3) from text
 	//demoEnv->setObjectFromRobot2ObjectText("C:/Users/snurobotics/Documents/판단지능/4차년도/PoseData180504/data00/Pose.txt", false);
-
+	SE3 dummySE3 = EulerXYZ(Vec3(DEG2RAD(179), DEG2RAD(-2), DEG2RAD(9)), Vec3(0.0, 0.0, 0.0));
+	demoTask->goToWaypoint(dummySE3);
 
 	//rendering(argc, argv);
-
+	
 	communicationFunc(argc, argv);
 
 	//만약 while 루프를 돌리지 않을 경우 무한정 서버를 기다리는 함수, 실제 사용하지는 않는다.
