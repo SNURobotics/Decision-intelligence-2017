@@ -435,8 +435,15 @@ bool demoTaskManager::goHomepos(bool usePlanning /*= false*/)
 
 bool demoTaskManager::moveWorkspaceDisplacement(Vec3 disp)
 {
-	getCurPos();
-	return goToWaypoint(SE3(disp) * TcurRobot);
+	getCurPosSignal();
+	while (1)
+	{
+		if (isGetPos == true)
+		{
+			return goToWaypoint(SE3(disp) * TcurRobot);
+		}
+	}
+	return false;
 }
 
 vector<SE3> demoTaskManager::planBetweenWaypoints(SE3 Tinit, SE3 Tgoal, unsigned int midNum /* = 1*/)
