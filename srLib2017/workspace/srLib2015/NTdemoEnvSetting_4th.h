@@ -8,6 +8,12 @@
 #include "robotManager\MH12RobotManager.h"
 #include "robotManager/robotRRTManager.h"
 
+#include <string>
+#include <cstring>
+#include <sstream>
+
+
+
 class demoEnvironment
 {
 public:
@@ -78,14 +84,13 @@ public:
 
 	vector<SE3> planBetweenWaypoints(SE3 Tinit, SE3 Tgoal, unsigned int midNum = 1);
 	
-
 	// Yaskawa client communication functions
 	SE3 YKpos2SE3(const Eigen::VectorXd YKpos);
 	bool goToWaypoint(SE3 Twaypoint);	// send robot waypoint commands after planning
 	bool goThroughWaypoints(vector<SE3> Twaypoints);
 	bool checkWaypointReached(SE3 Twaypoint);		// check if robot reached to the waypoint
-	bool getCurPos();						// send robot read cur pos command and set curRobotPos and TcurRobot
-
+	void getCurPosSignal();						// send robot read cur pos command and set curRobotPos and TcurRobot
+	void setCurPos(vector<double> values);
 public:
 	// demo environemnt
 	demoEnvironment * demoEnv;
@@ -116,7 +121,18 @@ public:
 	// Robot communication related variables
 	Eigen::VectorXd curRobotPos;	// current robot pos (Rx, Ry, Rz, px, py, pz)
 	SE3 TcurRobot;
-	int maxTimeDuration;
+	int maxTimeDuration=10000;
+	struct MOVE_POS
+	{
+		char Rx[256];
+		char Ry[256];
+		char Rz[256];
+		char X[256];
+		char Y[256];
+		char Z[256];
+	};
+	bool isGetPos;
+
 
 	// Planning related variables
 	Eigen::VectorXd lastPlanningJointVal;
