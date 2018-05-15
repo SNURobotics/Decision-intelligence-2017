@@ -61,10 +61,14 @@ void demoEnvironment::setObjectFromRobot2VisionData(vector<SE3> objectSE3)
 		printf("current object data does not exist!\n");
 		return;
 	}
+	unsigned int objectNumData = objectSE3.size();
 
 	for (unsigned int i = 0; i < objectNum; i++)
 	{
-		objects[i]->setBaseLinkFrame(Trobotbase * objectSE3[i]);
+		if (i < objectNumData)
+			objects[i]->setBaseLinkFrame(Trobotbase * objectSE3[i]);
+		else
+			objects[i]->setBaseLinkFrame(SE3());
 	}
 
 	return;
@@ -106,7 +110,6 @@ demoTaskManager::demoTaskManager(demoEnvironment* _demoEnv, MH12RobotManager* _r
 	rManager = _rManager;
 	robot = (MH12Robot*)rManager->m_robot;
 	robotrrtManager = NULL;
-	objectNum = 5;
 
 	// constants for task (should be modified later!!!)
 	goalSE3.resize(1);
@@ -139,10 +142,6 @@ void demoTaskManager::updateEnv(char* stringfromSKKU)
 	vector<bool> isHead;
 	vector<vector<Vec3>> objectGraspCandidatePos;
 
-	objectSE3.resize(objectNum);
-	isHead.resize(objectNum);
-	objectGraspCandidatePos.resize(objectNum);
-	
 	readSKKUvision(stringfromSKKU, objectSE3, isHead, objectGraspCandidatePos);
 
 	curObjectData.setObjectDataFromString(objectSE3, isHead, objectGraspCandidatePos);
@@ -204,9 +203,9 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 			else
 			{
 				v_objID.push_back(objID);
-				v_objPos.resize(objID + 1);
-				v_objOri.resize(objID + 1);
-				v_objCandPos.resize(objID + 1);
+				v_objPos.resize(objIdx + 1);
+				v_objOri.resize(objIdx + 1);
+				v_objCandPos.resize(objIdx + 1);
 			}
 		}
 		if (obsData && recv_cnt < 1)
@@ -231,8 +230,16 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 			}
 			else if (13 <= recv_cnt && recv_cnt < 14)
 			{
-				v_objCand.push_back(atoi(recv_data));
-				max_recv_cnt = 14 + 3 * v_objCand[objIdx];
+				if (atoi(recv_data) == -1)
+				{
+					v_objCand.push_back(0);
+					max_recv_cnt = 14;
+				}
+				else
+				{
+					v_objCand.push_back(atoi(recv_data));
+					max_recv_cnt = 14 + 3 * v_objCand[objIdx];
+				}
 			}
 			else if (14 <= recv_cnt && recv_cnt < max_recv_cnt)
 			{
@@ -257,10 +264,15 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 			recv_cnt = 0;
 	}
 
+	objectNumData = objIdx;
+
+	objectSE3.resize(objectNumData);
+	isHead.resize(objectNumData);
+	objectGraspCandidatePos.resize(objectNumData);
 
 
 	// transform vector data into Vec3 and SE3 format
-	for (unsigned int i = 0; i < objectNum; i++)
+	for (unsigned int i = 0; i < objectNumData; i++)
 	{
 		SE3 objSE3_Camera = SE3(v_objOri[i][0], v_objOri[i][1], v_objOri[i][2], v_objOri[i][3], v_objOri[i][4], v_objOri[i][5], v_objOri[i][6], v_objOri[i][7], v_objOri[i][8], v_objPos[i][0], v_objPos[i][1], v_objPos[i][2]);
 
@@ -274,7 +286,7 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 		for (unsigned int j = 0; j < (unsigned int)v_objCand[i]; j++)
 			objectGraspCandidatePos[i][j] = Vec3(v_objCandPos[i][0 + 3 * j], v_objCandPos[i][1 + 3 * j], v_objCandPos[i][2 + 3 * j]);
 	}
-
+	cout << objIdx << endl;
 }
 
 
@@ -292,7 +304,7 @@ bool demoTaskManager::setObjectNum()
 		return false;
 	}
 
-	for (unsigned int i = 0; i < objectNum; i++)
+	for (unsigned int i = 0; i < objectNumData; i++)
 	{
 		for (unsigned int j = 0; j < size(curObjectData.objectGraspCandidatePos[i]); j++)
 		{

@@ -19,7 +19,7 @@ class demoEnvironment
 public:
 	demoEnvironment(unsigned int _objectNum);
 	~demoEnvironment();
-
+	
 	void setObjectFromRobot2ObjectText(string loc, bool print = false);
 	void setObjectFromRobot2VisionData(vector<SE3> objectSE3);
 
@@ -109,7 +109,7 @@ public:
 
 	// SKKU vision data related variables
 	SKKUobjectData curObjectData;
-	unsigned int objectNum;
+	unsigned int objectNumData;
 	int curObjID;					// current object ID (0~4)
 	SE3 curGraspOffset;				// current SE3 from object frame to grasp frame
 
