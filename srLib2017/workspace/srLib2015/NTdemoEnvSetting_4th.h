@@ -12,7 +12,10 @@
 #include <cstring>
 #include <sstream>
 
-
+#define MOVE_SIGNAL 1
+#define GET_CURPOS_SIGNAL 2
+#define GRIPPER_ON_SIGNAL 3
+#define GRIPPER_OFF_SIGNAL 4
 
 class demoEnvironment
 {
@@ -93,6 +96,9 @@ public:
 	bool checkWaypointReached(SE3 Twaypoint);		// check if robot reached to the waypoint
 	void getCurPosSignal();						// send robot read cur pos command and set curRobotPos and TcurRobot
 	void setCurPos(vector<double> values);
+	void gripperOnSignal();
+	void gripperOffSignal();
+
 public:
 	// demo environemnt
 	demoEnvironment * demoEnv;
@@ -124,6 +130,7 @@ public:
 	Eigen::VectorXd curRobotPos;	// current robot pos (Rx, Ry, Rz, px, py, pz)
 	SE3 TcurRobot;
 	int maxTimeDuration=10000;
+	int graspWait = 50;
 	struct MOVE_POS
 	{
 		char Rx[256];

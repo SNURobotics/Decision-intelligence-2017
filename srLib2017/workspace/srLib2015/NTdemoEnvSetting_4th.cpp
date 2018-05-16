@@ -393,6 +393,9 @@ bool demoTaskManager::graspObject()
 
 	// send message to robot to grasp (gripper command ??)
 	bool grasped = false;
+	gripperOnSignal();
+	Sleep(graspWait);
+	grasped = true;
 	////////////////////////////////////////////////////////
 	return moved && grasped;
 }
@@ -421,6 +424,9 @@ bool demoTaskManager::releaseObject()
 {
 	// send message to robot to release (gripper command ??)
 	bool released = false;
+	gripperOffSignal();
+	Sleep(graspWait);
+	released = true;
 	////////////////////////////////////////////////////////
 	return released;
 }
@@ -534,7 +540,7 @@ bool demoTaskManager::goToWaypoint(SE3 Twaypoint)
 			HWND hTargetWnd = FindWindow(NULL, L"ESF_Client_Example_JOB_IMOV");
 
 			COPYDATASTRUCT cds;
-			cds.dwData = 1;
+			cds.dwData = MOVE_SIGNAL;
 			cds.cbData = sizeof(posForSend);
 			cds.lpData = &posForSend;
 			SendMessage(hTargetWnd, WM_COPYDATA, NULL, reinterpret_cast<LPARAM>(&cds));
@@ -589,7 +595,7 @@ void demoTaskManager::getCurPosSignal()
 	isGetPos = false;
 	HWND hTargetWnd = FindWindow(NULL, L"ESF_Client_Example_JOB_IMOV");
 	COPYDATASTRUCT cds;
-	cds.dwData = 2;
+	cds.dwData = GET_CURPOS_SIGNAL;
 	cds.cbData = sizeof(dummyMsg);
 	cds.lpData = dummyMsg;
 	SendMessage(hTargetWnd, WM_COPYDATA, NULL, reinterpret_cast<LPARAM>(&cds));
@@ -611,6 +617,34 @@ void demoTaskManager::setCurPos(vector<double> values)
 	}
 	TcurRobot = YKpos2SE3(curRobotPos);
 	isGetPos = true;
+
+}
+
+void demoTaskManager::gripperOnSignal()
+{
+	// send flag 2
+	char dummyMsg[256] = "dummy message";
+	isGetPos = false;
+	HWND hTargetWnd = FindWindow(NULL, L"ESF_Client_Example_JOB_IMOV");
+	COPYDATASTRUCT cds;
+	cds.dwData = GRIPPER_ON_SIGNAL;
+	cds.cbData = sizeof(dummyMsg);
+	cds.lpData = dummyMsg;
+	SendMessage(hTargetWnd, WM_COPYDATA, NULL, reinterpret_cast<LPARAM>(&cds));
+
+}
+
+void demoTaskManager::gripperOffSignal()
+{
+	// send flag 2
+	char dummyMsg[256] = "dummy message";
+	isGetPos = false;
+	HWND hTargetWnd = FindWindow(NULL, L"ESF_Client_Example_JOB_IMOV");
+	COPYDATASTRUCT cds;
+	cds.dwData = GRIPPER_OFF_SIGNAL;
+	cds.cbData = sizeof(dummyMsg);
+	cds.lpData = dummyMsg;
+	SendMessage(hTargetWnd, WM_COPYDATA, NULL, reinterpret_cast<LPARAM>(&cds));
 
 }
 

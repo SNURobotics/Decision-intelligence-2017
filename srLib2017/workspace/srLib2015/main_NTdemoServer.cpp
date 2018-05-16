@@ -117,6 +117,8 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	demoTask->gripperOnSignal();
+	demoTask->gripperOffSignal();
 	qval.setZero(6);
 	qval[0] = DEG2RAD(0.0);
 	qval[1] = DEG2RAD(0.0);
