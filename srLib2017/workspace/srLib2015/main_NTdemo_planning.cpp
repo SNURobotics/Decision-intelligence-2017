@@ -124,6 +124,10 @@ int main(int argc, char **argv)
 	cout << curGraspOffset << endl;
 	SE3 reachOffset = demoTask->reachOffset;
 	demoTask->planBetweenWaypoints(demoTask->homeSE3, curobjSE3 * curGraspOffset * reachOffset);
+
+	//Eigen::VectorXd qtemp = rManager1->inverseKin(demoTask->homeSE3, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, qIKinit);
+	//rManager1->setJointVal(qtemp);
+	//cout << flag << endl;
 	//demoTask->reachObject(true);
 	vector<Eigen::VectorXd> traj1 = demoTask->tempTraj;
 	vector<SE3> objTraj1 = demoTask->tempObjTraj;
@@ -261,8 +265,5 @@ void MHRobotManagerSetting()
 
 void envSetting()
 {
-	gSpace.AddSystem(demoEnv->bin);
-	gSpace.AddSystem(demoEnv->table);
-	for (unsigned int i = 0; i < demoEnv->objectNum; i++)
-		gSpace.AddSystem(demoEnv->objects[i]);
+	demoEnv->setEnvironmentInSrSpace(&gSpace);
 }

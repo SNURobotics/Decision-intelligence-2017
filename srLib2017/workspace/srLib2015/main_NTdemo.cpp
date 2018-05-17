@@ -177,8 +177,5 @@ void MHRobotManagerSetting()
 
 void envSetting()
 {
-	gSpace.AddSystem(demoEnv->bin);
-	gSpace.AddSystem(demoEnv->table);
-	for (unsigned int i = 0; i < demoEnv->objectNum; i++)
-		gSpace.AddSystem(demoEnv->objects[i]);
+	demoEnv->setEnvironmentInSrSpace(&gSpace);
 }

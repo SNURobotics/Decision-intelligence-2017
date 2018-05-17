@@ -11,7 +11,7 @@ demoEnvironment::demoEnvironment(unsigned int _objectNum) {
 		-0.0080738399, -0.0719967823, 0.7784732222);
 
 	// from data in e-mail 180504
-	Tcamera2robotbase = SE3(0.977314, 0.073841, -0.198506, 0.027069, -0.886021, -0.462855, -0.210058, 0.457728, -0.863922, 1.095999, -0.310359, 0.925915);
+	Tcamera2robotbase = SE3(0.977314, 0.073841, -0.198506, -0.027069, -0.886021, -0.462855, -0.210058, 0.457728, -0.863922, 1.095999, -0.310359, 0.925915);
 	Trobotbase2camera = Inv(Tcamera2robotbase);
 
 	// set bin
@@ -24,11 +24,17 @@ demoEnvironment::demoEnvironment(unsigned int _objectNum) {
 	Plink12table = Vec3(0.89, 0.0, 0.41);
 	table->setBaseLinkFrame(SE3(Trobotbase2link1.GetPosition()) * EulerZYX(Vec3(0.0, 0.0, 0.0), Plink12table));	// change to exact value later
 	
-																												// set objects
+	// set objects																											// set objects
 	objectNum = _objectNum;
 	objects.resize(objectNum);
 	for (unsigned int i = 0; i < objectNum; i++)
 		objects[i] = new workingObject;
+	
+	// set barrier
+	barrier1 = new Barrier1;
+	barrier1->setBaseLinkFrame(SE3());
+	barrier2 = new Barrier2;
+	barrier2->setBaseLinkFrame(SE3());
 }
 
 demoEnvironment::~demoEnvironment()
@@ -74,6 +80,16 @@ void demoEnvironment::setObjectFromRobot2VisionData(vector<SE3> objectSE3)
 	return;
 }
 
+void demoEnvironment::setEnvironmentInSrSpace(srSpace * space)
+{
+	space->AddSystem(bin);
+	space->AddSystem(table);
+	for (unsigned int i = 0; i < objectNum; i++)
+		space->AddSystem(objects[i]);
+	space->AddSystem(barrier1);
+	space->AddSystem(barrier2);
+}
+
 
 SKKUobjectData::SKKUobjectData()
 {
@@ -114,9 +130,11 @@ demoTaskManager::demoTaskManager(demoEnvironment* _demoEnv, MH12RobotManager* _r
 	// constants for task (should be modified later!!!)
 	goalSE3.resize(1);
 	goalSE3[0] = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.226026, 0.888197, 0.466843));
-	homeSE3 = EulerZYX(Vec3(SR_PI, -SR_PI_HALF, 0.0), Vec3(1.029, 0.0, 0.814));		// where robot goes when job is done (should be modified)
+	//homeSE3 = EulerZYX(Vec3(SR_PI, -SR_PI_HALF, 0.0), Vec3(1.029, 0.0, 0.814));		// where robot goes when job is done (should be modified)
+	homeSE3 = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.795, 0.0, 0.380));
 	reachOffset = SE3(Vec3(0.0, 0.0, -0.03));
 	goalOffset = SE3(Vec3(0.0, 0.0, 0.0));
+	TcurRobot = homeSE3;
 }
 
 demoTaskManager::~demoTaskManager()
@@ -521,22 +539,25 @@ std::string to_string_custom(double x)
 bool demoTaskManager::goToWaypoint(SE3 Twaypoint)
 {
 	getCurPosSignal();
+	MOVE_POS posForSend;
 	while (1) 
 	{
 		if (isGetPos == true)
 		{
 			// send message to robot (imov command) here
-			vector<double> tempOri = SO3ToEulerXYZ((TcurRobot % Twaypoint).GetOrientation());
-			Vec3 tempPos = (TcurRobot % Twaypoint).GetPosition();
+			vector<double> tempOri = SO3ToEulerXYZ((Twaypoint * Inv(TcurRobot)).GetOrientation());
+			//std::cout << Inv(TcurRobot)* Twaypoint << std::endl;
+			Vec3 tempPos = (Twaypoint * Inv(TcurRobot)).GetPosition();
 
-			MOVE_POS posForSend;
+			
 			// convert rad -> deg, m -> mm
-			strcpy(posForSend.Rx, to_string_custom(tempOri[0]*(180.0/SR_PI)).c_str());
-			strcpy(posForSend.Ry, to_string_custom(tempOri[1]*(180.0/SR_PI)).c_str());
-			strcpy(posForSend.Rz, to_string_custom(tempOri[2]*(180.0/SR_PI)).c_str());
-			strcpy(posForSend.X, to_string_custom(tempPos[0]*1000.0).c_str());
-			strcpy(posForSend.Y, to_string_custom(tempPos[1]*1000.0).c_str());
-			strcpy(posForSend.Z, to_string_custom(tempPos[2]*1000.0).c_str());
+			posForSend.Rx= tempOri[0]*(180.0/SR_PI);
+			posForSend.Ry= tempOri[1]*(180.0/SR_PI);
+			posForSend.Rz= tempOri[2]*(180.0/SR_PI);
+			posForSend.X = tempPos[0] * 1000.0;
+			posForSend.Y = tempPos[1] * 1000.0;
+			posForSend.Z = tempPos[2] * 1000.0;
+
 			HWND hTargetWnd = FindWindow(NULL, L"ESF_Client_Example_JOB_IMOV");
 
 			COPYDATASTRUCT cds;
@@ -551,16 +572,19 @@ bool demoTaskManager::goToWaypoint(SE3 Twaypoint)
 	}
 
 	/////////////////////////////////////////////
-	int cnt = 0;
-	while (cnt < maxTimeDuration)
-	{
-		// check if robot has reached its waypoint for every 50 ms
-		Sleep(50);
-		cnt += 50;
-		if (checkWaypointReached(Twaypoint))
-			return true;
-	}
-	return false;
+	//int cnt = 0;
+	//while (cnt < maxTimeDuration)
+	//{
+	//	// check if robot has reached its waypoint for every 50 ms
+	//	Sleep(50);
+	//	cnt += 50;
+	//	if (checkWaypointReached(Twaypoint))
+	//		return true;
+	//}
+	int sleepTime;
+	sleepTime = ceil((abs(posForSend.Rx) + abs(posForSend.Ry) + abs(posForSend.Rz) + abs(posForSend.X) + abs(posForSend.Y) + abs(posForSend.Z)) / IMOV_SPEED);
+	Sleep(sleepTime);
+	return true;
 }
 
 bool demoTaskManager::goThroughWaypoints(vector<SE3> Twaypoints)

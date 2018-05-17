@@ -50,12 +50,13 @@ void communicationFunc(int argc, char **argv);
 
 struct CUR_POS
 {
-	char Rx[256];
-	char Ry[256];
-	char Rz[256];
-	char X[256];
-	char Y[256];
-	char Z[256];
+
+	double X;
+	double Y;
+	double Z;
+	double Rx;
+	double Ry;
+	double Rz;
 };
 LRESULT CALLBACK getMessageFromRobot(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -66,20 +67,20 @@ LRESULT CALLBACK getMessageFromRobot(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 		memcpy_s(&cur_pos, sizeof(cur_pos), pcds->lpData, pcds->cbData);
 		vector<double> curPos(0);
 		// convert deg -> rad, mm -> m
-		curPos.push_back(atof(cur_pos.Rx)*(SR_PI/180.0));
-		curPos.push_back(atof(cur_pos.Ry)*(SR_PI/180.0));
-		curPos.push_back(atof(cur_pos.Rz)*(SR_PI/180.0));
-		curPos.push_back(atof(cur_pos.X)*0.001);
-		curPos.push_back(atof(cur_pos.Y)*0.001);
-		curPos.push_back(atof(cur_pos.Z)*0.001);
+		curPos.push_back(cur_pos.Rx*(SR_PI/180.0));
+		curPos.push_back(cur_pos.Ry*(SR_PI/180.0));
+		curPos.push_back(cur_pos.Rz*(SR_PI/180.0));
+		curPos.push_back(cur_pos.X*0.001);
+		curPos.push_back(cur_pos.Y*0.001);
+		curPos.push_back(cur_pos.Z*0.001);
 		demoTask->setCurPos(curPos);
 
-		std::cout << "==================" << std::endl;
-		std::cout << "getMessageFromRobot function" << std::endl;
-		for(int i = 0; i < 6; i++)
-		{
-			std::cout << "curPos: " << curPos[i] << std::endl;
-		}
+		//std::cout << "==================" << std::endl;
+		//std::cout << "getMessageFromRobot function" << std::endl;
+		//for(int i = 0; i < 6; i++)
+		//{
+		//	std::cout << "curPos: " << curPos[i] << std::endl;
+		//}
 	}
 
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -101,6 +102,8 @@ int main(int argc, char **argv)
 	MHRobotManagerSetting();
 	demoTask = new demoTaskManager(demoEnv, rManager1);
 
+	cout << demoEnv->Trobotbase2camera * demoEnv->Tcamera2robotbase;
+
 	// for communication (dummy window dialog)
 	WNDCLASS windowClass = {};
 	//windowClass.lpfnWndProc = demoTask->WindowProcedure;
@@ -116,25 +119,37 @@ int main(int argc, char **argv)
 		std::cout << "Failed to create message-only window" << std::endl;
 		return 1;
 	}
+	demoTask->getCurPosSignal();
+	//demoTask->gripperOnSignal();
+	//demoTask->gripperOffSignal();
 
-	demoTask->gripperOnSignal();
-	demoTask->gripperOffSignal();
+	//SE3 Ttemp = SE3(Vec3(0.0, 0.0, -0.05)) * demoTask->TcurRobot;
+	//demoTask->goToWaypoint(Ttemp);
+
+	vector<SE3> Ttemps(2);
+	Ttemps[0] = SE3(Vec3(0.0, 0.0, 0.05)) * demoTask->TcurRobot;
+	Ttemps[1] = SE3(Vec3(-0.05, 0.0, 0.0)) * Ttemps[0];
+	//demoTask->goThroughWaypoints(Ttemps);
+
 	qval.setZero(6);
 	qval[0] = DEG2RAD(0.0);
 	qval[1] = DEG2RAD(0.0);
 	qval[2] = DEG2RAD(0.0);		// joint 3 15deg error?? robot -15deg 일때랑 여기 0deg일때랑 비슷
 	qval[3] = DEG2RAD(0.0);
-	qval[4] = DEG2RAD(-93.472);
-	qval[5] = DEG2RAD(0.08);
+	qval[4] = DEG2RAD(-90.0);
+	qval[5] = DEG2RAD(0.0);
 	rManager1->setJointVal(qval);
-	cout << MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() << endl;
+
+	SE3 Ttemp = SE3(Vec3(0.0, 0.0, -0.2))*MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame();
+	cout << Ttemp << endl;
 	int flag;
 	cout << EulerXYZ(Vec3(DEG2RAD(179), DEG2RAD(-2), DEG2RAD(9)), Vec3(0.0, 0.0, 0.0)) << endl;
-
-
-	//rendering(argc, argv);
+	qval = rManager1->inverseKin(Ttemp, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, qval);
+	rManager1->setJointVal(qval);
+	cout << flag << endl;
+	rendering(argc, argv);
 	
-	communicationFunc(argc, argv);
+	//communicationFunc(argc, argv);
 
 	//만약 while 루프를 돌리지 않을 경우 무한정 서버를 기다리는 함수, 실제 사용하지는 않는다.
 	//serv.WaitServer(); 
@@ -280,8 +295,5 @@ void MHRobotManagerSetting()
 
 void envSetting()
 {
-	gSpace.AddSystem(demoEnv->bin);
-	gSpace.AddSystem(demoEnv->table);
-	for (unsigned int i = 0; i < demoEnv->objectNum; i++)
-		gSpace.AddSystem(demoEnv->objects[i]);
+	demoEnv->setEnvironmentInSrSpace(&gSpace);
 }

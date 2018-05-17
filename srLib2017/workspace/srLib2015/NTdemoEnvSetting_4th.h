@@ -16,7 +16,7 @@
 #define GET_CURPOS_SIGNAL 2
 #define GRIPPER_ON_SIGNAL 3
 #define GRIPPER_OFF_SIGNAL 4
-
+#define IMOV_SPEED			20		//500
 class demoEnvironment
 {
 public:
@@ -25,13 +25,15 @@ public:
 	
 	void setObjectFromRobot2ObjectText(string loc, bool print = false);
 	void setObjectFromRobot2VisionData(vector<SE3> objectSE3);
-
+	void setEnvironmentInSrSpace(srSpace* space);
 public:
 	SE3 Trobotbase;
 	SE3 Trobotbase2link1;
 	SE3 Tworld2camera;
 	Bin* bin;
 	Table4th* table;
+	Barrier1* barrier1;
+	Barrier2* barrier2;
 	unsigned int objectNum;
 	vector<workingObject*> objects;
 	SE3 Trobotbase2camera;
@@ -131,14 +133,24 @@ public:
 	SE3 TcurRobot;
 	int maxTimeDuration=10000;
 	int graspWait = 50;
+	//struct MOVE_POS
+	//{
+	//	char Rx[256];
+	//	char Ry[256];
+	//	char Rz[256];
+	//	char X[256];
+	//	char Y[256];
+	//	char Z[256];
+	//};
 	struct MOVE_POS
 	{
-		char Rx[256];
-		char Ry[256];
-		char Rz[256];
-		char X[256];
-		char Y[256];
-		char Z[256];
+		double X;
+		double Y;
+		double Z;
+		double Rx;
+		double Ry;
+		double Rz;
+
 	};
 	bool isGetPos;
 

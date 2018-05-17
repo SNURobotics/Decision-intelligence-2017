@@ -35,3 +35,23 @@ public:
 	~workingObject();
 	void AssembleModel();
 };
+
+// Barrier1 (with camera)
+class Barrier1 : public Object
+{
+public:
+	Barrier1(double collision_offset = 0.01);
+	~Barrier1();
+	void AssembleModel();
+	double m_collision_offset;
+};
+
+// Barrier2
+class Barrier2 : public Object
+{
+public:
+	Barrier2(double collision_offset = 0.01);
+	~Barrier2();
+	void AssembleModel();
+	double m_collision_offset;
+};
