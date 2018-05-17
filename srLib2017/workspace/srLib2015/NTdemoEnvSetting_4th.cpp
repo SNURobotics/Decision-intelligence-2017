@@ -392,14 +392,19 @@ bool demoTaskManager::reachObject(bool usePlanning /*= false*/)
 	else
 	{
 		getCurPosSignal();
+		std::clock_t start = std::clock();
 		while (1)
 		{
-			if (isGetPos==true)
+			if (isGetPos == true)
 			{
 				vector<SE3> Twaypoints = planBetweenWaypoints(TcurRobot, curObjectData.objectSE3[curObjID] * curGraspOffset * reachOffset);
 				return goThroughWaypoints(Twaypoints);
 			}
-
+			else if ((std::clock() - start) / (double)CLOCKS_PER_SEC > MAX_TIME_DURATION)
+			{
+				printf("isGetPos == false and setCurPos failed!!!\n");
+				return false;
+			}
 		}
 
 	}
@@ -425,6 +430,7 @@ bool demoTaskManager::moveObject(bool usePlanning /*= false*/)
 	else
 	{
 		getCurPosSignal();
+		std::clock_t start = std::clock();
 		while (1)
 		{
 			if (isGetPos == true)
@@ -432,6 +438,11 @@ bool demoTaskManager::moveObject(bool usePlanning /*= false*/)
 				robotrrtManager->attachObject(demoEnv->objects[curObjID], &robot->gMarkerLink[MH12_Index::MLINK_GRIP], Inv(curGraspOffset));
 				vector<SE3> Twaypoints = planBetweenWaypoints(TcurRobot, goalSE3[curGoalID] * goalOffset * curGraspOffset);
 				return goThroughWaypoints(Twaypoints);
+			}
+			else if ((std::clock() - start) / (double)CLOCKS_PER_SEC > MAX_TIME_DURATION)
+			{
+				printf("isGetPos == false and setCurPos failed!!!\n");
+				return false;
 			}
 		}
 
@@ -456,6 +467,7 @@ bool demoTaskManager::goHomepos(bool usePlanning /*= false*/)
 	else
 	{
 		getCurPosSignal();
+		std::clock_t start = std::clock();
 		while (1)
 		{
 			if (isGetPos == true)
@@ -465,6 +477,11 @@ bool demoTaskManager::goHomepos(bool usePlanning /*= false*/)
 				vector<SE3> Twaypoints = planBetweenWaypoints(TcurRobot, homeSE3);
 				return goThroughWaypoints(Twaypoints);
 			}
+			else if ((std::clock() - start) / (double)CLOCKS_PER_SEC > MAX_TIME_DURATION)
+			{
+				printf("isGetPos == false and setCurPos failed!!!\n");
+				return false;
+			}
 		}
 	}
 }
@@ -472,11 +489,15 @@ bool demoTaskManager::goHomepos(bool usePlanning /*= false*/)
 bool demoTaskManager::moveWorkspaceDisplacement(Vec3 disp)
 {
 	getCurPosSignal();
+	std::clock_t start = std::clock();
 	while (1)
 	{
 		if (isGetPos == true)
-		{
 			return goToWaypoint(SE3(disp) * TcurRobot);
+		else if ((std::clock() - start) / (double)CLOCKS_PER_SEC > MAX_TIME_DURATION)
+		{
+			printf("isGetPos == false and setCurPos failed!!!\n");
+			return false;
 		}
 	}
 	return false;
@@ -540,6 +561,7 @@ bool demoTaskManager::goToWaypoint(SE3 Twaypoint)
 {
 	getCurPosSignal();
 	MOVE_POS posForSend;
+	std::clock_t start = std::clock();
 	while (1) 
 	{
 		if (isGetPos == true)
@@ -565,10 +587,14 @@ bool demoTaskManager::goToWaypoint(SE3 Twaypoint)
 			cds.cbData = sizeof(posForSend);
 			cds.lpData = &posForSend;
 			SendMessage(hTargetWnd, WM_COPYDATA, NULL, reinterpret_cast<LPARAM>(&cds));
-			std::cout << "isGetPos == true and send goToWaypoint message (goToWaypoint())" << std::endl;
+			printf("isGetPos == true and send goToWaypoint message (goToWaypoint())\n");
 			break;
-
 		}
+		else if ((std::clock() - start) / (double)CLOCKS_PER_SEC > MAX_TIME_DURATION)
+		{
+			printf("isGetPos == false and setCurPos failed!!!\n");
+			return false;
+		}	
 	}
 
 	/////////////////////////////////////////////

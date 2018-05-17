@@ -11,12 +11,14 @@
 #include <string>
 #include <cstring>
 #include <sstream>
+#include <ctime>
 
 #define MOVE_SIGNAL 1
 #define GET_CURPOS_SIGNAL 2
 #define GRIPPER_ON_SIGNAL 3
 #define GRIPPER_OFF_SIGNAL 4
 #define IMOV_SPEED			20		//500
+#define MAX_TIME_DURATION   5.0
 class demoEnvironment
 {
 public:

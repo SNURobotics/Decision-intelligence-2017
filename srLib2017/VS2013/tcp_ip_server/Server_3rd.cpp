@@ -1,7 +1,11 @@
 #include "stdafx.h"
 #include "Server.h"
 
-
+#define SEOUL "192.168.137.102"
+#define HANYANG "192.168.137.108"
+#define SUNGGEUN "192.168.137.104"
+#define ROBOT01 "192.168.137.100"
+#define ROBOT02 "192.168.137.101"
 /**
 	메세지 전송을 테스트 하기 위한 terminal 형태의 메세지 전송 commandline
 	쓸 필요는 없다.
@@ -37,7 +41,7 @@ int SendMessageToClient(char *buffer, void *value) {
 		buffer[len - 1] = '\0';
 
 	// 데이터 보내기
-	int retval = send(*client_sock, buffer, strlen(buffer), 0);
+	int retval = send(*client_sock, buffer, BUFFER_SIZE, 0);
 
 	if (retval == SOCKET_ERROR)
 	{
@@ -63,6 +67,10 @@ DWORD WINAPI SendClient(LPVOID arg)
 {
 	SOCKET client_sock = (SOCKET)arg;
 	int sendClient = sendValue;
+	SOCKADDR_IN clientaddr;
+	int addrlen;
+	addrlen = sizeof(clientaddr);
+	getpeername(client_sock, (SOCKADDR*)&clientaddr, &addrlen);
 
 	// 클라이언트와 데이터 통신
 	while (1)
@@ -77,7 +85,19 @@ DWORD WINAPI SendClient(LPVOID arg)
 				여기에 코드를 수정해서 결정할 수도 있다.
 			
 			*/
+			if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT01) == 0 && (sendBuf[0] == 'I' || sendBuf[0] == 'V' || sendBuf[0] == 'R' || sendBuf[1] == '2'))
+				continue;
+			if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT02) == 0 && (sendBuf[0] == 'I' || sendBuf[0] == 'V' || sendBuf[0] == 'R' || sendBuf[1] == '1'))
+				continue;
+			else if (strcmp(inet_ntoa(clientaddr.sin_addr), HANYANG) == 0 && (sendBuf[0] == 'G' || sendBuf[0] == 'I' || sendBuf[0] == 'P' || sendBuf[0] == 'S' || sendBuf[0] == 'J' || sendBuf[0] == 'T' || sendBuf[0] == 'D'))
+				continue;
+			else if (strcmp(inet_ntoa(clientaddr.sin_addr), SUNGGEUN) == 0 && (sendBuf[0] == 'V' || sendBuf[0] == 'G' || sendBuf[0] == 'R' || sendBuf[0] == 'S' || sendBuf[0] == 'P' || sendBuf[0] == 'J' || sendBuf[0] == 'T' || sendBuf[0] == 'D'))
+				continue;
+			else
+				SendMessageToClient(sendBuf, &client_sock);
+
 			SendMessageToClient(sendBuf, &client_sock);
+
 		}
 
 	}
@@ -96,11 +116,17 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 {
 	SOCKET client_sock = (SOCKET)arg;
 	char buf[BUFSIZE + 1];
-	SOCKADDR_IN clientaddr;
 	int addrlen;
 	int retval;
+	SOCKADDR_IN clientaddr;
 	addrlen = sizeof(clientaddr);
 	getpeername(client_sock, (SOCKADDR*)&clientaddr, &addrlen);
+	int testIndex = 0;
+	for (int i = 0; i < 10; i++) {
+		testIndex = i;
+		if (strcmp(test_str[i], "\n\n\0") == 0)
+			break;
+	}
 
 
 
@@ -119,7 +145,7 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 			break;
 		}
 		else if (retval == 0) {
-			test_str[retval] =  '\0';
+			test_str[testIndex][retval] =  '\0';
 			break;
 		}
 
@@ -130,17 +156,56 @@ DWORD WINAPI ProcessClient(LPVOID arg)
 			받아온 데이터를 이쪽에서 처리해주면 된다.
 			buf 변수에 받은 데이터가 저장되어 있다.
 		*/
-		
+		char newBuf[BUFSIZE + 1] = "";
+		int len = strlen(buf);
+		bool isValidData = true;
+		for (int kk = 0; kk < len; kk++) {
+			if (kk > 3 && (buf[kk] == 'R' || buf[kk] == 'P')) {
+				isValidData = false;
+			}
+		}
+		if (!isValidData) {
+			printf("not valid data recieved\n");
+			continue;
+		}
+
+		if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT01) == 0 && buf[0] == 'R') {
+			strcat(newBuf, "R1");
+			//strncpy(buf, buf + 1, len - 1);
+			strcat(newBuf, buf);
+			strcpy(test_str[testIndex], "");
+			strcat(test_str[testIndex], newBuf);
+		}
+		else if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT02) == 0 && buf[0] == 'R') {
+			strcat(newBuf, "R2");
+			strcat(newBuf, buf);
+			strcpy(test_str[testIndex], "");
+			strcat(test_str[testIndex], newBuf);
+		}
+		else if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT01) == 0 && buf[0] == 'P') {
+			strcat(newBuf, "P1");
+			strcat(newBuf, buf);
+			strcpy(test_str[testIndex], "");
+			strcat(test_str[testIndex], newBuf);
+		}
+		else if (strcmp(inet_ntoa(clientaddr.sin_addr), ROBOT02) == 0 && buf[0] == 'P') {
+			strcat(newBuf, "P2");
+			strcat(newBuf, buf);
+			strcpy(test_str[testIndex], "");
+			strcat(test_str[testIndex], newBuf);
+		}
 		//
-		strcpy(test_str, buf);
-				
-		//printf("%d \n> ", retval);
+		else
+			strcpy(test_str[testIndex], buf);
+
+		//printf("%d[%s] \n> ", retval, inet_ntoa(clientaddr.sin_addr));
 		//printf("[TCP /%s:%d] %s\n> ", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port), recvBuf);
 	}
 	closesocket(client_sock);
 
 	TerminateThread(hServerThread, 0);
 	CloseHandle(hServerThread);
+	strcpy(test_str[testIndex], "\n\n\0");
 
 	printf("TCP 서버, 클라이언트 종료 : IP 주소 = %s, 포트번호 = %d\n> ", inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
 	return 0;
@@ -230,6 +295,9 @@ Server::Server()
 
 	printf("> ");
 
+	for (int i = 0; i < 10; i++) {
+		strcpy(test_str[i], "\n\n\0");
+	}
 	//std::thread control(&Server::ControlTower, this);
 
 	
@@ -253,6 +321,7 @@ void Server::WaitServer()
 void Server::SendMessageToClient(char *buf)
 {
 	strcpy(sendBuf, buf);
+	printf("%s             ...sentData\n", sendBuf);
 	sendValue++;
 	if (sendValue > 2048)
 		sendValue = 0;
@@ -268,8 +337,31 @@ void Server::MakeSendCommandLine()
 
 char *Server::RecevData()
 {
-	char *name = test_str;
-	return name;
+	for (int i = 0; i < 10; i++) {
+		int index = (receiveIndex + 1 + i) % 10;
+		if (strcmp(test_str[index], "") == 0 || strcmp(test_str[index], "\0") == 0 || strcmp(test_str[index], "\n\n\0") == 0 || test_str[index][0] == '\n' || test_str[index][0] == '\0' || test_str[index] == NULL)
+			continue;
+		else {
+			if (test_str[index][0] < 'A' || test_str[index][0] > 'Z') {
+				printf("check: %d", test_str[index][0]);
+				continue;
+			}
+				
+			char *name = (char *)malloc(sizeof(char)*BUFFER_SIZE);
+			memset(name, NULL, sizeof(char)*BUFFER_SIZE);
+			strcpy(name, test_str[index]);
+			printf(name);
+			printf("             ...receivedData\n");
+			int len = strlen(name);
+			if (name[len - 1] == '\n')
+				name[len - 1] = '\0';
+			receiveIndex = index;
+			strcpy(test_str[index], "\0");
+			return name;
+		}
+
+	}
+	return "\0";
 }
 
 Server::~Server()

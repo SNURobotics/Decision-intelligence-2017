@@ -147,9 +147,9 @@ int main(int argc, char **argv)
 	qval = rManager1->inverseKin(Ttemp, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, qval);
 	rManager1->setJointVal(qval);
 	cout << flag << endl;
-	rendering(argc, argv);
+	//rendering(argc, argv);
 	
-	//communicationFunc(argc, argv);
+	communicationFunc(argc, argv);
 
 	//만약 while 루프를 돌리지 않을 경우 무한정 서버를 기다리는 함수, 실제 사용하지는 않는다.
 	//serv.WaitServer(); 
@@ -169,7 +169,6 @@ void communicationFunc(int argc, char **argv)
 		char* received_data = serv.RecevData();
 		//strcpy(received_data, "");
 		//strcat(received_data, serv.RecevData());
-
 		communication_flag = received_data[0];
 
 		//printf(&communication_flag);
@@ -189,8 +188,9 @@ void communicationFunc(int argc, char **argv)
 			serv.SendMessageToClient(copy);
 			Sleep(50);
 			printf("%s\n", received_data);
-			//demoTask->curObjectData.setObjectDataFromString(received_data);
-			
+			demoTask->updateEnv(received_data);
+			//demoTask->updateEnv(dummy);
+			demoTask->setObjectNum();
 			//////////////////////////////////////////////////////////////////////
 			//m.lock();
 			//m.unlock();

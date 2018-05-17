@@ -11,7 +11,7 @@
 static int sendValue;
 static char sendBuf[BUFSIZE];
 
-static char test_str[10][BUFSIZE + 1];
+static char test_str[BUFSIZE + 1];
 static int receiveIndex = 0;
 
 
