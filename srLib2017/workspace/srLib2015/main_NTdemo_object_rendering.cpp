@@ -50,6 +50,22 @@ int main(int argc, char **argv)
 	MHRobotManagerSetting();
 	demoTask = new demoTaskManager(demoEnv, rManager1);
 
+	// dummy for NULL
+	char dummy_NULLobj[] = "d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d";
+
+	// dummy for front side
+	char dummy_oneobj[] = "d0.0d0.0d1.0d1.0d0.0d0.0d0.0d-1.0d0.0d0.0d0.0d-1.0d-0.02d-0.05d-0.005d0.005d";
+
+	// dummy for back side
+	//char dummy_oneobj[] = "d0.0d0.0d1.0d1.0d0.0d0.0d0.0d1.0d0.0d0.0d0.0d1.0d1d-0.02d0.0d-0.0004d";
+
+	char dummy[1000];
+	strcpy(dummy, "Vd-1"); strcat(dummy, dummy_oneobj);
+	strcat(dummy, "-1"); strcat(dummy, dummy_oneobj);
+	strcat(dummy, "1"); strcat(dummy, dummy_oneobj);
+	strcat(dummy, "-1"); strcat(dummy, dummy_oneobj);
+	//strcat(dummy, "3"); strcat(dummy, dummy_oneobj);
+	//strcat(dummy, "4"); strcat(dummy, dummy_oneobj);
 
 	////////////////////////////////////////////////////////////////
 	////////////////////// adjust below ////////////////////////////
@@ -57,16 +73,16 @@ int main(int argc, char **argv)
 	// load vision data and update demoTask (fix data location, or directly insert string data)
 	char visiondataSKKU[1000];
 	//loadDataFromFile("D:/프로젝트/Pose_example.txt", visiondataSKKU);
-	loadDataFromFile("D:/Documents/Decision-intelligence-2017/srLib2017/workspace/robot/poseData/Pose_example.txt", visiondataSKKU);
-	demoTask->updateEnv(visiondataSKKU);
-	//demoTask->updateEnv(dummy);
+	//loadDataFromFile("C:\Users\robotics\Documents\Decision-intelligence-2017\srLib2017\workspace\robot\poseData", visiondataSKKU);
+	//demoTask->updateEnv(visiondataSKKU);
+	demoTask->updateEnv(dummy);
 	demoTask->setObjectNum();
 
 
 
 	bool collision = rManager1->checkCollision();
 
-	if (~collision)
+	if (!collision)
 		cout << "collision free!" << endl;
 	else
 		cout << "collision OCCURED!" << endl;

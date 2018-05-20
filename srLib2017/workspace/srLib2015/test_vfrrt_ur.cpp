@@ -6,6 +6,9 @@
 #include <time.h>
 #include "RRTmanager\vfrrtManager.h"
 
+#define SINGAVOID
+//#define OBJCLEAR
+
 srSpace gSpace;
 myRenderer* renderer;
 
@@ -20,6 +23,7 @@ vector<Eigen::VectorXd> traj(0);
 // RRT setting
 vfrrtManager* RRTManager = new vfrrtManager;
 objectClearanceVectorField* objClearVF;
+singularityAvoidanceVectorField* singAvoidVF;
 bool addVF = true;
 // Obstacle
 srSystem* obs = new srSystem;
@@ -31,7 +35,9 @@ void updateFunc();
 void URrobotSetting();
 void URrobotManagerSetting();
 void URrrtSetting();
-void obsSetting(srSystem* obs);
+void URobjClearRRTSetting();
+void URsingAvoidRRTSetting();
+void obsSetting(srSystem* obs, double dim = 0.15);
 
 int main(int argc, char **argv)
 {
@@ -43,39 +49,68 @@ int main(int argc, char **argv)
 	initDynamics();
 	URrobotManagerSetting();
 
-
-	URrrtSetting();
+#ifdef OBJCLEAR
+	URobjClearRRTSetting();
 	Eigen::VectorXd test = Eigen::VectorXd::Zero(6);
 	test[0] = 2.0;
 	cout << test.squaredNorm() << endl;
 
-	Eigen::VectorXd start = Eigen::VectorXd::Zero(6);
-	start(2) = -SR_PI_HALF;
-	Eigen::VectorXd goal = Eigen::VectorXd::Zero(6);
-	goal(0) = SR_PI_HALF;
-	goal(2) = -SR_PI_HALF;
-	RRTManager->setStartandGoal(start, goal);
-	
+	//Eigen::VectorXd start = Eigen::VectorXd::Zero(6);
+	//start(2) = -SR_PI_HALF;
+	//Eigen::VectorXd goal = Eigen::VectorXd::Zero(6);
+	//goal(0) = SR_PI_HALF;
+	//goal(2) = -SR_PI_HALF;
+	//RRTManager->setStartandGoal(start, goal);
+	//SE3 Tstart = rManager1->forwardKin(start, &URRobot->gMarkerLink[UR3_Index::MLINK_GRIP]);
+	//SE3 Tgoal = rManager1->forwardKin(goal, &URRobot->gMarkerLink[UR3_Index::MLINK_GRIP]);
 
-	SE3 Tstart = rManager1->forwardKin(start, &URRobot->gMarkerLink[UR3_Index::MLINK_GRIP]);
-	SE3 Tgoal = rManager1->forwardKin(goal, &URRobot->gMarkerLink[UR3_Index::MLINK_GRIP]);
+	Eigen::VectorXd qTemp = Eigen::VectorXd::Zero(6);
+	qTemp[1] = -SR_PI_HALF;
+	qTemp[2] = SR_PI_HALF;
+	qTemp[3] = -SR_PI_HALF;
+	qTemp[4] = -SR_PI_HALF;
+	rManager1->setJointVal(qTemp);
+	SE3 Ttemp = rManager1->forwardKin(qTemp, &URRobot->gMarkerLink[UR3_Index::MLINK_GRIP]);
+	Eigen::VectorXd qTemp2 = qTemp;
+	qTemp2[0] = SR_PI_HALF; 
+	SE3 Ttemp2 = rManager1->forwardKin(qTemp2, &URRobot->gMarkerLink[UR3_Index::MLINK_GRIP]);
 
-	SE3 Tobs = SE3(0.5*(Tstart.GetPosition() + Tgoal.GetPosition()));
+	SE3 Tobs = EulerZYX(Vec3(SR_PI_HALF * 0.5, 0.0, 0.0), Vec3(0.0, 0.0, 0.1)) * Ttemp;
 	obs->GetBaseLink()->SetFrame(Tobs);
 	cout << Tobs << endl;
-	if (addVF)
-	{
-		Vec3 objectLoc = Tobs.GetPosition();
-		objClearVF->setObjectLocation(objectLoc);
-	}
-	
-	rManager1->setJointVal(goal);
 
-	cout << RRTManager->setState(start) << RRTManager->setState(goal);
+	Vec3 objectLoc = Tobs.GetPosition();
+	objClearVF->setObjectLocation(objectLoc, 0.15);
+	
+	
+	//rManager1->setJointVal(goal);
+	RRTManager->setStartandGoal(qTemp, qTemp2);
+	cout << RRTManager->setState(qTemp) << RRTManager->setState(qTemp2);
 	RRTManager->execute(0.1);
 	traj = RRTManager->extractPath();
+	double upstreamCost = objClearVF->getUpstreamCostOfPath(traj);
+	cout << upstreamCost << endl;
+#endif
+#ifdef SINGAVOID
+	URsingAvoidRRTSetting();
+	Eigen::VectorXd qTemp = Eigen::VectorXd::Zero(6);
+	qTemp[1] = -SR_PI_HALF;
+	qTemp[2] = SR_PI_HALF;
+	rManager1->setJointVal(qTemp);
+	Eigen::VectorXd qTemp2 = qTemp;
+	qTemp2[3] = -SR_PI;
+	//qTemp2[2] = 0.5*SR_PI_HALF;
+	rManager1->setJointVal(qTemp2);
+	obs->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -1.0)));
 
-	//cout << pinv( rManager1->getAnalyticJacobian(start, objClearVF->_links[0], false, objClearVF->_offsets[0])) << endl;
+	RRTManager->setStartandGoal(qTemp, qTemp2);
+	cout << RRTManager->setState(qTemp) << RRTManager->setState(qTemp2);
+	RRTManager->execute(0.1);
+	traj = RRTManager->extractPath();
+	double upstreamCost = singAvoidVF->getUpstreamCostOfPath(traj);
+	cout << upstreamCost << endl;
+
+#endif
 	rendering(argc, argv);
 
 	
@@ -142,7 +177,6 @@ void URrobotManagerSetting()
 
 }
 
-
 void URrrtSetting()
 {
 	RRTManager->setSpace(&gSpace);
@@ -151,34 +185,66 @@ void URrrtSetting()
 		planningJoint[i] = (srStateJoint*)URRobot->gJoint[i];
 	RRTManager->setSystem(planningJoint);
 	RRTManager->setStateBound(URRobot->getLowerJointLimit(), URRobot->getUpperJointLimit());
+}
+
+void URobjClearRRTSetting()
+{
+	URrrtSetting();
+
+	// vector field setting
+	objClearVF = new objectClearanceVectorField(rManager1, &URRobot->gMarkerLink[UR3_Index::MLINK_GRIP]);
+	// collision in link 4
+	vector<SE3> offsets(1, SE3(Vec3(0.0, 0.0, 0.60855)));
+	vector<srLink*> links(1, &URRobot->gLink[UR3_Index::LINK_4]);
+	vector<double> weights(1, 0.5);
+
+	// collision in link 5
+	offsets.push_back(SE3(Vec3(0.0, 0.1117, 0.65115 - 0.08472*0.5)));
+	links.push_back(&URRobot->gLink[UR3_Index::LINK_5]);
+	weights.push_back(0.5);
+
+	// collision in link 6
+	offsets.push_back(SE3(Vec3(0.0, 0.153 - 0.08472*0.5, 0.69195)));
+	links.push_back(&URRobot->gLink[UR3_Index::LINK_6]);
+	weights.push_back(0.5);
+
+	objClearVF->setOffsets(offsets);
+	objClearVF->setLinks(links);
+	objClearVF->setWeights(weights);
 
 	if (addVF)
 	{
-		// vector field setting
-		objClearVF = new objectClearanceVectorField(rManager1, &URRobot->gMarkerLink[UR3_Index::MLINK_GRIP]);
-		vector<SE3> offsets(1, SE3(Vec3(0.0, 0.0, 0.60855)));
-		vector<srLink*> links(1, &URRobot->gLink[UR3_Index::LINK_4]);
-		vector<double> weights(1, 0.5);
-		objClearVF->setOffsets(offsets);
-		objClearVF->setLinks(links);
-		objClearVF->setWeights(weights);
 		RRTManager->addVectorField(objClearVF);
 		RRTManager->setLambda(0.001);
 		RRTManager->setAlgorithmMode(vfrrtManager::MODE::GENUINE);
-	}	
+	}
 }
 
-void obsSetting(srSystem* obs)
+void URsingAvoidRRTSetting()
+{
+	URrrtSetting();
+	// vector field setting
+	singAvoidVF = new singularityAvoidanceVectorField(rManager1, &URRobot->gMarkerLink[UR3_Index::MLINK_GRIP]);
+
+	if (addVF)
+	{
+		RRTManager->addVectorField(singAvoidVF);
+		RRTManager->setLambda(0.01);
+		RRTManager->setAlgorithmMode(vfrrtManager::MODE::GENUINE);
+	}
+}
+
+void obsSetting(srSystem* obs, double dim)
 {
 	srLink* obs_base = new srLink;
 	srLink* obs_child = new srLink;
 	srWeldJoint* wJoint = new srWeldJoint;
 	srCollision* colli = new srCollision;
 	obs_base->GetGeomInfo().SetDimension(0.0);
-	obs_child->GetGeomInfo().SetDimension(0.05);
+	obs_child->GetGeomInfo().SetDimension(dim);
 	obs_child->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
 	obs_child->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
-	colli->GetGeomInfo().SetDimension(0.05);
+	colli->GetGeomInfo().SetDimension(dim);
 	colli->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
 	obs_child->AddCollision(colli);
 	wJoint->SetParentLink(obs_base);

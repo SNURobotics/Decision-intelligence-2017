@@ -17,8 +17,9 @@
 #define GET_CURPOS_SIGNAL 2
 #define GRIPPER_ON_SIGNAL 3
 #define GRIPPER_OFF_SIGNAL 4
-#define IMOV_SPEED			20		//500
 #define MAX_TIME_DURATION   5.0
+#define GRASP_WAIT_TIME 50
+#define POSITION_THRESHOLD 1E-3
 class demoEnvironment
 {
 public:
@@ -29,6 +30,7 @@ public:
 	void setObjectFromRobot2VisionData(vector<SE3> objectSE3);
 	void setEnvironmentInSrSpace(srSpace* space);
 public:
+	vector<SE3> objDefaultPositon;
 	SE3 Trobotbase;
 	SE3 Trobotbase2link1;
 	SE3 Tworld2camera;
@@ -95,6 +97,7 @@ public:
 	
 	// Yaskawa client communication functions
 	SE3 YKpos2SE3(const Eigen::VectorXd YKpos);
+	bool checkWaypoint(SE3 Tinit, SE3 Tgoal, int num = 10);
 	bool goToWaypoint(SE3 Twaypoint);	// send robot waypoint commands after planning
 	bool goThroughWaypoints(vector<SE3> Twaypoints);
 	bool checkWaypointReached(SE3 Twaypoint);		// check if robot reached to the waypoint
@@ -125,7 +128,6 @@ public:
 
 	// Place task related variables
 	vector<SE3> goalSE3;			// goal SE3 of objects (should be predefined and be the same as workspace)
-	double posThreshold;			// threshold to decide whether waypoints are reached
 	SE3 homeSE3;
 	SE3 reachOffset;				// offset between grasp point and waypoint right before grasp point (to reach vertically to object)
 	SE3 goalOffset;					// offset between goal point and waypoint right before goal point (to reach vertically to object)
@@ -133,8 +135,6 @@ public:
 	// Robot communication related variables
 	Eigen::VectorXd curRobotPos;	// current robot pos (Rx, Ry, Rz, px, py, pz)
 	SE3 TcurRobot;
-	int maxTimeDuration=10000;
-	int graspWait = 50;
 	//struct MOVE_POS
 	//{
 	//	char Rx[256];

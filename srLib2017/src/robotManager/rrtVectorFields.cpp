@@ -119,9 +119,10 @@ objectClearanceVectorField::~objectClearanceVectorField()
 {
 }
 
-void objectClearanceVectorField::setObjectLocation(Vec3 objectLoc)
+void objectClearanceVectorField::setObjectLocation(Vec3 objectLoc, double size /*= 0.0*/)
 {
 	_objectLoc = objectLoc;
+	_size = size;
 }
 
 void objectClearanceVectorField::setWeights(vector<double> weight)
@@ -145,16 +146,18 @@ Eigen::VectorXd objectClearanceVectorField::getVectorField(const Eigen::VectorXd
 	{
 		Vec3 endeffectorPos = _rManager->forwardKin(pos1, _link, _endeffectorOffset).GetPosition();
 		Vec3 workspaceVector(0.0);
-		double norm_inv;
-		norm_inv = 1.0 / (Norm(endeffectorPos - _objectLoc) + _eps);
-		workspaceVector = (endeffectorPos - _objectLoc) * norm_inv * norm_inv * norm_inv;
+		double norm, dist_inv;
+		norm = Norm(endeffectorPos - _objectLoc);
+		dist_inv = 1.0 / (norm - _size + _eps);
+		workspaceVector = (endeffectorPos - _objectLoc) / norm * dist_inv * dist_inv;
 		Eigen::VectorXd qdot = pinv(_rManager->getAnalyticJacobian(pos1, _link, false, _endeffectorOffset)) * Vec3toVector(workspaceVector);
 		vector<SE3> linkPos = _rManager->forwardKin(pos1, _links, _offsets);
 		for (unsigned int i = 0; i < _weights.size(); i++)
 		{
 			//cout << qdot.transpose() << endl;
-			norm_inv = 1.0 / (Norm(linkPos[i].GetPosition() - _objectLoc) + _eps);
-			workspaceVector = _weights[i] * (linkPos[i].GetPosition() - _objectLoc) * norm_inv * norm_inv * norm_inv;
+			norm = Norm(linkPos[i].GetPosition() - _objectLoc);
+			dist_inv = 1.0 / (norm - _size + _eps);
+			workspaceVector = _weights[i] * (linkPos[i].GetPosition() - _objectLoc) / norm * dist_inv * dist_inv;
 			qdot += pinv(_rManager->getAnalyticJacobian(pos1, _links[i], false, _offsets[i])) * Vec3toVector(workspaceVector);
 		}
 		//cout << qdot.transpose() << endl;

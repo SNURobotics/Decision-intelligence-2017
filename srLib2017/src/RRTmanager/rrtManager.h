@@ -58,7 +58,8 @@ public:
 
 	// print tree
 	void									printTree(TARGET_TREE tree);
-
+	Eigen::VectorXd							getStart();
+	Eigen::VectorXd							getGoal();
 
 
 protected:
@@ -102,7 +103,8 @@ protected:
 protected:
 	rrtTree									startTree;
 	rrtTree									goalTree;
-
+	Eigen::VectorXd							m_start;
+	Eigen::VectorXd							m_goal;
 protected:
 	rrtTree*								pTargetTree1;
 	rrtTree*								pTargetTree2;

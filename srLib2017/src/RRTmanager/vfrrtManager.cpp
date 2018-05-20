@@ -151,13 +151,14 @@ double vfrrtManager::getCost(rrtVertex * pos1, rrtVertex * pos2)
 
 double vfrrtManager::getRRTpathSmoothingCost(rrtVertex * vertex1, rrtVertex * vertex2, vector<rrtVertex*>& removedVertex)
 {
-	//double dist_rrtpath = 0;
 	double cost_rrtpath = 0;
 	rrtVertex* currentVertex = vertex2;
 	while (currentVertex != vertex1)
 	{
-		//dist_rrtpath += currentVertex->distance2parent;
-		cost_rrtpath += currentVertex->cost_bw_parent;
+		if (!_vectorFieldExist)
+			cost_rrtpath += currentVertex->distance2parent;
+		else
+			cost_rrtpath += currentVertex->cost_bw_parent;
 		currentVertex = currentVertex->parentVertex;
 		removedVertex.push_back(currentVertex);
 	}
@@ -168,8 +169,24 @@ double vfrrtManager::getNewPathSmoothingCost(vector<rrtVertex*> vertices)
 {
 	double smoothingCost = 0.0;
 	for (unsigned int i = 0; i < vertices.size() - 1; i++)
-		smoothingCost += getUpstreamCost(vertices[i]->posState, vertices[i + 1]->posState);
+	{
+		if (!_vectorFieldExist)
+			smoothingCost += getDistance(vertices[i]->posState, vertices[i + 1]->posState);
+		else
+			smoothingCost += getUpstreamCost(vertices[i]->posState, vertices[i + 1]->posState);
+	}
 	return smoothingCost;
+}
+
+double vfrrtManager::getUpstreamCostOfPath(const vector<Eigen::VectorXd>& path, double ds /*= 0.01*/)
+{
+	double upstreamCost = 0.0;
+	for (unsigned int i = 0; i < path.size() - 1; i++)
+	{
+		int n = ceil((path[i] - path[i + 1]).norm() / ds);
+		upstreamCost += getUpstreamCost(path[i], path[i + 1], n);
+	}
+	return upstreamCost;
 }
 
 bool vfrrtManager::checkVectorFieldFeasibility()
@@ -263,6 +280,37 @@ rrtVectorField::rrtVectorField()
 
 rrtVectorField::~rrtVectorField()
 {
+}
+
+double rrtVectorField::getUpstreamCost(const Eigen::VectorXd & vertPos1, const Eigen::VectorXd & vertPos2, int n)
+{
+	Eigen::VectorXd dir = vertPos2 - vertPos1;
+	double dist = dir.norm() / (double)n;
+	dir.normalize();
+	Eigen::VectorXd tmpVec;
+	double cost = 0.0;
+	for (int i = 0; i < n + 1; i++)
+	{
+		tmpVec = vertPos1 + (double)i / (double)n * (vertPos2 - vertPos1);
+		tmpVec = getVectorField(tmpVec);
+
+		if (i == 0 || i == n)
+			cost += 0.5*(tmpVec.norm() - tmpVec.transpose()*dir)*dist;
+		else
+			cost += (tmpVec.norm() - tmpVec.transpose()*dir)*dist;
+	}
+	return cost;
+}
+
+double rrtVectorField::getUpstreamCostOfPath(const vector<Eigen::VectorXd>& path, double ds)
+{
+	double upstreamCost = 0.0;
+	for (unsigned int i = 0; i < path.size() - 1; i++)
+	{
+		int n = ceil((path[i] - path[i + 1]).norm() / ds);
+		upstreamCost += getUpstreamCost(path[i], path[i + 1], n);
+	}
+	return upstreamCost;
 }
 
 

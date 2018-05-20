@@ -55,9 +55,11 @@ void rrtManager::setStartandGoal(const Eigen::VectorXd& _start, const Eigen::Vec
 
 	rrtVertex* startVertex = new rrtVertex();
 	startVertex->posState = _start;
+	m_start = _start;
 	
 	rrtVertex* goalVertex = new rrtVertex();
 	goalVertex->posState = _goal;
+	m_goal = _goal;
 	
 	startTree.insert(startVertex);
 	goalTree.insert(goalVertex);
@@ -509,7 +511,7 @@ list<rrtVertex*> rrtManager::smoothingPath(list<rrtVertex*>& path, int smoothing
 		double cmp_rrtpath = getRRTpathSmoothingCost(vertex1, vertex2, removedVertex);
 		double cmp;
 		
-		// get candidate vertices without collision
+		// get candidate vertices without collision (tempVertices should contain both initial and end of vertices)
 		vector<rrtVertex*> tempVertices = getCandidateVertices(vertices);
 
 		if (tempVertices.size() > 0)
@@ -693,6 +695,16 @@ void rrtManager::printTree(TARGET_TREE tree)
 			treeData[i].tail(nDim) = (*iter)->parentVertex->posState;
 	}
 	saveDataToText(treeData, fileName);
+}
+
+Eigen::VectorXd rrtManager::getStart()
+{
+	return m_start;
+}
+
+Eigen::VectorXd rrtManager::getGoal()
+{
+	return m_goal;
 }
 
 

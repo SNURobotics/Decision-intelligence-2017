@@ -28,6 +28,7 @@ public:
 	void									setVectorFieldWeight(double weight);
 
 	double									getUpstreamCost(const Eigen::VectorXd& vertPos1, const Eigen::VectorXd& vertPos2, int n = 10);
+	double									getUpstreamCostOfPath(const vector<Eigen::VectorXd>& path, double ds = 0.01);
 
 protected:
 	virtual Eigen::VectorXd					extendStepSize(const Eigen::VectorXd& vertPos1, const Eigen::VectorXd& vertPos2, double criterion, TARGET_TREE tree = TARGET_TREE::TREE1);
@@ -50,7 +51,7 @@ protected:
 	vfrrtManager::MODE						_algorithmMode;
 
 public:
-	double									_lambda;
+	double									_lambda;	// parameter to sample weight on vector field (the lower, the lower weight on vector field)
 };
 
 
@@ -63,7 +64,11 @@ public:
 	~rrtVectorField();
 
 	virtual	Eigen::VectorXd			getVectorField(const Eigen::VectorXd& pos1) = 0;
+	double							getUpstreamCost(const Eigen::VectorXd& vertPos1, const Eigen::VectorXd& vertPos2, int n = 10);
+	double							getUpstreamCostOfPath(const vector<Eigen::VectorXd>& path, double ds = 0.01);
 	virtual	void					checkFeasibility(int nDim) = 0;
+
+public:
 	bool							_isFeasible;
 	double							_C;		// parameter to control the scale of vector field
 };

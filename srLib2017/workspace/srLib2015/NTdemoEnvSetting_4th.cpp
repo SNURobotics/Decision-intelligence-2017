@@ -11,8 +11,8 @@ demoEnvironment::demoEnvironment(unsigned int _objectNum) {
 		-0.0080738399, -0.0719967823, 0.7784732222);
 
 	// from data in e-mail 180504
-	Tcamera2robotbase = SE3(0.977314, 0.073841, -0.198506, -0.027069, -0.886021, -0.462855, -0.210058, 0.457728, -0.863922, 1.095999, -0.310359, 0.925915);
-	Trobotbase2camera = Inv(Tcamera2robotbase);
+	Trobotbase2camera = SE3(0.977314, 0.073841, -0.198506, -0.027069, -0.886021, -0.462855, -0.210058, 0.457728, -0.863922, 1.095999, -0.310359, 0.925915);
+	Tcamera2robotbase = Inv(Trobotbase2camera);
 
 	// set bin
 	bin = new Bin(0.01);
@@ -26,9 +26,19 @@ demoEnvironment::demoEnvironment(unsigned int _objectNum) {
 	
 	// set objects																											// set objects
 	objectNum = _objectNum;
+
+	objDefaultPositon.resize(objectNum);
+
+	for (unsigned int i = 0; i < objectNum; i++)
+		objDefaultPositon[i] = SE3(Vec3(-1.0, 0.1 * i, 0.0));
+
 	objects.resize(objectNum);
 	for (unsigned int i = 0; i < objectNum; i++)
+	{
 		objects[i] = new workingObject;
+		objects[i]->setBaseLinkFrame(objDefaultPositon[i]);
+	}
+		
 	
 	// set barrier
 	barrier1 = new Barrier1;
@@ -52,7 +62,7 @@ void demoEnvironment::setObjectFromRobot2ObjectText(string loc, bool print /*= f
 	for (unsigned int i = 0; i < min(objectloc.size(), objectNum); i++)
 	{
 		Eigen::VectorXd temp = objectloc[i];
-		SE3 tempSE3 = EulerXYZ(Vec3(temp(0), temp(1), temp(2)), Vec3(temp(3), temp(4), temp(5)));
+		SE3 tempSE3 = EulerZYX(Vec3(temp(2), temp(1), temp(0)), Vec3(temp(3), temp(4), temp(5)));
 		if (print)
 			cout << tempSE3 << endl;
 		objects[i]->setBaseLinkFrame(Trobotbase * tempSE3);
@@ -74,7 +84,7 @@ void demoEnvironment::setObjectFromRobot2VisionData(vector<SE3> objectSE3)
 		if (i < objectNumData)
 			objects[i]->setBaseLinkFrame(Trobotbase * objectSE3[i]);
 		else
-			objects[i]->setBaseLinkFrame(SE3());
+			objects[i]->setBaseLinkFrame(objDefaultPositon[i]);
 	}
 
 	return;
@@ -129,12 +139,21 @@ demoTaskManager::demoTaskManager(demoEnvironment* _demoEnv, MH12RobotManager* _r
 
 	// constants for task (should be modified later!!!)
 	goalSE3.resize(1);
-	goalSE3[0] = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.226026, 0.888197, 0.466843));
+	//goalSE3[0] = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.226026, 0.888197, 0.466843));
+	goalSE3[0] = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.226026, 0.588197, 0.466843));
 	//homeSE3 = EulerZYX(Vec3(SR_PI, -SR_PI_HALF, 0.0), Vec3(1.029, 0.0, 0.814));		// where robot goes when job is done (should be modified)
-	homeSE3 = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.795, 0.0, 0.380));
+	homeSE3 = EulerZYX(Vec3(DEG2RAD(-130.8872), DEG2RAD(2.0460), DEG2RAD(179.0799)), Vec3(0.416704, 0.093653, 0.509468));
 	reachOffset = SE3(Vec3(0.0, 0.0, -0.03));
 	goalOffset = SE3(Vec3(0.0, 0.0, 0.0));
 	TcurRobot = homeSE3;
+
+	lastPlanningJointVal.setZero(6);
+	lastPlanningJointVal[0] = DEG2RAD(0.0);
+	lastPlanningJointVal[1] = DEG2RAD(0.0);
+	lastPlanningJointVal[2] = DEG2RAD(0.0);		// joint 3 15deg error?? robot -15deg ÀÏ¶§¶û ¿©±â 0degÀÏ¶§¶û ºñ½Á
+	lastPlanningJointVal[3] = DEG2RAD(0.0);
+	lastPlanningJointVal[4] = DEG2RAD(-90.0);
+	lastPlanningJointVal[5] = DEG2RAD(0.0);
 }
 
 demoTaskManager::~demoTaskManager()
@@ -191,7 +210,7 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 	vector<vector<double>> v_objPos;					//id, (x, y, z)
 	vector<vector<double>> v_objOri;					//id, (R_x, R_y, R_z)
 	vector<int> v_objCand;							//id, (number of candidate)
-	vector<vector<double>> v_objCandPos;		//id, cand_id, (x, y, z)
+	vector<vector<double>> v_objCandMinMax;		//id, (min_x, max_x, min_y, max_y)
 	vector<vector<double>> v_obsInfo;					//id, (center, size)
 
 	// read char data and save it to vector double format
@@ -202,12 +221,11 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 	v_objPos.resize(0);
 	v_objOri.resize(0);
 	v_objCand.resize(0);
-	v_objCandPos.resize(0);
-	v_obsInfo.resize(0);
+	v_objCandMinMax.resize(0);
 	int objIdx = 0;
 	int objID;
 	int obsID = 0;
-	int max_recv_cnt = 14;
+	int max_recv_cnt = 17;
 	bool obsData = false;
 
 	while (recv_data != NULL)
@@ -223,18 +241,7 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 				v_objID.push_back(objID);
 				v_objPos.resize(objIdx + 1);
 				v_objOri.resize(objIdx + 1);
-				v_objCandPos.resize(objIdx + 1);
-			}
-		}
-		if (obsData && recv_cnt < 1)
-		{
-			objID = atoi(recv_data);
-			if (objID == 0)
-				break;
-			else
-			{
-				vector<double> temp(0);
-				v_obsInfo.push_back(temp);
+				v_objCandMinMax.resize(objIdx + 1);
 			}
 		}
 
@@ -246,40 +253,23 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 			{
 				v_objOri[objIdx].push_back(atof(recv_data));
 			}
-			else if (13 <= recv_cnt && recv_cnt < 14)
+			else if (13 <= recv_cnt && recv_cnt < 17)
 			{
-				if (atoi(recv_data) == -1)
-				{
-					v_objCand.push_back(0);
-					max_recv_cnt = 14;
-				}
-				else
-				{
-					v_objCand.push_back(atoi(recv_data));
-					max_recv_cnt = 14 + 3 * v_objCand[objIdx];
-				}
-			}
-			else if (14 <= recv_cnt && recv_cnt < max_recv_cnt)
-			{
-				v_objCandPos[objIdx].push_back(atof(recv_data));
+				v_objCandMinMax[objIdx].push_back(atof(recv_data));
 			}
 
-		}
-		else if (recv_cnt > 0)
-		{
-			v_obsInfo[v_obsInfo.size() - 1].push_back(atof(recv_data));
 		}
 
 		recv_data = strtok(NULL, "d");
 		recv_cnt += 1;
 
-		if (!obsData && recv_cnt == max_recv_cnt)
+		if (recv_cnt == max_recv_cnt)
 		{
+			if (!obsData)
+				objIdx++;
 			recv_cnt = 0;
-			objIdx++;
+			obsData = false;
 		}
-		if (obsData && recv_cnt == 7)
-			recv_cnt = 0;
 	}
 
 	objectNumData = objIdx;
@@ -295,14 +285,26 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 		SE3 objSE3_Camera = SE3(v_objOri[i][0], v_objOri[i][1], v_objOri[i][2], v_objOri[i][3], v_objOri[i][4], v_objOri[i][5], v_objOri[i][6], v_objOri[i][7], v_objOri[i][8], v_objPos[i][0], v_objPos[i][1], v_objPos[i][2]);
 
 		// coordinate change
-		objectSE3[i] = demoEnv->Tcamera2robotbase * objSE3_Camera;
+		objectSE3[i] = demoEnv->Trobotbase2camera * objSE3_Camera;
 
 		// is z direcition of objectSE3 is upward
 		isHead[i] = (objectSE3[i][8] > 0);
-
-		objectGraspCandidatePos[i].resize(v_objCand[i]);
-		for (unsigned int j = 0; j < (unsigned int)v_objCand[i]; j++)
-			objectGraspCandidatePos[i][j] = Vec3(v_objCandPos[i][0 + 3 * j], v_objCandPos[i][1 + 3 * j], v_objCandPos[i][2 + 3 * j]);
+		
+		if (isHead[i])
+		{
+			objectGraspCandidatePos[i].resize(1);
+			objectGraspCandidatePos[i][0] = Vec3(v_objCandMinMax[i][0], v_objCandMinMax[i][2], 0.0036);
+		}
+		else
+		{
+			objectGraspCandidatePos[i].resize(5);
+			objectGraspCandidatePos[i][0] = Vec3(0.5 * (v_objCandMinMax[i][0] + v_objCandMinMax[i][1]), 0.5 * (v_objCandMinMax[i][2] + v_objCandMinMax[i][3]), -0.0004);
+			objectGraspCandidatePos[i][1] = Vec3(0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], 0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], -0.0004);
+			objectGraspCandidatePos[i][2] = Vec3(0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], 0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], -0.0004);
+			objectGraspCandidatePos[i][3] = Vec3(0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], 0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], -0.0004);
+			objectGraspCandidatePos[i][4] = Vec3(0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], 0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], -0.0004);
+		}		
+		
 	}
 	cout << objIdx << endl;
 }
@@ -335,6 +337,7 @@ bool demoTaskManager::setObjectNum()
 					break;
 				}
 				headSE3 = EulerZYX(Vec3(0.0, 0.0, SR_PI), curObjectData.objectGraspCandidatePos[i][j]);
+				cout << headSE3 << endl;
 			}
 			else
 				headSE3 = SE3(curObjectData.objectGraspCandidatePos[i][j]);
@@ -371,17 +374,29 @@ void demoTaskManager::setGoalNum(int goalNum)
 bool demoTaskManager::moveJob(int goalNum)
 {
 	setGoalNum(goalNum);
-	bool reached = reachObject();
-	bool grasped = graspObject();
-	bool lifted1 = moveWorkspaceDisplacement(Vec3(0.0, 0.0, 0.05));
-	bool moved = moveObject();
+	bool reached = false;
+	bool grasped = false;
+	bool lifted1 = false;
+	bool moved = false;
+	while(!reached)
+		reached = reachObject();
+	while(!grasped)
+		grasped = graspObject();
+	while(!lifted1)
+		lifted1 = moveWorkspaceDisplacement(Vec3(0.0, 0.0, 0.05));
+	while(!moved)
+		moved = moveObject();
 	return (reached && grasped && lifted1 && moved);
 }
 
 bool demoTaskManager::returnJob()
 {
-	bool released = releaseObject();
-	bool returned = goHomepos();
+	bool released = false;
+	while(!released)
+		released = releaseObject();
+	bool returned = false;
+	while(!returned)
+		returned = goHomepos();
 	return (released && returned);
 }
 
@@ -402,11 +417,10 @@ bool demoTaskManager::reachObject(bool usePlanning /*= false*/)
 			}
 			else if ((std::clock() - start) / (double)CLOCKS_PER_SEC > MAX_TIME_DURATION)
 			{
-				printf("isGetPos == false and setCurPos failed!!!\n");
+				printf("isGetPos == false and setCurPos failed at reachObject!!!\n");
 				return false;
 			}
 		}
-
 	}
 }
 bool demoTaskManager::graspObject()
@@ -417,7 +431,7 @@ bool demoTaskManager::graspObject()
 	// send message to robot to grasp (gripper command ??)
 	bool grasped = false;
 	gripperOnSignal();
-	Sleep(graspWait);
+	Sleep(GRASP_WAIT_TIME);
 	grasped = true;
 	////////////////////////////////////////////////////////
 	return moved && grasped;
@@ -426,7 +440,7 @@ bool demoTaskManager::graspObject()
 bool demoTaskManager::moveObject(bool usePlanning /*= false*/)
 {
 	if (robotrrtManager == NULL || !usePlanning)
-		return goToWaypoint(goalSE3[curGoalID] * goalOffset);
+		return goToWaypoint(goalSE3[curGoalID] * goalOffset * curGraspOffset);
 	else
 	{
 		getCurPosSignal();
@@ -441,7 +455,7 @@ bool demoTaskManager::moveObject(bool usePlanning /*= false*/)
 			}
 			else if ((std::clock() - start) / (double)CLOCKS_PER_SEC > MAX_TIME_DURATION)
 			{
-				printf("isGetPos == false and setCurPos failed!!!\n");
+				printf("isGetPos == false and setCurPos failed at moveObject!!!\n");
 				return false;
 			}
 		}
@@ -454,7 +468,7 @@ bool demoTaskManager::releaseObject()
 	// send message to robot to release (gripper command ??)
 	bool released = false;
 	gripperOffSignal();
-	Sleep(graspWait);
+	Sleep(GRASP_WAIT_TIME);
 	released = true;
 	////////////////////////////////////////////////////////
 	return released;
@@ -479,7 +493,7 @@ bool demoTaskManager::goHomepos(bool usePlanning /*= false*/)
 			}
 			else if ((std::clock() - start) / (double)CLOCKS_PER_SEC > MAX_TIME_DURATION)
 			{
-				printf("isGetPos == false and setCurPos failed!!!\n");
+				printf("isGetPos == false and setCurPos failed at goHomepos!!!\n");
 				return false;
 			}
 		}
@@ -488,19 +502,7 @@ bool demoTaskManager::goHomepos(bool usePlanning /*= false*/)
 
 bool demoTaskManager::moveWorkspaceDisplacement(Vec3 disp)
 {
-	getCurPosSignal();
-	std::clock_t start = std::clock();
-	while (1)
-	{
-		if (isGetPos == true)
-			return goToWaypoint(SE3(disp) * TcurRobot);
-		else if ((std::clock() - start) / (double)CLOCKS_PER_SEC > MAX_TIME_DURATION)
-		{
-			printf("isGetPos == false and setCurPos failed!!!\n");
-			return false;
-		}
-	}
-	return false;
+	return goToWaypoint(SE3(disp) * TcurRobot);
 }
 
 vector<SE3> demoTaskManager::planBetweenWaypoints(SE3 Tinit, SE3 Tgoal, unsigned int midNum /* = 1*/)
@@ -548,7 +550,34 @@ vector<SE3> demoTaskManager::planBetweenWaypoints(SE3 Tinit, SE3 Tgoal, unsigned
 
 SE3 demoTaskManager::YKpos2SE3(const Eigen::VectorXd YKpos)
 {
-	return EulerXYZ(Vec3(YKpos[0], YKpos[1], YKpos[2]), Vec3(YKpos[3], YKpos[4], YKpos[5]));
+	return EulerZYX(Vec3(YKpos[2], YKpos[1], YKpos[0]), Vec3(YKpos[3], YKpos[4], YKpos[5]));
+}
+
+bool demoTaskManager::checkWaypoint(SE3 Tinit, SE3 Tgoal, int num /*= 10*/)
+{
+	vector<Vec3> tempVec(num);
+	vector<SO3> tempOri(num);
+	Vec3 axis = Log(Inv(Tinit.GetOrientation()) * Tgoal.GetOrientation());
+	bool okay = true;
+	for (int i = 0; i < num; i++)
+	{
+		tempOri[i] = Tinit.GetOrientation() * Exp(axis * (double)i / (num - 1));
+		tempVec[i] = Tinit.GetPosition() * (double)(num-1-i) / (num - 1) + Tgoal.GetPosition() * (double)i / (num - 1);
+
+		SE3 Ttemp(tempOri[i], tempVec[i]);
+		int flag;
+		Eigen::VectorXd qval;
+		qval.setZero(6);
+		qval[0] = DEG2RAD(0.0);
+		qval[1] = DEG2RAD(0.0);
+		qval[2] = DEG2RAD(0.0);		// joint 3 15deg error?? robot -15deg ÀÏ¶§¶û ¿©±â 0degÀÏ¶§¶û ºñ½Á
+		qval[3] = DEG2RAD(0.0);
+		qval[4] = DEG2RAD(-90.0);
+		qval[5] = DEG2RAD(0.0);
+		Eigen::VectorXd q = rManager->inverseKin(Ttemp, &robot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, qval);
+		okay &= (flag == 0);
+	}
+	return okay;
 }
 
 std::string to_string_custom(double x)
@@ -561,21 +590,26 @@ bool demoTaskManager::goToWaypoint(SE3 Twaypoint)
 {
 	getCurPosSignal();
 	MOVE_POS posForSend;
+	vector<double> tempOri = SO3ToEulerZYX(Twaypoint.GetOrientation());
+	Vec3 tempPos = Twaypoint.GetPosition();
+	printf("x: %f, y: %f, z: %f, Rx: %f, Ry: %f, Rz: %f\n", tempPos[0], tempPos[1], tempPos[2], tempOri[2], tempOri[1], tempOri[0]);
+	
 	std::clock_t start = std::clock();
 	while (1) 
 	{
 		if (isGetPos == true)
 		{
+			//cout << Twaypoint * Inv(TcurRobot) << endl;
 			// send message to robot (imov command) here
-			vector<double> tempOri = SO3ToEulerXYZ((Twaypoint * Inv(TcurRobot)).GetOrientation());
+			vector<double> tempOri = SO3ToEulerZYX((Twaypoint.GetOrientation() * Inv(TcurRobot.GetOrientation())));
 			//std::cout << Inv(TcurRobot)* Twaypoint << std::endl;
-			Vec3 tempPos = (Twaypoint * Inv(TcurRobot)).GetPosition();
+			Vec3 tempPos = Twaypoint.GetPosition() - TcurRobot.GetPosition();
 
 			
 			// convert rad -> deg, m -> mm
-			posForSend.Rx= tempOri[0]*(180.0/SR_PI);
+			posForSend.Rx= tempOri[2]*(180.0/SR_PI);
 			posForSend.Ry= tempOri[1]*(180.0/SR_PI);
-			posForSend.Rz= tempOri[2]*(180.0/SR_PI);
+			posForSend.Rz= tempOri[0]*(180.0/SR_PI);
 			posForSend.X = tempPos[0] * 1000.0;
 			posForSend.Y = tempPos[1] * 1000.0;
 			posForSend.Z = tempPos[2] * 1000.0;
@@ -592,7 +626,7 @@ bool demoTaskManager::goToWaypoint(SE3 Twaypoint)
 		}
 		else if ((std::clock() - start) / (double)CLOCKS_PER_SEC > MAX_TIME_DURATION)
 		{
-			printf("isGetPos == false and setCurPos failed!!!\n");
+			printf("isGetPos == false and setCurPos failed (goToWaypoint())!!!\n");
 			return false;
 		}	
 	}
@@ -607,10 +641,9 @@ bool demoTaskManager::goToWaypoint(SE3 Twaypoint)
 	//	if (checkWaypointReached(Twaypoint))
 	//		return true;
 	//}
-	int sleepTime;
-	sleepTime = ceil((abs(posForSend.Rx) + abs(posForSend.Ry) + abs(posForSend.Rz) + abs(posForSend.X) + abs(posForSend.Y) + abs(posForSend.Z)) / IMOV_SPEED);
-	Sleep(sleepTime);
-	return true;
+	//return true;
+
+	return checkWaypointReached(Twaypoint);
 }
 
 bool demoTaskManager::goThroughWaypoints(vector<SE3> Twaypoints)
@@ -624,13 +657,19 @@ bool demoTaskManager::goThroughWaypoints(vector<SE3> Twaypoints)
 bool demoTaskManager::checkWaypointReached(SE3 Twaypoint)
 {
 	getCurPosSignal();
+	std::clock_t start = std::clock();
 	while (1)
 	{
 		if (isGetPos == true)
 		{
 			std::cout<< "isGetPos == true at checkWaypointReached() function" << std::endl;
-			if (distSE3(Twaypoint, TcurRobot) < posThreshold)
+			if (distSE3(Twaypoint, TcurRobot) < POSITION_THRESHOLD)
 				return true;
+			return false;
+		}
+		else if ((std::clock() - start) / (double)CLOCKS_PER_SEC > MAX_TIME_DURATION)
+		{
+			printf("isGetPos == false and setCurPos failed at checkWaypointReached() function!!!\n");
 			return false;
 		}
 	}

@@ -53,7 +53,7 @@ public:
 	objectClearanceVectorField(robotManager* rManager, srLink* link);
 	~objectClearanceVectorField();
 
-	void								setObjectLocation(Vec3 objectLoc);
+	void								setObjectLocation(Vec3 objectLoc, double size = 0.0);
 	void								setWeights(vector<double> weight);
 	void								setLinks(vector<srLink*> links);
 	void								setOffsets(vector<SE3> offsets);
@@ -62,6 +62,7 @@ public:
 
 public:
 	double								_eps;					// epsilon value to avoid zero denominator
+	double								_size;					// assume sphere object of radius = size, and repulsive point is located at the nearest point to the links
 	Vec3								_objectLoc;				// location of point object to avoid
 	vector<srLink*>						_links;					// links which should also avoid object
 	vector<SE3>							_offsets;				// offsets of the location of avoidance from link fixed frame
