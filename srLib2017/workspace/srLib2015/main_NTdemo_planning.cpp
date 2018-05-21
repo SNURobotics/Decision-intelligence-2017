@@ -27,6 +27,7 @@ srJoint::ACTTYPE actType = srJoint::ACTTYPE::TORQUE;
 demoTaskManager* demoTask;
 
 void initDynamics();
+void loadDataFromFile(string loc, char* visiondata);
 void rendering(int argc, char **argv);
 void updateFunc();
 void envSetting();
@@ -39,7 +40,7 @@ vector<Eigen::VectorXd> traj(0);
 
 int main(int argc, char **argv)
 {
-
+	clock_t rrt1_begin, rrt1_end, rrt2_begin, rrt2_end, rrt3_begin, rrt3_end;
 
 	////////////////////////////////////////////////////////////////
 	////////////////////// initialize //////////////////////////////
@@ -55,39 +56,35 @@ int main(int argc, char **argv)
 	demoTask = new demoTaskManager(demoEnv, rManager1);
 
 
-	qval.setZero(6);
-	qval[0] = DEG2RAD(0.0);
-	qval[1] = DEG2RAD(0.0);
-	qval[2] = DEG2RAD(0.0);		// joint 3 15deg error?? robot -15deg 일때랑 여기 0deg일때랑 비슷
-	qval[3] = DEG2RAD(0.0);
-	qval[4] = DEG2RAD(-93.472);
-	qval[5] = DEG2RAD(0.08);
-	//rManager1->setJointVal(qval);
-	//cout << MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() << endl;
-	int flag;
-	//cout << EulerXYZ(Vec3(DEG2RAD(179), DEG2RAD(-2), DEG2RAD(9)), Vec3(0.0, 0.0, 0.0)) << endl;
-	// set object SE(3) from text
-	//demoEnv->setObjectFromRobot2ObjectText("C:/Users/snurobotics/Documents/판단지능/4차년도/PoseData180504/data00/Pose.txt", false);
-
-	// dummy for front side
-	char dummy_oneobj[] = "d0.0d0.0d1.0d1.0d0.0d0.0d0.0d-1.0d0.0d0.0d0.0d-1.0d1d-0.02d0.0d0.0036d";
-
-	// dummy for back side
-	//char dummy_oneobj[] = "d0.0d0.0d1.0d1.0d0.0d0.0d0.0d1.0d0.0d0.0d0.0d1.0d1d-0.02d0.0d-0.0004d";
-
-	char dummy[1000];
-	strcpy(dummy, "Vd0"); strcat(dummy, dummy_oneobj);
-	strcat(dummy, "1"); strcat(dummy, dummy_oneobj);
-	strcat(dummy, "2"); strcat(dummy, dummy_oneobj);
-	strcat(dummy, "3"); strcat(dummy, dummy_oneobj);
-	strcat(dummy, "4"); strcat(dummy, dummy_oneobj);
+	srand((unsigned int)time(0));
+	vector<unsigned int> random_dummy;
+	random_dummy.resize(10);
+	for (unsigned int i = 0; i < 10; i++)
+		random_dummy[i] = rand() % 1000;
 	
+	char dummy[1000];
+	strcpy(dummy, "Vd0d");
+
+
+
+	strcat(dummy, std::to_string(-0.1 + random_dummy[0] / 5000.0).c_str()); strcat(dummy, "d");
+	strcat(dummy, std::to_string(-0.05 + random_dummy[1] / 10000.0).c_str()); strcat(dummy, "d");
+	strcat(dummy, std::to_string(0.9 + random_dummy[2] / 10000.0).c_str()); strcat(dummy, "d");
+
+	SE3 T_obj = EulerZYX(Vec3(random_dummy[3] / 6000.0 * SR_PI, random_dummy[4] / 6000.0 * SR_PI, random_dummy[5] / 6000.0 * SR_PI));
+
+	for (unsigned int i = 0; i < 9; i++)
+	{
+		strcat(dummy, std::to_string(T_obj[i]).c_str()); strcat(dummy, "d");
+	}
+	strcat(dummy, "-0.02d-0.035d-0.0025d0.0025d");
+
 	demoTask->updateEnv(dummy);
 	demoTask->setObjectNum();
 
 	bool collision = rManager1->checkCollision();
 
-	if (~collision)
+	if (!collision)
 		cout << "collision free!" << endl;
 	else
 		cout << "collision OCCURED!" << endl;
@@ -97,7 +94,7 @@ int main(int argc, char **argv)
 	////////////// test planning ////////////////////////
 	/////////////////////////////////////////////////////
 	demoTask->setRobotRRTManager();
-	demoTask->curObjID = 0;
+	//demoTask->curObjID = 0;
 	Eigen::VectorXd qIKinit(6);
 	qIKinit[0] = 0.0417904; qIKinit[1] = 0.283304; qIKinit[2] = -0.513154;
 	qIKinit[3] = -0.555694; qIKinit[4] = -1.0634; qIKinit[5] = 0.356608;
@@ -119,12 +116,14 @@ int main(int argc, char **argv)
 	///////////////// check reach task
 	/////////////////////////////////////////////////////
 	SE3 curobjSE3 = demoTask->curObjectData.objectSE3[demoTask->curObjID];
+	cout << curobjSE3 << endl;
 	SE3 curGraspOffset = demoTask->curGraspOffset;
 	cout << "grasp offset" << endl;
 	cout << curGraspOffset << endl;
 	SE3 reachOffset = demoTask->reachOffset;
+	rrt1_begin = clock();
 	demoTask->planBetweenWaypoints(demoTask->homeSE3, curobjSE3 * curGraspOffset * reachOffset);
-
+	rrt1_end = clock();
 	//Eigen::VectorXd qtemp = rManager1->inverseKin(demoTask->homeSE3, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, qIKinit);
 	//rManager1->setJointVal(qtemp);
 	//cout << flag << endl;
@@ -136,13 +135,17 @@ int main(int argc, char **argv)
 	SE3 goalSE3 = demoTask->goalSE3[0];
 	SE3 goalOffset = demoTask->goalOffset;
 	demoTask->robotrrtManager->attachObject(demoEnv->objects[demoTask->curObjID], &demoTask->robot->gMarkerLink[MH12_Index::MLINK_GRIP], Inv(curGraspOffset));
+	rrt2_begin = clock();
 	demoTask->planBetweenWaypoints(curobjSE3 * curGraspOffset, goalSE3 * curGraspOffset * goalOffset);
+	rrt2_end = clock();
 	//demoTask->moveObject(true);
 	vector<Eigen::VectorXd> traj2 = demoTask->tempTraj;
 	vector<SE3> objTraj2 = demoTask->tempObjTraj;
 	//////////////// check return task
 	demoTask->robotrrtManager->detachObject();
+	rrt3_begin = clock();
 	demoTask->planBetweenWaypoints(goalSE3 * curGraspOffset, demoTask->homeSE3);
+	rrt3_end = clock();
 	//demoTask->goHomepos(true);
 	vector<Eigen::VectorXd> traj3 = demoTask->tempTraj;
 	vector<SE3> objTraj3 = demoTask->tempObjTraj;
@@ -162,6 +165,8 @@ int main(int argc, char **argv)
 	//Eigen::VectorXd qGoal = rManager1->inverseKin(curobjSE3 * curGraspOffset * reachOffset, &demoTask->robot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, qIKinit);
 	//cout << flag << endl;
 	//rManager1->setJointVal(qGoal);
+	cout << "수행시간: " << ((rrt3_end - rrt3_begin) + (rrt2_end - rrt2_begin) + (rrt1_end - rrt1_begin)) << endl;
+
 	rendering(argc, argv);
 
 	return 0;
@@ -266,4 +271,22 @@ void MHRobotManagerSetting()
 void envSetting()
 {
 	demoEnv->setEnvironmentInSrSpace(&gSpace);
+}
+
+void loadDataFromFile(string loc, char* visiondata)
+{
+	std::ifstream fin;
+	fin.open(loc);
+
+	int i = 0;
+
+	if (fin.is_open())
+	{
+		while (!fin.eof())
+		{
+			fin >> visiondata[i];
+			i++;
+		}
+	}
+	fin.close();
 }

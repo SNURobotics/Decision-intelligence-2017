@@ -315,6 +315,7 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 bool demoTaskManager::setObjectNum()
 {
 	int flag;
+	bool collision;
 	SE3 headSE3 = SE3();
 	Eigen::VectorXd qval;
 
@@ -352,14 +353,21 @@ bool demoTaskManager::setObjectNum()
 				// Need to be deleted at actual simulation
 				rManager->setJointVal(qval);
 
-				printf("object number %d is set!\n", curObjID+1);
-				cout << qval.transpose() << endl;
-				//curGraspOffset = SE3(curObjectData.objectGraspCandidatePos[i][j]);
-				curGraspOffset = headSE3;
-				return true;
+				collision = rManager->checkCollision();
+
+				if (!collision)
+				{
+					printf("object number %d is set!\n", curObjID + 1);
+					cout << qval.transpose() << endl;
+					//curGraspOffset = SE3(curObjectData.objectGraspCandidatePos[i][j]);
+					curGraspOffset = headSE3;
+					return true;
+				}
 			}
 		}
 	}
+
+	rManager->setJointVal(lastPlanningJointVal);
 
 	printf("none of objects are not reachable!\n");
 	return false;
