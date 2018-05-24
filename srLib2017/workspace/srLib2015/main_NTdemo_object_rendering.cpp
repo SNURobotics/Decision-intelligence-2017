@@ -72,10 +72,10 @@ int main(int argc, char **argv)
 	////////////////////////////////////////////////////////////////
 	// load vision data and update demoTask (fix data location, or directly insert string data)
 	char visiondataSKKU[1000];
-	//loadDataFromFile("D:/프로젝트/Pose_example.txt", visiondataSKKU);
+	loadDataFromFile("D:/프로젝트/Pose_example.txt", visiondataSKKU);
 	//loadDataFromFile("C:\Users\robotics\Documents\Decision-intelligence-2017\srLib2017\workspace\robot\poseData", visiondataSKKU);
-	//demoTask->updateEnv(visiondataSKKU);
-	demoTask->updateEnv(dummy);
+	demoTask->updateEnv(visiondataSKKU);
+	//demoTask->updateEnv(dummy);
 	demoTask->setObjectNum();
 
 
