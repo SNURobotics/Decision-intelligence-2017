@@ -171,9 +171,9 @@ int main(int argc, char **argv)
 	//rManager1->setJointVal(qval);
 	//cout << flag << endl;
 	
-	rendering(argc, argv);
+	//rendering(argc, argv);
 	
-	//communicationFunc(argc, argv);
+	communicationFunc(argc, argv);
 
 	//만약 while 루프를 돌리지 않을 경우 무한정 서버를 기다리는 함수, 실제 사용하지는 않는다.
 	//serv.WaitServer(); 
@@ -201,7 +201,7 @@ void communicationFunc(int argc, char **argv)
 		//serv.SendMessageToClient("G");
 		if (!sentInit)
 		{
-			printf("push the botton");
+			printf("push the botton to get vision data\n");
 			getchar();
 			serv.SendMessageToClient("I");
 			sentInit = true;
@@ -236,6 +236,8 @@ void communicationFunc(int argc, char **argv)
 					break;
 					/////////////////////////////////////////////
 				}
+			printf("push the botton to do return job\n");
+			getchar();
 			bool isReturned = demoTask->returnJob();
 			sentInit = false;
 		}

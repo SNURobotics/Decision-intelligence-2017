@@ -6,8 +6,8 @@
 #include <time.h>
 #include "RRTmanager\vfrrtManager.h"
 
-#define SINGAVOID
-//#define OBJCLEAR
+//#define SINGAVOID
+#define OBJCLEAR
 
 srSpace gSpace;
 myRenderer* renderer;
@@ -24,7 +24,7 @@ vector<Eigen::VectorXd> traj(0);
 vfrrtManager* RRTManager = new vfrrtManager;
 objectClearanceVectorField* objClearVF;
 singularityAvoidanceVectorField* singAvoidVF;
-bool addVF = true;
+bool addVF = false;
 // Obstacle
 srSystem* obs = new srSystem;
 //srSystem* obs1 = new srSystem;
@@ -75,21 +75,36 @@ int main(int argc, char **argv)
 	qTemp2[0] = SR_PI_HALF; 
 	SE3 Ttemp2 = rManager1->forwardKin(qTemp2, &URRobot->gMarkerLink[UR3_Index::MLINK_GRIP]);
 
-	SE3 Tobs = EulerZYX(Vec3(SR_PI_HALF * 0.5, 0.0, 0.0), Vec3(0.0, 0.0, 0.1)) * Ttemp;
-	obs->GetBaseLink()->SetFrame(Tobs);
-	cout << Tobs << endl;
-
-	Vec3 objectLoc = Tobs.GetPosition();
-	objClearVF->setObjectLocation(objectLoc, 0.15);
+	
 	
 	
 	//rManager1->setJointVal(goal);
-	RRTManager->setStartandGoal(qTemp, qTemp2);
-	cout << RRTManager->setState(qTemp) << RRTManager->setState(qTemp2);
-	RRTManager->execute(0.1);
-	traj = RRTManager->extractPath();
-	double upstreamCost = objClearVF->getUpstreamCostOfPath(traj);
-	cout << upstreamCost << endl;
+	int testNum = 1;
+	double upstreamCostMean = 0.0;
+	int testiter = 0;
+	while (testiter < testNum)
+	{
+		SE3 Tobs = EulerZYX(Vec3(SR_PI_HALF * 0.5, 0.0, 0.0), Vec3(0.0, 0.0, 0.1) + 0.0*Vec3((double) rand()/RAND_MAX, (double) rand() / RAND_MAX, (double) rand() / RAND_MAX)) * Ttemp;
+		obs->GetBaseLink()->SetFrame(Tobs);
+		cout << Tobs << endl;
+
+		Vec3 objectLoc = Tobs.GetPosition();
+		objClearVF->setObjectLocation(objectLoc, 0.15);
+
+		RRTManager->setStartandGoal(qTemp, qTemp2);
+		cout << RRTManager->setState(qTemp) << RRTManager->setState(qTemp2);
+		RRTManager->execute(0.1);
+		if (RRTManager->isExecuted())
+		{
+			testiter++;
+			traj = RRTManager->extractPath();
+			double upstreamCost = objClearVF->getUpstreamCostOfPath(traj);
+			//cout << upstreamCost << endl;
+			upstreamCostMean += upstreamCost;
+		}
+	}
+	upstreamCostMean /= (double)testNum;
+	cout << upstreamCostMean << endl;
 #endif
 #ifdef SINGAVOID
 	URsingAvoidRRTSetting();
@@ -103,13 +118,20 @@ int main(int argc, char **argv)
 	rManager1->setJointVal(qTemp2);
 	obs->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -1.0)));
 
-	RRTManager->setStartandGoal(qTemp, qTemp2);
-	cout << RRTManager->setState(qTemp) << RRTManager->setState(qTemp2);
-	RRTManager->execute(0.1);
-	traj = RRTManager->extractPath();
-	double upstreamCost = singAvoidVF->getUpstreamCostOfPath(traj);
-	cout << upstreamCost << endl;
-
+	int testNum = 10;
+	double upstreamCostMean = 0.0;
+	for (int testiter = 0; testiter < testNum; testiter++)
+	{
+		RRTManager->setStartandGoal(qTemp, qTemp2);
+		cout << RRTManager->setState(qTemp) << RRTManager->setState(qTemp2);
+		RRTManager->execute(0.1);
+		traj = RRTManager->extractPath();
+		double upstreamCost = singAvoidVF->getUpstreamCostOfPath(traj);
+		//cout << upstreamCost << endl;
+		upstreamCostMean += upstreamCost;
+	}
+	upstreamCostMean /= (double)testNum;
+	cout << upstreamCostMean << endl;
 #endif
 	rendering(argc, argv);
 

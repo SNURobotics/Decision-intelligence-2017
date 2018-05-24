@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 	Eigen::VectorXd qIKinit(6);
 	qIKinit[0] = 0.0417904; qIKinit[1] = 0.283304; qIKinit[2] = -0.513154;
 	qIKinit[3] = -0.555694; qIKinit[4] = -1.0634; qIKinit[5] = 0.356608;
-	demoTask->lastPlanningJointVal = qIKinit;
+	//demoTask->lastPlanningJointVal = qIKinit;
 	//cout << curobjSE3 << endl;
 	//cout << demoTask->curGraspOffset << endl;
 	// print home pos
@@ -125,36 +125,36 @@ int main(int argc, char **argv)
 	SE3 reachOffset = demoTask->reachOffset;
 	demoTask->planBetweenWaypoints(demoTask->homeSE3, curobjSE3 * curGraspOffset * reachOffset);
 
-	//Eigen::VectorXd qtemp = rManager1->inverseKin(demoTask->homeSE3, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, qIKinit);
-	//rManager1->setJointVal(qtemp);
-	//cout << flag << endl;
-	//demoTask->reachObject(true);
-	vector<Eigen::VectorXd> traj1 = demoTask->tempTraj;
-	vector<SE3> objTraj1 = demoTask->tempObjTraj;
-	///////////////// check move task
-	/////////////////////////////////////////////////////
-	SE3 goalSE3 = demoTask->goalSE3[0];
-	SE3 goalOffset = demoTask->goalOffset;
-	demoTask->robotrrtManager->attachObject(demoEnv->objects[demoTask->curObjID], &demoTask->robot->gMarkerLink[MH12_Index::MLINK_GRIP], Inv(curGraspOffset));
-	demoTask->planBetweenWaypoints(curobjSE3 * curGraspOffset, goalSE3 * curGraspOffset * goalOffset);
-	//demoTask->moveObject(true);
-	vector<Eigen::VectorXd> traj2 = demoTask->tempTraj;
-	vector<SE3> objTraj2 = demoTask->tempObjTraj;
-	//////////////// check return task
-	demoTask->robotrrtManager->detachObject();
-	demoTask->planBetweenWaypoints(goalSE3 * curGraspOffset, demoTask->homeSE3);
-	//demoTask->goHomepos(true);
-	vector<Eigen::VectorXd> traj3 = demoTask->tempTraj;
-	vector<SE3> objTraj3 = demoTask->tempObjTraj;
+	////Eigen::VectorXd qtemp = rManager1->inverseKin(demoTask->homeSE3, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, qIKinit);
+	////rManager1->setJointVal(qtemp);
+	////cout << flag << endl;
+	////demoTask->reachObject(true);
+	//vector<Eigen::VectorXd> traj1 = demoTask->tempTraj;
+	//vector<SE3> objTraj1 = demoTask->tempObjTraj;
+	/////////////////// check move task
+	///////////////////////////////////////////////////////
+	//SE3 goalSE3 = demoTask->goalSE3[0];
+	//SE3 goalOffset = demoTask->goalOffset;
+	//demoTask->robotrrtManager->attachObject(demoEnv->objects[demoTask->curObjID], &demoTask->robot->gMarkerLink[MH12_Index::MLINK_GRIP], Inv(curGraspOffset));
+	//demoTask->planBetweenWaypoints(curobjSE3 * curGraspOffset, goalSE3 * curGraspOffset * goalOffset);
+	////demoTask->moveObject(true);
+	//vector<Eigen::VectorXd> traj2 = demoTask->tempTraj;
+	//vector<SE3> objTraj2 = demoTask->tempObjTraj;
+	////////////////// check return task
+	//demoTask->robotrrtManager->detachObject();
+	//demoTask->planBetweenWaypoints(goalSE3 * curGraspOffset, demoTask->homeSE3);
+	////demoTask->goHomepos(true);
+	//vector<Eigen::VectorXd> traj3 = demoTask->tempTraj;
+	//vector<SE3> objTraj3 = demoTask->tempObjTraj;
 
-	vector<Eigen::VectorXd> totalTraj = traj1;
-	vector<SE3> totalObjTraj = objTraj1;
-	totalTraj.insert(totalTraj.end(), traj2.begin(), traj2.end());
-	totalTraj.insert(totalTraj.end(), traj3.begin(), traj3.end());
-	totalObjTraj.insert(totalObjTraj.end(), objTraj2.begin(), objTraj2.end());
-	totalObjTraj.insert(totalObjTraj.end(), objTraj3.begin(), objTraj3.end());
-	demoTask->tempTraj = totalTraj;
-	demoTask->tempObjTraj = totalObjTraj;
+	//vector<Eigen::VectorXd> totalTraj = traj1;
+	//vector<SE3> totalObjTraj = objTraj1;
+	//totalTraj.insert(totalTraj.end(), traj2.begin(), traj2.end());
+	//totalTraj.insert(totalTraj.end(), traj3.begin(), traj3.end());
+	//totalObjTraj.insert(totalObjTraj.end(), objTraj2.begin(), objTraj2.end());
+	//totalObjTraj.insert(totalObjTraj.end(), objTraj3.begin(), objTraj3.end());
+	//demoTask->tempTraj = totalTraj;
+	//demoTask->tempObjTraj = totalObjTraj;
 	//Eigen::VectorXd qInit = rManager1->inverseKin(demoTask->homeSE3, &demoTask->robot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, qIKinit);
 	//cout << flag << endl;
 	//cout << qInit.transpose() << endl;
