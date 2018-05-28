@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2010
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ESF_Client_Example_JOB_IMOV", "ESF_Client_Example_JOB_IMOV\ESF_Client_Example_JOB_IMOV.vcxproj", "{ACB175D0-6F02-4339-85B2-1D06E47F6E9A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D5639856-0294-47A0-8665-6AFDC7FD03AA} = {D5639856-0294-47A0-8665-6AFDC7FD03AA}
+		{ED8465DD-8442-4D0D-9468-6FFE51B1C507} = {ED8465DD-8442-4D0D-9468-6FFE51B1C507}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LieGroup", "LieGroup\LieGroup.vcxproj", "{D5639856-0294-47A0-8665-6AFDC7FD03AA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{ED8465DD-8442-4D0D-9468-6FFE51B1C507} = {ED8465DD-8442-4D0D-9468-6FFE51B1C507}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "common", "common\common.vcxproj", "{ED8465DD-8442-4D0D-9468-6FFE51B1C507}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ACB175D0-6F02-4339-85B2-1D06E47F6E9A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{ACB175D0-6F02-4339-85B2-1D06E47F6E9A}.Debug|Win32.Build.0 = Debug|Win32
+		{ACB175D0-6F02-4339-85B2-1D06E47F6E9A}.Release|Win32.ActiveCfg = Release|Win32
+		{ACB175D0-6F02-4339-85B2-1D06E47F6E9A}.Release|Win32.Build.0 = Release|Win32
+		{D5639856-0294-47A0-8665-6AFDC7FD03AA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D5639856-0294-47A0-8665-6AFDC7FD03AA}.Debug|Win32.Build.0 = Debug|Win32
+		{D5639856-0294-47A0-8665-6AFDC7FD03AA}.Release|Win32.ActiveCfg = Release|Win32
+		{D5639856-0294-47A0-8665-6AFDC7FD03AA}.Release|Win32.Build.0 = Release|Win32
+		{ED8465DD-8442-4D0D-9468-6FFE51B1C507}.Debug|Win32.ActiveCfg = Debug|Win32
+		{ED8465DD-8442-4D0D-9468-6FFE51B1C507}.Debug|Win32.Build.0 = Debug|Win32
+		{ED8465DD-8442-4D0D-9468-6FFE51B1C507}.Release|Win32.ActiveCfg = Release|Win32
+		{ED8465DD-8442-4D0D-9468-6FFE51B1C507}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {57AA39D8-6A54-491D-87AD-24ED4638F6A9}
+	EndGlobalSection
+EndGlobal

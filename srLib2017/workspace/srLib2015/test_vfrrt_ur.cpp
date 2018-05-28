@@ -24,7 +24,7 @@ vector<Eigen::VectorXd> traj(0);
 vfrrtManager* RRTManager = new vfrrtManager;
 objectClearanceVectorField* objClearVF;
 singularityAvoidanceVectorField* singAvoidVF;
-bool addVF = false;
+bool addVF = true;
 // Obstacle
 srSystem* obs = new srSystem;
 //srSystem* obs1 = new srSystem;

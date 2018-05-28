@@ -25,10 +25,14 @@ demoEnvironment* demoEnv;
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::TORQUE;
 demoTaskManager* demoTask;
 
+// temp sphere
+srSystem* sph;
+
 void initDynamics();
 void rendering(int argc, char **argv);
 void updateFunc();
 void envSetting();
+void sphereSetting();
 void MHRobotSetting();
 void MHRobotManagerSetting();
 void URrrtSetting();
@@ -40,15 +44,19 @@ int main(int argc, char **argv)
 	////////////////////////////////////////////////////////////////
 	////////////////////// initialize //////////////////////////////
 	////////////////////////////////////////////////////////////////
-	// set the number of objects in demoEnvirionment function (Since object data is now using dummy data, set the number as 1)
+	// set the number of objects in demoEnvirionment function
 	demoEnv = new demoEnvironment(1);
 	// add robot to system
-    MHRobotSetting();
+	MHRobotSetting();
+	// add tiny sphere to system
+	sphereSetting();
 	// add bin and objects to system
 	envSetting();
 	initDynamics();
 	MHRobotManagerSetting();
 	demoTask = new demoTaskManager(demoEnv, rManager1);
+	demoTask->setRobotRRTManager();
+	//cout << demoEnv->Trobotbase2camera * demoEnv->Tcamera2robotbase;
 
 	qval.setZero(6);
 	qval[0] = DEG2RAD(0.0);
@@ -56,38 +64,47 @@ int main(int argc, char **argv)
 	qval[2] = DEG2RAD(0.0);		// joint 3 15deg error?? robot -15deg 일때랑 여기 0deg일때랑 비슷
 	qval[3] = DEG2RAD(0.0);
 	qval[4] = DEG2RAD(-93.472);
-	qval[5] = DEG2RAD(0.08);
-	//rManager1->setJointVal(qval);
+	qval[5] = DEG2RAD(0.0);
+	////rManager1->setJointVal(qval);
+	//cout << MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() << endl;
+	//int flag;
+	//cout << EulerXYZ(Vec3(DEG2RAD(179), DEG2RAD(-2), DEG2RAD(9)), Vec3(0.0, 0.0, 0.0)) << endl;
+	//// set object SE(3) from text
+	////demoEnv->setObjectFromRobot2ObjectText("C:/Users/snurobotics/Documents/판단지능/4차년도/PoseData180504/data00/Pose.txt", false);
+
+	//// dummy for front side
+	//char dummy_oneobj[] = "d0.0d0.0d1.0d1.0d0.0d0.0d0.0d-1.0d0.0d0.0d0.0d-1.0d1d-0.02d0.0d0.0036d";
+
+	//// dummy for back side
+	////char dummy_oneobj[] = "d0.0d0.0d1.0d1.0d0.0d0.0d0.0d1.0d0.0d0.0d0.0d1.0d1d-0.02d0.0d-0.0004d";
+
+	//char dummy[1000];
+	//strcpy(dummy, "Vd0"); strcat(dummy, dummy_oneobj);
+	//strcat(dummy, "1"); strcat(dummy, dummy_oneobj);
+	//strcat(dummy, "2"); strcat(dummy, dummy_oneobj);
+	//strcat(dummy, "3"); strcat(dummy, dummy_oneobj);
+	//strcat(dummy, "4"); strcat(dummy, dummy_oneobj);
+	//
+	//demoTask->updateEnv(dummy);
+	//demoTask->setObjectNum();
+
+	//bool collision = rManager1->checkCollision();
+
+	//if (~collision)
+	//	cout << "collision free!" << endl;
+	//else
+	//	cout << "collision OCCURED!" << endl;
+
+	int flag = 0;
+	//cout << EulerZYX(Vec3(DEG2RAD(179), DEG2RAD(-2), DEG2RAD(9)), Vec3(0.0, 0.0, 0.0)) << endl;
+	SE3 robotDeliverPos = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.226048, 0.871385, 0.466791));
+	qval = rManager1->inverseKin(robotDeliverPos, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, qval);
+	rManager1->setJointVal(qval);
+	cout << flag << endl;
 	cout << MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() << endl;
-	int flag;
-	cout << EulerXYZ(Vec3(DEG2RAD(179), DEG2RAD(-2), DEG2RAD(9)), Vec3(0.0, 0.0, 0.0)) << endl;
-	// set object SE(3) from text
-	//demoEnv->setObjectFromRobot2ObjectText("C:/Users/snurobotics/Documents/판단지능/4차년도/PoseData180504/data00/Pose.txt", false);
+	//demoEnv->objects[0]->setBaseLinkFrame(demoTask->goalSE3[1]);
 
-	// dummy for front side
-	char dummy_oneobj[] = "d0.0d0.0d1.0d1.0d0.0d0.0d0.0d-1.0d0.0d0.0d0.0d-1.0d1d-0.02d0.0d0.0036d";
-
-	// dummy for back side
-	//char dummy_oneobj[] = "d0.0d0.0d1.0d1.0d0.0d0.0d0.0d1.0d0.0d0.0d0.0d1.0d1d-0.02d0.0d-0.0004d";
-
-	char dummy[1000];
-	strcpy(dummy, "Vd0"); strcat(dummy, dummy_oneobj);
-	strcat(dummy, "1"); strcat(dummy, dummy_oneobj);
-	strcat(dummy, "2"); strcat(dummy, dummy_oneobj);
-	strcat(dummy, "3"); strcat(dummy, dummy_oneobj);
-	strcat(dummy, "4"); strcat(dummy, dummy_oneobj);
-	
-	demoTask->updateEnv(dummy);
-	demoTask->setObjectNum();
-
-	bool collision = rManager1->checkCollision();
-
-	if (~collision)
-		cout << "collision free!" << endl;
-	else
-		cout << "collision OCCURED!" << endl;
-
-
+	sph->GetBaseLink()->SetFrame(MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() * SE3(Vec3(0.0, 0.0, 0.005)));
 	rendering(argc, argv);
 
 	return 0;
@@ -178,4 +195,16 @@ void MHRobotManagerSetting()
 void envSetting()
 {
 	demoEnv->setEnvironmentInSrSpace(&gSpace);
+}
+
+void sphereSetting()
+{
+	sph = new srSystem;
+	srLink* link = new srLink;
+	link->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
+	link->GetGeomInfo().SetDimension(0.01);
+	link->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
+	sph->SetBaseLink(link);
+	sph->SetBaseLinkType(srSystem::FIXED);
+	gSpace.AddSystem(sph);
 }

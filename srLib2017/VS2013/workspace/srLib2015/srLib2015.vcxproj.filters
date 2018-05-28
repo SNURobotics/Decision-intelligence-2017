@@ -107,5 +107,8 @@
     <ClCompile Include="..\..\..\workspace\srLib2015\main_NTdemo_object_rendering.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\main_NTdemoServer_SKKUtest.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

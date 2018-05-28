@@ -87,6 +87,7 @@ public:
 
 	// do job functions (all functions send waypoints to robot, and return true when robot moved successfully)
 	bool reachObject(bool usePlanning = false);		// plan to reach candidate SE3
+	bool goToGraspPos();
 	bool graspObject();		// go to object and actuate gripper
 	bool moveObject(bool usePlanning = false);		// plan to goal SE3
 	bool releaseObject();	// go to exact goal and release object
@@ -163,7 +164,7 @@ public:
 	vector<Eigen::VectorXd> tempTraj;
 	vector<SE3> tempObjTraj;
 private:
-	int curGoalID;					// current goal ID 
+	int curGoalID;					// current goal ID (0: head, 1: tail)
 };
 
 

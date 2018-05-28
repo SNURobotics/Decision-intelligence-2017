@@ -138,9 +138,18 @@ demoTaskManager::demoTaskManager(demoEnvironment* _demoEnv, MH12RobotManager* _r
 	robotrrtManager = NULL;
 
 	// constants for task (should be modified later!!!)
-	goalSE3.resize(1);
+	goalSE3.resize(2);
 	//goalSE3[0] = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.226026, 0.888197, 0.466843));
-	goalSE3[0] = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.226026, 0.588197, 0.466843));
+	//goalSE3[0] = EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.226026, 0.588197, 0.466843));
+
+	// goal setting (18.05.25.)
+	double temp_r = 0.04 - 0.017*0.5 / sqrt(3.0);
+	double temp_r2 = 0.001;
+	SE3 temp_robot2objhead = EulerZYX(Vec3(-SR_PI / 6.0, 0.0, SR_PI), Vec3(temp_r * cos(SR_PI / 6.0), - temp_r * sin(SR_PI / 6.0), 0.0));
+	SE3 temp_robot2objtail = EulerZYX(Vec3(-SR_PI / 6.0, 0.0, 0.0), Vec3(temp_r * cos(SR_PI / 6.0) + temp_r2 * sin(SR_PI / 6.0), - temp_r * sin(SR_PI / 6.0) + temp_r2 * cos(SR_PI / 6.0), 0.004));
+	goalSE3[0] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.226048, 0.871385, 0.466791)) * temp_robot2objhead; // head case
+	goalSE3[1] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.226048, 0.871385, 0.466791)) * temp_robot2objtail; // tail case
+
 	//homeSE3 = EulerZYX(Vec3(SR_PI, -SR_PI_HALF, 0.0), Vec3(1.029, 0.0, 0.814));		// where robot goes when job is done (should be modified)
 	homeSE3 = EulerZYX(Vec3(DEG2RAD(-130.8872), DEG2RAD(2.0460), DEG2RAD(179.0799)), Vec3(0.416704, 0.093653, 0.509468));
 	reachOffset = SE3(Vec3(0.0, 0.0, -0.03));
@@ -282,10 +291,12 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 	// transform vector data into Vec3 and SE3 format
 	for (unsigned int i = 0; i < objectNumData; i++)
 	{
-		SE3 objSE3_Camera = SE3(v_objOri[i][0], v_objOri[i][1], v_objOri[i][2], v_objOri[i][3], v_objOri[i][4], v_objOri[i][5], v_objOri[i][6], v_objOri[i][7], v_objOri[i][8], v_objPos[i][0], v_objPos[i][1], v_objPos[i][2]);
+		SE3 objSE3_Camera = SE3(v_objOri[i][0], v_objOri[i][3], v_objOri[i][6], v_objOri[i][1], v_objOri[i][4], v_objOri[i][7], v_objOri[i][2], v_objOri[i][5], v_objOri[i][8], v_objPos[i][0], v_objPos[i][1], v_objPos[i][2]);
 
 		// coordinate change
-		objectSE3[i] = demoEnv->Trobotbase2camera * objSE3_Camera;
+		//objectSE3[i] = demoEnv->Trobotbase2camera * objSE3_Camera;
+		// coordinate change is not needed
+		objectSE3[i] = objSE3_Camera;
 
 		// is z direcition of objectSE3 is upward
 		isHead[i] = (objectSE3[i][8] > 0);
@@ -293,16 +304,22 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 		if (isHead[i])
 		{
 			objectGraspCandidatePos[i].resize(1);
-			objectGraspCandidatePos[i][0] = Vec3(v_objCandMinMax[i][0], v_objCandMinMax[i][2], 0.0036);
+			//objectGraspCandidatePos[i][0] = Vec3(v_objCandMinMax[i][0], v_objCandMinMax[i][2], 0.0036);
+			objectGraspCandidatePos[i][0] = Vec3(v_objCandMinMax[i][0], v_objCandMinMax[i][2], 0.0);
 		}
 		else
 		{
 			objectGraspCandidatePos[i].resize(5);
-			objectGraspCandidatePos[i][0] = Vec3(0.5 * (v_objCandMinMax[i][0] + v_objCandMinMax[i][1]), 0.5 * (v_objCandMinMax[i][2] + v_objCandMinMax[i][3]), -0.0004);
+/*			objectGraspCandidatePos[i][0] = Vec3(0.5 * (v_objCandMinMax[i][0] + v_objCandMinMax[i][1]), 0.5 * (v_objCandMinMax[i][2] + v_objCandMinMax[i][3]), -0.0004);
 			objectGraspCandidatePos[i][1] = Vec3(0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], 0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], -0.0004);
 			objectGraspCandidatePos[i][2] = Vec3(0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], 0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], -0.0004);
 			objectGraspCandidatePos[i][3] = Vec3(0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], 0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], -0.0004);
-			objectGraspCandidatePos[i][4] = Vec3(0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], 0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], -0.0004);
+			objectGraspCandidatePos[i][4] = Vec3(0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], 0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], -0.0004);*/ 
+			objectGraspCandidatePos[i][0] = Vec3(0.5 * (v_objCandMinMax[i][0] + v_objCandMinMax[i][1]), 0.5 * (v_objCandMinMax[i][2] + v_objCandMinMax[i][3]), -0.004);
+			objectGraspCandidatePos[i][1] = Vec3(0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], 0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], -0.004);
+			objectGraspCandidatePos[i][2] = Vec3(0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], 0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], -0.004);
+			objectGraspCandidatePos[i][3] = Vec3(0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], 0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], -0.004);
+			objectGraspCandidatePos[i][4] = Vec3(0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], 0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], -0.004);
 		}		
 		
 	}
@@ -338,7 +355,7 @@ bool demoTaskManager::setObjectNum()
 					break;
 				}
 				headSE3 = EulerZYX(Vec3(0.0, 0.0, SR_PI), curObjectData.objectGraspCandidatePos[i][j]);
-				cout << headSE3 << endl;
+				//cout << headSE3 << endl;
 			}
 			else
 				headSE3 = SE3(curObjectData.objectGraspCandidatePos[i][j]);
@@ -358,9 +375,15 @@ bool demoTaskManager::setObjectNum()
 				if (!collision)
 				{
 					printf("object number %d is set!\n", curObjID + 1);
-					cout << qval.transpose() << endl;
+					//cout << qval.transpose() << endl;
 					//curGraspOffset = SE3(curObjectData.objectGraspCandidatePos[i][j]);
 					curGraspOffset = headSE3;
+
+					// set goal num (0: head, 1: tail)
+					if (curObjectData.isHead[i])
+						setGoalNum(0);
+					else
+						setGoalNum(1);
 					return true;
 				}
 			}
@@ -383,18 +406,22 @@ bool demoTaskManager::moveJob(int goalNum)
 {
 	setGoalNum(goalNum);
 	bool reached = false;
+	bool reachedGraspPos = false;
 	bool grasped = false;
 	bool lifted1 = false;
 	bool moved = false;
 	while(!reached)
 		reached = reachObject();
+	while (!reachedGraspPos)
+		reachedGraspPos = goToGraspPos();
 	while(!grasped)
 		grasped = graspObject();
 	while(!lifted1)
 		lifted1 = moveWorkspaceDisplacement(Vec3(0.0, 0.0, 0.05));
 	while(!moved)
 		moved = moveObject();
-	return (reached && grasped && lifted1 && moved);
+	//return (reached && reachedGraspPos && grasped && lifted1 && moved);
+	return true;
 }
 
 bool demoTaskManager::returnJob()
@@ -405,7 +432,8 @@ bool demoTaskManager::returnJob()
 	bool returned = false;
 	while(!returned)
 		returned = goHomepos();
-	return (released && returned);
+	//return (released && returned);
+	return true;
 }
 
 bool demoTaskManager::reachObject(bool usePlanning /*= false*/)
@@ -431,18 +459,19 @@ bool demoTaskManager::reachObject(bool usePlanning /*= false*/)
 		}
 	}
 }
+bool demoTaskManager::goToGraspPos()
+{
+	return goToWaypoint(curObjectData.objectSE3[curObjID] * curGraspOffset);
+}
 bool demoTaskManager::graspObject()
 {
-	bool moved = false;
-	moved = goToWaypoint(curObjectData.objectSE3[curObjID] * curGraspOffset);
-
 	// send message to robot to grasp (gripper command ??)
 	bool grasped = false;
 	gripperOnSignal();
 	Sleep(GRASP_WAIT_TIME);
 	grasped = true;
 	////////////////////////////////////////////////////////
-	return moved && grasped;
+	return grasped;
 }
 
 bool demoTaskManager::moveObject(bool usePlanning /*= false*/)

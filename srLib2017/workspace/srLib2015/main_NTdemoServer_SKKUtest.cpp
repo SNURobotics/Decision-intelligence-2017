@@ -15,6 +15,7 @@
 #include <Windows.h>
 #include <windowsx.h>
 
+//#define USE_COMMUNICATION // when using communication
 
 // srSpace and renderer
 srSpace gSpace;
@@ -38,6 +39,7 @@ void envSetting();
 void MHRobotSetting();
 void MHRobotManagerSetting();
 void URrrtSetting();
+void loadDataFromFile(string loc, char* visiondata);
 int activeJointIdx =0;
 vector<Eigen::VectorXd> traj(0);
 
@@ -93,7 +95,7 @@ int main(int argc, char **argv)
 	////////////////////// initialize //////////////////////////////
 	////////////////////////////////////////////////////////////////
 	// set the number of objects in demoEnvirionment function
-	demoEnv = new demoEnvironment(1);
+	demoEnv = new demoEnvironment(5);
 	// add robot to system
     MHRobotSetting();
 	// add bin and objects to system
@@ -102,74 +104,6 @@ int main(int argc, char **argv)
 	MHRobotManagerSetting();
 	demoTask = new demoTaskManager(demoEnv, rManager1);
 	demoTask->setRobotRRTManager();
-	//cout << demoEnv->Trobotbase2camera * demoEnv->Tcamera2robotbase;
-
-	SE3 temp = EulerZYX(Vec3(DEG2RAD(129.3924), DEG2RAD(0.1922), DEG2RAD(176.9429)), Vec3());
-	SE3 result = EulerZYX(Vec3(DEG2RAD(129.3926), DEG2RAD(-0.5806), DEG2RAD(176.3080)), Vec3());
-
-	SE3 disp = Inv(temp) * result ;
-	//cout << temp << endl;
-	//cout << result << endl;
-	//cout << Log(disp.GetOrientation()) / Log(disp.GetOrientation()).Normalize() << endl;
-	//cout << RAD2DEG(Log(disp.GetOrientation()).Normalize()) << endl;
-
-
-	// for communication (dummy window dialog)
-	WNDCLASS windowClass = {};
-	//windowClass.lpfnWndProc = demoTask->WindowProcedure;
-	windowClass.lpfnWndProc = getMessageFromRobot;
-	LPCWSTR windowClassName = L"srLibServer";
-	windowClass.lpszClassName = windowClassName;
-	if (!RegisterClass(&windowClass)) {
-		std::cout << "Failed to register window class" << std::endl;
-		return 1;
-	}
-	HWND messageWindow = CreateWindow(windowClassName, 0, 0, 0, 0, 0, 0, HWND_MESSAGE, 0, 0, 0);
-	if (!messageWindow) {
-		std::cout << "Failed to create message-only window" << std::endl;
-		return 1;
-	}
-	/////////////////////// test 18.05.11. /////////////////////////
-	//demoTask->getCurPosSignal();
-	//demoTask->gripperOnSignal();
-	//demoTask->gripperOffSignal();
-	//vector<SE3> Ttemps(2);
-	//Ttemps[0] = SE3(Vec3(0.0, 0.0, 0.05)) * demoTask->TcurRobot;
-	//Ttemps[1] = SE3(Vec3(-0.05, 0.0, 0.0)) * Ttemps[0];
-	//demoTask->goThroughWaypoints(Ttemps);
-
-	/////////////////////// test 18.05.18. /////////////////////////
-	//SE3 Ttemp = EulerZYX(Vec3(0.0, 0.0, DEG2RAD(-5.0)), Vec3(0.0, 0.0, 0.02)) * demoTask->TcurRobot;
-	//demoTask->goToWaypoint(Ttemp);
-	//SE3 curGraspOffset = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.0036));
-	//demoTask->goToWaypoint(demoTask->homeSE3);
-	//SE3 waypoiny1 = EulerZYX(Vec3(DEG2RAD(0.0), DEG2RAD(2.0460), DEG2RAD(179.0799)), Vec3(0.416704, 0.093653, 0.509468));
-	//demoTask->goToWaypoint(waypoiny1);
-	//demoTask->goToWaypoint(demoTask->goalSE3[0] * curGraspOffset);
-
-
-	/////////////////////// test 18.05.25. /////////////////////////
-	for (int i = 0; i < 1000; i++)
-	{
-		demoTask->getCurPosSignal();
-		Sleep(150);
-	}
-	bool task1 = demoTask->goToWaypoint(demoTask->homeSE3);
-	SE3 tempGoal = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.226048, 0.871385, 0.466791));
-	//bool task2 = demoTask->goToWaypoint(tempGoal);
-	//bool task3 = demoTask->goToWaypoint(demoTask->homeSE3);
-	demoTask->getCurPosSignal();
-	vector<SE3> Twaypoints = demoTask->planBetweenWaypoints(demoTask->TcurRobot, tempGoal);
-	//traj = demoTask->tempTraj;
-	bool task4 = demoTask->goThroughWaypoints(Twaypoints);
-	demoTask->getCurPosSignal();
-	vector<SE3> Twaypoints2 = demoTask->planBetweenWaypoints(demoTask->TcurRobot, demoTask->homeSE3);
-	//traj = demoTask->tempTraj;
-	bool task5 = demoTask->goThroughWaypoints(Twaypoints2);
-
-
-
-
 
 	qval.setZero(6);
 	qval[0] = DEG2RAD(0.0);
@@ -180,18 +114,29 @@ int main(int argc, char **argv)
 	qval[5] = DEG2RAD(0.0);
 	rManager1->setJointVal(qval);
 
-	//SE3 Ttemp = SE3(Vec3(0.0, 0.0, -0.2))*MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame();
-	//cout << Ttemp << endl;
 	int flag;
-	//cout << EulerZYX(Vec3(DEG2RAD(179), DEG2RAD(-2), DEG2RAD(9)), Vec3(0.0, 0.0, 0.0)) << endl;
 	
-	//qval = rManager1->inverseKin(demoTask->goalSE3[0] * demoTask->goalOffset * curGraspOffset, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, qval);
-	//rManager1->setJointVal(qval);
-	//cout << flag << endl;
+	qval = rManager1->inverseKin(demoTask->homeSE3, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, qval);
+	rManager1->setJointVal(qval);
 	
-	//rendering(argc, argv);
-	
+	////////////////////////////////// when using communication //////////////////////////////////////
+#ifdef USE_COMMUNICATION
 	communicationFunc(argc, argv);
+#else
+	char visiondataSKKU[1000];
+	// if load file from txt
+	//loadDataFromFile("../../../workspace/robot/poseData/TextExample.txt", visiondataSKKU);
+	//printf("%s\n", visiondataSKKU);
+	/////////////////////////////////////////
+	// input string directly
+	strcpy(visiondataSKKU, "V1.d-0.8615d6.395e-003d0.1991d0.9403d0.2304d0.2503d-0.3366d0.7365d0.5867d-4.916e-002d-0.636d0.7702d-1.d-1.d-1.d-1.d1.d-0.9382d-4.005e-002d0.2501d-0.8364d-0.5466d-4.17e-002d0.5161d-0.8108d0.2762d-0.1848d0.2095d0.9602d-1.d-1.d-1.d-1.d1.d-0.8756d-0.1131d0.2517d0.4978d0.858d0.1266d-0.8672d0.495d5.443e-002d-1.597e-002d-0.1369d0.9905d-1.d-1.d-1.d-1.d1.d-0.9752d-0.1559d0.2589d0.9197d-0.3067d0.2451d0.3136d0.9495d1.112e-002d-0.2361d6.665e-002d0.9694d-1.d-1.d-1.d-1.d1.d-1.083d-5.901e-003d0.2216d0.543d-0.8376d-6.02e-002d0.6758d0.3933d0.6234d-0.4985d-0.3792d0.7796d-1.d-1.d-1.d-1.d");
+	/////////////////////////////////////////
+	demoTask->updateEnv(visiondataSKKU);
+	demoTask->setObjectNum();
+#endif
+	////////////////////////////////// when not using communication //////////////////////////////////
+
+	rendering(argc, argv);
 
 	//만약 while 루프를 돌리지 않을 경우 무한정 서버를 기다리는 함수, 실제 사용하지는 않는다.
 	//serv.WaitServer(); 
@@ -208,9 +153,11 @@ void communicationFunc(int argc, char **argv)
 	static bool sentInit = false;
 	while (TRUE) 
 	{
+
 		//Receiving data from HYU client
 		char* received_data = serv.RecevData();
 		communication_flag = received_data[0];
+
 		if (!sentInit)
 		{
 			printf("push the botton to get vision data\n");
@@ -222,26 +169,16 @@ void communicationFunc(int argc, char **argv)
 
 		if (communication_flag == 'V')
 		{
+			//cout << "Vision communicate called" << endl;
+
 			// vision data
 			printf("%s\n", received_data);
 			demoTask->updateEnv(received_data);
 			demoTask->setObjectNum();
-
-			// move robot to deliver workingobject
-			bool isJobFinished = demoTask->moveJob(goalNum);
-			if (isJobFinished)
-				while (1)
-				{
-					// when dual arm robot task is finished
-					break;
-					/////////////////////////////////////////////
-				}
-
-			// return to home pos
-			printf("push the botton to do return job\n");
-			getchar();
-			bool isReturned = demoTask->returnJob();
+			//////////////////////////////////////////////////////////////////////
 			sentInit = false;
+
+			break;
 		}
 	}
 }
@@ -283,7 +220,7 @@ void updateFunc()
 	static int cnt = 0;
 	static int trajcnt = 0;
 	cnt++;
-	demoTask->rManager->setJointVal(demoTask->robotrrtManager->getStart());
+	//demoTask->rManager->setJointVal(demoTask->robotrrtManager->getStart());
 	if (cnt % 10 == 0)
 		trajcnt++;
 	if (traj.size() > 0)
@@ -331,4 +268,22 @@ void MHRobotManagerSetting()
 void envSetting()
 {
 	demoEnv->setEnvironmentInSrSpace(&gSpace);
+}
+
+void loadDataFromFile(string loc, char* visiondata)
+{
+	std::ifstream fin;
+	fin.open(loc);
+
+	int i = 0;
+
+	if (fin.is_open())
+	{
+		while (!fin.eof())
+		{
+			fin >> visiondata[i];
+			i++;
+		}
+	}
+	fin.close();
 }
