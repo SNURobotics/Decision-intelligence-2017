@@ -253,7 +253,7 @@ LRESULT CESF_Client_Example_JOB_IMOVDlg::OnTraceMsg(WPARAM wParam, LPARAM lParam
 		CWnd *hTargetWnd = CWnd::FindWindow(L"srLibServer" , NULL);
 		if (hTargetWnd == NULL)
 		{
-			std::cout << "Can't find the target window" << std::endl;
+			AddStrToList(_T("Can't find the target window!"));
 			return 0;
 		}
 		if (hTargetWnd) {

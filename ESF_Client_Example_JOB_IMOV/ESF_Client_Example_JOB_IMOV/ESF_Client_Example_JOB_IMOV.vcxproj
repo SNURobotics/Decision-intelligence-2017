@@ -14,7 +14,7 @@
     <ProjectGuid>{ACB175D0-6F02-4339-85B2-1D06E47F6E9A}</ProjectGuid>
     <RootNamespace>ESF_Client_Example_JOB_IMOV</RootNamespace>
     <Keyword>MFCProj</Keyword>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
