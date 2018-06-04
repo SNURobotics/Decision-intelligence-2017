@@ -15,6 +15,7 @@
 #include <Windows.h>
 #include <windowsx.h>
 
+#define USE_TASK_MANAGER_FUNC
 
 // srSpace and renderer
 srSpace gSpace;
@@ -155,20 +156,21 @@ int main(int argc, char **argv)
 		demoTask->getCurPosSignal();
 		Sleep(150);
 	}
-	bool task1 = demoTask->goToWaypoint(demoTask->homeSE3);
-	SE3 tempGoal = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.226048, 0.871385, 0.466791));
-	//bool task2 = demoTask->goToWaypoint(tempGoal);
-	//bool task3 = demoTask->goToWaypoint(demoTask->homeSE3);
-	demoTask->getCurPosSignal();
-	vector<SE3> Twaypoints = demoTask->planBetweenWaypoints(demoTask->TcurRobot, tempGoal);
-	//traj = demoTask->tempTraj;
-	bool task4 = demoTask->goThroughWaypoints(Twaypoints);
-	demoTask->getCurPosSignal();
-	vector<SE3> Twaypoints2 = demoTask->planBetweenWaypoints(demoTask->TcurRobot, demoTask->homeSE3);
-	//traj = demoTask->tempTraj;
-	bool task5 = demoTask->goThroughWaypoints(Twaypoints2);
+	//bool task1 = demoTask->goToWaypoint(demoTask->homeSE3);
+	//SE3 tempGoal = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.226048, 0.871385, 0.466791));
+	////bool task2 = demoTask->goToWaypoint(tempGoal);
+	////bool task3 = demoTask->goToWaypoint(demoTask->homeSE3);
+	//demoTask->getCurPosSignal();
+	//vector<SE3> Twaypoints = demoTask->planBetweenWaypoints(demoTask->TcurRobot, tempGoal);
+	////traj = demoTask->tempTraj;
+	//bool task4 = demoTask->goThroughWaypoints(Twaypoints);
+	//demoTask->getCurPosSignal();
+	//vector<SE3> Twaypoints2 = demoTask->planBetweenWaypoints(demoTask->TcurRobot, demoTask->homeSE3);
+	////traj = demoTask->tempTraj;
+	//bool task5 = demoTask->goThroughWaypoints(Twaypoints2);
 
 
+	/////////////////////// test 18.06.05. /////////////////////////
 
 
 
@@ -205,7 +207,6 @@ int main(int argc, char **argv)
 
 void communicationFunc(int argc, char **argv)
 {
-	static int goalNum = 0;
 	static bool sentInit = false;
 	while (TRUE) 
 	{
@@ -228,20 +229,61 @@ void communicationFunc(int argc, char **argv)
 			demoTask->updateEnv(received_data);
 			demoTask->setObjectNum();
 
+#ifdef USE_TASK_MANAGER_FUNC
 			// move robot to deliver workingobject
-			bool isJobFinished = demoTask->moveJob(goalNum);
-			if (isJobFinished)
-				while (1)
-				{
-					// when dual arm robot task is finished
-					break;
-					/////////////////////////////////////////////
-				}
+			bool isJobFinished = demoTask->moveJob();
 
 			// return to home pos
 			printf("push the botton to do return job\n");
 			getchar();
 			bool isReturned = demoTask->returnJob();
+#else
+			
+			int curObjID = demoTask->curObjID;
+			int curGoalID = demoTask->getGoalNum();
+			SE3 curGraspOffset = demoTask->curGraspOffset;
+			SE3 reachOffset = demoTask->reachOffset;
+
+			// reachObject
+			printf("push the botton to get reachObject imov command\n");
+			getchar();
+			demoTask->getCurPosSignal();	// to set demoTask->TcurRobot
+			SE3 T1 = demoTask->curObjectData.objectSE3[curObjID] * curGraspOffset * reachOffset;
+			demoTask->printImovCommand(demoTask->TcurRobot, T1);	
+			
+			// goToGraspPos
+			printf("push the botton to get goToGraspPos imov command\n");
+			getchar();
+			SE3 T2 = demoTask->curObjectData.objectSE3[curObjID] * curGraspOffset;
+			demoTask->printImovCommand(T1, T2);		
+
+			// graspObject
+			printf("push the botton to call graspObject command\n");
+			getchar();
+			demoTask->graspObject();
+
+			// moveWorkspaceDisplacement(Vec3(0.0, 0.0, 0.05))
+			printf("push the botton to get moveWorkspaceDisplacement imov command\n");
+			getchar();
+			SE3 T3 = SE3(Vec3(0.0, 0.0, 0.05)) * T2;
+			demoTask->printImovCommand(T2, T3);
+
+			// moveObject
+			printf("push the botton to get moveObject imov command\n");
+			getchar();
+			SE3 T4 = demoTask->goalSE3[curGoalID] * demoTask->goalOffset * curGraspOffset;
+			demoTask->printImovCommand(T3, T4);
+
+			// releaseObject
+			printf("push the botton to call releaseObject command\n");
+			getchar();
+			demoTask->releaseObject();
+
+			// goHomepos
+			printf("push the botton to get goHomepose imov command\n");
+			getchar();
+			demoTask->printImovCommand(T4, demoTask->homeSE3);
+#endif
 			sentInit = false;
 		}
 	}

@@ -135,8 +135,6 @@ void SKKUobjectData::setObjectDataFromString(vector<SE3> _objectSE3, vector<bool
 
 demoTaskManager::demoTaskManager(demoEnvironment* _demoEnv, MH12RobotManager* _rManager)
 {
-	int maxTimeDuration = 60000;		// means max 60000ms per movement
-	double posThreshold = 0.0001;		// threshold to check if a waypoint is reached
 	demoEnv = _demoEnv;
 	rManager = _rManager;
 	robot = (MH12Robot*)rManager->m_robot;
@@ -436,9 +434,13 @@ void demoTaskManager::setGoalNum(int goalNum)
 	curGoalID = goalNum;
 }
 
-bool demoTaskManager::moveJob(int goalNum)
+int demoTaskManager::getGoalNum()
 {
-	setGoalNum(goalNum);
+	return curGoalID;
+}
+
+bool demoTaskManager::moveJob()
+{
 	bool reached = false;
 	bool reachedGraspPos = false;
 	bool grasped = false;
@@ -573,7 +575,18 @@ bool demoTaskManager::goHomepos(bool usePlanning /*= false*/)
 
 bool demoTaskManager::moveWorkspaceDisplacement(Vec3 disp)
 {
-	return goToWaypoint(SE3(disp) * TcurRobot);
+	getCurPosSignal();
+	std::clock_t start = std::clock();
+	while (1)
+	{
+		if (isGetPos == true)
+			return goToWaypoint(SE3(disp) * TcurRobot);
+		else if ((std::clock() - start) / (double)CLOCKS_PER_SEC > MAX_TIME_DURATION)
+		{
+			printf("isGetPos == false and setCurPos failed at moveWorkspaceDisplacement!!!\n");
+			return false;
+		}
+	}
 }
 
 vector<SE3> demoTaskManager::planBetweenWaypoints(SE3 Tinit, SE3 Tgoal, unsigned int midNum /* = 1*/)
@@ -617,6 +630,14 @@ vector<SE3> demoTaskManager::planBetweenWaypoints(SE3 Tinit, SE3 Tgoal, unsigned
 		vector<SE3> TwaypointSet(1, Tgoal);
 		return TwaypointSet;
 	}
+}
+
+void demoTaskManager::printImovCommand(SE3 Tstart, SE3 Tgoal)
+{
+	vector<double> tempOri = SO3ToEulerZYX((Tgoal.GetOrientation() * Inv(Tstart.GetOrientation())));
+	Vec3 tempPos = Tgoal.GetPosition() - Tstart.GetPosition();
+
+	printf("imov command x: %f, y: %f, z: %f, Rx: %f, Ry: %f, Rz: %f\n", tempPos[0]*1000.0, tempPos[1] * 1000.0, tempPos[2] * 1000.0, tempOri[2] * (180.0 / SR_PI), tempOri[1] * (180.0 / SR_PI), tempOri[0] * (180.0 / SR_PI));
 }
 
 SE3 demoTaskManager::YKpos2SE3(const Eigen::VectorXd YKpos)
@@ -684,7 +705,6 @@ bool demoTaskManager::goToWaypoint(SE3 Twaypoint)
 			posForSend.X = tempPos[0] * 1000.0;
 			posForSend.Y = tempPos[1] * 1000.0;
 			posForSend.Z = tempPos[2] * 1000.0;
-
 			HWND hTargetWnd = FindWindow(NULL, L"ESF_Client_Example_JOB_IMOV");
 
 			COPYDATASTRUCT cds;
@@ -693,6 +713,7 @@ bool demoTaskManager::goToWaypoint(SE3 Twaypoint)
 			cds.lpData = &posForSend;
 			SendMessage(hTargetWnd, WM_COPYDATA, NULL, reinterpret_cast<LPARAM>(&cds));
 			printf("isGetPos == true and send goToWaypoint message (goToWaypoint())\n");
+			printf("imov command x: %f, y: %f, z: %f, Rx: %f, Ry: %f, Rz: %f\n", posForSend.X, posForSend.Y, posForSend.Z, posForSend.Rx, posForSend.Ry, posForSend.Rz);
 			break;
 		}
 		else if ((std::clock() - start) / (double)CLOCKS_PER_SEC > MAX_TIME_DURATION)

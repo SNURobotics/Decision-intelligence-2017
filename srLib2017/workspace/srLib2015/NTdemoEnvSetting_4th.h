@@ -83,7 +83,8 @@ public:
 
 	// Pick and place task functions
 	void setGoalNum(int goalNum);		// select goal to place object
-	bool moveJob(int goalNum);
+	int getGoalNum();
+	bool moveJob();
 	bool returnJob();
 
 	// do job functions (all functions send waypoints to robot, and return true when robot moved successfully)
@@ -97,6 +98,8 @@ public:
 
 	vector<SE3> planBetweenWaypoints(SE3 Tinit, SE3 Tgoal, unsigned int midNum = 1);
 	
+	void printImovCommand(SE3 Tstart, SE3 Tgoal);
+
 	// Yaskawa client communication functions
 	SE3 YKpos2SE3(const Eigen::VectorXd YKpos);
 	bool checkWaypoint(SE3 Tinit, SE3 Tgoal, int num = 10);
