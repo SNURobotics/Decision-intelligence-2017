@@ -18,7 +18,7 @@ demoEnvironment::demoEnvironment(unsigned int _objectNum) {
 	bin = new Bin(0.01);
 	Plink12bin = Vec3(0.89, 0.14, 0.45);
 	bin->setBaseLinkFrame(SE3(Trobotbase2link1.GetPosition()) * EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Plink12bin));	// change to exact value later
-
+	
 	// set table
 	table = new Table4th(0.01);
 	Plink12table = Vec3(0.89, 0.0, 0.41);
@@ -70,7 +70,7 @@ void demoEnvironment::setObjectFromRobot2ObjectText(string loc, bool print /*= f
 }
 
 
-void demoEnvironment::setObjectFromRobot2VisionData(vector<SE3> objectSE3)
+void demoEnvironment::setObjectFromRobot2VisionData(vector<SE3> objectSE3, SE3 binSE3)
 {
 	if (objectSE3.size() == 0)
 	{
@@ -86,6 +86,8 @@ void demoEnvironment::setObjectFromRobot2VisionData(vector<SE3> objectSE3)
 		else
 			objects[i]->setBaseLinkFrame(objDefaultPositon[i]);
 	}
+
+	bin->setBaseLinkFrame(Trobotbase * binSE3);
 
 	return;
 }
@@ -107,6 +109,7 @@ SKKUobjectData::SKKUobjectData()
 	objectSE3.resize(objectNum);
 	isHead.resize(objectNum);
 	objectGraspCandidatePos.resize(objectNum);
+	binSE3 = SE3();
 }
 
 SKKUobjectData::~SKKUobjectData()
@@ -114,9 +117,10 @@ SKKUobjectData::~SKKUobjectData()
 	objectSE3.clear();
 	isHead.clear();
 	objectGraspCandidatePos.clear();
+	binSE3 = SE3();
 }
 
-void SKKUobjectData::setObjectDataFromString(vector<SE3> _objectSE3, vector<bool> _isHead, vector<vector<Vec3>> _objectGraspCandidatePos)
+void SKKUobjectData::setObjectDataFromString(vector<SE3> _objectSE3, vector<bool> _isHead, vector<vector<Vec3>> _objectGraspCandidatePos, SE3 _binSE3)
 {
 	objectSE3.clear();
 	isHead.clear();
@@ -125,6 +129,7 @@ void SKKUobjectData::setObjectDataFromString(vector<SE3> _objectSE3, vector<bool
 	objectSE3 = _objectSE3;
 	isHead = _isHead;
 	objectGraspCandidatePos = _objectGraspCandidatePos;
+	binSE3 = _binSE3;
 }
 
 
@@ -187,12 +192,13 @@ void demoTaskManager::updateEnv(char* stringfromSKKU)
 	vector<SE3> objectSE3;
 	vector<bool> isHead;
 	vector<vector<Vec3>> objectGraspCandidatePos;
+	SE3 binSE3;
 
-	readSKKUvision(stringfromSKKU, objectSE3, isHead, objectGraspCandidatePos);
+	readSKKUvision(stringfromSKKU, objectSE3, isHead, objectGraspCandidatePos, binSE3);
 
-	curObjectData.setObjectDataFromString(objectSE3, isHead, objectGraspCandidatePos);
+	curObjectData.setObjectDataFromString(objectSE3, isHead, objectGraspCandidatePos, binSE3);
 
-	demoEnv->setObjectFromRobot2VisionData(curObjectData.objectSE3);
+	demoEnv->setObjectFromRobot2VisionData(curObjectData.objectSE3, curObjectData.binSE3);
 
 	return;
 }
@@ -209,7 +215,7 @@ static void Eliminate(char *str, char ch)
 	}
 }
 
-void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vector<bool>& isHead, vector<vector<Vec3>>& objectGraspCandidatePos)
+void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vector<bool>& isHead, vector<vector<Vec3>>& objectGraspCandidatePos, SE3& binSE3)
 {
 	// read vision data
 	Eliminate(hyu_data, 'V');
@@ -221,6 +227,8 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 	vector<int> v_objCand;							//id, (number of candidate)
 	vector<vector<double>> v_objCandMinMax;		//id, (min_x, max_x, min_y, max_y)
 	vector<vector<double>> v_obsInfo;					//id, (center, size)
+	vector<double> v_binPos;
+	vector<double> v_binOri;
 
 	// read char data and save it to vector double format
 	char *recv_data = strtok(hyu_data, "d");
@@ -231,11 +239,14 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 	v_objOri.resize(0);
 	v_objCand.resize(0);
 	v_objCandMinMax.resize(0);
+	v_binPos.resize(0);
+	v_binOri.resize(0);
 	int objIdx = 0;
 	int objID;
 	int obsID = 0;
 	int max_recv_cnt = 17;
 	bool obsData = false;
+	bool binData = false;
 
 	while (recv_data != NULL)
 	{
@@ -245,6 +256,8 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 			objID = atoi(recv_data);
 			if (objID == -1)
 				obsData = true;
+			else if (objID == 9)
+				binData = true;
 			else
 			{
 				v_objID.push_back(objID);
@@ -254,7 +267,7 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 			}
 		}
 
-		if (!obsData)
+		if (!obsData && !binData)
 		{
 			if (1 <= recv_cnt && recv_cnt < 4)
 				v_objPos[objIdx].push_back(atof(recv_data));
@@ -266,7 +279,16 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 			{
 				v_objCandMinMax[objIdx].push_back(atof(recv_data));
 			}
+		}
 
+		if (binData)
+		{
+			if (1 <= recv_cnt && recv_cnt < 4)
+				v_binPos.push_back(atof(recv_data));
+			else if (4 <= recv_cnt && recv_cnt < 13)
+			{
+				v_binOri.push_back(atof(recv_data));
+			}
 		}
 
 		recv_data = strtok(NULL, "d");
@@ -274,10 +296,11 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 
 		if (recv_cnt == max_recv_cnt)
 		{
-			if (!obsData)
+			if (!obsData && !binData)
 				objIdx++;
 			recv_cnt = 0;
 			obsData = false;
+			binData = false;
 		}
 	}
 
@@ -292,6 +315,7 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 	for (unsigned int i = 0; i < objectNumData; i++)
 	{
 		SE3 objSE3_Camera = SE3(v_objOri[i][0], v_objOri[i][3], v_objOri[i][6], v_objOri[i][1], v_objOri[i][4], v_objOri[i][7], v_objOri[i][2], v_objOri[i][5], v_objOri[i][8], v_objPos[i][0], v_objPos[i][1], v_objPos[i][2]);
+		//SE3 objSE3_Camera = SE3(v_objOri[i][0], v_objOri[i][1], v_objOri[i][2], v_objOri[i][3], v_objOri[i][4], v_objOri[i][5], v_objOri[i][6], v_objOri[i][7], v_objOri[i][8], v_objPos[i][0], v_objPos[i][1], v_objPos[i][2]);
 
 		// coordinate change
 		//objectSE3[i] = demoEnv->Trobotbase2camera * objSE3_Camera;
@@ -323,6 +347,16 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 		}		
 		
 	}
+
+	if (v_binOri.size() != 0)
+	{
+		SE3 binSE3_Camera = SE3(v_binOri[0], v_binOri[1], v_binOri[2], v_binOri[3], v_binOri[4], v_binOri[5], v_binOri[6], v_binOri[7], v_binOri[8], v_binPos[0], v_binPos[1], v_binPos[2]);
+
+		binSE3 = binSE3_Camera;
+	}
+	else
+		binSE3 = SE3(demoEnv->Trobotbase2link1.GetPosition()) * EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), demoEnv->Plink12bin);
+
 	cout << objIdx << endl;
 }
 
