@@ -104,14 +104,7 @@ int main(int argc, char **argv)
 	demoTask->setRobotRRTManager();
 	//cout << demoEnv->Trobotbase2camera * demoEnv->Tcamera2robotbase;
 
-	SE3 temp = EulerZYX(Vec3(DEG2RAD(129.3924), DEG2RAD(0.1922), DEG2RAD(176.9429)), Vec3());
-	SE3 result = EulerZYX(Vec3(DEG2RAD(129.3926), DEG2RAD(-0.5806), DEG2RAD(176.3080)), Vec3());
 
-	SE3 disp = Inv(temp) * result ;
-	//cout << temp << endl;
-	//cout << result << endl;
-	//cout << Log(disp.GetOrientation()) / Log(disp.GetOrientation()).Normalize() << endl;
-	//cout << RAD2DEG(Log(disp.GetOrientation()).Normalize()) << endl;
 
 
 	// for communication (dummy window dialog)
@@ -139,6 +132,14 @@ int main(int argc, char **argv)
 	//demoTask->goThroughWaypoints(Ttemps);
 
 	/////////////////////// test 18.05.18. /////////////////////////
+	//SE3 temp = EulerZYX(Vec3(DEG2RAD(129.3924), DEG2RAD(0.1922), DEG2RAD(176.9429)), Vec3());
+	//SE3 result = EulerZYX(Vec3(DEG2RAD(129.3926), DEG2RAD(-0.5806), DEG2RAD(176.3080)), Vec3());
+	//SE3 disp = Inv(temp) * result;
+	//cout << temp << endl;
+	//cout << result << endl;
+	//cout << Log(disp.GetOrientation()) / Log(disp.GetOrientation()).Normalize() << endl;
+	//cout << RAD2DEG(Log(disp.GetOrientation()).Normalize()) << endl;
+	//demoTask->getCurPosSignal();
 	//SE3 Ttemp = EulerZYX(Vec3(0.0, 0.0, DEG2RAD(-5.0)), Vec3(0.0, 0.0, 0.02)) * demoTask->TcurRobot;
 	//demoTask->goToWaypoint(Ttemp);
 	//SE3 curGraspOffset = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.0036));
