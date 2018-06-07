@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 	char dummy_NULLobj[] = "d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d-1.0d";
 
 	// dummy for front side
-	char dummy_oneobj[] = "d0.0d0.0d1.0d1.0d0.0d0.0d0.0d-1.0d0.0d0.0d0.0d-1.0d-0.02d-0.05d-0.005d0.005d";
+	char dummy_oneobj[] = "d0.0d0.0d0.0d1.0d0.0d0.0d0.0d-1.0d0.0d0.0d0.0d-1.0d-0.02d-0.05d-0.005d0.005d";
 
 	// dummy for back side
 	//char dummy_oneobj[] = "d0.0d0.0d1.0d1.0d0.0d0.0d0.0d1.0d0.0d0.0d0.0d1.0d1d-0.02d0.0d-0.0004d";
@@ -72,7 +72,8 @@ int main(int argc, char **argv)
 	////////////////////////////////////////////////////////////////
 	// load vision data and update demoTask (fix data location, or directly insert string data)
 	char visiondataSKKU[1000];
-	loadDataFromFile("D:/프로젝트/Pose_example.txt", visiondataSKKU);
+	strcpy(visiondataSKKU, "V9.d0.8925d6.67e-002d0.d-1.d-1.d-1.d-1.d-1.d-1.d-1.d-1.d-1.d-1.d-1.d-1.d-1.d1.d0.7477d0.1229d3.842e-002d-0.6935d-0.7142d-9.464e-002d0.7192d-0.6941d-3.197e-002d-4.286e-002d-9.023e-002d0.995d-2.e-002d-2.e-002d0.d0.d");
+	//loadDataFromFile("D:/프로젝트/Pose_example.txt", visiondataSKKU);
 	//loadDataFromFile("C:\Users\robotics\Documents\Decision-intelligence-2017\srLib2017\workspace\robot\poseData", visiondataSKKU);
 	demoTask->updateEnv(visiondataSKKU);
 	//demoTask->updateEnv(dummy);

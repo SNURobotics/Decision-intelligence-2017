@@ -398,9 +398,9 @@ void MH12Robot::AssembleCollision()
 	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-0.905, 0.0, 1.264)));
 
 	gLink[MH12_Index::COUPLING].AddCollision(&gCollision[m_numCollision]);
-	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.08, 0.08, 0.08));
-	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-0.965, 1.264, 0.0)));
+	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::CYLINDER);
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.081, 0.08, 0.0));
+	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(-0.965, 1.264, 0.0)));
 
 
 

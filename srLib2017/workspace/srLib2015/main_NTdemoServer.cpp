@@ -74,7 +74,16 @@ LRESULT CALLBACK getMessageFromRobot(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 		curPos.push_back(cur_pos.X*0.001);
 		curPos.push_back(cur_pos.Y*0.001);
 		curPos.push_back(cur_pos.Z*0.001);
-		demoTask->setCurPos(curPos);
+
+		double eps = 1e-5;
+		if (abs(curPos[0]) < eps && abs(curPos[1]) < eps && abs(curPos[2]) < eps && abs(curPos[3]) < eps && abs(curPos[4]) < eps && abs(curPos[5]) < eps)
+		{
+			cout << "RPOSC error: retry get currunt position" << endl;
+			demoTask->getCurPosSignal();
+			return 0;
+		}
+		else
+			demoTask->setCurPos(curPos);
 
 		//std::cout << "==================" << std::endl;
 		//std::cout << "getMessageFromRobot function" << std::endl;
@@ -151,11 +160,11 @@ int main(int argc, char **argv)
 
 
 	/////////////////////// test 18.05.25. /////////////////////////
-	for (int i = 0; i < 1000; i++)
-	{
-		demoTask->getCurPosSignal();
-		Sleep(150);
-	}
+	//for (int i = 0; i < 1000; i++)
+	//{
+	//	demoTask->getCurPosSignal();
+	//	Sleep(150);
+	//}
 	//bool task1 = demoTask->goToWaypoint(demoTask->homeSE3);
 	//SE3 tempGoal = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.226048, 0.871385, 0.466791));
 	////bool task2 = demoTask->goToWaypoint(tempGoal);
@@ -171,7 +180,18 @@ int main(int argc, char **argv)
 
 
 	/////////////////////// test 18.06.05. /////////////////////////
-
+	//bool task1 = demoTask->goToWaypoint(demoTask->homeSE3);
+	////SE3 tempGoal = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.226048, 0.871385, 0.466791));
+	////bool task2 = demoTask->goToWaypoint(tempGoal);
+	////bool task3 = demoTask->goToWaypoint(demoTask->homeSE3);
+	//demoTask->getCurPosSignal();
+	//vector<SE3> Twaypoints = demoTask->planBetweenWaypoints(demoTask->TcurRobot, demoTask->goalSE3[1]);
+	////traj = demoTask->tempTraj;
+	//bool task4 = demoTask->goThroughWaypoints(Twaypoints);
+	//demoTask->getCurPosSignal();
+	//vector<SE3> Twaypoints2 = demoTask->planBetweenWaypoints(demoTask->TcurRobot, demoTask->homeSE3);
+	////traj = demoTask->tempTraj;
+	//bool task5 = demoTask->goThroughWaypoints(Twaypoints2);
 
 
 	qval.setZero(6);

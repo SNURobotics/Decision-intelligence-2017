@@ -229,7 +229,7 @@ void workingObject::AssembleModel()
 
 	m_ObjLink[0].SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF), Vec3(-0.01675, 0.0, -0.0004)));
+	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF), Vec3(-0.01675, 0.0, -0.004)));
 	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/mh12_3ds/cover.3ds");
 
 	

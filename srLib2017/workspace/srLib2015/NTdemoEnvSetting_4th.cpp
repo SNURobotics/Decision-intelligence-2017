@@ -15,7 +15,7 @@ demoEnvironment::demoEnvironment(unsigned int _objectNum) {
 	Tcamera2robotbase = Inv(Trobotbase2camera);
 
 	// set bin
-	bin = new Bin(0.01);
+	bin = new Bin(0.002);
 	Plink12bin = Vec3(0.89, 0.14, 0.45);
 	bin->setBaseLinkFrame(SE3(Trobotbase2link1.GetPosition()) * EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Plink12bin));	// change to exact value later
 	
@@ -125,6 +125,66 @@ void SKKUobjectData::setObjectDataFromString(vector<SE3> _objectSE3, vector<bool
 	objectSE3.clear();
 	isHead.clear();
 	objectGraspCandidatePos.clear();
+	vector<double> length;
+	Vec3 temp;
+	vector<unsigned int> order;
+	unsigned int temp_int;
+	length.resize(_objectSE3.size());
+	order.resize(_objectSE3.size());
+
+	for (unsigned int i = 0; i < _objectSE3.size(); i++)
+	{
+		//temp = _objectSE3[i].GetPosition();
+		//temp -= _binSE3.GetPosition();
+		length[i] = (_objectSE3[i].GetPosition() - _binSE3.GetPosition()).Normalize();
+		order[i] = i;
+	}
+
+	for (unsigned int i = 0; i < _objectSE3.size(); i++)
+	{
+		if (length[i] < length[order[0]])
+		{
+			order[i] = order[0];
+			order[0] = i;
+		}
+		if (length[i] > length[order[_objectSE3.size() - 1]])
+		{
+			order[i] = order[_objectSE3.size() - 1];
+			order[_objectSE3.size() - 1] = i;
+		}
+	}
+
+	if (_objectSE3.size() > 2)
+	{
+		for (unsigned int i = 1; i < _objectSE3.size() - 1; i++)
+		{
+			if (length[order[i]] < length[order[1]])
+			{
+				temp_int = order[i];
+				order[i] = order[1];
+				order[1] = temp_int;
+			}
+			if (length[order[i]] > length[order[_objectSE3.size() - 2]])
+			{
+				temp_int = order[i];
+				order[i] = order[_objectSE3.size() - 2];
+				order[_objectSE3.size() - 2] = temp_int;
+			}
+		}
+	}
+
+	//for (unsigned int i = 0; i < _objectSE3.size(); i++)
+	//{
+	//	cout << order[i] << endl;
+	//	cout << length[i] << endl;
+	//}
+
+	for (unsigned int i = 0; i < _objectSE3.size(); i++)
+	{
+		objectSE3.push_back(_objectSE3[order[i]]);
+		isHead.push_back(_isHead[order[i]]);
+		objectGraspCandidatePos.push_back(_objectGraspCandidatePos[order[i]]);
+	}
 
 	objectSE3 = _objectSE3;
 	isHead = _isHead;
@@ -348,9 +408,10 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 
 	if (v_binOri.size() != 0)
 	{
-		SE3 binSE3_Camera = SE3(v_binOri[0], v_binOri[1], v_binOri[2], v_binOri[3], v_binOri[4], v_binOri[5], v_binOri[6], v_binOri[7], v_binOri[8], v_binPos[0], v_binPos[1], v_binPos[2]);
-
-		binSE3 = binSE3_Camera;
+		if (v_binOri[0] == -1.0 && v_binOri[1] == -1.0 && v_binOri[2] == -1.0 && v_binOri[3] == -1.0 && v_binOri[4] == -1.0 && v_binOri[5] == -1.0 && v_binOri[6] == -1.0 && v_binOri[7] == -1.0 && v_binOri[8] == -1.0)
+			binSE3 = SE3(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(v_binPos[0], v_binPos[1], v_binPos[2])));
+		else
+			binSE3 = SE3(v_binOri[0], v_binOri[1], v_binOri[2], v_binOri[3], v_binOri[4], v_binOri[5], v_binOri[6], v_binOri[7], v_binOri[8], v_binPos[0], v_binPos[1], v_binPos[2]);
 	}
 	else
 		binSE3 = SE3(demoEnv->Trobotbase2link1.GetPosition()) * EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), demoEnv->Plink12bin);
@@ -393,8 +454,8 @@ bool demoTaskManager::setObjectNum()
 				headSE3 = SE3(curObjectData.objectGraspCandidatePos[i][j]);
 				
 			SE3 targetObject = curObjectData.objectSE3[i] * headSE3;
-			qval = rManager->inverseKin(targetObject, &robot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag);
-						
+			qval = rManager->inverseKin(targetObject, &robot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, lastPlanningJointVal);
+			
 			if (flag == 0)
 			{
 				curObjID = i;
