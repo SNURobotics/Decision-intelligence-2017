@@ -78,6 +78,7 @@ public:
 	void updateEnv(char* stringfromSKKU);		// get vision data from SKKU, and update object locations
 	void readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vector<bool>& isHead, vector<vector<Vec3>>& objectGraspCandidatePos, SE3& binSE3);
 
+	bool setObjectNumManually(int objNum);
 	bool setObjectNum();	// select object to move from object SE3 and grasp candidates (return true if object is reachable, false if none of the objects are reachable)
 	bool sendError();				// send error when none of the objects are reachable
 
@@ -106,10 +107,10 @@ public:
 	bool goToWaypoint(SE3 Twaypoint);	// send robot waypoint commands after planning
 	bool goThroughWaypoints(vector<SE3> Twaypoints);
 	bool checkWaypointReached(SE3 Twaypoint);		// check if robot reached to the waypoint
-	void getCurPosSignal();						// send robot read cur pos command and set curRobotPos and TcurRobot
+	LRESULT getCurPosSignal();						// send robot read cur pos command and set curRobotPos and TcurRobot
 	void setCurPos(vector<double> values);
-	void gripperOnSignal();
-	void gripperOffSignal();
+	LRESULT gripperOnSignal();
+	LRESULT gripperOffSignal();
 
 public:
 	// demo environemnt

@@ -118,7 +118,8 @@ int main(int argc, char **argv)
 	
 	qval = rManager1->inverseKin(demoTask->homeSE3, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, qval);
 	rManager1->setJointVal(qval);
-	
+	//printf("home  pos: ");
+	//cout << qval.transpose() << endl;
 	////////////////////////////////// when using communication //////////////////////////////////////
 #ifdef USE_COMMUNICATION
 	communicationFunc(argc, argv);
@@ -136,6 +137,17 @@ int main(int argc, char **argv)
 	demoTask->setObjectNum();
 #endif
 	////////////////////////////////// when not using communication //////////////////////////////////
+
+	////////////////////////// test q6 angle ///////////////////////////
+	//qval = rManager1->inverseKin(demoTask->curObjectData.objectSE3[0]*demoTask->curGraspOffset, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, qval);
+	//rManager1->setJointVal(qval);
+	//printf("grasp pos: ");
+	//cout << qval.transpose() << endl;
+	//qval = rManager1->inverseKin(demoTask->goalSE3[0] * demoTask->curGraspOffset, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, qval);
+	//rManager1->setJointVal(qval);
+	//printf("goal  pos: ");
+	//cout << qval.transpose() << endl;
+	////////////////////////////////////////////////////////////////////
 
 	rendering(argc, argv);
 

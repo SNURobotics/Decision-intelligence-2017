@@ -156,6 +156,7 @@ LRESULT CESF_Client_Example_JOB_IMOVDlg::OnTraceMsg(WPARAM wParam, LPARAM lParam
 	// srLib으로부터 Move Position 받아서 로봇에 전달 (지금은 연결 안되어있어서 실험 못함)
 	if (pcds->dwData == MOVE_SIGNAL)
 	{
+
 		AddStrToList(_T("goToWaypoint() from srLib reached!"));
 		MOVE_POS move_pos_from_srLib;
 		memcpy_s(&move_pos_from_srLib, sizeof(move_pos_from_srLib), pcds->lpData, pcds->cbData);
@@ -290,7 +291,6 @@ LRESULT CESF_Client_Example_JOB_IMOVDlg::OnTraceMsg(WPARAM wParam, LPARAM lParam
 	return 0;
 	
 }
-
 
 // CESF_Client_Example_JOB_IMOVDlg 메시지 처리기
 
@@ -985,7 +985,7 @@ BOOL CESF_Client_Example_JOB_IMOVDlg::IncrementalMove()
 	//Sleep(20000);
 	int sleepTime;
 	sleepTime = max(sqrt(m_MoveVal[0]* m_MoveVal[0] + m_MoveVal[1]*m_MoveVal[1] + m_MoveVal[2]* m_MoveVal[2]), sqrt(m_MoveVal[3]* m_MoveVal[3] + m_MoveVal[4] * m_MoveVal[4] + m_MoveVal[5] * m_MoveVal[5])) / IMOV_SPEED;
-	Sleep(sleepTime*1000);
+	Sleep((sleepTime + 1)*1000);
 	Disconnect();
 	return TRUE;
 }
