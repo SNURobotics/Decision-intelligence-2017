@@ -61,6 +61,8 @@
     <ClCompile Include="..\..\src\robotManager\rrtVectorFields.cpp" />
     <ClCompile Include="..\..\src\robotManager\UR3Robot.cpp" />
     <ClCompile Include="..\..\src\robotManager\UR3RobotManager.cpp" />
+    <ClCompile Include="..\..\src\robotManager\UR5Robot.cpp" />
+    <ClCompile Include="..\..\src\robotManager\UR5RobotManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\robotManager\environment.h" />
@@ -83,6 +85,8 @@
     <ClInclude Include="..\..\src\robotManager\rrtVectorFields.h" />
     <ClInclude Include="..\..\src\robotManager\UR3Robot.h" />
     <ClInclude Include="..\..\src\robotManager\UR3RobotManager.h" />
+    <ClInclude Include="..\..\src\robotManager\UR5Robot.h" />
+    <ClInclude Include="..\..\src\robotManager\UR5RobotManager.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9682940B-2E28-4127-B240-CF7AFA7B9CFB}</ProjectGuid>
