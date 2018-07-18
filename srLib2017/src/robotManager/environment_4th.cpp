@@ -431,3 +431,268 @@ void Barrier2::AssembleModel()
 	this->SetBaseLink(&m_ObjLink[0]);
 	this->SetBaseLinkType(srSystem::KINEMATIC);
 }
+
+BlueMaleConnector::BlueMaleConnector()
+{
+	AssembleModel();
+}
+
+BlueMaleConnector::~BlueMaleConnector()
+{
+}
+
+void BlueMaleConnector::AssembleModel()
+{
+	// TO DO: add collision
+	m_numLink = 2;
+	m_numWeldJoint = 1;
+	m_numCollision = 1;
+
+	for (int i = 0; i < m_numLink; i++)
+	{
+		srLink* temp = new srLink;
+		m_ObjLink.push_back(*temp);
+	}
+	for (int i = 0; i < m_numCollision; i++)
+	{
+		srCollision* temp = new srCollision;
+		m_ObjCollision.push_back(*temp);
+	}
+	for (int i = 0; i < m_numWeldJoint; i++)
+	{
+		srWeldJoint* temp = new srWeldJoint;
+		m_ObjWeldJoint.push_back(*temp);
+	}
+
+	m_ObjLink[0].GetGeomInfo().SetColor(0.3, 0.4, 0.3);
+
+	m_ObjLink[0].SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	//m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF), Vec3(-0.01675, 0.0, -0.004)));
+	//m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.10007, 0.09307, 0.0888)));
+	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF), Vec3(-0.10007, 0.09307, 0.0888))); // SetLocalFrame --> Orientation: srLib에서 solidworks로 가는 SO3, Position: srLib frame의 orientation 기준으로 원점 이동하고 싶은 만큼 입력
+	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/retarget_object/blue_male_connector.3ds");
+	
+
+	// dummy link
+	m_ObjLink[1].GetGeomInfo().SetDimension(Vec3(0.0, 0.0, 0.0));
+
+	m_ObjWeldJoint[0].SetParentLink(&m_ObjLink[1]);
+	//m_ObjWeldJoint[0].SetParentLinkFrame(SE3(Vec3(-0.01, 0.0, dim[2] - 0.0004))); // change to exact value later
+	m_ObjWeldJoint[0].SetParentLinkFrame(); // change to exact value later
+	m_ObjWeldJoint[0].SetChildLink(&m_ObjLink[0]);
+	m_ObjWeldJoint[0].SetChildLinkFrame();
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[0]);
+	m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[0].GetGeomInfo().SetDimension(Vec3(0.050, 0.050, 0.180));
+	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.180/2.0)));
+
+	this->SetSelfCollision(false);
+	this->SetBaseLink(&m_ObjLink[1]);
+	this->SetBaseLinkType(srSystem::KINEMATIC);
+
+}
+
+
+RedMaleConnector::RedMaleConnector()
+{
+	AssembleModel();
+}
+
+RedMaleConnector::~RedMaleConnector()
+{
+}
+
+void RedMaleConnector::AssembleModel()
+{
+	m_numLink = 2;
+	m_numWeldJoint = 1;
+	m_numCollision = 1;
+
+	for (int i = 0; i < m_numLink; i++)
+	{
+		srLink* temp = new srLink;
+		m_ObjLink.push_back(*temp);
+	}
+	for (int i = 0; i < m_numCollision; i++)
+	{
+		srCollision* temp = new srCollision;
+		m_ObjCollision.push_back(*temp);
+	}
+	for (int i = 0; i < m_numWeldJoint; i++)
+	{
+		srWeldJoint* temp = new srWeldJoint;
+		m_ObjWeldJoint.push_back(*temp);
+	}
+
+	m_ObjLink[0].GetGeomInfo().SetColor(0.3, 0.4, 0.3);
+
+	m_ObjLink[0].SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	//m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF), Vec3(-0.01675, 0.0, -0.004)));
+	//m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.10007, 0.09307, 0.0888)));
+	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF), Vec3(-0.10007, 0.09307, 0.07995))); // SetLocalFrame --> Orientation: srLib에서 solidworks로 가는 SO3, Position: srLib frame의 orientation 기준으로 원점 이동하고 싶은 만큼 입력
+	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/retarget_object/red_male_connector.3ds");
+
+
+	// dummy link
+	m_ObjLink[1].GetGeomInfo().SetDimension(Vec3(0.0, 0.0, 0.0));
+
+	m_ObjWeldJoint[0].SetParentLink(&m_ObjLink[1]);
+	//m_ObjWeldJoint[0].SetParentLinkFrame(SE3(Vec3(-0.01, 0.0, dim[2] - 0.0004))); // change to exact value later
+	m_ObjWeldJoint[0].SetParentLinkFrame(); // change to exact value later
+	m_ObjWeldJoint[0].SetChildLink(&m_ObjLink[0]);
+	m_ObjWeldJoint[0].SetChildLinkFrame();
+
+
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[0]);
+	m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[0].GetGeomInfo().SetDimension(Vec3(0.061, 0.061, 0.180));
+	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.180 / 2.0)));
+
+	this->SetSelfCollision(false);
+	this->SetBaseLink(&m_ObjLink[1]);
+	this->SetBaseLinkType(srSystem::KINEMATIC);
+
+}
+
+
+BlueFemaleConnector::BlueFemaleConnector()
+{
+	AssembleModel();
+}
+
+BlueFemaleConnector::~BlueFemaleConnector()
+{
+}
+
+void BlueFemaleConnector::AssembleModel()
+{
+	m_numLink = 2;
+	m_numWeldJoint = 1;
+	m_numCollision = 2;
+
+	for (int i = 0; i < m_numLink; i++)
+	{
+		srLink* temp = new srLink;
+		m_ObjLink.push_back(*temp);
+	}
+	for (int i = 0; i < m_numCollision; i++)
+	{
+		srCollision* temp = new srCollision;
+		m_ObjCollision.push_back(*temp);
+	}
+	for (int i = 0; i < m_numWeldJoint; i++)
+	{
+		srWeldJoint* temp = new srWeldJoint;
+		m_ObjWeldJoint.push_back(*temp);
+	}
+
+	m_ObjLink[0].GetGeomInfo().SetColor(0.3, 0.4, 0.3);
+
+	m_ObjLink[0].SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	//m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF), Vec3(-0.01675, 0.0, -0.004)));
+	//m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.10007, 0.09307, 0.0888)));
+	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF), Vec3(0.0,0.0, 0.018))); // SetLocalFrame --> Orientation: srLib에서 solidworks로 가는 SO3, Position: srLib frame의 orientation 기준으로 원점 이동하고 싶은 만큼 입력
+	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/retarget_object/blue_female_connector.3ds");
+
+
+	// dummy link
+	m_ObjLink[1].GetGeomInfo().SetDimension(Vec3(0.0, 0.0, 0.0));
+
+	m_ObjWeldJoint[0].SetParentLink(&m_ObjLink[1]);
+	//m_ObjWeldJoint[0].SetParentLinkFrame(SE3(Vec3(-0.01, 0.0, dim[2] - 0.0004))); // change to exact value later
+	m_ObjWeldJoint[0].SetParentLinkFrame(); // change to exact value later
+	m_ObjWeldJoint[0].SetChildLink(&m_ObjLink[0]);
+	m_ObjWeldJoint[0].SetChildLinkFrame();
+
+
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[0]);
+	m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[0].GetGeomInfo().SetDimension(Vec3(0.075, 0.075, 0.008));
+	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.022 )));
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[1]);
+	m_ObjCollision[1].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[1].GetGeomInfo().SetDimension(Vec3(0.055, 0.055, 0.060));
+	m_ObjCollision[1].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.060 / 2.0)));
+
+	this->SetSelfCollision(false);
+	this->SetBaseLink(&m_ObjLink[1]);
+	this->SetBaseLinkType(srSystem::KINEMATIC);
+
+}
+
+
+RedFemaleConnector::RedFemaleConnector()
+{
+	AssembleModel();
+}
+
+RedFemaleConnector::~RedFemaleConnector()
+{
+}
+
+void RedFemaleConnector::AssembleModel()
+{
+	m_numLink = 2;
+	m_numWeldJoint = 1;
+	m_numCollision = 2;
+
+	for (int i = 0; i < m_numLink; i++)
+	{
+		srLink* temp = new srLink;
+		m_ObjLink.push_back(*temp);
+	}
+	for (int i = 0; i < m_numCollision; i++)
+	{
+		srCollision* temp = new srCollision;
+		m_ObjCollision.push_back(*temp);
+	}
+	for (int i = 0; i < m_numWeldJoint; i++)
+	{
+		srWeldJoint* temp = new srWeldJoint;
+		m_ObjWeldJoint.push_back(*temp);
+	}
+
+	m_ObjLink[0].GetGeomInfo().SetColor(0.3, 0.4, 0.3);
+
+	m_ObjLink[0].SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	//m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF), Vec3(-0.01675, 0.0, -0.004)));
+	//m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.10007, 0.09307, 0.0888)));
+	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0,0.0,SR_PI_HALF), Vec3(0.0,0.0, 0.0))); // SetLocalFrame --> Orientation: SolidworkssrLib에서 solidworks로 가는 SO3, Position: srLib frame의 orientation 기준으로 원점 이동하고 싶은 만큼 입력
+	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/retarget_object/red_female_connector.3ds");
+
+
+	// dummy link
+	m_ObjLink[1].GetGeomInfo().SetDimension(Vec3(0.0, 0.0, 0.0));
+
+	m_ObjWeldJoint[0].SetParentLink(&m_ObjLink[1]);
+	//m_ObjWeldJoint[0].SetParentLinkFrame(SE3(Vec3(-0.01, 0.0, dim[2] - 0.0004))); // change to exact value later
+	m_ObjWeldJoint[0].SetParentLinkFrame(); // change to exact value later
+	m_ObjWeldJoint[0].SetChildLink(&m_ObjLink[0]);
+	m_ObjWeldJoint[0].SetChildLinkFrame();
+
+
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[0]);
+	m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[0].GetGeomInfo().SetDimension(Vec3(0.092, 0.092, 0.008));
+	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.004 )));
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[1]);
+	m_ObjCollision[1].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[1].GetGeomInfo().SetDimension(Vec3(0.065, 0.070, 0.084));
+	//m_ObjCollision[1].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.060 / 2.0)));
+	m_ObjCollision[1].SetLocalFrame(EulerZYX(Vec3(0.0,0.0,SR_PI/9), Vec3(0.0,-0.001,0.001)));
+
+	this->SetSelfCollision(false);
+	this->SetBaseLink(&m_ObjLink[1]);
+	this->SetBaseLinkType(srSystem::KINEMATIC);
+
+}

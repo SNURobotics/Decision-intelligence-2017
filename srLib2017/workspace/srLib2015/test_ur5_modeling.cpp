@@ -14,7 +14,15 @@
 // Robot
 UR5Robot* URRobot = new UR5Robot;
 UR5RobotManager* rManager1;
+
+// objects
 Bin* bin = new Bin(0.01);
+BlueMaleConnector* blueMaleConnector = new BlueMaleConnector();
+BlueFemaleConnector* blueFemaleConnector = new BlueFemaleConnector();
+RedFemaleConnector* redFemaleConnector = new RedFemaleConnector();
+RedMaleConnector* redMaleConnector = new RedMaleConnector();
+workingObject* workingObj = new workingObject();
+
 
 Eigen::VectorXd qval;
 
@@ -37,36 +45,38 @@ vector<Eigen::VectorXd> traj(0);
 int main(int argc, char **argv)
 {
 
-	URRobotSetting();
+	//URRobotSetting();
 
-	ee->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
-	ee->GetGeomInfo().SetDimension(0.03);
-	ee->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
-	obs->SetBaseLink(ee);
-	obs->SetBaseLinkType(srSystem::FIXED);
-	gSpace.AddSystem(obs);
-	gSpace.AddSystem(bin);
+	//ee->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
+	//ee->GetGeomInfo().SetDimension(0.03);
+	//ee->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
+	//obs->SetBaseLink(ee);
+	//obs->SetBaseLinkType(srSystem::FIXED);
+	//gSpace.AddSystem(obs);
+	//gSpace.AddSystem(bin);
+	gSpace.AddSystem(redFemaleConnector);
 	initDynamics();
 
 
-	URRobotManagerSetting();
+	//URRobotManagerSetting();
 
 	//busbar->setBaseLinkFrame(MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() * Inv(Tbusbar2gripper_ur));
 	//ctCase->setBaseLinkFrame(MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() * Inv(TctCase2gripper_ur));
-	qval.setZero(6);
+	//qval.setZero(6);
 	//qval[0] = SR_PI_HALF/3;
 	//qval[1] = SR_PI_HALF/4;
 	//qval[2] = SR_PI_HALF/7;
 	//qval[3] = SR_PI_HALF/2;
 	//qval[4] = SR_PI_HALF/6;
 	//qval[5] = SR_PI_HALF/5;
-	rManager1->setJointVal(qval);
-	obs->GetBaseLink()->SetFrame(URRobot->gMarkerLink[UR5_Index::MLINK_GRIP].GetFrame());
-	bin->setBaseLinkFrame(SE3(Vec3(1.0, 0.0, 0.0)));
+	//rManager1->setJointVal(qval);
+	//obs->GetBaseLink()->SetFrame(URRobot->gMarkerLink[UR5_Index::MLINK_GRIP].GetFrame());
+	//bin->setBaseLinkFrame(SE3(Vec3(1.0, 0.0, 0.0)));
+	redFemaleConnector->setBaseLinkFrame(SE3());
 
 	int flag;
 
-	rManager1->setJointVal(qval);
+	//rManager1->setJointVal(qval);
 
 	rendering(argc, argv);
 
