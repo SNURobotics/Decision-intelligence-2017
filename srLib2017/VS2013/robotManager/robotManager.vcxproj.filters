@@ -63,6 +63,12 @@
     <ClCompile Include="..\..\src\robotManager\MH12RobotManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\robotManager\SDA20DRobot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\robotManager\SDA20DRobotManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\robotManager\robotManager.h">
@@ -114,6 +120,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\robotManager\MH12RobotManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\robotManager\SDA20DRobot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\robotManager\SDA20DRobotManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

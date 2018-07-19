@@ -59,6 +59,8 @@
     <ClCompile Include="..\..\src\robotManager\robotRRTManager.cpp" />
     <ClCompile Include="..\..\src\robotManager\robotTaskManager.cpp" />
     <ClCompile Include="..\..\src\robotManager\rrtVectorFields.cpp" />
+    <ClCompile Include="..\..\src\robotManager\SDA20DRobot.cpp" />
+    <ClCompile Include="..\..\src\robotManager\SDA20DRobotManager.cpp" />
     <ClCompile Include="..\..\src\robotManager\UR3Robot.cpp" />
     <ClCompile Include="..\..\src\robotManager\UR3RobotManager.cpp" />
   </ItemGroup>
@@ -81,6 +83,8 @@
     <ClInclude Include="..\..\src\robotManager\robotRRTManager.h" />
     <ClInclude Include="..\..\src\robotManager\robotTaskManager.h" />
     <ClInclude Include="..\..\src\robotManager\rrtVectorFields.h" />
+    <ClInclude Include="..\..\src\robotManager\SDA20DRobot.h" />
+    <ClInclude Include="..\..\src\robotManager\SDA20DRobotManager.h" />
     <ClInclude Include="..\..\src\robotManager\UR3Robot.h" />
     <ClInclude Include="..\..\src\robotManager\UR3RobotManager.h" />
   </ItemGroup>

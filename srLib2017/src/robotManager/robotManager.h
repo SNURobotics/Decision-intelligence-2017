@@ -17,14 +17,17 @@ public:
 	~activeArmInfo();
 
 	vector<srJoint*>		goToRoot(srSystem* robot, srLink* lastLink);
-
+	vector<srJoint*>		excludeJoint(vector<srJoint*> sourceJoints, vector<srJoint*> excludingJoints);
 	void					setActiveArmInfo(gamasot::srRobot* robot, string lastLinkName);
 	void					setActiveArmInfo(srSystem* robot, srLink* lastLink);
+	void					setActiveArmInfoExclude(srSystem* robot, srLink* lastLink, vector<srJoint*> excludingJoints);
 
 	// for multi end-effector case
 	void					setActiveArmInfo(gamasot::srRobot* robot, vector<string> lastLinkName);
 	void					setActiveArmInfo(srSystem* robot, vector<srLink*> lastLink);
+	void					setActiveArmInfoExclude(srSystem* robot, vector<srLink*> lastLink, vector<srJoint*> excludingJoints);
 	void					setActiveArmInfo(srSystem* robot, vector<srLink*> lastLink, vector<srJoint*> activeJoint);
+
 
 	int						getActiveJointIdx(srJoint* joint);
 
@@ -178,7 +181,7 @@ public:
 	Eigen::VectorXd				inverseKin(const vector<SE3>& T, vector<srLink*> link, vector<bool> includeOri, vector<SE3> offset, int& flag, Eigen::VectorXd initGuess = (Eigen::VectorXd()), int maxIter = (500), invKinAlg alg = (invKinAlg::NR), invKinMet metric = (invKinMet::DG));
 	Eigen::VectorXd				inverseKin(const SE3& T, srLink* link, bool includeOri, SE3 offset, int& flag, Eigen::VectorXd initGuess = (Eigen::VectorXd()), int maxIter = (500), invKinAlg alg = (invKinAlg::NR), invKinMet metric = (invKinMet::DG));
 	
-	double						manipulability(const Eigen::VectorXd& jointVal, srLink* link, manipKind kind = manipKind::MIN);
+	double						manipulability(const Eigen::VectorXd& jointVal, srLink* link, manipKind kind = manipKind::MIN, Eigen::MatrixXd Select = Eigen::MatrixXd());
 	Eigen::VectorXd				manipulabilityGradient(const Eigen::VectorXd& jointVal, srLink* link, manipKind kind = manipKind::MIN);
 	Eigen::VectorXd				manipulabilityGradient(const Eigen::VectorXd& jointVal, srLink* link, double& manipulability, manipKind kind = manipKind::MIN);
 

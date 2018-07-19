@@ -44,6 +44,26 @@ vector<srJoint*> activeArmInfo::goToRoot(srSystem* robot, srLink * lastLink)
 	return tempJointSet;
 }
 
+vector<srJoint*> activeArmInfo::excludeJoint(vector<srJoint*> sourceJoints, vector<srJoint*> excludingJoints)
+{
+	vector<srJoint*> returnJoints(0);
+	for (unsigned int i = 0; i < sourceJoints.size(); i++)
+	{
+		bool exclude = false;
+		for (unsigned int j = 0; j < excludingJoints.size(); j++)
+		{
+			if (sourceJoints[i] == excludingJoints[j])
+			{
+				exclude = true;
+				break;
+			}
+		}
+		if (!exclude)
+			returnJoints.push_back(sourceJoints[i]);
+	}
+	return returnJoints;
+}
+
 void activeArmInfo::setActiveArmInfo(gamasot::srRobot* robot, string lastLinkName)
 {
 	srLink* tempLink = robot->getLink(lastLinkName);
@@ -54,6 +74,18 @@ void activeArmInfo::setActiveArmInfo(srSystem* robot, srLink * lastLink)
 {
 	m_activeJoint.resize(0);
 	m_activeJoint = goToRoot(robot, lastLink);
+	m_endeffector.resize(0);
+	m_endeffector.push_back(lastLink);
+	m_numJoint = m_activeJoint.size();
+	m_activeJointSet.resize(0);
+	m_activeJointSet.push_back(m_activeJoint);
+}
+
+void activeArmInfo::setActiveArmInfoExclude(srSystem * robot, srLink * lastLink, vector<srJoint*> excludingJoints)
+{
+	m_activeJoint.resize(0);
+	vector<srJoint*> tempJoints = goToRoot(robot, lastLink);
+	m_activeJoint = excludeJoint(tempJoints, excludingJoints);
 	m_endeffector.resize(0);
 	m_endeffector.push_back(lastLink);
 	m_numJoint = m_activeJoint.size();
@@ -94,6 +126,36 @@ void activeArmInfo::setActiveArmInfo(srSystem * robot, vector<srLink*> lastLink)
 		for (unsigned int k = maxJbf; k < m_activeJointSet[i].size(); k++)
 			m_activeJoint.push_back(m_activeJointSet[i][k]);
 		
+	}
+	m_numJoint = m_activeJoint.size();
+}
+
+void activeArmInfo::setActiveArmInfoExclude(srSystem * robot, vector<srLink*> lastLink, vector<srJoint*> excludingJoints)
+{
+	m_endeffector = lastLink;
+	m_activeJointSet.resize(0);
+	m_activeJoint.resize(0);
+	int maxJ = 0, maxJbf = 0;
+	for (unsigned int i = 0; i < lastLink.size(); i++)
+	{
+		vector<srJoint*> tempJoints = goToRoot(robot, lastLink[i]);
+		m_activeJointSet.push_back(excludeJoint(tempJoints, excludingJoints));
+		for (unsigned int k = 0; k < i; k++)
+		{
+			for (unsigned int j = 0; j < min(m_activeJointSet[i].size(), m_activeJointSet[k].size()); j++)
+			{
+				if (m_activeJointSet[i][j] != m_activeJointSet[k][j])
+				{
+					maxJ = j;
+					break;
+				}
+			}
+			if (maxJ > maxJbf)
+				maxJbf = maxJ;
+		}
+		for (unsigned int k = maxJbf; k < m_activeJointSet[i].size(); k++)
+			m_activeJoint.push_back(m_activeJointSet[i][k]);
+
 	}
 	m_numJoint = m_activeJoint.size();
 }
@@ -788,7 +850,10 @@ Eigen::VectorXd robotManager::getInverseKinUpdateQP(const Eigen::VectorXd& q, co
 	bool isRedundant = false;
 	if (!isRedundant)
 	{
-		quadprog._P = J.transpose()*J + 0.01*lambda * Eigen::MatrixXd::Identity(q.size(), q.size());
+		//Eigen::MatrixXd M = Eigen::MatrixXd::Identity(6, 6);
+		//for (int i = 0; i < 3; i++)
+		//	M(i, i) = 0.01;
+		quadprog._P = J.transpose()*J + 0.001*lambda * Eigen::MatrixXd::Identity(q.size(), q.size());
 		quadprog._q = -J.transpose()*error*step_size;
 		//cout << error.transpose() << endl;
 		quadprog._A = Eigen::MatrixXd();
@@ -921,7 +986,10 @@ Eigen::VectorXd robotManager::inverseKin(const vector<SE3>& T, vector<srLink*> l
 			//moveIntoJointLimit(q, false);
 			//printf("converged\n");
 			flag = invKinFlag::SOLVED;
-			break;
+			if (alg == invKinAlg::NR)
+				break;
+			else if (error.norm() < 1e-3)
+				break;
 		}
 	}
 	if (iter == maxIter)
@@ -957,14 +1025,15 @@ Eigen::VectorXd robotManager::inverseKin(const SE3 & T, srLink * link, bool incl
 	return inverseKin(Ts, links, includeOris, offsets, flag, initGuess, maxIter, alg, metric);
 }
 
-double robotManager::manipulability(const Eigen::VectorXd & jointVal, srLink* link, manipKind kind /*= manipKind::INVCOND*/)
+double robotManager::manipulability(const Eigen::VectorXd & jointVal, srLink* link, manipKind kind /*= manipKind::INVCOND*/, Eigen::MatrixXd Select /*= Eigen::MatrixXd()*/)
 {
 	Eigen::MatrixXd Jb = getBodyJacobian(jointVal, link);
-	
+	if (Jb.cols() == Select.rows())
+		Jb = Jb * Select;
 	if (kind == manipKind::VOL)
 	{
-		if (Jb.rows() >= Jb.cols())
-			return (Jb*Jb.transpose()).determinant();
+		if (Jb.rows() <= Jb.cols())
+			return sqrt(max((Jb*Jb.transpose()).determinant(), 0.0));
 		else
 			return 0.0;
 	}

@@ -110,5 +110,17 @@
     <ClCompile Include="..\..\..\workspace\srLib2015\main_NTdemoServer_SKKUtest.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\test_sda20d_modeling.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\test_sda20d_falut.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\test_mh12_replanning.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\test_mh12_replanning_tasklevel.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
