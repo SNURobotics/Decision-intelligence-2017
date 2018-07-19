@@ -39,7 +39,7 @@
 #define RPOSC_NO_EX_AXIS	0
 #define RPOSC_EX_AXIS		1
 
-#define IMOV_SPEED			20		//500
+#define IMOV_SPEED			50		//500
 
 
 #define MOVE_SIGNAL 1
@@ -50,7 +50,6 @@
 
 
 enum {X = 0, Y, Z, RX, RY, RZ};
-
 // CESF_Client_Example_JOB_IMOVDlg 대화 상자
 class CESF_Client_Example_JOB_IMOVDlg : public CDialogEx
 {
@@ -131,4 +130,6 @@ public:
 
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	LRESULT OnTraceMsg(WPARAM wParam, LPARAM lParam);
+
+	
 };

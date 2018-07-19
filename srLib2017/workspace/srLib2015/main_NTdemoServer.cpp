@@ -103,7 +103,7 @@ int main(int argc, char **argv)
 	////////////////////// initialize //////////////////////////////
 	////////////////////////////////////////////////////////////////
 	// set the number of objects in demoEnvirionment function
-	demoEnv = new demoEnvironment(1);
+	demoEnv = new demoEnvironment(5);
 	// add robot to system
     MHRobotSetting();
 	// add bin and objects to system
@@ -113,8 +113,6 @@ int main(int argc, char **argv)
 	demoTask = new demoTaskManager(demoEnv, rManager1);
 	demoTask->setRobotRRTManager();
 	//cout << demoEnv->Trobotbase2camera * demoEnv->Tcamera2robotbase;
-
-
 
 
 	// for communication (dummy window dialog)
@@ -193,6 +191,26 @@ int main(int argc, char **argv)
 	////traj = demoTask->tempTraj;
 	//bool task5 = demoTask->goThroughWaypoints(Twaypoints2);
 
+	/////////////////////// test 18.06.12. /////////////////////////
+	//for (int i = 0; i < 10; i++)
+	//{
+	//	std::cout << i << std::endl;
+	//	cout << demoTask->getCurPosSignal() << endl;
+	//	Sleep(500);
+	//}
+	//bool grasped = demoTask->graspObject();
+	//bool released = demoTask->releaseObject();
+	//bool gohome = demoTask->goToWaypoint(demoTask->homeSE3);
+	//for (int i = 0; i < 5; i++)
+	//{
+	//	Sleep(500);
+	//	std::cout << i << std::endl;
+	//	cout << demoTask->moveWorkspaceDisplacement(Vec3(0.0, 0.0, 0.01)) << endl;
+	//	Sleep(500);
+	//	cout << demoTask->moveWorkspaceDisplacement(Vec3(0.0, 0.0, -0.01)) << endl;
+	//}
+	
+		
 
 	qval.setZero(6);
 	qval[0] = DEG2RAD(0.0);
@@ -202,7 +220,10 @@ int main(int argc, char **argv)
 	qval[4] = DEG2RAD(-90.0);
 	qval[5] = DEG2RAD(0.0);
 	rManager1->setJointVal(qval);
-
+	//cout << MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame();
+	//qval[5] = DEG2RAD(90.0);
+	//rManager1->setJointVal(qval);
+	//cout << MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame();
 	//SE3 Ttemp = SE3(Vec3(0.0, 0.0, -0.2))*MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame();
 	//cout << Ttemp << endl;
 	int flag;

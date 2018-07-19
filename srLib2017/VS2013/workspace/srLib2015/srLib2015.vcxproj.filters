@@ -122,5 +122,8 @@
     <ClCompile Include="..\..\..\workspace\srLib2015\test_mh12_replanning_tasklevel.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\test_ur5_modeling.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

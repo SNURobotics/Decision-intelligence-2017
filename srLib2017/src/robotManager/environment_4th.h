@@ -55,3 +55,37 @@ public:
 	void AssembleModel();
 	double m_collision_offset;
 };
+
+// 4th year object
+class BlueMaleConnector : public Object
+{
+public:
+	BlueMaleConnector();
+	~BlueMaleConnector();
+	void AssembleModel();
+};
+
+class RedMaleConnector : public Object
+{
+public:
+	RedMaleConnector();
+	~RedMaleConnector();
+	void AssembleModel();
+};
+
+
+class BlueFemaleConnector : public Object
+{
+public:
+	BlueFemaleConnector();
+	~BlueFemaleConnector();
+	void AssembleModel();
+};
+
+class RedFemaleConnector : public Object
+{
+public:
+	RedFemaleConnector();
+	~RedFemaleConnector();
+	void AssembleModel();
+};
