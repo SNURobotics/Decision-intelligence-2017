@@ -57,6 +57,14 @@ public:
 };
 
 // 4th year object
+class TableRetarget : public Object
+{
+public:
+	TableRetarget();
+	~TableRetarget();
+	void AssembleModel();
+};
+
 class BlueMaleConnector : public Object
 {
 public:

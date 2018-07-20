@@ -10,85 +10,69 @@
 #include "robotManager\environment_4th.h"
 #include <time.h>
 #include "common\dataIO.h"
+#include "retargettingEnvSetting.h"
 
+
+// Robot
 // Robot
 UR5Robot* URRobot = new UR5Robot;
 UR5RobotManager* rManager1;
 
-// objects
-Bin* bin = new Bin(0.01);
-BlueMaleConnector* blueMaleConnector = new BlueMaleConnector();
-BlueFemaleConnector* blueFemaleConnector = new BlueFemaleConnector();
-RedFemaleConnector* redFemaleConnector = new RedFemaleConnector();
-RedMaleConnector* redMaleConnector = new RedMaleConnector();
-TableRetarget* tableRetarget = new TableRetarget();
+//// Objects
+//TableRetarget* tableRetarget = new TableRetarget();
+//BlueMaleConnector* blueMaleConnector = new BlueMaleConnector();
+//BlueFemaleConnector* blueFemaleConnector = new BlueFemaleConnector();
+//RedFemaleConnector* redFemaleConnector = new RedFemaleConnector();
+//RedMaleConnector* redMaleConnector = new RedMaleConnector();
 
-workingObject* workingObj = new workingObject();
+// environment setting
+retargetEnvironment* retargetEnv;
 
 
-Eigen::VectorXd qval;
+
+// Given traj
+vector<Eigen::VectorXd> right_wrist_data;
+
 
 srSpace gSpace;
 myRenderer* renderer;
 
-srLink* ee = new srLink;
-srSystem* obs = new srSystem;
-srJoint::ACTTYPE actType = srJoint::ACTTYPE::TORQUE;
 SE3 Trobotbase1;
 void initDynamics();
 void rendering(int argc, char **argv);
 void updateFunc();
 void URRobotSetting();
 void URRobotManagerSetting();
-void URrrtSetting();
-int activeJointIdx = 0;
-vector<Eigen::VectorXd> traj(0);
+void envSetting();
+vector<Eigen::VectorXd> generateRetargetPath(string data_txt_path, int data_col_Num);
+
+
 
 int main(int argc, char **argv)
 {
 
 
 
+	retargetEnv = new retargetEnvironment();
+
+	// add robot to system
+	URRobotSetting();
+	// add environment to system
+	envSetting();
 	
-	//URRobotSetting();
-
-	//ee->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
-	//ee->GetGeomInfo().SetDimension(0.03);
-	//ee->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
-	//obs->SetBaseLink(ee);
-	//obs->SetBaseLinkType(srSystem::FIXED);
-	//gSpace.AddSystem(obs);
-	//gSpace.AddSystem(bin);
-	//gSpace.AddSystem(redFemaleConnector);
-	gSpace.AddSystem(tableRetarget);
 	initDynamics();
+	URRobotManagerSetting();
 
-
-	//URRobotManagerSetting();
-
-	//busbar->setBaseLinkFrame(MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() * Inv(Tbusbar2gripper_ur));
-	//ctCase->setBaseLinkFrame(MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() * Inv(TctCase2gripper_ur));
-	//qval.setZero(6);
-	//qval[0] = SR_PI_HALF/3;
-	//qval[1] = SR_PI_HALF/4;
-	//qval[2] = SR_PI_HALF/7;
-	//qval[3] = SR_PI_HALF/2;
-	//qval[4] = SR_PI_HALF/6;
-	//qval[5] = SR_PI_HALF/5;
-	//rManager1->setJointVal(qval);
-	//obs->GetBaseLink()->SetFrame(URRobot->gMarkerLink[UR5_Index::MLINK_GRIP].GetFrame());
-	//bin->setBaseLinkFrame(SE3(Vec3(1.0, 0.0, 0.0)));
-	tableRetarget->setBaseLinkFrame(SE3());
-
-	int flag;
-
-	//rManager1->setJointVal(qval);
+	// data preperation
+	// right wrist
+	string data_txt_path = "D:/Google_Drive/판단지능_ksh_local/4차년도/재평가 관련/생기원 경로/result1/right_wrist.txt";
+	int dataColNum = 3;
+	right_wrist_data = generateRetargetPath(data_txt_path, dataColNum);
 
 	rendering(argc, argv);
 
 	return 0;
 }
-
 void rendering(int argc, char **argv)
 {
 	renderer = new myRenderer();
@@ -122,14 +106,14 @@ void updateFunc()
 	//((srStateJoint*)URRobot->m_KIN_Joints[5])->m_State.m_rValue[0] = JointVal;
 	//JointVal += 0.01;
 	//obs->GetBaseLink()->SetFrame(URRobot->gMarkerLink[UR5_Index::MLINK_GRIP].GetFrame());
-	//static int cnt = 0;
-	//static int trajcnt = 0;
-	//cnt++;
+	static int cnt = 0;
+	static int trajcnt = 0;
+	cnt++;
 
-	//if (cnt % 10 == 0)
-	//	trajcnt++;
-	//if (traj.size() > 0)
-		//rManager1->setJointVal(traj[trajcnt % traj.size()]);
+	if (cnt % 10 == 0)
+		trajcnt++;
+	if (right_wrist_data.size() > 0)
+	rManager1->setJointVal(right_wrist_data[trajcnt % right_wrist_data.size()]);
 
 
 	//cout << MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() << endl;
@@ -165,14 +149,14 @@ void updateFunc()
 	//cout << "Fext1:    " << rManager1->m_ftSensorInfo[0]->getExtForce() << endl;
 	//cout << "Fsensor2: " << rManager2->readSensorValue() << endl;
 	//cout << "Fext2:    " << rManager2->m_ftSensorInfo[0]->getExtForce() << endl;
-	int stop = 1;
+	//int stop = 1;
 }
 
 
 void URRobotSetting()
 {
 	gSpace.AddSystem((srSystem*)URRobot);
-	URRobot->GetBaseLink()->SetFrame(EulerZYX(Vec3(SR_PI, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	URRobot->GetBaseLink()->SetFrame(retargetEnv->Trobotbase);
 	URRobot->SetActType(srJoint::ACTTYPE::HYBRID);
 
 	vector<int> gpIdx(2);
@@ -180,40 +164,51 @@ void URRobotSetting()
 	gpIdx[1] = 1;
 	URRobot->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
 
-	Trobotbase1 = URRobot->GetBaseLink()->GetFrame() * URRobot->TsrLinkbase2robotbase;
-	//robot1->SetActType(srJoint::ACTTYPE::HYBRID);
-	//robot2->SetActType(srJoint::ACTTYPE::TORQUE);
-	//vector<int> gpIdx(2);
-	//gpIdx[0] = 0;
-	//gpIdx[1] = 1;
-	//robot1->SetGripperActType(srJoint::ACTTYPE::TORQUE, gpIdx);
-	//robot2->SetGripperActType(srJoint::ACTTYPE::TORQUE, gpIdx);
-	//gpIdx[0] = 2;
-	//gpIdx[1] = 3;
-	//robot1->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
-	//robot2->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
+
 }
 
 void URRobotManagerSetting()
 {
 
-	//rManager2 = new robotManager();
-	//rManager2->setRobot((srSystem*)robot2);
-	//rManager2->setSpace(&gSpace);
-	//rManager2->setEndeffector(&robot2->gMarkerLink[Indy_Index::MLINK_GRIP]);
-
-	//// gripper setting
-	//vector<srJoint*> gripperJoint(2);
-	//gripperJoint[0] = robot2->gPjoint[Indy_Index::GRIPJOINT_L];
-	//gripperJoint[1] = robot2->gPjoint[Indy_Index::GRIPJOINT_U];
-	//vector<srJoint*> gripperDummyJoint(2);
-	//gripperDummyJoint[0] = robot2->gPjoint[Indy_Index::GRIPJOINT_L_DUMMY];
-	//gripperDummyJoint[1] = robot2->gPjoint[Indy_Index::GRIPJOINT_U_DUMMY];
-	//rManager2->setGripper(gripperJoint, gripperDummyJoint);
-
-	//// sensor setting
-	//rManager2->setFTSensor(robot2->gWeldJoint[Indy_Index::WELDJOINT_GRIPPER]);
-
 	rManager1 = new UR5RobotManager(URRobot, &gSpace);
 
+}
+
+vector<Eigen::VectorXd> generateRetargetPath(string data_txt_path, int data_col_num)
+{
+	vector<Eigen::VectorXd> data_from_txt = loadDataFromText(data_txt_path, data_col_num);
+	vector < Eigen::VectorXd > robotTraj(0);
+	int invKinFlag;
+	for (int i_frame = 0; i_frame < 155 /*data_from_txt.size()*/; i_frame++)
+	{
+		Vec3 dataXYZ_Vec3_txt;
+
+		for (int i_coord = 0; i_coord < data_from_txt[i_frame].size(); i_coord++)
+		{
+			dataXYZ_Vec3_txt[i_coord] = data_from_txt[i_frame][i_coord];
+		}
+
+		SE3 dataXYZ_SE3_ori = SE3();
+		dataXYZ_SE3_ori.SetPosition(dataXYZ_Vec3_txt);
+
+		//cout << retargetEnv->Tworld2camera << endl;
+		//SE3 AAA = retargetEnv->Tworld2camera*dataXYZ_Vec3_txt;
+		//cout << AAA << endl;
+		SE3 dataXYZfromWorld = retargetEnv->Tworld2camera*dataXYZ_SE3_ori;
+		//cout << dataXYZfromWorld << endl;
+
+		robotTraj.push_back(rManager1->inverseKin(dataXYZfromWorld, &URRobot->gMarkerLink[UR5_Index::MLINK_GRIP], false, SE3(), invKinFlag, URRobot->qInvKinInit));
+		cout << "inverse kinematics flag: "<< invKinFlag << endl;
+	}
+
+
+
+
+	return robotTraj;
+}
+
+
+void envSetting()
+{
+	retargetEnv->setEnvironmentInSrSpace(&gSpace);
 }
