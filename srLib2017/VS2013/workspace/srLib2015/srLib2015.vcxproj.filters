@@ -117,6 +117,8 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\retargettingEnvSetting.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\test_sda20d_modeling.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
