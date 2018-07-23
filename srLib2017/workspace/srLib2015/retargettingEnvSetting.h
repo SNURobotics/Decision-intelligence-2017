@@ -20,10 +20,16 @@ public:
 public:
 	SE3 Tworld2camera;
 	SE3 Tworld2tableCenter;
-	SE3 Trobotbase;
+	SE3 Trobotbase_right;
+	SE3 Trobotbase_left;
+	SE3 TblueFemale2robotEE;
+	SE3 TblueMale2robotEE;
+	SE3 TredFemale2robotEE;
+	SE3 TredMale2robotEE;
+
 	TableRetarget* m_table;
 	BlueFemaleConnector* m_blueFemaleConnetor;
-	BlueMaleConnector* m_blueMmaleConnetor;
+	BlueMaleConnector* m_blueMaleConnetor;
 	RedFemaleConnector* m_redFemaleConnetor;
-	RedMaleConnector* m_redMmaleConnetor;
+	RedMaleConnector* m_redMaleConnetor;
 };
