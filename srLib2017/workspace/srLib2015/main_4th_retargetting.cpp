@@ -49,7 +49,7 @@ void envSetting(int taskIdx);
 void URrrtSetting();
 
 // generate path with inverse kinematics
-vector<Eigen::VectorXd> generateRetargetPath(string data_txt_path, int data_col_num, UR5RobotManager* robotManager, UR5Robot* robot, pair<int, int> taskFrameIdx);
+vector<Eigen::VectorXd> generateRetargetPath(string data_txt_path, int data_col_num, UR5RobotManager* robotManager, UR5Robot* robot, pair<int, int> taskFrameIdx, bool isLeft);
 
 // generate path with RRT
 robotRRTManager* RRTManager_right = new robotRRTManager;
@@ -95,21 +95,21 @@ int main(int argc, char **argv)
 
 	// data preperation
 	// right wrist
-	string data_txt_path_right = "D:/Google_Drive/판단지능_ksh_local/4차년도/재평가 관련/생기원 경로/result1/right_wrist_smooth_seokho.txt";
-	string data_txt_path_left = "D:/Google_Drive/판단지능_ksh_local/4차년도/재평가 관련/생기원 경로/result1/left_wrist_smooth_seokho.txt";
+	string data_txt_path_right = "D:/프로젝트/Decision-intelligence-2017-download/추가작업데이터/right_wrist_smooth.txt";
+	string data_txt_path_left = "D:/프로젝트/Decision-intelligence-2017-download/추가작업데이터/left_wrist_smooth.txt";
 	int dataColNum = 3;
 
 #ifdef INVKIN_TRAJ
 
-	pair<int, int> firstTask(0, 150);
+	pair<int, int> firstTask(85, 150);
 	
 	cout << " ===== Right arm motion generating start ======" << endl;
-	right_wrist_data = generateRetargetPath(data_txt_path_right, dataColNum, rManager_right, URRobot_right,firstTask);
-
+	right_wrist_data = generateRetargetPath(data_txt_path_right, dataColNum, rManager_right, URRobot_right, firstTask, false);
+	
 	// left wrist
 
 	cout << " ===== Left arm motion generating start ======" << endl;
-	left_wrist_data = generateRetargetPath(data_txt_path_left, dataColNum, rManager_left, URRobot_left, firstTask);
+	left_wrist_data = generateRetargetPath(data_txt_path_left, dataColNum, rManager_left, URRobot_left, firstTask, true);
 #endif
 
 #ifdef RRT_TRAJ
@@ -278,11 +278,13 @@ void URRobotManagerSetting()
 
 }
 
-vector<Eigen::VectorXd> generateRetargetPath(string data_txt_path, int data_col_num, UR5RobotManager* robotManager, UR5Robot* robot, pair<int, int> taskFrameIdx)
+vector<Eigen::VectorXd> generateRetargetPath(string data_txt_path, int data_col_num, UR5RobotManager* robotManager, UR5Robot* robot, pair<int, int> taskFrameIdx, bool isLeft)
 {
 	vector<Eigen::VectorXd> data_from_txt = loadDataFromText(data_txt_path, data_col_num);
 	vector < Eigen::VectorXd > robotTraj(0);
 	int invKinFlag;
+	SE3 dataXYZfromWorld;
+
 	for (int i_frame = taskFrameIdx.first; i_frame < taskFrameIdx.second; i_frame++)
 	{
 		Vec3 dataXYZ_Vec3_txt;
@@ -299,7 +301,7 @@ vector<Eigen::VectorXd> generateRetargetPath(string data_txt_path, int data_col_
 		//cout << retargetEnv->Tworld2camera << endl;
 		//SE3 AAA = retargetEnv->Tworld2camera*dataXYZ_Vec3_txt;
 		//cout << AAA << endl;
-		SE3 dataXYZfromWorld = retargetEnv->Tworld2camera*dataXYZ_SE3;
+		dataXYZfromWorld = retargetEnv->Tworld2camera*dataXYZ_SE3;
 		//cout << dataXYZfromWorld << endl;
 		SE3 dataXYZIdentity = SE3();
 		dataXYZIdentity.SetPosition(dataXYZfromWorld.GetPosition());
@@ -316,6 +318,47 @@ vector<Eigen::VectorXd> generateRetargetPath(string data_txt_path, int data_col_
 		}
 			
 	}
+
+	cout << dataXYZfromWorld << endl;
+	SE3 GoalPosition;
+	SE3 CurrentFrame;
+
+	if (isLeft)
+	{
+		//GoalPosition = EulerZYX(Vec3(SR_PI, 0.0, 0.0), Vec3(-0.4445, 0.2215 + 0.1, 1.185));	// for blue
+		GoalPosition = EulerZYX(Vec3(SR_PI, 0.0, 0.0), Vec3(-0.3525, 0.2715 + 0.1, 0.961));		// for red
+		CurrentFrame = rManager_left->m_activeArmInfo->m_endeffector[0]->GetFrame();
+	}
+	else
+	{
+		//GoalPosition = EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.4445, 0.2215 - 0.1, 1.185));		// for blue
+		GoalPosition = EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.3525, 0.2715 - 0.1, 0.961));		// for red
+		CurrentFrame = rManager_right->m_activeArmInfo->m_endeffector[0]->GetFrame();
+	}
+
+	
+
+	SE3 Interpolation = Inv(CurrentFrame) * GoalPosition;
+
+	Vec3 InterAngular = Log(Interpolation.GetOrientation());
+
+	for (int i_frame = 0; i_frame<20; i_frame++)
+	{
+		SE3 ToGoalfromWorld = CurrentFrame * SE3(Exp(InterAngular / 20 * (i_frame+1)), Interpolation.GetPosition() / 20 * (i_frame+1));
+
+		robotTraj.push_back(robotManager->inverseKin(ToGoalfromWorld, &robot->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), invKinFlag, robot->qInvKinInit));
+		//robotTraj.push_back(robotManager->inverseKin(dataXYZfromWorld, &robot->gLink[UR5_Index::LINK_6], false, SE3(), invKinFlag, robot->qInvKinInit));
+		//robotTraj.push_back(robotManager->inverseKin(dataXYZIdentity, &robot->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), invKinFlag, robot->qInvKinInit));
+		cout << "inverse kinematics flag: " << invKinFlag << endl;
+		if (invKinFlag != 0)
+		{
+			cout << "==========================" << endl;
+			cout << "Inverse kineamtics flag is not ZERO!!!!!!" << endl;
+			cout << "==========================" << endl;
+		}
+
+	}
+
 
 	return robotTraj;
 }
