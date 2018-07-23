@@ -7,8 +7,8 @@ retargetEnvironment::retargetEnvironment()
 {
 	 Tworld2camera = EulerZYX(Vec3(-SR_PI_HALF, 0.0, (120.5 / 180.0) * SR_PI), Vec3(0.50 + 0.53, 0.775 - 0.75, 0.72+ 0.82));
 	 Tworld2tableCenter = SE3(Vec3(0.0, 0.0, 0.72));
-	 Trobotbase_right= SE3(Vec3(-0.75, -0.3, 0.4));
-	 Trobotbase_left = SE3(Vec3(-0.75, 0.55, 0.4));
+	 Trobotbase_right= SE3(Vec3(-0.7, -0.3, 0.5));
+	 Trobotbase_left = SE3(Vec3(-0.7, 0.55, 0.5));
 
 	 // set table
 	 m_table = new TableRetarget();
