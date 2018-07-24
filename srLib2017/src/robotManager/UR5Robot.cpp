@@ -33,7 +33,8 @@ UR5Robot::UR5Robot(bool elbowUp, double gripperRot)
 	}
 	TsrLinkbase2robotbase = SE3();
 	//TsrLinkbase2robotbase = EulerZYX(Vec3(SR_PI, 0.0, 0.0), Vec3(0.0, 0.0, 0.69195 - 0.69511 + 0.00195));
-	this->SetSelfCollision(true);
+	//this->SetSelfCollision(true);
+	this->SetSelfCollision(false);
 }
 
 UR5Robot::~UR5Robot()

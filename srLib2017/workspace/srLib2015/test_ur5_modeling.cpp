@@ -9,7 +9,7 @@
 #include "robotManager\UR5Robot.h"
 #include "robotManager\environment_4th.h"
 #include <time.h>
-
+#include "common\dataIO.h"
 
 // Robot
 UR5Robot* URRobot = new UR5Robot;
@@ -21,6 +21,8 @@ BlueMaleConnector* blueMaleConnector = new BlueMaleConnector();
 BlueFemaleConnector* blueFemaleConnector = new BlueFemaleConnector();
 RedFemaleConnector* redFemaleConnector = new RedFemaleConnector();
 RedMaleConnector* redMaleConnector = new RedMaleConnector();
+TableRetarget* tableRetarget = new TableRetarget();
+
 workingObject* workingObj = new workingObject();
 
 
@@ -45,6 +47,9 @@ vector<Eigen::VectorXd> traj(0);
 int main(int argc, char **argv)
 {
 
+
+
+	
 	//URRobotSetting();
 
 	//ee->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
@@ -54,7 +59,8 @@ int main(int argc, char **argv)
 	//obs->SetBaseLinkType(srSystem::FIXED);
 	//gSpace.AddSystem(obs);
 	//gSpace.AddSystem(bin);
-	gSpace.AddSystem(redFemaleConnector);
+	//gSpace.AddSystem(redFemaleConnector);
+	gSpace.AddSystem(tableRetarget);
 	initDynamics();
 
 
@@ -72,7 +78,7 @@ int main(int argc, char **argv)
 	//rManager1->setJointVal(qval);
 	//obs->GetBaseLink()->SetFrame(URRobot->gMarkerLink[UR5_Index::MLINK_GRIP].GetFrame());
 	//bin->setBaseLinkFrame(SE3(Vec3(1.0, 0.0, 0.0)));
-	redFemaleConnector->setBaseLinkFrame(SE3());
+	tableRetarget->setBaseLinkFrame(SE3());
 
 	int flag;
 

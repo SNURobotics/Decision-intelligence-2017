@@ -61,7 +61,7 @@ static std::vector<Eigen::VectorXd> loadDataFromText(std::string str, int colNum
 
 	return data;
 }
-
+     
 static Eigen::VectorXd loadVectorFromText(std::string str, int colNum)
 {
 	std::ifstream fin;
