@@ -19,10 +19,17 @@ UR5Robot::UR5Robot(bool elbowUp, double gripperRot)
 	SetInitialConfiguration();
 	SetInertia();
 	homePos = Eigen::VectorXd::Zero(6);
-	homePos[1] = -SR_PI_HALF; homePos[3] = -SR_PI_HALF;
+	//homePos[1] = -SR_PI_HALF; 
+	homePos[0] = SR_PI_HALF;
+	homePos[2] = SR_PI_HALF;
+	//homePos[3] = -SR_PI_HALF;
 	qInvKinInit = Eigen::VectorXd::Zero(6);
-	qInvKinInit[0] = DEG2RAD(-2.43); 	qInvKinInit[1] = DEG2RAD(-68.79);	qInvKinInit[2] = DEG2RAD(93.97);
-	qInvKinInit[3] = DEG2RAD(-115.47);	qInvKinInit[4] = DEG2RAD(-94.96);	qInvKinInit[5] = DEG2RAD(0.0);
+	//qInvKinInit[0] = DEG2RAD(-2.43); 	qInvKinInit[1] = DEG2RAD(-68.79);	qInvKinInit[2] = DEG2RAD(93.97);
+	//qInvKinInit[3] = DEG2RAD(-115.47);	qInvKinInit[4] = DEG2RAD(-94.96);	qInvKinInit[5] = DEG2RAD(0.0);
+
+	qInvKinInit[0] = 0.797052; qInvKinInit[1] = 0.728445; qInvKinInit[2] = 0.495759; 
+	qInvKinInit[3] = 0.346593; qInvKinInit[4] = -1.5708; qInvKinInit[5] = -2.34454;
+
 	if (elbowUp)
 	{
 		//qInvKinInit[0] = -0.224778; qInvKinInit[1] = -1.91949; qInvKinInit[2] = -0.384219; qInvKinInit[3] = 1.5708; qInvKinInit[4] = -0.73291; qInvKinInit[5] = 1.79557;
