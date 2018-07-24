@@ -60,6 +60,7 @@ double robotOperationSpeed = 0.25;
 double maxPlanningTime = 2.0;
 int plannigHorizon = ceil(maxPlanningTime * robotOperationSpeed / rrtStepSize);
 int predictionHorizon = 2 * plannigHorizon;
+int stop_iter = -1;
 Eigen::VectorXd qInit;
 Eigen::VectorXd qGoal;
 int main(int argc, char **argv)
@@ -154,6 +155,7 @@ int main(int argc, char **argv)
 	////////////////////// replanning algorithm /////////////////////////
 	/////////////////////////////////////////////////////////////////////
 #ifdef REPLANNING
+	bool replan_success = true;
 	// load trajectory
 	jointTraj_initPlan = loadDataFromText("../../../workspace/robot/replanning/jointInitTraj_tasklevel.txt", 6);
 	vector<Eigen::VectorXd> obsTraj_vec = loadDataFromText("../../../workspace/robot/replanning/obsTraj_tasklevel.txt", 6);
@@ -163,6 +165,7 @@ int main(int argc, char **argv)
 
 	// replanning
 	int iter = 0;
+	
 	jointTraj_curPlan = jointTraj_initPlan;
 	while (iter + plannigHorizon != jointTraj_curPlan.size())
 	{
@@ -191,6 +194,8 @@ int main(int argc, char **argv)
 		{
 			printf("replanning impossible!!! plan task again!!!\n");
 			printf("stop iter: %d\n", iter);
+			replan_success = false;
+			stop_iter = iter;
 			break;
 		}			
 		if (doReplanning)
@@ -205,36 +210,58 @@ int main(int argc, char **argv)
 			{
 				printf("replanning impossible!!! plan task again!!!\n");
 				printf("stop iter: %d\n", iter);
+				replan_success = false;
+				stop_iter = iter;
 				break;
 			}
 
 		}
 		iter++;
 	}
-	traj = jointTraj_curPlan;
-
-	if (jointTraj_curPlan.size() > obsTraj.size())
+	if (replan_success)
 	{
-		vector<SE3> obsTempTraj = obsTraj;
-		obsTraj.resize(jointTraj_curPlan.size());
-		for (unsigned int i = 0; i < obsTraj.size(); i++)
+		traj = jointTraj_curPlan;
+
+		if (jointTraj_curPlan.size() > obsTraj.size())
 		{
-			if (i < obsTempTraj.size())
-				obsTraj[i] = obsTempTraj[i];
-			else
-				obsTraj[i] = obsTempTraj.back();
+			vector<SE3> obsTempTraj = obsTraj;
+			obsTraj.resize(jointTraj_curPlan.size());
+			for (unsigned int i = 0; i < obsTraj.size(); i++)
+			{
+				if (i < obsTempTraj.size())
+					obsTraj[i] = obsTempTraj[i];
+				else
+					obsTraj[i] = obsTempTraj.back();
+			}
 		}
 	}
 
 #endif
 	
 #ifdef ADD_TASK
+
+	stop_iter = 12;
+	int delay_timeStep = 10;
 	// load trajectory
 	jointTraj_initPlan = loadDataFromText("../../../workspace/robot/replanning/jointInitTraj_tasklevel.txt", 6);
 	vector<Eigen::VectorXd> obsTraj_vec = loadDataFromText("../../../workspace/robot/replanning/obsTraj_tasklevel.txt", 6);
 	obsTraj.resize(obsTraj_vec.size());
 	for (unsigned int i = 0; i < obsTraj_vec.size(); i++)
 		obsTraj[i] = VectortoSE3(obsTraj_vec[i]);
+
+	vector<Eigen::VectorXd> jointTraj0(jointTraj_initPlan.size() + delay_timeStep);
+	vector<SE3> obsTraj0(jointTraj_initPlan.size() + delay_timeStep);
+	for (unsigned int i = 0; i < jointTraj_initPlan.size() + delay_timeStep; i++)
+	{
+		if (i < stop_iter)
+			jointTraj0[i] = jointTraj_initPlan[i];
+		else
+			jointTraj0[i] = jointTraj_initPlan[stop_iter];
+		if (i < obsTraj.size())
+			obsTraj0[i] = obsTraj[i];
+		else
+			obsTraj0[i] = obsTraj.back();
+	}
 
 	SE3 Tobs2robot = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.035));
 	SE3 Trobot2obs = Inv(Tobs2robot);
@@ -254,7 +281,7 @@ int main(int argc, char **argv)
 	qGoal = rManager1->inverseKin(TobsInit * Tobs2robot, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, qInvKinInit);
 
 	clock_t start1 = clock();
-	robotrrtManager->setStartandGoal(qInit, qGoal);
+	robotrrtManager->setStartandGoal(jointTraj_initPlan[stop_iter], qGoal);
 
 	robotrrtManager->execute(0.1);
 	if (robotrrtManager->isExecuted())
@@ -319,6 +346,11 @@ int main(int argc, char **argv)
 	// gather traj
 	traj.resize(0);
 	obsTraj.resize(0);
+	for (unsigned int i = 0; i < jointTraj0.size(); i++)
+	{
+		traj.push_back(jointTraj0[i]);
+		obsTraj.push_back(obsTraj0[i]);
+	}
 	for (unsigned int i = 0; i < jointTraj1.size(); i++)
 	{
 		traj.push_back(jointTraj1[i]);
@@ -382,8 +414,8 @@ void updateFunc()
 		
 	if (traj.size() > 0)
 	{
-		obs->GetBaseLink()->SetFrame(obsTraj[trajcnt % traj.size()]);
-		//obs->GetBaseLink()->SetFrame(obsTraj[0]);
+		//obs->GetBaseLink()->SetFrame(obsTraj[trajcnt % traj.size()]);
+		obs->GetBaseLink()->SetFrame(obsTraj[0]);
 		//robotrrtManager->setState(traj[trajcnt % traj.size()]);
 		rManager1->setJointVal(traj[trajcnt % traj.size()]);
 		if (!printed)

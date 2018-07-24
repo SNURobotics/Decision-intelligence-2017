@@ -13,8 +13,8 @@
 #include <ctime>
 #include "common/dataIO.h"
 
-//#define PROBLEM_DEFINITION
-#define REPLANNING
+#define PROBLEM_DEFINITION
+//#define REPLANNING
 
 // Robot
 MH12Robot* MHRobot = new MH12Robot;
@@ -277,15 +277,13 @@ void updateFunc()
 		
 	if (traj.size() > 0)
 	{
-		obs->GetBaseLink()->SetFrame(obsTraj[trajcnt % traj.size()]);
-		//obs->GetBaseLink()->SetFrame(obsTraj[0]);
+		//obs->GetBaseLink()->SetFrame(obsTraj[trajcnt % traj.size()]);
+		obs->GetBaseLink()->SetFrame(obsTraj[0]);
 		robotrrtManager->setState(traj[trajcnt % traj.size()]);
 		gSpace._KIN_UpdateFrame_All_The_Entity_All_The_Systems();
 		if (!printed)
 			printf("traj iter: %d, collision?: %d\n", trajcnt % traj.size(), (int)rManager1->checkCollision());
 		printed = true;
-		if (rManager1->checkCollision())
-			cnt--;
 	}
 		
 		//rManager1->setJointVal(traj[trajcnt % traj.size()]);
