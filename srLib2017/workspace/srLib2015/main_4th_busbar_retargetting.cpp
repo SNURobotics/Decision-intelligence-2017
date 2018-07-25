@@ -397,7 +397,7 @@ void updateFunc()
 	//rManager1->setJointVal(testWaypoint);
 	//rManager1->setJointVal(traj[0][cnt%(traj[0].size()-1)]);
 	cnt++;
-	if (cnt % 10 == 0)
+	if (cnt % 5 == 0)
 		temp_cnt++;
 	
 	
