@@ -106,6 +106,19 @@ int main(int argc, char **argv)
 	
 	rManager2->setJointVal(q);
 	
+	//SE3 temp = SE3(Vec3(0.0, -0.1, 0.3));
+	//Eigen::VectorXd qq = rManager1->inverseKin(temp, &sdaRobot->gMarkerLink[SDA20D_Index::MLINK_RIGHT_T], false, SE3(), flag, rManager1->qInvKinInitActiveJoint, 500, robotManager::QP, robotManager::DG);
+	
+	Eigen::VectorXd qq(7);
+	qq.setZero();
+	//qq(0) = DEG2RAD(-147);
+	//qq(1) = DEG2RAD(73.6);
+	//qq(2) = DEG2RAD(-15.5);
+	//qq(3) = DEG2RAD(-11.8);
+	//qq(4) = DEG2RAD(-16.4);
+	//qq(5) = DEG2RAD(90);
+	//qq(6) = DEG2RAD(-221);
+	rManager1->setJointVal(qq);
 	rendering(argc, argv);
 
 	return 0;
@@ -155,13 +168,13 @@ void updateFunc()
 
 	if (cnt % 100 == 0)
 		trajcnt++;
-	if (trajcnt % 2 == 0)
-		rManager1->setJointVal(qTemp);
-	else
-	{
-		rManager1->setJointVal(Eigen::VectorXd::Zero(7));
-		rManager2->setJointVal(q);
-	}
+	//if (trajcnt % 2 == 0)
+	//	rManager1->setJointVal(qTemp);
+	//else
+	//{
+	//	rManager1->setJointVal(Eigen::VectorXd::Zero(7));
+	//	rManager2->setJointVal(q);
+	//}
 		
 	//cout << sdaRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() << endl;
 	//cout << sdaRobot->gLink[MH12_Index::GRIPPER].GetFrame() << endl;

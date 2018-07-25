@@ -11,7 +11,7 @@
 #include <time.h>
 #include <ctime>
 
-#define GRID_NUM		8
+#define GRID_NUM		10
 #define TOTAL_DOF		7
 #define MAX_ITER		100
 //#define SOLVE_INVKIN
@@ -253,11 +253,19 @@ int main(int argc, char **argv)
 	for (int i = 0; i < totalDof; i++)
 	{
 		workSpaceVolRatio[i] = workSpaceVol[i] / workSpaceVol[totalDof];
+		int maxIdx = 0;
 		for (int j = 0; j < gridNum; j++)
 		{
 			workSpaceVolRatio_anglewise[i][j] = workSpaceVol_anglewise[i][j] / workSpaceVol[i];
+			if (j > 0)
+				if (workSpaceVol_anglewise[i][j] > workSpaceVol_anglewise[i][maxIdx])
+					maxIdx = j;
 		}
+		printf("%d-th joint best angle: %f\n", i, RAD2DEG(grid(i, maxIdx)));
 	}
+
+	for (int i = 0; i < totalDof; i++)
+		printf("%d-th joint workspace vol ratio: %f\n", i, workSpaceVolRatio[i]);
 
 #ifdef SOLVE_INVKIN
 	vector<int> Ninvestigate(totalDof, Ninvestigate_exceptLast);
@@ -453,5 +461,7 @@ void setSelectionMtx()
 			else
 				S[i].col(j) = identity.col(j + 1);
 		}
+		cout << i << endl;
+		cout << S[i] << endl;
 	}
 }
