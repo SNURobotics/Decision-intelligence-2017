@@ -7,8 +7,8 @@ retargetEnvironment::retargetEnvironment()
 {
 	 Tworld2camera = EulerZYX(Vec3(-SR_PI_HALF, 0.0, (120.5 / 180.0) * SR_PI), Vec3(0.50 + 0.53, 0.775 - 0.75, 0.72+ 0.82));
 	 Tworld2tableCenter = SE3(Vec3(0.0, 0.0, 0.72));
-	 Trobotbase_connector_right= SE3(Vec3(-0.7, -0.3, 0.5));
-	 Trobotbase_connector_left = SE3(Vec3(-0.7, 0.55, 0.5));
+	 Trobotbase_connector_right= SE3(Vec3(-0.7, -0.4, 0.8));
+	 Trobotbase_connector_left = SE3(Vec3(-0.7, 0.55, 0.8));
 
 	 Trobotbase_busbar_right = SE3(Vec3(-0.7, -0.3, 0.4));
 	 Trobotbase_busbar_left = SE3(Vec3(-0.7, 0.55, 0.4));
@@ -25,7 +25,7 @@ retargetEnvironment::retargetEnvironment()
 
 	 // set objects position w.r.t. EE
 	 TblueFemale2robotEE = EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.01));
-	 TblueMale2robotEE = EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.05));
+	 TblueMale2robotEE = EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.1));
 	 TredFemale2robotEE = EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(-0.03, 0.0, -0.03));
 	 TredMale2robotEE = EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(-0.03, 0.0, -0.03));
 

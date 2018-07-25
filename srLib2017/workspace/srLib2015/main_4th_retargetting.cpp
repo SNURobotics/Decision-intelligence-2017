@@ -95,13 +95,13 @@ int main(int argc, char **argv)
 
 	// data preperation
 	// right wrist
-	string data_txt_path_right = "D:/프로젝트/Decision-intelligence-2017-download/추가작업데이터/right_wrist_smooth.txt";
-	string data_txt_path_left = "D:/프로젝트/Decision-intelligence-2017-download/추가작업데이터/left_wrist_smooth.txt";
+	string data_txt_path_right = "D:/Google_Drive/판단지능_ksh_local/4차년도/재평가 관련/생기원 경로/result1/right_wrist_smooth_seokho.txt";
+	string data_txt_path_left = "D:/Google_Drive/판단지능_ksh_local/4차년도/재평가 관련/생기원 경로/result1/left_wrist_smooth_seokho.txt";
 	int dataColNum = 3;
 
 #ifdef INVKIN_TRAJ
 
-	pair<int, int> firstTask(85, 150);
+	pair<int, int> firstTask(0, 150);
 
 	
 	cout << " ===== Right arm motion generating start ======" << endl;
