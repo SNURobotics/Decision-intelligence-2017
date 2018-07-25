@@ -83,7 +83,7 @@ int main(int argc, char **argv)
 	// task 2: result 1 folder red connector
 	taskIdx = 1;
 	envSetting(taskIdx);
-	
+
 
 
 	// add robot to system
@@ -95,18 +95,18 @@ int main(int argc, char **argv)
 
 	// data preperation
 	// right wrist
-	string data_txt_path_right = "D:/Google_Drive/판단지능_ksh_local/4차년도/재평가 관련/생기원 경로/result1/right_wrist_smooth_seokho.txt";
-	string data_txt_path_left = "D:/Google_Drive/판단지능_ksh_local/4차년도/재평가 관련/생기원 경로/result1/left_wrist_smooth_seokho.txt";
+	string data_txt_path_right = "D:/Google_Drive/판단지능_ksh_local/4차년도/재평가 관련/생기원 경로/result2/right_wrist_smooth.txt";
+	string data_txt_path_left = "D:/Google_Drive/판단지능_ksh_local/4차년도/재평가 관련/생기원 경로/result2/left_wrist_smooth.txt";
 	int dataColNum = 3;
 
 #ifdef INVKIN_TRAJ
 
-	pair<int, int> firstTask(0, 300);
-	
-	cout << " ===== Right arm motion generating start ======" << endl;
-	right_wrist_data = generateRetargetPath(data_txt_path_right, dataColNum, rManager_right, URRobot_right,firstTask);
+	pair<int, int> firstTask(0, 700);
 
-	// left wrist
+	cout << " ===== Right arm motion generating start ======" << endl;
+	right_wrist_data = generateRetargetPath(data_txt_path_right, dataColNum, rManager_right, URRobot_right, firstTask);
+
+	//// left wrist
 
 	cout << " ===== Left arm motion generating start ======" << endl;
 	left_wrist_data = generateRetargetPath(data_txt_path_left, dataColNum, rManager_left, URRobot_left, firstTask);
@@ -237,14 +237,14 @@ void updateFunc()
 			retargetEnv->m_redMaleConnetor->setBaseLinkFrame(rManager_left->m_activeArmInfo->m_endeffector[0]->GetFrame() * Inv(retargetEnv->TredMale2robotEE));
 		}
 		break;
-			
+
 	}
 
 
-	
 
 
-	
+
+
 }
 
 
@@ -252,7 +252,7 @@ void URRobotSetting()
 {
 	// right hand robot
 	gSpace.AddSystem((srSystem*)URRobot_right);
-	URRobot_right->GetBaseLink()->SetFrame(retargetEnv->Trobotbase_connector_right);
+	URRobot_right->GetBaseLink()->SetFrame(retargetEnv->Trobotbase_busbar_right);
 	URRobot_right->SetActType(srJoint::ACTTYPE::HYBRID);
 
 	vector<int> gpIdx(2);
@@ -262,7 +262,7 @@ void URRobotSetting()
 
 	// left hand robot
 	gSpace.AddSystem((srSystem*)URRobot_left);
-	URRobot_left->GetBaseLink()->SetFrame(retargetEnv->Trobotbase_connector_left);
+	URRobot_left->GetBaseLink()->SetFrame(retargetEnv->Trobotbase_busbar_left);
 	URRobot_left->SetActType(srJoint::ACTTYPE::HYBRID);
 
 	URRobot_left->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
@@ -307,14 +307,14 @@ vector<Eigen::VectorXd> generateRetargetPath(string data_txt_path, int data_col_
 		robotTraj.push_back(robotManager->inverseKin(dataXYZfromWorld, &robot->gMarkerLink[UR5_Index::MLINK_GRIP], false, SE3(), invKinFlag, robot->qInvKinInit));
 		//robotTraj.push_back(robotManager->inverseKin(dataXYZfromWorld, &robot->gLink[UR5_Index::LINK_6], false, SE3(), invKinFlag, robot->qInvKinInit));
 		//robotTraj.push_back(robotManager->inverseKin(dataXYZIdentity, &robot->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), invKinFlag, robot->qInvKinInit));
-		cout << "inverse kinematics flag: "<< invKinFlag << endl;
+		cout << "inverse kinematics flag: " << invKinFlag << endl;
 		if (invKinFlag != 0)
 		{
 			cout << "==========================" << endl;
 			cout << "Inverse kineamtics flag is not ZERO!!!!!!" << endl;
 			cout << "==========================" << endl;
 		}
-			
+
 	}
 
 	return robotTraj;
@@ -324,7 +324,7 @@ vector<SE3> generateRRTwaypoints(string data_txt_path, int data_col_num, UR5Robo
 {
 	vector<Eigen::VectorXd> data_from_txt = loadDataFromText(data_txt_path, data_col_num);
 	vector<SE3> waypoints(0);
-	
+
 	// check feasibility (first, end point's inverse kin solution exist?)
 	int invKinFlag_first, invKinFlag_end;
 	Vec3 dataXYZ_vec3_first;
@@ -341,9 +341,9 @@ vector<SE3> generateRRTwaypoints(string data_txt_path, int data_col_num, UR5Robo
 	robotManager->inverseKin(dataXYZfromWorld_first, &robot->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), invKinFlag_first, robot->qInvKinInit);
 
 	Vec3 dataXYZ_vec3_end;
-	for (int i_coord = 0; i_coord < data_from_txt[tasK_frame_idx.second-1].size(); i_coord++)
+	for (int i_coord = 0; i_coord < data_from_txt[tasK_frame_idx.second - 1].size(); i_coord++)
 	{
-		dataXYZ_vec3_end[i_coord] = data_from_txt[tasK_frame_idx.second-1][i_coord];
+		dataXYZ_vec3_end[i_coord] = data_from_txt[tasK_frame_idx.second - 1][i_coord];
 	}
 	SE3 dataXYZ_SE3_txt_end = SE3();
 	dataXYZ_SE3_txt_end.SetPosition(dataXYZ_vec3_end);
@@ -355,7 +355,7 @@ vector<SE3> generateRRTwaypoints(string data_txt_path, int data_col_num, UR5Robo
 
 	assert(invKinFlag_first == 0 && "first data point does not have invkin solution!");
 	assert(invKinFlag_end == 0 && "end data point does not have invkin solution!");
-		
+
 	// If the feasibility check is finished, generate rrt waypoints
 	int invKinFlag;
 	for (int i_frame = tasK_frame_idx.first; i_frame < tasK_frame_idx.second; i_frame++)
@@ -406,7 +406,7 @@ vector<SE3> generateRRTwaypoints(string data_txt_path, int data_col_num, UR5Robo
 				//waypoints.push_back(dataXYZIdentity);
 				waypoints.push_back(dataXYZfromWorld);
 		}
-		
+
 		else if (i_frame == tasK_frame_idx.second - 1)
 		{
 			for (int i_coord = 0; i_coord < data_from_txt[i_frame].size(); i_coord++)
@@ -427,7 +427,7 @@ vector<SE3> generateRRTwaypoints(string data_txt_path, int data_col_num, UR5Robo
 			//waypoints.push_back(dataXYZIdentity);
 			waypoints.push_back(dataXYZfromWorld);
 		}
-		
+
 	}
 
 	return waypoints;
@@ -437,9 +437,9 @@ vector<SE3> generateRRTwaypoints(string data_txt_path, int data_col_num, UR5Robo
 void envSetting(int taskIdx)
 {
 
-	switch(taskIdx)
+	switch (taskIdx)
 	{
-	case 1: 
+	case 1:
 		gSpace.AddSystem(retargetEnv->m_blueFemaleConnetor);
 		gSpace.AddSystem(retargetEnv->m_blueMaleConnetor);
 		break;
@@ -478,21 +478,21 @@ pair<vector<Eigen::VectorXd>, vector<Eigen::VectorXd>> RRT_problemSetting(vector
 	vector<bool> feas(2);
 	int flag;
 
-	switch(taskIdx){
+	switch (taskIdx) {
 	case 1:
 		if (leftRight == "right")
 		{
 			initPos.push_back(rManager_right->inverseKin(wayPoints[0], &URRobot_right->gMarkerLink[UR5_Index::MLINK_GRIP], includeOri[0], SE3(), flag, URRobot_right->qInvKinInit));
-			
-			for (unsigned int i = 0; i < wayPoints.size()-1; i++)
+
+			for (unsigned int i = 0; i < wayPoints.size() - 1; i++)
 			{
 				//qInit = initPos[i];
-				goalPos.push_back(rManager_right->inverseKin(wayPoints[i+1], &URRobot_right->gMarkerLink[UR5_Index::MLINK_GRIP], includeOri[i+1], SE3(), flag, URRobot_right->qInvKinInit));
+				goalPos.push_back(rManager_right->inverseKin(wayPoints[i + 1], &URRobot_right->gMarkerLink[UR5_Index::MLINK_GRIP], includeOri[i + 1], SE3(), flag, URRobot_right->qInvKinInit));
 				//goalPos.push_back(rManager1->inverseKin(wayPoints[i], &robot1->gMarkerLink[Indy_Index::MLINK_GRIP], includeOri[i], SE3(), flag, qInit)); // ONLY END-EFFECTOR POS/ORI
 				if (flag != 0)
-					goalPos[i] = rManager_right->inverseKin(wayPoints[i+1], &URRobot_right->gMarkerLink[UR5_Index::MLINK_GRIP], includeOri[i + 1], SE3(), flag);
+					goalPos[i] = rManager_right->inverseKin(wayPoints[i + 1], &URRobot_right->gMarkerLink[UR5_Index::MLINK_GRIP], includeOri[i + 1], SE3(), flag);
 				if (flag != 0)
-					goalPos[i] = rManager_right->inverseKin(wayPoints[i+1], &URRobot_right->gMarkerLink[UR5_Index::MLINK_GRIP], includeOri[i + 1], SE3(), flag, initPos[i]);
+					goalPos[i] = rManager_right->inverseKin(wayPoints[i + 1], &URRobot_right->gMarkerLink[UR5_Index::MLINK_GRIP], includeOri[i + 1], SE3(), flag, initPos[i]);
 				printf("%d-th init inv kin flag: %d\n", i, flag);
 				if (i < wayPoints.size() - 2)
 					initPos.push_back(goalPos[i]);
@@ -511,7 +511,7 @@ pair<vector<Eigen::VectorXd>, vector<Eigen::VectorXd>> RRT_problemSetting(vector
 		{
 			initPos.push_back(rManager_left->inverseKin(wayPoints[0], &URRobot_left->gMarkerLink[UR5_Index::MLINK_GRIP], includeOri[0], SE3(), flag, URRobot_left->qInvKinInit));
 
-			for (unsigned int i = 0; i < wayPoints.size()-1; i++)
+			for (unsigned int i = 0; i < wayPoints.size() - 1; i++)
 			{
 				//qInit = initPos[i];
 				goalPos.push_back(rManager_left->inverseKin(wayPoints[i + 1], &URRobot_left->gMarkerLink[UR5_Index::MLINK_GRIP], includeOri[i + 1], SE3(), flag, URRobot_left->qInvKinInit));
@@ -634,7 +634,7 @@ void RRTSolve(vector<double> stepsize, string leftRight)
 		for (int i = start; i < end; i++)
 		{
 
-			RRTManager_left ->setStartandGoal(rrtInitEndPos_left.first[i], rrtInitEndPos_left.second[i]);
+			RRTManager_left->setStartandGoal(rrtInitEndPos_left.first[i], rrtInitEndPos_left.second[i]);
 
 			//cout << "initpos:  " << initPos[i].transpose() << endl;
 			//cout << "goalPos:  " << goalPos[i].transpose() << endl << endl;;
@@ -751,7 +751,7 @@ void updateFuncPlanning()
 	//	trjIdx_right++;
 	//	trjIdx_left++;
 	//}
-		
+
 
 
 	// right arm motion
