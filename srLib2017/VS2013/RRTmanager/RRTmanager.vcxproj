@@ -119,11 +119,13 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\RRTmanager\cbirrtManager.cpp" />
     <ClCompile Include="..\..\src\RRTmanager\rrtManager.cpp" />
+    <ClCompile Include="..\..\src\RRTmanager\TBrrtManager.cpp" />
     <ClCompile Include="..\..\src\RRTmanager\vfrrtManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\RRTmanager\cbirrtManager.h" />
     <ClInclude Include="..\..\src\RRTmanager\rrtManager.h" />
+    <ClInclude Include="..\..\src\RRTmanager\TBrrtManager.h" />
     <ClInclude Include="..\..\src\RRTmanager\vfrrtManager.h" />
   </ItemGroup>
   <ItemGroup>

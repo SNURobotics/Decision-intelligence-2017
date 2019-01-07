@@ -9,7 +9,7 @@
 #include "robotManager\environmentBusbar.h"
 #include "robotManager\environment_QBtech.h"
 #include "robotManager\environment_workcell.h"
-#include "tcp_ip_communication.h"
+#include "tcp_ip_communication_4th.h"
 
 //srLib
 srSpace gSpace;
