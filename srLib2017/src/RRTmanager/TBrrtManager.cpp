@@ -49,7 +49,7 @@ Eigen::VectorXd TBrrtManager::extendStepSize(const Eigen::VectorXd& vertPos1, co
 	#endif // RRTExtCon
 	
 	#ifdef RRTConCon
-		Eigen::VectorXd qnew;
+		Eigen::VectorXd qnew = Eigen::VectorXd();
 		temp_vertex_pos_old = vertPos1;
 		while (1)
 		{
@@ -81,10 +81,9 @@ Eigen::VectorXd TBrrtManager::extendStepSize(const Eigen::VectorXd& vertPos1, co
 					return qnew;
 			}
 			qnew = temp_vertex_pos;
-			// <= Add vertex to tree Code
+			// <= Add vertex to tree
 			temp_vertex_pos_old = qnew;
 		}
-	
 	#endif // RRTConCon	
 }
 
@@ -198,33 +197,76 @@ bool TBrrtManager::replaceVertices(list<rrtVertex*>& path, vector<rrtVertex*>& t
 	return true;
 }
 
+Eigen::VectorXd * TBrrtManager::TBrandomSample(const Eigen::VectorXd qroot, double range)
+{
+	Eigen::VectorXd * qrand = new Eigen::VectorXd;
+	for (int i = 0; i < tangentBasis.size(); i++)
+		*qrand += randomDouble(-range, range) * tangentBasis.data[i];
+	return qrand;
+}
+
 void TBrrtManager::getTangentBasis(const Eigen::VectorXd& vertPos1) {
-	Eigen::MatrixXd temp;
-	
-	temp = rrtConstraints[0].getConstraintJacobian(vertPos1); // how to get combined constraint's jacobian?
+	/*Eigen::MatrixXd temp;
+	temp = rrtConstraints->getConstraintJacobian(vertPos1);
 
 	// Needs faster method..
-	Eigen::HouseholderQR<Eigen::MatrixXd> QR(temp);
-	Eigen::FullPivLU<Eigen::MatrixXd> LU(temp);
+	Eigen::HouseholderQR<Eigen::MatrixXd> QR(temp); // QR decomposition to get null space basis
+	Eigen::FullPivLU<Eigen::MatrixXd> LU(temp); // LU decomposition to get rank of Jacobian
 	temp = QR.householderQ;
 	int rank = LU.rank();
 
-	tangentBasis.clear;
-	if (rank != 0) {
-		Eigen::VectorXd * tmp;
-		int column = temp.cols();
-		for (int i = 1; i <= rank; i++) {
-			tmp = new Eigen::VectorXd(temp.col(column - i));
-			tangentBasis.push_back(tmp);
-		}
-	}
+	tangentBasis.clear; // clear current tangent basis
+
+	Eigen::VectorXd * tmp;
+	int column = temp.cols();
+	for (int i = 1; i <= rank; i++) {
+		tmp = new Eigen::VectorXd(temp.col(column - i));
+		tangentBasis.push_back(tmp);
+	}*/
+
+	// %%%% Basis formulation using principle directions %%%%
+	Eigen::MatrixXd J = rrtConstraints->getConstraintJacobian(vertPos1);
+	Eigen::MatrixXd G = J.transpose() * J;
+
+	double sum = 0;
+	for (int i = 0; i < G.rows(); i++)
+		for (int j = 0; j < G.cols(); j++)
+			//sum += G(j, i) * H(i, j); // needs constraint Hessian to proceed
+
+	Eigen::MatrixXd v = 1 / G.rows()/*m*/ * (Eigen::MatrixXd::Identity() - ProjectionMatrix) * sum;
+	//v = v / v.norm();
 }
 
-void TBrrtManager::project2TangentSpace(Eigen::VectorXd& jointval) {
-	Eigen::VectorXd temp;
+// Project point onto reference point's tangent space
+void TBrrtManager::project2TangentSpace(Eigen::VectorXd& jointval, Eigen::VectorXd& jointvalRef)
+{
+	/*Eigen::VectorXd temp;
 	for (int i = 0; i < size(tangentBasis); i++)
 		temp += *tangentBasis[i] * (*tangentBasis[i] * jointval);
-	jointval = temp;
+	jointval = temp;*/
+	
+	Eigen::MatrixXd J = rrtConstraints->getConstraintJacobian(jointvalRef);
+	Eigen::MatrixXd G = J.transpose() * J;
+	jointval = jointvalRef + (J * G.inverse() * J.transpose()) * (jointval - jointvalRef);
+}
+
+// Project point onto constraint manifold minimizing norm error
+bool TBrrtManager::projectionNewtonRaphson(Eigen::VectorXd& jointval, double threshold, int maxIter)
+{
+	Eigen::MatrixXd Jacobian;
+	Eigen::VectorXd error;
+	int i = 0;
+	
+	while (i < maxIter)
+	{
+		i++;
+		error = rrtConstraints->getConstraintVector(jointval);
+		if (error.norm() < threshold)
+			return 1;
+		Jacobian = rrtConstraints->getConstraintJacobian(jointval);
+		jointval -= Jacobian.transpose()*(Jacobian * Jacobian.transpose()).inverse() * error; // pseudo-inverse of J * e
+	}
+	return 0;
 }
 
 void TBrrtManager::setThreshold(double threshold) 

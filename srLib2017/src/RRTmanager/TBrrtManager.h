@@ -23,6 +23,7 @@ protected:
 	vector<rrtVertex*>						getConstrainedPathConnectingTwoVertices(rrtVertex* vertex1, rrtVertex* vertex2, double eps, int maxIter = 10000);
 	virtual vector<rrtVertex*>				getCandidateVertices(vector<rrtVertex*> vertices);
 	virtual bool							replaceVertices(list<rrtVertex*>& path, vector<rrtVertex*>& tempVertices, vector<rrtVertex*>& removedVertex);
+	Eigen::VectorXd *						TBrandomSample(const Eigen::VectorXd qroot, double range);
 
 protected:
 	double									_error_threshold;
@@ -36,7 +37,9 @@ protected:
 	list<vector<Eigen::VectorXd *> *>		TangentSpaces;
 	vector<Eigen::VectorXd *>				tangentBasis;
 	void									getTangentBasis(const Eigen::VectorXd& vertPos1);
-	void									project2TangentSpace(Eigen::VectorXd& jointval);
+	void									project2TangentSpace(Eigen::VectorXd& jointval, Eigen::VectorXd& jointvalRef);
+	bool									projectionNewtonRaphson(Eigen::VectorXd& jointval, double threshold = 0.1, int maxIter = 100);
+	Eigen::MatrixXd							ProjectionMatrix;
 };
 
 class rrtConstraint
