@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 
 		RRTManager->setStartandGoal(qTemp, qTemp2);
 		cout << RRTManager->setState(qTemp) << RRTManager->setState(qTemp2);
-		RRTManager->execute(0.1);
+		RRTManager->execute(0.05);
 		if (RRTManager->isExecuted())
 		{
 			testiter++;

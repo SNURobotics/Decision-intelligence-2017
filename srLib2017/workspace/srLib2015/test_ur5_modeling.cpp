@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 
 
 	
-	//URRobotSetting();
+	URRobotSetting();
 
 	//ee->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
 	//ee->GetGeomInfo().SetDimension(0.03);
