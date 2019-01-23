@@ -28,11 +28,11 @@ public:
 
 protected:
 	// RRT functions
-	bool									innerloop();			// TB-RRT-simple inner loop 
+	//bool									innerloop();			// TB-RRT-simple inner loop 
 
 
 	// generate new vertex
-	rrtVertex*								generateNewVertex(rrtVertex* pos1, const Eigen::VectorXd& pos2, double step_size_collision = 0.01);	// generate TBrrtVertex inside
+	//rrtVertex*								generateNewVertex(rrtVertex* pos1, const Eigen::VectorXd& pos2, double step_size_collision = 0.01);	// generate TBrrtVertex inside
 
 	// extend step size
 	virtual Eigen::VectorXd					extendStepSize(const Eigen::VectorXd& vertPos1, const Eigen::VectorXd& vertPos2, double criterion, TARGET_TREE tree = TARGET_TREE::TREE1);

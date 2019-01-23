@@ -8,6 +8,7 @@
 #include <algorithm>
 #include "robotManager.h"
 #include "RRTmanager\rrtManager.h"
+#include "RRTmanager/TBrrtManager.h"
 #include "Math\mathOperator.h"
 #include "Math\QuadraticProgramming.h"
 //
@@ -51,30 +52,33 @@ public:
 public:
 	Eigen::VectorXd homePosActiveJoint;
 	Eigen::VectorXd qInvKinInitActiveJoint;
+public:
+	int mode;
 };
 
 
-//class DualArmClosedLoopConstraint : public rrtConstraint
-//{
-//public:
-//	DualArmClosedLoopConstraint(SDA20DManager* robotManager) { _robotManager = robotManager; };
-//
-//	void								setConstraintProblem(const SE3 _constraintFrame, srLink* right_link, srLink* left_link);
-//	virtual		Eigen::VectorXd			getConstraintVector(const Eigen::VectorXd& jointVal);
-//	virtual		Eigen::MatrixXd			getConstraintJacobian(const Eigen::VectorXd& jointVal);
-//	virtual		void					project2ConstraintManifold(Eigen::VectorXd& jointVal);
-//
-//public:
-//	SDA20DManager*						_robotManager;
-//	
-//	SE3									constraintFrame1to2;
-//	srLink*								left_link;
-//	srLink*								right_link;
-//	
-//	int									numEffectiveLeftArmJoint;
-//	int									numEffectiveRightArmJoint;
-//	int									numEffectiveArmJoints;
-//	vector<int>							effectiveArmJointIdx;
-//};
+class SDA20DDualArmClosedLoopConstraint : public rrtConstraint
+{
+public:
+	SDA20DDualArmClosedLoopConstraint(SDA20DManager* robotManager, const SE3 Tright2left);
+
+	virtual		Eigen::VectorXd			getConstraintVector(const Eigen::VectorXd& jointVal);
+	virtual		Eigen::MatrixXd			getConstraintJacobian(const Eigen::VectorXd& jointVal);
+	virtual		Eigen::VectorXd			getConstraintHessian(const Eigen::VectorXd& jointVal, unsigned int i, unsigned int j);
+	virtual		void					project2ConstraintManifold(Eigen::VectorXd& jointVal);
+
+public:
+	SDA20DManager*						_robotManager;
+	
+	SE3									_Tright2left;
+	srLink*								left_link;
+	srLink*								right_link;
+	int									numEffectiveArmJoints;	// number of moving joints
+	vector<unsigned int>				commonJointIdx;		// common joints from right and left end-effectors to root
+	
+	//int									numEffectiveLeftArmJoint;
+	//int									numEffectiveRightArmJoint;
+	//vector<int>							effectiveArmJointIdx;
+};
 
 #endif

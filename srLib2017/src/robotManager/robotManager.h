@@ -16,8 +16,8 @@ public:
 	activeArmInfo();
 	~activeArmInfo();
 
-	vector<srJoint*>		goToRoot(srSystem* robot, srLink* lastLink);
-	vector<srJoint*>		excludeJoint(vector<srJoint*> sourceJoints, vector<srJoint*> excludingJoints);
+	static vector<srJoint*>		goToRoot(srSystem* robot, srLink* lastLink);
+	static vector<srJoint*>		excludeJoint(vector<srJoint*> sourceJoints, vector<srJoint*> excludingJoints);
 	void					setActiveArmInfo(gamasot::srRobot* robot, string lastLinkName);
 	void					setActiveArmInfo(srSystem* robot, srLink* lastLink);
 	void					setActiveArmInfoExclude(srSystem* robot, srLink* lastLink, vector<srJoint*> excludingJoints);

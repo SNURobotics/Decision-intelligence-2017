@@ -53,6 +53,7 @@ SDA20DManager::SDA20DManager(SDA20D * robot, srSpace * space, int ch, vector<srJ
 			}	
 		}
 	}
+	mode = ch;
 }
 
 SDA20DManager::~SDA20DManager()
@@ -158,11 +159,33 @@ SDA20DManager::~SDA20DManager()
 //}
 
 
-//void DualArmClosedLoopConstraint::setConstraintProblem(const SE3 _constraintFrame, srLink* _right_link, srLink* _left_link)
+SDA20DDualArmClosedLoopConstraint::SDA20DDualArmClosedLoopConstraint(SDA20DManager * robotManager, const SE3 Tright2left)
+{
+	if (robotManager->mode == SDA20DManager::MoveBothArmOnly || robotManager->mode == SDA20DManager::MoveWholeBody)
+	{
+		_robotManager = robotManager;
+		activeArmInfo* curArmInfo = _robotManager->m_activeArmInfo;
+		for (unsigned int i = 0; i < min(curArmInfo->m_activeJointSet[0].size(), curArmInfo->m_activeJointSet[1].size()); i++)
+		{
+			if (curArmInfo->m_activeJointSet[0][i] == curArmInfo->m_activeJointSet[1][i])
+				commonJointIdx.push_back(i);
+		}
+		_Tright2left = Tright2left;
+		right_link = &((SDA20D*)_robotManager->m_robot)->gMarkerLink[SDA20D_Index::MLINK_RIGHT_T];
+		left_link = &((SDA20D*)_robotManager->m_robot)->gMarkerLink[SDA20D_Index::MLINK_LEFT_T];
+		numEffectiveArmJoints = curArmInfo->m_numJoint;
+	}		
+	else
+	{
+		// wrong robot mode for dual arm motion
+		_robotManager = NULL;
+	}
+}
+
+//void DualArmClosedLoopConstraint::setConstraintProblem(const SE3 _right2left)
 //{
-//	constraintFrame1to2 = _constraintFrame;
-//	left_link = _left_link;
-//	right_link = _right_link;
+//	constraintFrame1to2 = _right2left;
+//	
 //
 //	// extract effective joints
 //	srJoint*	tempJoint;
@@ -223,64 +246,70 @@ SDA20DManager::~SDA20DManager()
 //		effectiveArmJointIdx[i + numEffectiveRightArmJoint] = leftArmJointIdx[leftArmJointIdx.size() -  1 - i - commonJointIdx.size()];
 //	
 //}
-//
-//Eigen::VectorXd DualArmClosedLoopConstraint::getConstraintVector(const Eigen::VectorXd & jointVal)
-//{
-//	SE3 SE3diff;
-//	se3 logSE3diff;
-//	_robotManager->setJointValue(VectorToVec(jointVal));
-//	SE3diff = (right_link->GetFrame() % left_link->GetFrame()) % constraintFrame1to2;
-//	logSE3diff = Log(SE3diff);
-//	return se3toVector(logSE3diff);
-//}
-//
-//Eigen::MatrixXd DualArmClosedLoopConstraint::getConstraintJacobian(const Eigen::VectorXd& jointVal)
-//{
-//	_robotManager->setJointValue(VectorToVec(jointVal));
-//	Eigen::MatrixXd constraintJacobian(6, numEffectiveArmJoints);
-//	vector<se3> screw(numEffectiveArmJoints);
-//
-//	srJoint* curJoint;
-//	SE3 SE3_endeffector = left_link->GetFrame();		// left end-effector is set as link2
-//
-//	for (int i = 0; i < numEffectiveArmJoints; i++) {
-//		curJoint = _robotManager->getRobot()->gJoint[_robotManager->getActiveArmInfo()->m_activeJointIdx[effectiveArmJointIdx[i]]];
-//		if (curJoint->GetType() == srJoint::REVOLUTE)
-//			screw[i].Ad(SE3_endeffector % (curJoint->GetFrame()), se3(0, 0, 1, 0, 0, 0));
-//		else if (curJoint->GetType() == srJoint::PRISMATIC)
-//			screw[i].Ad(SE3_endeffector % (curJoint->GetFrame()), se3(0, 0, 0, 0, 0, 1));
-//	}
-//	for (int i = 0; i < 6; i++) {
-//		for (int j = 0; j < numEffectiveArmJoints; j++) {
-//			if (j < numEffectiveRightArmJoint)
-//				constraintJacobian(i, j) = -screw[j][i];
-//			else
-//				constraintJacobian(i, j) = screw[j][i];
-//		}
-//	}
-//
-//	return constraintJacobian;
-//}
-//
-//void DualArmClosedLoopConstraint::project2ConstraintManifold(Eigen::VectorXd& jointVal)
-//{
-//	Eigen::MatrixXd Jc;
-//	Eigen::VectorXd delta_q(numEffectiveArmJoints);
-//	Eigen::MatrixXd Q(numEffectiveArmJoints, numEffectiveArmJoints);
-//	Q.setIdentity();
-//	Eigen::VectorXd f;
-//	double norm_delta_q = 1;
-//	double f_norm = 1;
-//	while (norm_delta_q > INVERSEKIN_TOL) {
-//		Jc = getConstraintJacobian(jointVal);
-//		f = getConstraintVector(jointVal);
-//		f_norm = f.norm();
-//		delta_q = Q.inverse()*Jc.transpose()*(Jc*Q.inverse()*Jc.transpose()).inverse()*f;
-//		for (int i = 0; i < numEffectiveArmJoints; i++)
-//			jointVal(effectiveArmJointIdx[i]) += 0.5*delta_q(i);
-//		norm_delta_q = delta_q.norm();
-//		//cout << "normq: " << norm_delta_q << endl;
-//	}
-//	// implement quadratic programming...??
-//	_robotManager->moveIntoJointLimit(jointVal);
-//}
+
+Eigen::VectorXd SDA20DDualArmClosedLoopConstraint::getConstraintVector(const Eigen::VectorXd & jointVal)
+{
+	SE3 SE3diff;
+	se3 logSE3diff;
+	_robotManager->setJointVal(jointVal);
+	SE3diff = (right_link->GetFrame() % left_link->GetFrame()) % _Tright2left;
+	logSE3diff = Log(SE3diff);
+	return se3toVector(logSE3diff);
+}
+
+Eigen::MatrixXd SDA20DDualArmClosedLoopConstraint::getConstraintJacobian(const Eigen::VectorXd& jointVal)
+{
+	_robotManager->setJointVal(jointVal);
+	Eigen::MatrixXd constraintJacobian = Eigen::MatrixXd::Zero(6, numEffectiveArmJoints);
+	vector<se3> screw(numEffectiveArmJoints);
+
+	srJoint* curJoint;
+	SE3 SE3_endeffector = left_link->GetFrame();		// left end-effector is set as link2
+
+	for (int i = 0; i < numEffectiveArmJoints; i++) {
+		curJoint = _robotManager->m_activeArmInfo->m_activeJoint[i];
+		if (curJoint->GetType() == srJoint::REVOLUTE)
+			screw[i].Ad(SE3_endeffector % (curJoint->GetFrame()), se3(0, 0, 1, 0, 0, 0));
+		else if (curJoint->GetType() == srJoint::PRISMATIC)
+			screw[i].Ad(SE3_endeffector % (curJoint->GetFrame()), se3(0, 0, 0, 0, 0, 1));
+	}
+	for (int i = 0; i < 6; i++) {
+		// joint order should follow (common joints, right arm joints, left arm joints)
+		for (unsigned int j = commonJointIdx.size(); j < numEffectiveArmJoints; j++) {
+			if (j < _robotManager->m_activeArmInfo->m_activeJointSet[0].size())
+				constraintJacobian(i, j) = -screw[j][i];
+			else
+				constraintJacobian(i, j) = screw[j][i];
+		}
+	}
+
+	return constraintJacobian;
+}
+
+Eigen::VectorXd SDA20DDualArmClosedLoopConstraint::getConstraintHessian(const Eigen::VectorXd & jointVal, unsigned int i, unsigned int j)
+{
+	return Eigen::VectorXd();
+}
+
+void SDA20DDualArmClosedLoopConstraint::project2ConstraintManifold(Eigen::VectorXd& jointVal)
+{
+	Eigen::MatrixXd Jc;
+	Eigen::VectorXd delta_q(numEffectiveArmJoints);
+	Eigen::MatrixXd Q(numEffectiveArmJoints, numEffectiveArmJoints);
+	Q.setIdentity();
+	Eigen::VectorXd f;
+	double norm_delta_q = 1;
+	double f_norm = 1;
+	while (norm_delta_q > INVERSEKIN_TOL) {
+		Jc = getConstraintJacobian(jointVal);
+		f = getConstraintVector(jointVal);
+		f_norm = f.norm();
+		delta_q = Q.inverse()*Jc.transpose()*(Jc*Q.inverse()*Jc.transpose()).inverse()*f;
+		for (int i = 0; i < numEffectiveArmJoints; i++)
+			jointVal(i) += 0.5*delta_q(i);
+		norm_delta_q = delta_q.norm();
+		//cout << "normq: " << norm_delta_q << endl;
+	}
+	// implement quadratic programming...??
+	_robotManager->moveIntoJointLimit(jointVal);
+}

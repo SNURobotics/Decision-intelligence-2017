@@ -406,7 +406,7 @@ void TBrrtManager::LazyProjection(vector<rrtVertex *>& path)
 
 unsigned int TBrrtManager::selectTangentSpace()
 {
-
+	return 0;
 }
 
 void TBrrtManager::setThreshold(double threshold) 
