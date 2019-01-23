@@ -6,6 +6,16 @@ using namespace std;
 class rrtConstraint;
 class tangentSpace;
 
+class TBrrtVertex : public rrtVertex
+{
+public:
+	TBrrtVertex();
+	~TBrrtVertex();
+public:
+	tangentSpace*		_tangentSpace;
+};
+
+
 class TBrrtManager : public rrtManager
 {
 public:
@@ -17,6 +27,14 @@ public:
 	void									clearConstraints();
 
 protected:
+	// RRT functions
+	bool									innerloop();			// TB-RRT-simple inner loop 
+
+
+	// generate new vertex
+	rrtVertex*								generateNewVertex(rrtVertex* pos1, const Eigen::VectorXd& pos2, double step_size_collision = 0.01);	// generate TBrrtVertex inside
+
+	// extend step size
 	virtual Eigen::VectorXd					extendStepSize(const Eigen::VectorXd& vertPos1, const Eigen::VectorXd& vertPos2, double criterion, TARGET_TREE tree = TARGET_TREE::TREE1);
 	virtual Eigen::VectorXd					extendStepSizeSimple(const Eigen::VectorXd& vertPos1, const Eigen::VectorXd& vertPos2, double criterion, TARGET_TREE tree = TARGET_TREE::TREE1);
 	// smoothing function
@@ -24,9 +42,22 @@ protected:
 	virtual vector<rrtVertex*>				getCandidateVertices(vector<rrtVertex*> vertices);
 	virtual bool							replaceVertices(list<rrtVertex*>& path, vector<rrtVertex*>& tempVertices, vector<rrtVertex*>& removedVertex);
 
+
+
 protected:
-	double									_error_threshold;
+	// TB-RRT functions
+	// tanget space
+	void									getTangentBasis(const Eigen::VectorXd& vertPos1);	// retrieve current node's TB basis form constraint manifold
+	void									projectOntoTangentSpace(Eigen::VectorXd& jointval, const Eigen::VectorXd jointvalRef);
+	Eigen::VectorXd *						TBrandomSample(const Eigen::VectorXd qroot, double range);
+	unsigned int							selectTangentSpace();								// Heuristically select tangent space for extension
+
+	// projection function
+	bool									projectionNewtonRaphson(Eigen::VectorXd& jointval, double threshold = 0.1, int maxIter = 100);
 	void									setThreshold(double threshold);
+	void									LazyProjection(vector<rrtVertex *>& path);
+
+	
 
 protected:
 	rrtConstraint*							rrtConstraints;
@@ -34,15 +65,15 @@ protected:
 protected:
 	// Tangent Space
 	list<tangentSpace *>					TangentSpaces;										// List of existing tangent space
+
+	/////////////// move to tangent space class ////////////////////////////////
 	vector<Eigen::VectorXd *>				tangentBasis;										// current tangent space's basis
 	list<Eigen::VectorXd *>					localCurvatures;									// List of existing tangent space curvature
-	void									getTangentBasis(const Eigen::VectorXd& vertPos1);	// retrieve current node's TB basis form constraint manifold
-	void									projectOntoTangentSpace(Eigen::VectorXd& jointval, const Eigen::VectorXd jointvalRef);
-	bool									projectionNewtonRaphson(Eigen::VectorXd& jointval, double threshold = 0.1, int maxIter = 100);
 	Eigen::MatrixXd							ProjectionMatrix;
-	Eigen::VectorXd *						TBrandomSample(const Eigen::VectorXd qroot, double range);
-	void									LazyProjection(vector<rrtVertex *>& path);
-	unsigned int							selectTangentSpace();								// Heuristically select tangent space for extension
+	/////////////////////////////////////////////////////////////////////////////
+	// projection function
+	double									_error_threshold;
+	
 };
 
 class rrtConstraint
