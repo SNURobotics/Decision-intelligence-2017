@@ -19,15 +19,16 @@ public:
 
 protected:
 	// RRT functions
-	bool									innerloop();			// TB-RRT-simple inner loop 
+	//bool									innerloop();			// TB-RRT-simple inner loop 
 
 
 	// generate new vertex
-	TBrrtVertex*							generateNewVertex(const TBrrtVertex* pos1, const Eigen::VectorXd& pos2, double step_size_collision = 0.01);	// generate TBrrtVertex inside
+	virtual rrtVertex*						generateNewVertex(rrtVertex* pos1, const Eigen::VectorXd& pos2, double step_size_collision = 0.01);	// generate TBrrtVertex inside
+
 
 	// extend step size
 	virtual Eigen::VectorXd					extendStepSize(const Eigen::VectorXd& vertPos1, const Eigen::VectorXd& vertPos2, double criterion, TARGET_TREE tree = TARGET_TREE::TREE1);
-	virtual Eigen::VectorXd					extendStepSizeSimple(const TBrrtVertex* nearestVertex, const Eigen::VectorXd& vertPos2, double criterion, TARGET_TREE tree = TARGET_TREE::TREE1);
+	Eigen::VectorXd							extendStepSizeSimple(const TBrrtVertex* nearestVertex, const Eigen::VectorXd& vertPos2, double criterion, TARGET_TREE tree = TARGET_TREE::TREE1);
 	// smoothing function
 	vector<rrtVertex*>						getConstrainedPathConnectingTwoVertices(rrtVertex* vertex1, rrtVertex* vertex2, double eps, int maxIter = 10000);
 	virtual vector<rrtVertex*>				getCandidateVertices(vector<rrtVertex*> vertices);

@@ -15,6 +15,44 @@ TBrrtManager::~TBrrtManager()
 #define RRTExtCon
 //#define RRTConCon
 
+rrtVertex * TBrrtManager::generateNewVertex(rrtVertex * nearest_vertex, const Eigen::VectorXd & pos2, double step_size_collision)
+{
+	rrtVertex* new_vertex = new TBrrtVertex();
+
+	Eigen::VectorXd pos1 = nearest_vertex->posState;
+	double length = getDistance(pos1, pos2);
+
+	int numMidPoint = (int)floor(length / step_size_collision) + 1;
+
+	vector<Eigen::VectorXd> checkSet;
+	checkSet = generateIntermediateVertex(pos1, pos2, numMidPoint);
+
+	int indexCollision = -1;
+	for (int i = 0; i < numMidPoint; i++) {
+		bool bCollision = setState(checkSet[i]);
+		if (bCollision) {
+			indexCollision = i;
+			break;
+		}
+	}
+
+	if (indexCollision == 0)
+		return NULL;
+	else if (indexCollision > 0)
+		new_vertex->posState = checkSet[indexCollision - 1];
+	else
+		new_vertex->posState = pos2;
+
+	new_vertex->parentVertex = nearest_vertex;
+	((TBrrtVertex*)new_vertex)->_tangentSpace = ((TBrrtVertex*)nearest_vertex)->_tangentSpace;
+	//new_vertex->distance2parent = getDistance(new_vertex->parentVertex->posState, new_vertex->posState);
+	//if (_vectorFieldExist)
+	//	new_vertex->cost2parent = getUpstreamCost(new_vertex->parentVertex->posState, new_vertex->posState);
+	//else
+	//	new_vertex->cost2parent = 0.0;
+	return new_vertex;
+}
+
 // Currently not using
 Eigen::VectorXd TBrrtManager::extendStepSize(const Eigen::VectorXd& vertPos1, const Eigen::VectorXd& vertPos2, double criterion, TARGET_TREE tree /* = TARGET_TREE::TREE1*/)
 {
@@ -145,12 +183,12 @@ Eigen::VectorXd TBrrtManager::extendStepSizeSimple(const TBrrtVertex* nearVertex
 		}
 	}
 	// Add new TBrrtVertex to tree1
-	TBrrtVertex* new_vertex = NULL;
+	rrtVertex* new_vertex = NULL;
 	new_vertex = generateNewVertex(nearVertex, temp_vertex_pos, step_size*0.1);
 	if (deviationFlag == 0)
-		new_vertex->_tangentSpace = nearVertex->_tangentSpace;
+		((TBrrtVertex*) new_vertex)->_tangentSpace = nearVertex->_tangentSpace;
 	else
-		new_vertex->_tangentSpace = TangentSpaces.back();
+		((TBrrtVertex*)new_vertex)->_tangentSpace = TangentSpaces.back();
 	pTargetTree1->insert(new_vertex);
 	return temp_vertex_pos;
 #endif // RRTExtCon
@@ -400,7 +438,7 @@ void TBrrtManager::LazyProjection(vector<rrtVertex *>& path)
 
 unsigned int TBrrtManager::selectTangentSpace()
 {
-
+	return 0;
 }
 
 void TBrrtManager::setThreshold(double threshold) 
