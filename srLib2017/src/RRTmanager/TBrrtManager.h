@@ -7,19 +7,24 @@ class rrtConstraint;
 class tangentSpace;
 class TBrrtVertex;
 
+#define RRTExtCon
+
 class TBrrtManager : public rrtManager
 {
 public:
-	TBrrtManager();
+	TBrrtManager(rrtConstraint* constraint);
 	~TBrrtManager();
 
 	// handle constraint
 	void									setConstraint(rrtConstraint* constraint);
 	void									clearConstraints();
 
+	virtual void							setStartandGoal(const Eigen::VectorXd& _start, const Eigen::VectorXd& _goal);
+	virtual vector<Eigen::VectorXd>			extractPath(int smoothingNum = 200);
+
 protected:
 	// RRT functions
-	//bool									innerloop();			// TB-RRT-simple inner loop 
+	virtual bool							innerloop();			// TB-RRT-simple inner loop 
 
 
 	// generate new vertex
@@ -27,8 +32,11 @@ protected:
 
 
 	// extend step size
-	virtual Eigen::VectorXd					extendStepSize(const Eigen::VectorXd& vertPos1, const Eigen::VectorXd& vertPos2, double criterion, TARGET_TREE tree = TARGET_TREE::TREE1);
-	Eigen::VectorXd							extendStepSizeSimple(const TBrrtVertex* nearestVertex, const Eigen::VectorXd& vertPos2, double criterion, TARGET_TREE tree = TARGET_TREE::TREE1);
+	//virtual Eigen::VectorXd					extendStepSize(const Eigen::VectorXd& vertPos1, const Eigen::VectorXd& vertPos2, double criterion, TARGET_TREE tree = TARGET_TREE::TREE1);
+	//Eigen::VectorXd							extendStepSizeSimple(TBrrtVertex* nearestVertex, const Eigen::VectorXd& vertPos2, double criterion, TARGET_TREE tree = TARGET_TREE::TREE1);
+	
+
+
 	// smoothing function
 	vector<rrtVertex*>						getConstrainedPathConnectingTwoVertices(rrtVertex* vertex1, rrtVertex* vertex2, double eps, int maxIter = 10000);
 	virtual vector<rrtVertex*>				getCandidateVertices(vector<rrtVertex*> vertices);
@@ -46,7 +54,7 @@ protected:
 	// projection function
 	bool									projectionNewtonRaphson(Eigen::VectorXd& jointval, double threshold = 0.1, int maxIter = 100);
 	void									setThreshold(double threshold);
-	void									LazyProjection(vector<rrtVertex *>& path);
+	void									LazyProjection(list<rrtVertex *>& path);
 
 	
 
@@ -73,7 +81,7 @@ public:
 	virtual	Eigen::VectorXd			getConstraintVector(const Eigen::VectorXd& jointVal) = 0;
 	virtual	Eigen::MatrixXd			getConstraintJacobian(const Eigen::VectorXd& jointVal) = 0;
 	virtual Eigen::VectorXd			getConstraintHessian(const Eigen::VectorXd& jointVal, unsigned int i, unsigned int j) = 0;
-	virtual	void					project2ConstraintManifold(Eigen::VectorXd& jointVal) = 0;
+	virtual	bool					project2ConstraintManifold(Eigen::VectorXd& jointVal, int max_iter = 1000) = 0;
 };
 
 class tangentSpace
@@ -86,7 +94,7 @@ public:
 
 	void projectOntoTangentSpace(Eigen::VectorXd& jointval);
 
-protected:
+public:
 	Eigen::MatrixXd					tangentBasis;
 	
 	Eigen::VectorXd					rootNode;

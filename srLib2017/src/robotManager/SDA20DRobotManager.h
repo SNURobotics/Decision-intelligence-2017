@@ -65,7 +65,7 @@ public:
 	virtual		Eigen::VectorXd			getConstraintVector(const Eigen::VectorXd& jointVal);
 	virtual		Eigen::MatrixXd			getConstraintJacobian(const Eigen::VectorXd& jointVal);
 	virtual		Eigen::VectorXd			getConstraintHessian(const Eigen::VectorXd& jointVal, unsigned int i, unsigned int j);
-	virtual		void					project2ConstraintManifold(Eigen::VectorXd& jointVal);
+	virtual		bool					project2ConstraintManifold(Eigen::VectorXd& jointVal, int max_iter = 1000);
 
 public:
 	SDA20DManager*						_robotManager;

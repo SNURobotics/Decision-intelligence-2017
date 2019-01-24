@@ -42,7 +42,7 @@ public:
 	virtual void							setSystem(srSystem* _pSystem);
 	virtual void							setSystem(vector<srStateJoint*> _pStateJoints);
 	void									setSpace(srSpace* _pSpace) { pSpace = _pSpace; }
-	void									setStartandGoal(const Eigen::VectorXd& _start, const Eigen::VectorXd& _goal);
+	virtual void							setStartandGoal(const Eigen::VectorXd& _start, const Eigen::VectorXd& _goal);
 	void									setStateBound(const Eigen::VectorXd& _lowerbound, const Eigen::VectorXd& _upperbound);
 	virtual bool							setState(const Eigen::VectorXd& state);
 	
@@ -51,7 +51,7 @@ public:
 
 	void									execute(double _step_size);
 	bool									isExecuted();
-	vector<Eigen::VectorXd>					extractPath(int smoothingNum = 200);
+	virtual vector<Eigen::VectorXd>			extractPath(int smoothingNum = 200);
 	
 	bool									collisionChecking(const Eigen::VectorXd& pos1, const Eigen::VectorXd& pos2, double step_size_collision = 0.01);
 	
@@ -64,7 +64,7 @@ public:
 
 protected:
 	
-	bool									innerloop();
+	virtual bool							innerloop();
 
 	void									swapTree();
 	virtual void							connectParentAndChild(rrtVertex* parentVertex, rrtVertex* childVertex);

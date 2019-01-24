@@ -22,7 +22,6 @@ Eigen::VectorXd qval;
 srSpace gSpace;
 myRenderer* renderer;
 
-rrtManager* RRTManager = new rrtManager;
 
 srLink* ee = new srLink;
 srSystem* obs = new srSystem;
@@ -38,10 +37,14 @@ int activeJointIdx =0;
 vector<Eigen::VectorXd> traj(0);
 Eigen::VectorXd qTemp;
 Eigen::VectorXd q;
-SDA20DDualArmClosedLoopConstraint* armConstraint;
+
 int useWaist = 0;
 Eigen::VectorXd tempJointVal = Eigen::VectorXd::Zero(14 + useWaist);
 Eigen::VectorXd tempJointVal2;
+
+SDA20DDualArmClosedLoopConstraint* armConstraint;
+TBrrtManager* RRTManager = new TBrrtManager(armConstraint);
+
 int main(int argc, char **argv)
 {
 	srand(time(NULL));
@@ -91,9 +94,28 @@ int main(int argc, char **argv)
 	cout << tempJointVal2.transpose() << endl;
 	rManager1->setJointVal(tempJointVal2);
 
-	//sdarrtSetting();
+	sdarrtSetting();
 
+	RRTManager->setConstraint(armConstraint);
+
+	tangentSpace* TS = new tangentSpace(tempJointVal, armConstraint);
+	Eigen::VectorXd q = Eigen::VectorXd::Random(14 + useWaist);
+	TS->projectOntoTangentSpace(q);
 	
+	printf("tangent space basis\n");
+	cout << TS->tangentBasis << endl;
+	printf("projection matrix\n");
+	cout << TS->ProjectionMatrix << endl;
+	printf("check projection\n");
+	cout << (q - tempJointVal).transpose() << endl;
+	cout << (armConstraint->getConstraintJacobian(tempJointVal) * (q - tempJointVal)).transpose() << endl;
+
+	// define planning problem
+	RRTManager->setStartandGoal(tempJointVal, tempJointVal2);
+	// run RRT
+	RRTManager->execute(0.1);
+	traj = RRTManager->extractPath();
+
 	rendering(argc, argv);
 
 	return 0;
@@ -139,9 +161,9 @@ void updateFunc()
 	//if (cnt % 10 == 0)
 	//	trajcnt++;
 	//if (traj.size() > 0)
-	//	rManager1->setJointVal(traj[trajcnt % traj.size()]);
+	rManager1->setJointVal(traj[trajcnt % traj.size()]);
 
-	if (cnt % 100 == 0)
+	if (cnt % 10 == 0)
 		trajcnt++;
 	//if (trajcnt % 2 == 0)
 	//	rManager1->setJointVal(qTemp);
