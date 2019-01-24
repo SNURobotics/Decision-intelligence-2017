@@ -11,15 +11,16 @@ TBrrtManager::TBrrtManager() : _error_threshold(0.1)
 TBrrtManager::~TBrrtManager()
 {
 }
-// In progress...
+
+#define RRTExtCon
+//#define RRTConCon
+
+// Currently not using
 Eigen::VectorXd TBrrtManager::extendStepSize(const Eigen::VectorXd& vertPos1, const Eigen::VectorXd& vertPos2, double criterion, TARGET_TREE tree /* = TARGET_TREE::TREE1*/)
 {
 	Eigen::VectorXd dir_2_random = (vertPos2 - vertPos1);
 	Eigen::VectorXd temp_vertex_pos;
 	Eigen::VectorXd temp_vertex_pos_old;
-
-	#define RRTExtCon
-	//#define RRTConCon
 
 	#ifdef RRTExtCon
 		// extend one step
@@ -40,18 +41,18 @@ Eigen::VectorXd TBrrtManager::extendStepSize(const Eigen::VectorXd& vertPos1, co
 				if (projectionNewtonRaphson(temp_vertex_pos))
 				{
 					// Create new Tangent Space and Add to TS list
-					getTangentBasis(temp_vertex_pos);
-					tangentSpace * TS = new tangentSpace(temp_vertex_pos, tangentBasis);
+					tangentSpace * TS = new tangentSpace(temp_vertex_pos, rrtConstraints);
 					TangentSpaces.push_back(TS);
 				}
 				else
 					return Eigen::VectorXd();
 			}
 		}
-		// %%%%%%%%%%%%%%%%%%%% <= Add vertex to tree
+		// Add vertex to tree
 		rrtVertex* new_vertex = NULL;
 		rrtVertex* nearest_vertex = nearestVertex(temp_vertex_pos, tree);
 		new_vertex = generateNewVertex(nearest_vertex, temp_vertex_pos, step_size*0.1);
+		pTargetTree1->insert(new_vertex);
 		return temp_vertex_pos;
 	#endif // RRTExtCon
 	
@@ -78,13 +79,13 @@ Eigen::VectorXd TBrrtManager::extendStepSize(const Eigen::VectorXd& vertPos1, co
 				{
 					if (projectionNewtonRaphson(qr))
 					{
-						// %%%%%%%%%%%%%%%%%%%% <= Add vertex to tree
+						// Add vertex to tree
 						rrtVertex* new_vertex = NULL;
 						rrtVertex* nearest_vertex = nearestVertex(qr, tree);
 						new_vertex = generateNewVertex(nearest_vertex, qr, step_size*0.1);
+						pTargetTree1->insert(new_vertex);
 						// Create new Tangent Space and Add to TS list
-						getTangentBasis(qr);
-						tangentSpace * TS = new tangentSpace(qr, tangentBasis);
+						tangentSpace * TS = new tangentSpace(qr, rrtConstraints);
 						TangentSpaces.push_back(TS);
 						return qr;
 					}
@@ -92,10 +93,11 @@ Eigen::VectorXd TBrrtManager::extendStepSize(const Eigen::VectorXd& vertPos1, co
 						return temp_vertex_pos;
 				}
 				temp_vertex_pos = qr;
-				// %%%%%%%%%%%%%%%%%%%% <= Add vertex to tree
+				// Add vertex to tree
 				rrtVertex* new_vertex = NULL;
 				rrtVertex* nearest_vertex = nearestVertex(temp_vertex_pos, tree);
 				new_vertex = generateNewVertex(nearest_vertex, temp_vertex_pos, step_size*0.1);
+				pTargetTree1->insert(new_vertex);
 				temp_vertex_pos_old = temp_vertex_pos;
 			}
 			else
@@ -103,15 +105,14 @@ Eigen::VectorXd TBrrtManager::extendStepSize(const Eigen::VectorXd& vertPos1, co
 		} // end of while
 	#endif // RRTConCon	
 }
-// In progress...
-Eigen::VectorXd TBrrtManager::extendStepSizeSimple(const Eigen::VectorXd& vertPos1, const Eigen::VectorXd& vertPos2, double criterion, TARGET_TREE tree /* = TARGET_TREE::TREE1*/)
+
+Eigen::VectorXd TBrrtManager::extendStepSizeSimple(const TBrrtVertex* nearVertex, const Eigen::VectorXd& vertPos2, double criterion, TARGET_TREE tree /* = TARGET_TREE::TREE1*/)
 {
+	Eigen::VectorXd vertPos1 = nearVertex->posState;
 	Eigen::VectorXd dir_2_random = (vertPos2 - vertPos1);
 	Eigen::VectorXd temp_vertex_pos;
 	Eigen::VectorXd temp_vertex_pos_old;
-
-#define RRTExtCon
-	//#define RRTConCon
+	bool deviationFlag = 0;	// flag for excessive deviation from constraint manifold
 
 #ifdef RRTExtCon
 	// extend one step
@@ -122,7 +123,7 @@ Eigen::VectorXd TBrrtManager::extendStepSizeSimple(const Eigen::VectorXd& vertPo
 		dir_2_random.normalize();
 		temp_vertex_pos = vertPos1 + step_size * dir_2_random;
 	}
-	projectOntoTangentSpace(temp_vertex_pos, vertPos1);
+	nearVertex->_tangentSpace->projectOntoTangentSpace(temp_vertex_pos);
 
 	if (rrtConstraints != NULL)
 	{
@@ -132,25 +133,32 @@ Eigen::VectorXd TBrrtManager::extendStepSizeSimple(const Eigen::VectorXd& vertPo
 		{
 			if (projectionNewtonRaphson(temp_vertex_pos))
 			{
+				deviationFlag = 1;
 				// Create new Tangent Space and Add to TS list
-				getTangentBasis(temp_vertex_pos);
-				tangentSpace * TS = new tangentSpace(temp_vertex_pos, tangentBasis);
+				tangentSpace * TS = new tangentSpace(temp_vertex_pos, rrtConstraints);
 				TangentSpaces.push_back(TS);
+
+				return temp_vertex_pos;
 			}
 			else
 				return Eigen::VectorXd();
 		}
 	}
-	// %%%%%%%%%%%%%%%%%%%% <= Add vertex to tree
-	rrtVertex* new_vertex = NULL;
-	rrtVertex* nearest_vertex = nearestVertex(temp_vertex_pos, tree);
-	new_vertex = generateNewVertex(nearest_vertex, temp_vertex_pos, step_size*0.1);
+	// Add new TBrrtVertex to tree1
+	TBrrtVertex* new_vertex = NULL;
+	new_vertex = generateNewVertex(nearVertex, temp_vertex_pos, step_size*0.1);
+	if (deviationFlag == 0)
+		new_vertex->_tangentSpace = nearVertex->_tangentSpace;
+	else
+		new_vertex->_tangentSpace = TangentSpaces.back();
+	pTargetTree1->insert(new_vertex);
 	return temp_vertex_pos;
 #endif // RRTExtCon
 
 #ifdef RRTConCon
 	Eigen::VectorXd qr;
 	temp_vertex_pos_old = vertPos1; // qold
+	tangentSpace* old_TS_ptr = nearVertex->_tangentSpace;
 	while (1)
 	{
 		// extend one step
@@ -161,7 +169,7 @@ Eigen::VectorXd TBrrtManager::extendStepSizeSimple(const Eigen::VectorXd& vertPo
 			dir_2_random.normalize();
 			qr = vertPos1 + step_size * dir_2_random;
 		}
-		projectOntoTangentSpace(qr, temp_vertex_pos_old);
+		old_TS_ptr->projectOntoTangentSpace(qr);
 
 		if (rrtConstraints != NULL)
 		{
@@ -172,9 +180,9 @@ Eigen::VectorXd TBrrtManager::extendStepSizeSimple(const Eigen::VectorXd& vertPo
 			{
 				if (projectionNewtonRaphson(qr))
 				{
+					deviationFlag = 1;
 					// Create new Tangent Space and Add to TS list
-					getTangentBasis(qr);
-					tangentSpace * TS = new tangentSpace(qr, tangentBasis);
+					tangentSpace * TS = new tangentSpace(qr, rrtConstraints);
 					TangentSpaces.push_back(TS);
 				}
 				else
@@ -184,11 +192,18 @@ Eigen::VectorXd TBrrtManager::extendStepSizeSimple(const Eigen::VectorXd& vertPo
 				return temp_vertex_pos;
 
 			temp_vertex_pos = qr;
-			// %%%%%%%%%%%%%%%%%%%% <= Add vertex to tree
-			rrtVertex* new_vertex = NULL;
-			rrtVertex* nearest_vertex = nearestVertex(temp_vertex_pos, tree);
-			new_vertex = generateNewVertex(nearest_vertex, temp_vertex_pos, step_size*0.1);
+			// Add new TBrrtVertex to tree1
+			TBrrtVertex* new_vertex = NULL;
+			new_vertex = (TBrrtVertex*)generateNewVertex((rrtVertex*)nearVertex, temp_vertex_pos, step_size*0.1);
+			if (deviationFlag == 0)
+				new_vertex->_tangentSpace = nearVertex->_tangentSpace;
+			else
+				new_vertex->_tangentSpace = TangentSpaces.back();
+			pTargetTree1->insert(new_vertex);
+			
+			// Saving new vertex as old vertex for next iteration
 			temp_vertex_pos_old = temp_vertex_pos;
+			old_TS_ptr = new_vertex->_tangentSpace;
 		}
 		else
 			return qr;
@@ -306,73 +321,46 @@ bool TBrrtManager::replaceVertices(list<rrtVertex*>& path, vector<rrtVertex*>& t
 	return true;
 }
 
-void TBrrtManager::getTangentBasis(const Eigen::VectorXd& vertPos1) {
-	/*Eigen::MatrixXd temp;
-	temp = rrtConstraints->getConstraintJacobian(vertPos1);
+/*void TBrrtManager::getTangentBasis(const Eigen::VectorXd& vertPos1) {
 
-	// Needs faster method..
-	Eigen::HouseholderQR<Eigen::MatrixXd> QR(temp); // QR decomposition to get null space basis
-	Eigen::FullPivLU<Eigen::MatrixXd> LU(temp); // LU decomposition to get rank of Jacobian
-	temp = QR.householderQ;
-	int rank = LU.rank();
+	//// %%%% Basis formulation using principle directions %%%%
+	//Eigen::MatrixXd J = rrtConstraints->getConstraintJacobian(vertPos1);
+	//Eigen::MatrixXd G = J.transpose() * J;
 
-	tangentBasis.clear; // clear current tangent basis
+	//Eigen::VectorXd v = Eigen::VectorXd(); // Mean curvature vector
+	//int m = G.rows(); // = G.cols()
+	//for (int i = 0; i < m; i++)
+	//	for (int j = 0; j < m; j++)
+	//		v += G(j, i) * rrtConstraints->getConstraintHessian(vertPos1, i, j); // Mean curvature vector v
 
-	Eigen::VectorXd * tmp;
-	int column = temp.cols();
-	for (int i = 1; i <= rank; i++) {
-		tmp = new Eigen::VectorXd(temp.col(column - i));
-		tangentBasis.push_back(tmp);
-	}*/
+	//v = 1 / m * (Eigen::MatrixXd::Identity(ProjectionMatrix.rows(), ProjectionMatrix.cols()) - ProjectionMatrix) * v;
+	//v = v / v.norm();
 
-	// %%%% Basis formulation using principle directions %%%%
-	Eigen::MatrixXd J = rrtConstraints->getConstraintJacobian(vertPos1);
-	Eigen::MatrixXd G = J.transpose() * J;
+	//Eigen::MatrixXd Qn(m, m);
+	//for (int i = 0; i < m; i++)
+	//	for (int j = 0; j < m; j++)
+	//		Qn(i, j) = rrtConstraints->getConstraintHessian(vertPos1, i, j).transpose() * v;
 
-	Eigen::VectorXd v = Eigen::VectorXd(); // Mean curvature vector
-	int m = G.rows(); // = G.cols()
-	for (int i = 0; i < m; i++)
-		for (int j = 0; j < m; j++)
-			v += G(j, i) * rrtConstraints->getConstraintHessian(vertPos1, i, j); // Mean curvature vector v
+	//Eigen::EigenSolver<Eigen::MatrixXd> Temp(G.inverse() * Qn);
+	//Eigen::VectorXd buffer(Temp.eigenvectors().rows());
 
-	v = 1 / m * (Eigen::MatrixXd::Identity(ProjectionMatrix.rows(), ProjectionMatrix.cols()) - ProjectionMatrix) * v;
-	v = v / v.norm();
+	//tangentBasis.clear();
+	//// Renew current TS basis and save local curvature
+	//Eigen::VectorXd * tempCurvature = new Eigen::VectorXd;
+	//for (int i = 0; i < Temp.eigenvectors().cols(); i++) {
+	//	for (int j = 0; j < Temp.eigenvectors().rows(); j++)
+	//		buffer(j) = real(Temp.eigenvectors()(i, j));
+	//	tangentBasis[i] = new Eigen::VectorXd(buffer);
+	//	(*tempCurvature)(i) = real(Temp.eigenvalues()(i));
+	//}
+	//localCurvatures.push_back(tempCurvature);
 
-	Eigen::MatrixXd Qn(m, m);
-	for (int i = 0; i < m; i++)
-		for (int j = 0; j < m; j++)
-			Qn(i, j) = rrtConstraints->getConstraintHessian(vertPos1, i, j).transpose() * v;
-
-	Eigen::EigenSolver<Eigen::MatrixXd> Temp(G.inverse() * Qn);
-	Eigen::VectorXd buffer(Temp.eigenvectors().rows());
-
-	tangentBasis.clear();
-	// Renew current TS basis and save local curvature
-	Eigen::VectorXd * tempCurvature = new Eigen::VectorXd;
-	for (int i = 0; i < Temp.eigenvectors().cols(); i++) {
-		for (int j = 0; j < Temp.eigenvectors().rows(); j++)
-			buffer(j) = real(Temp.eigenvectors()(i, j));
-		tangentBasis[i] = new Eigen::VectorXd(buffer);
-		(*tempCurvature)(i) = real(Temp.eigenvalues()(i));
-	}
-	localCurvatures.push_back(tempCurvature);
-}
-
-// Project point onto reference point's tangent space
-void TBrrtManager::projectOntoTangentSpace(Eigen::VectorXd& jointval, const Eigen::VectorXd jointvalRef)
-{
-	/*Eigen::VectorXd temp;
-	for (int i = 0; i < size(tangentBasis); i++)
-		temp += *tangentBasis[i] * (*tangentBasis[i] * jointval);
-	jointval = temp;*/
-	
-	Eigen::MatrixXd J = rrtConstraints->getConstraintJacobian(jointvalRef);
-	Eigen::MatrixXd G = J.transpose() * J;
-	jointval = jointvalRef + (J * G.inverse() * J.transpose()) * (jointval - jointvalRef);
-}
+	Eigen::FullPivLU<Eigen::MatrixXd> lu(rrtConstraints->getConstraintJacobian(vertPos1));
+	Eigen::MatrixXd null_basis = lu.kernel();
+}*/
 
 // Project point onto constraint manifold minimizing norm error
-bool TBrrtManager::projectionNewtonRaphson(Eigen::VectorXd& jointval, double threshold, int maxIter)
+bool TBrrtManager::projectionNewtonRaphson(Eigen::VectorXd& jointval, double threshold = 0.1, int maxIter = 100)
 {
 	Eigen::MatrixXd Jacobian;
 	Eigen::VectorXd error;
@@ -390,18 +378,24 @@ bool TBrrtManager::projectionNewtonRaphson(Eigen::VectorXd& jointval, double thr
 	return 0;
 }
 
-Eigen::VectorXd * TBrrtManager::TBrandomSample(const Eigen::VectorXd qroot, double range)
+/*Eigen::VectorXd * TBrrtManager::TBrandomSample(const Eigen::VectorXd qroot, double range)
 {
 	Eigen::VectorXd tmp = Eigen::VectorXd();
 	for (unsigned int i = 0; i < tangentBasis.size(); i++)
 		tmp += randomDouble(-range, range) * (*tangentBasis[i]);
 	Eigen::VectorXd * qrand = new Eigen::VectorXd(tmp);
 	return qrand;
-}
+}*/
 
 void TBrrtManager::LazyProjection(vector<rrtVertex *>& path)
 {
-
+	for (int i = 0; i < path.size(); i++) 
+	{
+		Eigen::VectorXd buffer;
+		projectionNewtonRaphson(buffer);
+		path[i]->posState = buffer;
+		path[i]->distance2parent = (path[i]->parentVertex->posState - path[i]->posState).norm();
+	}
 }
 
 unsigned int TBrrtManager::selectTangentSpace()
@@ -424,29 +418,54 @@ void TBrrtManager::clearConstraints()
 	rrtConstraints = NULL;
 }
 
+// %%%%%%%%%%%%%% rrtConstraint member functions %%%%%%%%%%%%%%
 
 rrtConstraint::rrtConstraint()
 {
 }
 
-
 rrtConstraint::~rrtConstraint()
 {
 }
 
+// %%%%%%%%%%%%%% Tangent Space member functions %%%%%%%%%%%%%%
+
 tangentSpace::tangentSpace()
 {
-	tangentBasis = vector<Eigen::VectorXd *>();
-	rootNode = Eigen::VectorXd();
 	nodeNumber = 0;
 }
 tangentSpace::~tangentSpace()
 {
 }
 
-tangentSpace::tangentSpace(Eigen::VectorXd Node, vector<Eigen::VectorXd *> Basis)
+tangentSpace::tangentSpace(Eigen::VectorXd vertex, rrtConstraint* constraints)
 {
-	tangentBasis = Basis;
-	rootNode = Node;
+	Eigen::FullPivLU<Eigen::MatrixXd> lu(constraints->getConstraintJacobian(vertex));
+	tangentBasis = lu.kernel();
+
+	rootNode = vertex;
+
+	// localCurvature =
+
+	Eigen::MatrixXd J = constraints->getConstraintJacobian(vertex);
+	Eigen::MatrixXd G = J.transpose() * J;
+	ProjectionMatrix = J * G.inverse() * J.transpose();
+	
 	nodeNumber = 1;
+}
+
+// Project point onto reference point's tangent space
+void tangentSpace::projectOntoTangentSpace(Eigen::VectorXd& jointval)
+{
+	jointval = rootNode + ProjectionMatrix * (jointval - rootNode);
+}
+
+// %%%%%%%%%%%%%% TBrrtVertex member functions %%%%%%%%%%%%%%
+
+TBrrtVertex::TBrrtVertex()
+{
+	_tangentSpace = NULL;
+}
+TBrrtVertex::~TBrrtVertex()
+{
 }
