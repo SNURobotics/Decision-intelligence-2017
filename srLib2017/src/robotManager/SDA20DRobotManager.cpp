@@ -254,7 +254,7 @@ Eigen::VectorXd SDA20DDualArmClosedLoopConstraint::getConstraintVector(const Eig
 	_robotManager->setJointVal(jointVal);
 	SE3diff = (right_link->GetFrame() % left_link->GetFrame()) % _Tright2left;
 	logSE3diff = Log(SE3diff);
-	return se3toVector(logSE3diff);
+	return -se3toVector(logSE3diff);
 }
 
 Eigen::MatrixXd SDA20DDualArmClosedLoopConstraint::getConstraintJacobian(const Eigen::VectorXd& jointVal)
@@ -303,7 +303,7 @@ bool SDA20DDualArmClosedLoopConstraint::project2ConstraintManifold(Eigen::Vector
 	int iter = 0;
 	while (iter < max_iter) {
 		Jc = getConstraintJacobian(jointVal);
-		f = getConstraintVector(jointVal);
+		f = -getConstraintVector(jointVal);
 		f_norm = f.norm();
 		delta_q = Q.inverse()*Jc.transpose()*(Jc*Q.inverse()*Jc.transpose()).inverse()*f;
 		for (int i = 0; i < numEffectiveArmJoints; i++)

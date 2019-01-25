@@ -506,6 +506,7 @@ bool TBrrtManager::replaceVertices(list<rrtVertex*>& path, vector<rrtVertex*>& t
 // Project point onto constraint manifold minimizing norm error
 bool TBrrtManager::projectionNewtonRaphson(Eigen::VectorXd& jointval, double threshold, int maxIter)
 {
+	// consider joint limit during projection
 	return rrtConstraints->project2ConstraintManifold(jointval, maxIter);
 
 	//Eigen::MatrixXd Jacobian;
