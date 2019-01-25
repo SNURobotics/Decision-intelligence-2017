@@ -554,6 +554,7 @@ bool TBrrtManager::innerloop()
 	Eigen::VectorXd nearest_vertex_pos = nearest_vertex->posState;
 
 #ifdef RRTExtCon
+	// ExtCon in TB-RRT
 
 	// 3. extend step size to random node (vector field is considered here)
 	Eigen::VectorXd temp_vertex_pos = extendStepSize(nearest_vertex_pos, random_vertex_pos, eps, TREE1);
@@ -570,19 +571,38 @@ bool TBrrtManager::innerloop()
 	else
 		new_vertex = nearest_vertex;
 #endif
+
 #ifndef RRTExtCon
 	// ConCon in TB-RRT
+	rrtVertex* old_vertex = nearest_vertex;
 
+	while (1)
+	{
+		Eigen::VectorXd temp_vertex_pos = extendStepSize(old_vertex->posState, random_vertex_pos, eps, TREE1);
+		rrtVertex* qr = generateNewVertex(old_vertex, temp_vertex_pos, step_size*0.1);
+		if (qr == NULL)
+		{
+			break;
+		}
+		if ((random_vertex_pos - qr->posState).norm() > (random_vertex_pos - old_vertex->posState).norm())
+			break;
 
-
+		new_vertex = qr;
+		pTargetTree1->insert(new_vertex);
+		old_vertex = new_vertex;
+	}
+	if (new_vertex == NULL)
+		new_vertex = nearest_vertex;
 #endif
 
 
 	/* -------------------------------------------------------------  TREE 2 -------------------------------------------------------------*/
 
+	rrtVertex* new_tree2_vertex = NULL;
 	rrtVertex* nearest_tree2_vertex = nearestVertex(new_vertex->posState, TREE2);
 
 #ifdef RRTExtCon
+	// ExtCon in TB-RRT
 
 	//Eigen::VectorXd dir_2_tree1 = (new_vertex->posState - nearest_tree2_vertex->posState);
 	//double distance_2_tree1 = dir_2_tree1.norm();
@@ -591,15 +611,32 @@ bool TBrrtManager::innerloop()
 	// (optional) constraint projection
 	//if (rrtConstraints != NULL)
 	//	rrtConstraints->project2ConstraintManifold(temp_tree2_vertex_pos);
-	rrtVertex* new_tree2_vertex = NULL;
 
 	// collision checking
 	new_tree2_vertex = generateNewVertex(nearest_tree2_vertex, temp_tree2_vertex_pos, step_size*0.1);
 	if (new_tree2_vertex != NULL)
 		pTargetTree2->insert(new_tree2_vertex);
 #endif // RRTExtCon
+
 #ifndef RRTExtCon
 	// ConCon in TB-RRT
+	rrtVertex* old_tree2_vertex = nearest_tree2_vertex;
+
+	while (1)
+	{
+		Eigen::VectorXd temp_tree2_vertex_pos = extendStepSize(old_tree2_vertex->posState, new_vertex->posState, eps, TREE2);
+		rrtVertex* qr = generateNewVertex(old_tree2_vertex, temp_tree2_vertex_pos, step_size*0.1);
+		if (qr == NULL)
+		{
+			break;
+		}
+		if ((new_vertex->posState - qr->posState).norm() > (new_vertex->posState - old_tree2_vertex->posState).norm())
+			break;
+
+		new_tree2_vertex = qr;
+		pTargetTree2->insert(new_tree2_vertex);
+		old_tree2_vertex = new_tree2_vertex;
+	}
 #endif
 
 
