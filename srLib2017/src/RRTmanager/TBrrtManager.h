@@ -17,6 +17,7 @@ public:
 
 	// handle constraint
 	void									setConstraint(rrtConstraint* constraint);
+	void									setThreshold(double threshold);
 	void									clearConstraints();
 
 	virtual void							setStartandGoal(const Eigen::VectorXd& _start, const Eigen::VectorXd& _goal);
@@ -52,8 +53,7 @@ protected:
 	unsigned int							selectTangentSpace();								// Heuristically select tangent space for extension
 
 	// projection function
-	bool									projectionNewtonRaphson(Eigen::VectorXd& jointval, double threshold = 0.1, int maxIter = 100);
-	void									setThreshold(double threshold);
+	bool									projectionNewtonRaphson(Eigen::VectorXd& jointval, double threshold = 1.0e-6, int maxIter = 1000);
 	void									LazyProjection(list<rrtVertex *>& path);
 
 	

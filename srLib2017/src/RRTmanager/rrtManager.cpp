@@ -621,11 +621,9 @@ list<Eigen::VectorXd> rrtManager::fillingPath(list<rrtVertex*>& path)
 	filledPath.push_back((*iter)->parentVertex->posState);
 	for (iter; iter != end_iter; iter++){
 		int numMidPoint = (int) ceil((*iter)->distance2parent / step_size);
-		//Eigen::VectorXd diff = (*iter)->posState - (*iter)->parentVertex->posState ;
 		vector<Eigen::VectorXd>	midPoints = generateIntermediateVertex((*iter)->parentVertex->posState, (*iter)->posState, numMidPoint);
 		for (int j = 0; j < numMidPoint; j++){
 			filledPath.push_back(midPoints[j]);
-			//filledPath.push_back((*iter)->parentVertex->posState + (double) j / (double)numMidPoint*diff);
 		}
 	}
 	//end_iter--;

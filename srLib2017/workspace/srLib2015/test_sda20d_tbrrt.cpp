@@ -10,6 +10,7 @@
 #include "robotManager\environment_4th.h"
 #include <time.h>
 #include <ctime>
+#include "common/dataIO.h"
 
 // Robot
 SDA20D* sdaRobot = new SDA20D;
@@ -58,8 +59,8 @@ int main(int argc, char **argv)
 		sdaRobotManagerSetting(SDA20DManager::MoveWholeBody);
 
 	// set joint value for test
-	tempJointVal[0 + useWaist] = 1.3*SR_PI_HALF;
-	tempJointVal[7 + useWaist] = 1.3*SR_PI_HALF;
+	tempJointVal[0 + useWaist] = 0.5*SR_PI_HALF;
+	tempJointVal[7 + useWaist] = 0.5*SR_PI_HALF;
 	tempJointVal[1 + useWaist] = 0.5*SR_PI_HALF;
 	tempJointVal[8 + useWaist] = 0.5*SR_PI_HALF;
 	tempJointVal[2 + useWaist] = -SR_PI_HALF;
@@ -106,16 +107,26 @@ int main(int argc, char **argv)
 	cout << TS->tangentBasis << endl;
 	printf("projection matrix\n");
 	cout << TS->ProjectionMatrix << endl;
-	printf("check projection\n");
+	printf("check projection to tangent space\n");
 	cout << (q - tempJointVal).transpose() << endl;
 	cout << (armConstraint->getConstraintJacobian(tempJointVal) * (q - tempJointVal)).transpose() << endl;
-
+	printf("joint value in tangent space\n");
+	cout << q.transpose() << endl;
+	printf("project to constraint manifold:\n");
+	armConstraint->project2ConstraintManifold(q);
+	cout << q.transpose() << endl;
+	cout << armConstraint->getConstraintVector(q);
 	// define planning problem
 	RRTManager->setStartandGoal(tempJointVal, tempJointVal2);
+	RRTManager->setThreshold(0.1);
 	// run RRT
 	RRTManager->execute(0.1);
 	traj = RRTManager->extractPath();
-
+	saveDataToText(traj, "../../../data/tbrrt_traj/tbrrt_traj_test.txt");
+	vector<Eigen::VectorXd> constraintVec(0);
+	for (unsigned int i = 0; i < traj.size(); i++)
+		constraintVec.push_back(armConstraint->getConstraintVector(traj[i]));
+	saveDataToText(constraintVec, "../../../data/tbrrt_traj/tbrrt_traj_constraintVec.txt");
 	rendering(argc, argv);
 
 	return 0;
