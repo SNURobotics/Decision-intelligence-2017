@@ -7,7 +7,7 @@ class rrtConstraint;
 class tangentSpace;
 class TBrrtVertex;
 
-#define RRTExtCon
+//#define RRTExtCon
 
 class TBrrtManager : public rrtManager
 {
