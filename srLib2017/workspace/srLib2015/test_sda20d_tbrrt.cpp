@@ -26,6 +26,7 @@ myRenderer* renderer;
 
 srLink* ee = new srLink;
 srSystem* obs = new srSystem;
+srCollision* colli = new srCollision;
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::TORQUE;
 SE3 Trobotbase1;
 void initDynamics();
@@ -34,14 +35,17 @@ void updateFunc();
 void sdaRobotSetting();
 void sdaRobotManagerSetting(int robotMode, int excludeNum = 0);
 void sdarrtSetting();
+void setObstacle();
 int activeJointIdx =0;
 vector<Eigen::VectorXd> traj(0);
+vector<Eigen::VectorXd> traj2(0);
 Eigen::VectorXd qTemp;
 Eigen::VectorXd q;
 
 int useWaist = 0;
 Eigen::VectorXd tempJointVal = Eigen::VectorXd::Zero(14 + useWaist);
 Eigen::VectorXd tempJointVal2;
+bool doPlanning = false;
 
 SDA20DDualArmClosedLoopConstraint* armConstraint;
 TBrrtManager* RRTManager = new TBrrtManager(armConstraint);
@@ -50,7 +54,7 @@ int main(int argc, char **argv)
 {
 	srand(time(NULL));
     sdaRobotSetting();
-
+	setObstacle();
 
 	initDynamics();
 	if (useWaist == 0)
@@ -61,8 +65,8 @@ int main(int argc, char **argv)
 	// set joint value for test
 	tempJointVal[0 + useWaist] = 0.5*SR_PI_HALF;
 	tempJointVal[7 + useWaist] = 0.5*SR_PI_HALF;
-	tempJointVal[1 + useWaist] = 0.5*SR_PI_HALF;
-	tempJointVal[8 + useWaist] = 0.5*SR_PI_HALF;
+	tempJointVal[1 + useWaist] = 0.8*SR_PI_HALF;
+	tempJointVal[8 + useWaist] = 0.8*SR_PI_HALF;
 	tempJointVal[2 + useWaist] = -SR_PI_HALF;
 	tempJointVal[9 + useWaist] = -SR_PI_HALF;
 	tempJointVal[3 + useWaist] = -SR_PI_HALF;
@@ -83,7 +87,8 @@ int main(int argc, char **argv)
 
 	// check projection
 	tempJointVal2 = tempJointVal + 0.1*Eigen::VectorXd::Random(tempJointVal.size());
-	tempJointVal2[0 + useWaist] += SR_PI_HALF;
+	tempJointVal2[0 + useWaist] += 0.5*SR_PI_HALF;
+	tempJointVal2[7 + useWaist] += 0.5*SR_PI_HALF;
 	printf("jointval before projection:\n");
 	cout << tempJointVal2.transpose() << endl;
 	printf("constraint vector before projection:\n");
@@ -115,18 +120,37 @@ int main(int argc, char **argv)
 	printf("project to constraint manifold:\n");
 	armConstraint->project2ConstraintManifold(q);
 	cout << q.transpose() << endl;
-	cout << armConstraint->getConstraintVector(q);
-	// define planning problem
-	RRTManager->setStartandGoal(tempJointVal, tempJointVal2);
-	RRTManager->setThreshold(0.1);
-	// run RRT
-	RRTManager->execute(0.1);
-	traj = RRTManager->extractPath();
-	saveDataToText(traj, "../../../data/tbrrt_traj/tbrrt_traj_test.txt");
-	vector<Eigen::VectorXd> constraintVec(0);
-	for (unsigned int i = 0; i < traj.size(); i++)
-		constraintVec.push_back(armConstraint->getConstraintVector(traj[i]));
-	saveDataToText(constraintVec, "../../../data/tbrrt_traj/tbrrt_traj_constraintVec.txt");
+	cout << armConstraint->getConstraintVector(q) << endl;
+
+	///////////////////////////// solve RRT ////////////////////////////
+	doPlanning = true;
+	if (doPlanning)
+	{
+		// define planning problem
+		RRTManager->setStartandGoal(tempJointVal, tempJointVal2);
+		RRTManager->setThreshold(0.1);
+		// run RRT
+		RRTManager->execute(0.2);
+		//traj = RRTManager->extractPath(0);
+		//saveDataToText(traj, "../../../data/tbrrt_traj/tbrrt_traj_test.txt");
+		//vector<Eigen::VectorXd> constraintVec(0);
+		//for (unsigned int i = 0; i < traj.size(); i++)
+		//	constraintVec.push_back(armConstraint->getConstraintVector(traj[i]));
+		//saveDataToText(constraintVec, "../../../data/tbrrt_traj/tbrrt_traj_constraintVec.txt");
+		traj2 = RRTManager->extractPath(200);
+		saveDataToText(traj2, "../../../data/tbrrt_traj/tbrrt_traj_test2.txt");
+		vector<Eigen::VectorXd> constraintVec2(0);
+		for (unsigned int i = 0; i < traj2.size(); i++)
+			constraintVec2.push_back(armConstraint->getConstraintVector(traj2[i]));
+		saveDataToText(constraintVec2, "../../../data/tbrrt_traj/tbrrt_traj_constraintVec2.txt");
+	}
+	
+	///////////////////////////////////////////////////////////////////
+
+	rManager1->setJointVal(tempJointVal);
+	cout << rManager1->checkCollision() << endl;
+	rManager1->setJointVal(tempJointVal2);
+	cout << rManager1->checkCollision() << endl;
 	rendering(argc, argv);
 
 	return 0;
@@ -171,11 +195,20 @@ void updateFunc()
 
 	//if (cnt % 10 == 0)
 	//	trajcnt++;
-	//if (traj.size() > 0)
-	rManager1->setJointVal(traj[trajcnt % traj.size()]);
-
+	if (traj.size() > 0)
+		rManager1->setJointVal(traj[trajcnt % traj.size()]);
+	if (traj2.size() > 0)
+		rManager1->setJointVal(traj2[trajcnt % traj2.size()]);
 	if (cnt % 10 == 0)
 		trajcnt++;
+	if (!doPlanning)
+	{
+		if (cnt % 100 < 50)
+			rManager1->setJointVal(tempJointVal);
+		else
+			rManager1->setJointVal(tempJointVal2);
+	}
+	
 	//if (trajcnt % 2 == 0)
 	//	rManager1->setJointVal(qTemp);
 	//else
@@ -242,4 +275,17 @@ void sdarrtSetting()
 	RRTManager->setStateBound(VecToVector(rManager1->m_lowerJointLimit), VecToVector(rManager1->m_upperJointLimit));
 }
 
-
+void setObstacle()
+{
+	ee->GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	Vec3 obs_size = Vec3(0.03, 1.5, 0.03);
+	ee->GetGeomInfo().SetDimension(obs_size);
+	ee->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
+	colli->GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	colli->GetGeomInfo().SetDimension(obs_size);
+	ee->AddCollision(colli);
+	obs->SetBaseLink(ee);
+	obs->SetBaseLinkType(srSystem::FIXED);
+	gSpace.AddSystem(obs);
+	obs->GetBaseLink()->SetFrame(SE3(Vec3(0.9, 0.0, 0.2)));
+}

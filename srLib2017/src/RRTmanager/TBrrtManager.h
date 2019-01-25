@@ -15,20 +15,23 @@ public:
 	TBrrtManager(rrtConstraint* constraint);
 	~TBrrtManager();
 
-	// handle constraint
+public:	// define TB-RRT problem
 	void									setConstraint(rrtConstraint* constraint);
-	void									setThreshold(double threshold);
 	void									clearConstraints();
-
 	virtual void							setStartandGoal(const Eigen::VectorXd& _start, const Eigen::VectorXd& _goal);
-	virtual vector<Eigen::VectorXd>			extractPath(int smoothingNum = 200);
 
-protected:
-	// RRT functions
+public: // generate RRT trajectory output
+	virtual vector<Eigen::VectorXd>			extractPath(int smoothingNum = 20);
+
+public: // set parameters
+	void									setThreshold(double threshold);
+	void									setMaxSmoothingRange(int maxSmoothingRange);
+
+protected: 	// RRT functions
 	virtual bool							innerloop();			// TB-RRT-simple inner loop 
 
 
-	// generate new vertex
+protected: // innerloop function
 	virtual rrtVertex*						generateNewVertex(rrtVertex* pos1, const Eigen::VectorXd& pos2, double step_size_collision = 0.01);	// generate TBrrtVertex inside
 
 
@@ -38,15 +41,13 @@ protected:
 	
 
 
-	// smoothing function
-	vector<rrtVertex*>						getConstrainedPathConnectingTwoVertices(rrtVertex* vertex1, rrtVertex* vertex2, double eps, int maxIter = 10000);
-	virtual vector<rrtVertex*>				getCandidateVertices(vector<rrtVertex*> vertices);
-	virtual bool							replaceVertices(list<rrtVertex*>& path, vector<rrtVertex*>& tempVertices, vector<rrtVertex*>& removedVertex);
+protected: // smoothing function
+	virtual vector<rrtVertex*>				getRandomVertices(list<rrtVertex*>& path);
+	//virtual bool							replaceVertices(list<rrtVertex*>& path, vector<rrtVertex*>& tempVertices, vector<rrtVertex*>& removedVertex);
 
 
 
-protected:
-	// TB-RRT functions
+protected: // TB-RRT functions
 	// tangent space
 	//void									getTangentBasis(const Eigen::VectorXd& vertPos1);	// retrieve current node's TB basis form constraint manifold
 	//Eigen::VectorXd *						TBrandomSample(const Eigen::VectorXd qroot, double range);
@@ -54,7 +55,7 @@ protected:
 
 	// projection function
 	bool									projectionNewtonRaphson(Eigen::VectorXd& jointval, double threshold = 1.0e-6, int maxIter = 1000);
-	void									LazyProjection(list<rrtVertex *>& path);
+	void									LazyProjection(list<Eigen::VectorXd>& path);
 
 	
 
@@ -65,9 +66,9 @@ protected:
 	// Tangent Space
 	vector<tangentSpace *>					TangentSpaces;										// List of existing tangent space
 
-	// projection function
+	// parameters
 	double									_error_threshold;
-	
+	int										_max_smoothing_range;
 };
 
 class rrtConstraint

@@ -2,7 +2,7 @@
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 
-TBrrtManager::TBrrtManager(rrtConstraint* constraint) : _error_threshold(0.1)
+TBrrtManager::TBrrtManager(rrtConstraint* constraint) : _error_threshold(0.1), _max_smoothing_range(15)
 {	
 	rrtConstraints = constraint;
 }
@@ -341,11 +341,24 @@ vector<Eigen::VectorXd> TBrrtManager::extractPath(int smoothingNum)
 		connectParentAndChild((*iter2), (*iter));
 	}
 
-	// project to constraint manifold
-	LazyProjection(path);
+	// check path connection
+	iter = path.rbegin();
+	int temp = 0;
+	rrtVertex* curVertex = (*iter);
+	while (curVertex != NULL)
+	{
+		curVertex = curVertex->parentVertex;
+		temp++;
+		
+	}
 
-	//path = smoothingPath(path, smoothingNum);
+
+	path = smoothingPath(path, smoothingNum);
+	
 	list<Eigen::VectorXd> filledPath = fillingPath(path);
+
+	// project to constraint manifold
+	LazyProjection(filledPath);
 	list<Eigen::VectorXd>::iterator iter_path = filledPath.begin();
 	vector<Eigen::VectorXd> outputPath(filledPath.size());
 	for (unsigned int i = 0; i < outputPath.size(); i++, iter_path++)
@@ -355,115 +368,72 @@ vector<Eigen::VectorXd> TBrrtManager::extractPath(int smoothingNum)
 	return outputPath;
 }
 
-vector<rrtVertex*> TBrrtManager::getConstrainedPathConnectingTwoVertices(rrtVertex* vertex1, rrtVertex* vertex2, double eps, int maxIter /*= 10000*/)
+vector<rrtVertex*> TBrrtManager::getRandomVertices(list<rrtVertex*>& path)
 {
-	vector<rrtVertex*> extendedVertex;
-	rrtVertex* firstExtenedVertex = new rrtVertex;
-	firstExtenedVertex->posState = vertex1->posState;
-	extendedVertex.push_back(firstExtenedVertex);
-
-
-	// find temporary vertex set which connect vertex1 and vertex2
-	int iter = 0;
-	while (iter < maxIter)
-	{
-		Eigen::VectorXd diff = vertex2->posState - extendedVertex[extendedVertex.size() - 1]->posState;
-		double diffnorm = diff.norm();
-
-		// if two random vertices (vertex1 and vertex2) are close enough, break
-		if (diffnorm < eps && !collisionChecking(vertex2->posState, extendedVertex[extendedVertex.size() - 1]->posState, step_size*0.1))
-			break;
-
-		// if newly extended vertex is farther to vertex2 than previously extended vertex, break
-		if (extendedVertex.size() > 2 && diffnorm > (vertex2->posState - extendedVertex[extendedVertex.size() - 2]->posState).norm())
-		{
-			extendedVertex.resize(extendedVertex.size() - 1);
-			break;
-		}
-
-		// to get a temp vertex, from vertex1 go a step size to direction to vertex2 and project to constraint manifold
-		Eigen::VectorXd temp_vertex = extendedVertex[extendedVertex.size() - 1]->posState + min(step_size, diffnorm)*diff;
-		rrtConstraints->project2ConstraintManifold(temp_vertex);
-
-		// if there is no collision, add temp vertex to the set of temporary vertices
-		if (!collisionChecking(temp_vertex, extendedVertex[extendedVertex.size() - 1]->posState, step_size*0.1))
-		{
-			rrtVertex* tempVertex = new rrtVertex;
-			tempVertex->posState = temp_vertex;
-			//tempVertex->parentVertex = extendedVertex[extendedVertex.size() - 1];
-			//tempVertex->distance2parent = (extendedVertex[extendedVertex.size() - 1]->posState - temp_vertex).norm();
-			//tempVertex->cost_bw_parent = getCost(extendedVertex[extendedVertex.size() - 1], tempVertex);
-
-			extendedVertex.push_back(tempVertex);
-		}
-		else
-			break;
-		iter++;
-	}
-	return extendedVertex;
-}
-
-vector<rrtVertex*> TBrrtManager::getCandidateVertices(vector<rrtVertex*> vertices)
-{
-	double eps = 0.5*step_size;
-	vector<rrtVertex*> extendedVertex = getConstrainedPathConnectingTwoVertices(vertices[0], vertices[1], eps);
-	double dist_cur = (vertices[1]->posState - extendedVertex[extendedVertex.size() - 1]->posState).norm();
-	if (dist_cur < eps)
-	{
-		extendedVertex.push_back(vertices[1]);
-		return extendedVertex;
-	}
-	else
-	{
-		// delete extended vertices
-		for (unsigned int i = 0; i < extendedVertex.size(); i++)
-			delete extendedVertex[i];
-	}
-	return vector<rrtVertex*>();
-}
-
-bool TBrrtManager::replaceVertices(list<rrtVertex*>& path, vector<rrtVertex*>& tempVertices, vector<rrtVertex*>& removedVertex)
-{
-	list<rrtVertex*> tmpPath;
-	rrtVertex* vertex1 = removedVertex[removedVertex.size() - 1]->parentVertex;
-	rrtVertex* vertex2 = tempVertices[tempVertices.size() - 1];
-	if (tempVertices.size() == 2)
-	{
-		vertex2->parentVertex = vertex1;
-		vertex2->distance2parent = getDistance(vertex1->posState, vertex2->posState);
-		vertex2->cost_bw_parent = getCost(vertex1, vertex2);
-	}
-	else
-	{
-		tempVertices[1]->parentVertex = vertex1;
-		tempVertices[1]->distance2parent = getDistance(vertex1->posState, tempVertices[1]->posState);
-		tempVertices[1]->cost_bw_parent = getCost(vertex1, tempVertices[1]);
-		for (unsigned int i = tempVertices.size() - 1; i > 1; i--)
-		{
-			tempVertices[i]->parentVertex = tempVertices[i - 1];
-			tempVertices[i]->distance2parent = getDistance(tempVertices[i - 1]->posState, tempVertices[i]->posState);
-			tempVertices[i]->cost_bw_parent = getCost(tempVertices[i - 1], tempVertices[i]);
-		}
-	}
-
-
-	for (unsigned int i = 0; i < removedVertex.size() - 1; i++)
-		path.remove(removedVertex[i]);
-
-	// add new vertices to the path
+	// perform smoothing only locally
 	int n = path.size();
-	tmpPath.resize(0);
-	list<rrtVertex*>::reverse_iterator tmpriter = tmpPath.rbegin();
-	list<rrtVertex*>::reverse_iterator riter = path.rbegin();
-	tmpPath.push_back(*riter);
-	int added_num = tempVertices.size() - 1;
-	for (int i = 1; i < n + added_num - 1; i++, tmpriter++)
-		tmpPath.push_front((*tmpriter)->parentVertex);
-	path = tmpPath;
-	delete tempVertices[0];
+	int _smoothing_range = randomInt(1, _max_smoothing_range);
+	int idx = randomInt(0, n - 1);
+	
+	int idx1 = max(idx - _smoothing_range, 0);
+	int idx2 = min(idx + _smoothing_range, n - 1);
+	
 
-	return true;
+	list<rrtVertex*>::iterator iter = path.begin();
+	advance(iter, idx1);
+	rrtVertex* vertex1 = *iter;
+
+	iter = path.begin();
+	advance(iter, idx2);
+	rrtVertex* vertex2 = *iter;
+	vector<rrtVertex*> randomVertices(2);
+	randomVertices[0] = vertex1;
+	randomVertices[1] = vertex2;
+	return randomVertices;
 }
+
+//bool TBrrtManager::replaceVertices(list<rrtVertex*>& path, vector<rrtVertex*>& tempVertices, vector<rrtVertex*>& removedVertex)
+//{
+//	list<rrtVertex*> tmpPath;
+//	rrtVertex* vertex1 = removedVertex[removedVertex.size() - 1]->parentVertex;
+//	rrtVertex* vertex2 = tempVertices[tempVertices.size() - 1];
+//	if (tempVertices.size() == 2)
+//	{
+//		vertex2->parentVertex = vertex1;
+//		vertex2->distance2parent = getDistance(vertex1->posState, vertex2->posState);
+//		vertex2->cost_bw_parent = getCost(vertex1, vertex2);
+//	}
+//	else
+//	{
+//		tempVertices[1]->parentVertex = vertex1;
+//		tempVertices[1]->distance2parent = getDistance(vertex1->posState, tempVertices[1]->posState);
+//		tempVertices[1]->cost_bw_parent = getCost(vertex1, tempVertices[1]);
+//		for (unsigned int i = tempVertices.size() - 1; i > 1; i--)
+//		{
+//			tempVertices[i]->parentVertex = tempVertices[i - 1];
+//			tempVertices[i]->distance2parent = getDistance(tempVertices[i - 1]->posState, tempVertices[i]->posState);
+//			tempVertices[i]->cost_bw_parent = getCost(tempVertices[i - 1], tempVertices[i]);
+//		}
+//	}
+//
+//
+//	for (unsigned int i = 0; i < removedVertex.size() - 1; i++)
+//		path.remove(removedVertex[i]);
+//
+//	// add new vertices to the path
+//	int n = path.size();
+//	tmpPath.resize(0);
+//	list<rrtVertex*>::reverse_iterator tmpriter = tmpPath.rbegin();
+//	list<rrtVertex*>::reverse_iterator riter = path.rbegin();
+//	tmpPath.push_back(*riter);
+//	int added_num = tempVertices.size() - 1;
+//	for (int i = 1; i < n + added_num - 1; i++, tmpriter++)
+//		tmpPath.push_front((*tmpriter)->parentVertex);
+//	path = tmpPath;
+//	delete tempVertices[0];
+//
+//	return true;
+//}
 
 /*void TBrrtManager::getTangentBasis(const Eigen::VectorXd& vertPos1) {
 
@@ -534,15 +504,14 @@ bool TBrrtManager::projectionNewtonRaphson(Eigen::VectorXd& jointval, double thr
 	return qrand;
 }*/
 
-void TBrrtManager::LazyProjection(list<rrtVertex *>& path)
+void TBrrtManager::LazyProjection(list<Eigen::VectorXd>& path)
 {
-	list<rrtVertex*>::iterator iter = path.begin();
-	list<rrtVertex*>::iterator iter_end = path.end(); iter_end--;
+	list<Eigen::VectorXd>::iterator iter = path.begin();
+	list<Eigen::VectorXd>::iterator iter_end = path.end(); iter_end--;
 	advance(iter, 1);
 	for (iter; iter != iter_end; iter++)
 	{
-		projectionNewtonRaphson((*iter)->posState);
-		(*iter)->distance2parent = ((*iter)->parentVertex->posState - (*iter)->posState).norm();
+		projectionNewtonRaphson((*iter));
 	}
 }
 
@@ -554,6 +523,11 @@ unsigned int TBrrtManager::selectTangentSpace()
 void TBrrtManager::setThreshold(double threshold) 
 {
 	_error_threshold = threshold;
+}
+
+void TBrrtManager::setMaxSmoothingRange(int maxSmoothingRange)
+{
+	_max_smoothing_range = maxSmoothingRange;
 }
 
 void TBrrtManager::setConstraint(rrtConstraint* constraint)
@@ -641,9 +615,10 @@ bool TBrrtManager::innerloop()
 			cout << "distance b/w trees: " << dist << endl;
 		if (dist < step_size && !collisionChecking(new_vertex->posState, new_tree2_vertex->posState, step_size*0.1))
 		{
-			rrtVertex* new_tree1_last_vertex = new rrtVertex;
+			rrtVertex* new_tree1_last_vertex = new TBrrtVertex;
 			new_tree1_last_vertex->posState = new_tree2_vertex->posState;
 			new_tree1_last_vertex->parentVertex = new_vertex;
+			((TBrrtVertex*)new_tree1_last_vertex)->_tangentSpace = ((TBrrtVertex*)new_tree2_vertex)->_tangentSpace;
 			pTargetTree1->insert(new_tree1_last_vertex);
 
 			connectedVertex1 = new_tree1_last_vertex;

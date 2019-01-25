@@ -82,7 +82,7 @@ protected: // innerloop function
 	virtual vector<Eigen::VectorXd>			generateIntermediateVertex(Eigen::VectorXd pos1, Eigen::VectorXd pos2, int numMidPoint);
 
 protected: // smoothing function
-	vector<rrtVertex*>						getRandomVertices(list<rrtVertex*>& path);
+	virtual vector<rrtVertex*>				getRandomVertices(list<rrtVertex*>& path);
 	virtual vector<rrtVertex*>				getCandidateVertices(vector<rrtVertex*> vertices);
 	virtual double							getCost(rrtVertex* pos1, rrtVertex* pos2);
 	virtual double							getRRTpathSmoothingCost(rrtVertex* pos1, rrtVertex* pos2, vector<rrtVertex*>& removedVertex);
