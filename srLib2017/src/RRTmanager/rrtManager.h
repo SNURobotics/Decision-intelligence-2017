@@ -112,7 +112,10 @@ protected:
 	rrtVertex*								connectedVertex1;
 	rrtVertex*								connectedVertex2;
 
-
+public: // print options
+	bool									printIter;
+	bool									printFinish;
+	bool									printDist;
 };
 
 

@@ -2,9 +2,8 @@
 #include "rrtManager.h"
 #include "common\dataIO.h"
 
-rrtManager::rrtManager()
+rrtManager::rrtManager() : _isExecuted(false), printDist(true), printIter(true), printFinish(true)
 {
-	_isExecuted = false;
 }
 
 
@@ -97,9 +96,6 @@ void rrtManager::execute(double _step_size)
 	// check feasibility of the problem
 	if (isProblemFeasible())
 	{
-		// print options
-		bool printIter = true;
-		bool printFinish = true;
 		///////////////////////////
 		while (!bConnected)
 		{
@@ -172,7 +168,6 @@ bool rrtManager::innerloop()
 		pTargetTree2->insert(new_tree2_vertex);
 
 	/* -------------------------------------------------------------  CHECK CONNECTIVITY -------------------------------------------------------------*/
-	bool printDist = true;
 	if (new_tree2_vertex == NULL)
 		return false;
 

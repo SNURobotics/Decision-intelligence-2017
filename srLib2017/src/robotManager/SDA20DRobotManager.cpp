@@ -266,7 +266,7 @@ Eigen::MatrixXd SDA20DDualArmClosedLoopConstraint::getConstraintJacobian(const E
 	srJoint* curJoint;
 	SE3 SE3_endeffector = left_link->GetFrame();		// left end-effector is set as link2
 
-	for (int i = 0; i < numEffectiveArmJoints; i++) {
+	for (unsigned int i = 0; i < numEffectiveArmJoints; i++) {
 		curJoint = _robotManager->m_activeArmInfo->m_activeJoint[i];
 		if (curJoint->GetType() == srJoint::REVOLUTE)
 			screw[i].Ad(SE3_endeffector % (curJoint->GetFrame()), se3(0, 0, 1, 0, 0, 0));

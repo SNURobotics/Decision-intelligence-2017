@@ -73,7 +73,7 @@ public:
 	SE3									_Tright2left;
 	srLink*								left_link;
 	srLink*								right_link;
-	int									numEffectiveArmJoints;	// number of moving joints
+	unsigned int						numEffectiveArmJoints;	// number of moving joints
 	vector<unsigned int>				commonJointIdx;		// common joints from right and left end-effectors to root
 	
 	//int									numEffectiveLeftArmJoint;

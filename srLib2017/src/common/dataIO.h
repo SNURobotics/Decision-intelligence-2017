@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <list>
 #include "../Eigen/Dense"
 #include <fstream>
 #include <iostream>
@@ -24,6 +25,26 @@ static void saveDataToText(std::vector<Eigen::VectorXd> data, std::string str)
 
 	fout.close();
 }
+
+static void saveDataToText(std::list<Eigen::VectorXd> data, std::string str)
+{
+	std::ofstream fout;
+	fout.open(str);
+	std::list<Eigen::VectorXd>::iterator iter = data.begin();
+	std::list<Eigen::VectorXd>::iterator end_iter = data.end();
+	for (iter; iter != end_iter; iter++)
+	{
+		for (int j = 0; j < (*iter).rows(); j++)
+		{
+			fout << (*iter)(j) << '\t';
+		}
+		fout << std::endl;
+	}
+
+
+	fout.close();
+}
+
 
 static void saveSingleDataToText(Eigen::VectorXd data, std::string str)
 {
