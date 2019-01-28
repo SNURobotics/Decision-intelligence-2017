@@ -131,31 +131,53 @@ int main(int argc, char **argv)
 	doPlanning = true;
 	if (doPlanning)
 	{
-		// define planning problem
-		RRTManager->setStartandGoal(tempJointVal, tempJointVal2);
-		RRTManager->setThreshold(0.1);
-		// run RRT
-		RRTManager->execute(0.2);
-		//traj = RRTManager->extractPath(0);
-		//saveDataToText(traj, "../../../data/tbrrt_traj/tbrrt_traj_test.txt");
-		//vector<Eigen::VectorXd> constraintVec(0);
-		//for (unsigned int i = 0; i < traj.size(); i++)
-		//	constraintVec.push_back(armConstraint->getConstraintVector(traj[i]));
-		//saveDataToText(constraintVec, "../../../data/tbrrt_traj/tbrrt_traj_constraintVec.txt");
-		traj2 = RRTManager->extractPath(200);
-		saveDataToText(traj2, "../../../data/tbrrt_traj/tbrrt_traj_test2.txt");
-		vector<Eigen::VectorXd> constraintVec2(0);
-		for (unsigned int i = 0; i < traj2.size(); i++)
-			constraintVec2.push_back(armConstraint->getConstraintVector(traj2[i]));
-		saveDataToText(constraintVec2, "../../../data/tbrrt_traj/tbrrt_traj_constraintVec2.txt");
+		for (int k = 0; k < 10; k++)
+		{
+			vector<unsigned int> colliIdx(0);
+			// define planning problem
+			RRTManager->setStartandGoal(tempJointVal, tempJointVal2);
+			RRTManager->setThreshold(0.05);
+			RRTManager->setSmoothingErrorThreshold(0.25);
+			// run RRT
+			RRTManager->execute(0.2);
+			//traj = RRTManager->extractPath(0);
+			//saveDataToText(traj, "../../../data/tbrrt_traj/tbrrt_traj_test.txt");
+			//vector<Eigen::VectorXd> constraintVec(0);
+			//for (unsigned int i = 0; i < traj.size(); i++)
+			//	constraintVec.push_back(armConstraint->getConstraintVector(traj[i]));
+			//saveDataToText(constraintVec, "../../../data/tbrrt_traj/tbrrt_traj_constraintVec.txt");
+			traj2 = RRTManager->extractPath(200);
+			saveDataToText(traj2, "../../../data/tbrrt_traj/tbrrt_traj_test2.txt");
+			vector<Eigen::VectorXd> constraintVec2(0);
+			for (unsigned int i = 0; i < traj2.size(); i++)
+				constraintVec2.push_back(armConstraint->getConstraintVector(traj2[i]));
+			saveDataToText(constraintVec2, "../../../data/tbrrt_traj/tbrrt_traj_constraintVec2.txt");
+
+
+			// feasibility check for output trajectory
+			bool pathFeasible = true;
+			for (unsigned int i = 0; i < traj2.size(); i++)
+			{
+				rManager1->setJointVal(traj2[i]);
+				pathFeasible = pathFeasible && (!rManager1->checkCollision());
+				if (rManager1->checkCollision())
+					colliIdx.push_back(i);
+			}
+			printf("output path feasible?\n");
+			cout << pathFeasible << endl;
+			printf("collision occuring path index:\n");
+			for (unsigned int i = 0; i < colliIdx.size(); i++)
+				cout << colliIdx[i] << ", ";
+			cout << endl;
+		}
 	}
 	
 	///////////////////////////////////////////////////////////////////
 
-	rManager1->setJointVal(tempJointVal);
-	cout << rManager1->checkCollision() << endl;
-	rManager1->setJointVal(tempJointVal2);
-	cout << rManager1->checkCollision() << endl;
+	//rManager1->setJointVal(tempJointVal);
+	//cout << rManager1->checkCollision() << endl;
+	//rManager1->setJointVal(tempJointVal2);
+	//cout << rManager1->checkCollision() << endl;
 	rendering(argc, argv);
 
 	return 0;
@@ -285,8 +307,8 @@ void sdarrtSetting()
 void setObstacle()
 {
 	ee->GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	Vec3 obs_size = Vec3(0.03, 2.5, 0.03);
-	Vec3 obs_col_size = Vec3(0.09, 2.5, 0.09);
+	Vec3 obs_size = Vec3(0.05, 5.0, 0.05);
+	Vec3 obs_col_size = Vec3(0.09, 5.0, 0.09);
 	ee->GetGeomInfo().SetDimension(obs_size);
 	ee->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
 	colli->GetGeomInfo().SetShape(srGeometryInfo::BOX);

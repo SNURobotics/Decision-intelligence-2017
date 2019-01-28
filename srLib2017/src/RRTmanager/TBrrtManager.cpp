@@ -2,7 +2,7 @@
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 
-TBrrtManager::TBrrtManager(rrtConstraint* constraint) : _error_threshold(0.1), _max_smoothing_range(15)
+TBrrtManager::TBrrtManager(rrtConstraint* constraint) : _error_threshold(0.1), _smoothing_error_threshold(0.25)
 {	
 	rrtConstraints = constraint;
 }
@@ -353,13 +353,29 @@ vector<Eigen::VectorXd> TBrrtManager::extractPath(int smoothingNum)
 		
 	}
 
+	// save trajectory before smoothing
+	vector<Eigen::VectorXd> pathtemp(path.size());
+	list<rrtVertex*>::iterator itertemp = path.begin();
+	for (unsigned int i = 0; i < pathtemp.size(); i++, itertemp++)
+	{
+		pathtemp[i] = (*itertemp)->posState;
+	}
+	saveDataToText(pathtemp, "../../../data/tbrrt_traj/tbrrt_traj_bfsmooth.txt");
+
 
 	path = smoothingPath(path, smoothingNum);
 	
 	list<Eigen::VectorXd> filledPath = fillingPath(path);
 
+	// save trajectory before projection
+	saveDataToText(filledPath, "../../../data/tbrrt_traj/tbrrt_traj_bfproj.txt");
+
 	// project to constraint manifold
 	LazyProjection(filledPath);
+
+	// save trajectory after projection
+	saveDataToText(filledPath, "../../../data/tbrrt_traj/tbrrt_traj_afproj.txt");
+
 	list<Eigen::VectorXd>::iterator iter_path = filledPath.begin();
 	vector<Eigen::VectorXd> outputPath(filledPath.size());
 	for (unsigned int i = 0; i < outputPath.size(); i++, iter_path++)
@@ -369,28 +385,56 @@ vector<Eigen::VectorXd> TBrrtManager::extractPath(int smoothingNum)
 	return outputPath;
 }
 
-vector<rrtVertex*> TBrrtManager::getRandomVertices(list<rrtVertex*>& path)
+//vector<rrtVertex*> TBrrtManager::getRandomVertices(list<rrtVertex*>& path)
+//{
+//	// perform smoothing only locally
+//	int n = path.size();
+//	int _smoothing_range = randomInt(1, _max_smoothing_range);
+//	int idx = randomInt(0, n - 1);
+//	
+//	int idx1 = max(idx - _smoothing_range, 0);
+//	int idx2 = min(idx + _smoothing_range, n - 1);
+//	
+//
+//	list<rrtVertex*>::iterator iter = path.begin();
+//	advance(iter, idx1);
+//	rrtVertex* vertex1 = *iter;
+//
+//	iter = path.begin();
+//	advance(iter, idx2);
+//	rrtVertex* vertex2 = *iter;
+//	vector<rrtVertex*> randomVertices(2);
+//	randomVertices[0] = vertex1;
+//	randomVertices[1] = vertex2;
+//	return randomVertices;
+//}
+
+vector<rrtVertex*> TBrrtManager::getCandidateVertices(vector<rrtVertex*> vertices)
 {
-	// perform smoothing only locally
-	int n = path.size();
-	int _smoothing_range = randomInt(1, _max_smoothing_range);
-	int idx = randomInt(0, n - 1);
-	
-	int idx1 = max(idx - _smoothing_range, 0);
-	int idx2 = min(idx + _smoothing_range, n - 1);
-	
+	// check collision of the path of candidate vertices
+	for (unsigned int i = 0; i < vertices.size() - 1; i++)
+	{
+		if (collisionChecking(vertices[i]->posState, vertices[i + 1]->posState, step_size*0.1))
+			return vector<rrtVertex*>();
+	}
+	// check distance from the constraint manifold for the path of candidate vertices
+	for (unsigned int i = 0; i < vertices.size() - 1; i++)
+	{
+		Eigen::VectorXd dir = vertices[i + 1]->posState - vertices[i]->posState;
+		double length = dir.norm();
 
-	list<rrtVertex*>::iterator iter = path.begin();
-	advance(iter, idx1);
-	rrtVertex* vertex1 = *iter;
+		int numMidPoint = (int)floor(length / step_size) + 1;
 
-	iter = path.begin();
-	advance(iter, idx2);
-	rrtVertex* vertex2 = *iter;
-	vector<rrtVertex*> randomVertices(2);
-	randomVertices[0] = vertex1;
-	randomVertices[1] = vertex2;
-	return randomVertices;
+		vector<Eigen::VectorXd> checkSet(numMidPoint);
+		checkSet = generateIntermediateVertex(vertices[i]->posState, vertices[i + 1]->posState, numMidPoint);
+		for (unsigned int j = 0; j < checkSet.size(); j++)
+		{
+			double curError = rrtConstraints->getConstraintVector(checkSet[j]).norm();
+			if (curError > _smoothing_error_threshold)
+				return vector<rrtVertex*>();
+		}
+	}
+	return vertices;
 }
 
 //bool TBrrtManager::replaceVertices(list<rrtVertex*>& path, vector<rrtVertex*>& tempVertices, vector<rrtVertex*>& removedVertex)
@@ -531,9 +575,9 @@ void TBrrtManager::setThreshold(double threshold)
 	_error_threshold = threshold;
 }
 
-void TBrrtManager::setMaxSmoothingRange(int maxSmoothingRange)
+void TBrrtManager::setSmoothingErrorThreshold(double smoothing_error_threshold)
 {
-	_max_smoothing_range = maxSmoothingRange;
+	_smoothing_error_threshold = smoothing_error_threshold;
 }
 
 void TBrrtManager::setConstraint(rrtConstraint* constraint)
@@ -647,7 +691,6 @@ bool TBrrtManager::innerloop()
 
 
 	/* -------------------------------------------------------------  CHECK CONNECTIVITY -------------------------------------------------------------*/
-	bool printDist = true;
 	if (new_tree2_vertex == NULL)
 		return false;
 

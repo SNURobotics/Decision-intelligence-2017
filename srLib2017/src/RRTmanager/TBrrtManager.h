@@ -1,6 +1,6 @@
 #pragma once
 #include "rrtManager.h"
-
+#include "common/dataIO.h"
 using namespace std;
 
 class rrtConstraint;
@@ -25,7 +25,7 @@ public: // generate RRT trajectory output
 
 public: // set parameters
 	void									setThreshold(double threshold);
-	void									setMaxSmoothingRange(int maxSmoothingRange);
+	void									setSmoothingErrorThreshold(double smoothing_error_threshold);
 
 protected: 	// RRT functions
 	virtual bool							innerloop();			// TB-RRT-simple inner loop 
@@ -42,7 +42,8 @@ protected: // innerloop function
 
 
 protected: // smoothing function
-	virtual vector<rrtVertex*>				getRandomVertices(list<rrtVertex*>& path);
+	//virtual vector<rrtVertex*>				getRandomVertices(list<rrtVertex*>& path);
+	virtual vector<rrtVertex*>				getCandidateVertices(vector<rrtVertex*> vertices);
 	//virtual bool							replaceVertices(list<rrtVertex*>& path, vector<rrtVertex*>& tempVertices, vector<rrtVertex*>& removedVertex);
 
 
@@ -69,7 +70,7 @@ protected:
 
 	// parameters
 	double									_error_threshold;
-	int										_max_smoothing_range;
+	double									_smoothing_error_threshold;
 };
 
 class rrtConstraint
