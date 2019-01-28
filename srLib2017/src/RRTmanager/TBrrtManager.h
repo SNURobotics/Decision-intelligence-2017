@@ -56,7 +56,8 @@ protected: // TB-RRT functions
 	// projection function
 	bool									projectionNewtonRaphson(Eigen::VectorXd& jointval, double threshold = 1.0e-6, int maxIter = 1000);
 	void									LazyProjection(list<Eigen::VectorXd>& path);
-
+public:
+	void									LazyProjection(vector<Eigen::VectorXd>& path);
 	
 
 protected:

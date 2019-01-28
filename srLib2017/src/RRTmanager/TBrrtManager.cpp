@@ -55,6 +55,7 @@ rrtVertex * TBrrtManager::generateNewVertex(rrtVertex * nearest_vertex, const Ei
 	{
 		if (projectionNewtonRaphson(new_vertex->posState))
 		{
+			if (setState(new_vertex->posState)) { return NULL; }
 			// Create new Tangent Space and Add to TS list
 			tangentSpace * TS = new tangentSpace(new_vertex->posState, rrtConstraints);
 			TangentSpaces.push_back(TS);
@@ -513,6 +514,11 @@ void TBrrtManager::LazyProjection(list<Eigen::VectorXd>& path)
 	{
 		projectionNewtonRaphson((*iter));
 	}
+}
+
+void TBrrtManager::LazyProjection(vector<Eigen::VectorXd>& path) {
+	for (unsigned int i = 0; i < path.size(); i++)
+		projectionNewtonRaphson(path[i]);
 }
 
 unsigned int TBrrtManager::selectTangentSpace()

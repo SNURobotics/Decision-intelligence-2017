@@ -27,6 +27,9 @@ myRenderer* renderer;
 srLink* ee = new srLink;
 srSystem* obs = new srSystem;
 srCollision* colli = new srCollision;
+srLink* ee2 = new srLink;
+srSystem* obs2 = new srSystem;
+srCollision* colli2 = new srCollision;
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::TORQUE;
 SE3 Trobotbase1;
 void initDynamics();
@@ -36,6 +39,7 @@ void sdaRobotSetting();
 void sdaRobotManagerSetting(int robotMode, int excludeNum = 0);
 void sdarrtSetting();
 void setObstacle();
+void setObstacle2();
 int activeJointIdx =0;
 vector<Eigen::VectorXd> traj(0);
 vector<Eigen::VectorXd> traj2(0);
@@ -55,6 +59,7 @@ int main(int argc, char **argv)
 	srand(time(NULL));
     sdaRobotSetting();
 	setObstacle();
+	setObstacle2();
 
 	initDynamics();
 	if (useWaist == 0)
@@ -221,6 +226,8 @@ void updateFunc()
 	//cout << sdaRobot->gLink[MH12_Index::GRIPPER].GetFrame() << endl;
 	//rManager1->setJointVal(qval);
 
+	if (rManager1->checkCollision())
+		cout << "Collision!" << endl;
 
 	int stop = 1;
 }
@@ -278,14 +285,30 @@ void sdarrtSetting()
 void setObstacle()
 {
 	ee->GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	Vec3 obs_size = Vec3(0.03, 1.5, 0.03);
+	Vec3 obs_size = Vec3(0.03, 2.5, 0.03);
+	Vec3 obs_col_size = Vec3(0.09, 2.5, 0.09);
 	ee->GetGeomInfo().SetDimension(obs_size);
 	ee->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
 	colli->GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	colli->GetGeomInfo().SetDimension(obs_size);
+	colli->GetGeomInfo().SetDimension(obs_col_size);
 	ee->AddCollision(colli);
 	obs->SetBaseLink(ee);
 	obs->SetBaseLinkType(srSystem::FIXED);
 	gSpace.AddSystem(obs);
 	obs->GetBaseLink()->SetFrame(SE3(Vec3(0.9, 0.0, 0.2)));
+}
+void setObstacle2()
+{
+	ee2->GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	Vec3 obs_size = Vec3(2.5, 2.5, 0.03);
+	Vec3 obs_col_size = Vec3(2.5, 2.5, 0.09);
+	ee2->GetGeomInfo().SetDimension(obs_size);
+	ee2->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
+	colli2->GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	colli2->GetGeomInfo().SetDimension(obs_col_size);
+	ee2->AddCollision(colli2);
+	obs2->SetBaseLink(ee2);
+	obs2->SetBaseLinkType(srSystem::FIXED);
+	gSpace.AddSystem(obs2);
+	obs2->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, 0.7)));
 }
