@@ -46,7 +46,7 @@ vector<Eigen::VectorXd> traj2(0);
 Eigen::VectorXd qTemp;
 Eigen::VectorXd q;
 
-int useWaist = 0;
+int useWaist = 1;
 Eigen::VectorXd tempJointVal = Eigen::VectorXd::Zero(14 + useWaist);
 Eigen::VectorXd tempJointVal2;
 bool doPlanning = false;
@@ -129,11 +129,13 @@ int main(int argc, char **argv)
 
 	///////////////////////////// solve RRT ////////////////////////////
 	doPlanning = true;
+	RRTManager->printIter = false;
 	if (doPlanning)
 	{
-		for (int k = 0; k < 10; k++)
+		for (int k = 0; k < 1; k++)
 		{
 			vector<unsigned int> colliIdx(0);
+
 			// define planning problem
 			RRTManager->setStartandGoal(tempJointVal, tempJointVal2);
 			RRTManager->setThreshold(0.05);
@@ -248,8 +250,8 @@ void updateFunc()
 	//cout << sdaRobot->gLink[MH12_Index::GRIPPER].GetFrame() << endl;
 	//rManager1->setJointVal(qval);
 
-	if (rManager1->checkCollision())
-		cout << "Collision!" << endl;
+	//if (rManager1->checkCollision())
+		//cout << "Collision!" << endl;
 
 	int stop = 1;
 }
