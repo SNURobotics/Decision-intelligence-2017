@@ -55,7 +55,7 @@ rrtVertex * TBrrtManager::generateNewVertex(rrtVertex * nearest_vertex, const Ei
 	{
 		if (projectionNewtonRaphson(new_vertex->posState))
 		{
-			if (setState(new_vertex->posState)) { return NULL; }
+			//if (setState(new_vertex->posState)) { return NULL; }
 			// Create new Tangent Space and Add to TS list
 			tangentSpace * TS = new tangentSpace(new_vertex->posState, rrtConstraints);
 			TangentSpaces.push_back(TS);
@@ -412,13 +412,49 @@ vector<Eigen::VectorXd> TBrrtManager::extractPath(int smoothingNum)
 vector<rrtVertex*> TBrrtManager::getCandidateVertices(vector<rrtVertex*> vertices)
 {
 	// check collision of the path of candidate vertices
-	for (unsigned int i = 0; i < vertices.size() - 1; i++)
+	/*for (unsigned int i = 0; i < vertices.size() - 1; i++)
 	{
 		if (collisionChecking(vertices[i]->posState, vertices[i + 1]->posState, step_size*0.1))
 			return vector<rrtVertex*>();
-	}
-	// check distance from the constraint manifold for the path of candidate vertices
+	}*/
+
+	Eigen::VectorXd temp1 = vertices[0]->posState;
+	Eigen::VectorXd temp2;
 	for (unsigned int i = 0; i < vertices.size() - 1; i++)
+	{
+		temp2 = vertices[i + 1]->posState;
+		// collision checking
+		Eigen::VectorXd dir = temp2 - temp1;
+		double length = getDistance(temp1, temp2);
+		int numMidPoint = (int)floor(length / (step_size)) + 1;
+		vector<Eigen::VectorXd> checkSet(numMidPoint);
+		checkSet = generateIntermediateVertex(temp1, temp2, numMidPoint);
+		LazyProjection(checkSet);
+		bool Collision = false;
+		for (int j = 0; j < numMidPoint; j++) {
+			bool bCollision = setState(checkSet[j]);
+			if (bCollision) {
+				Collision = true;
+				break;
+			}
+		}
+
+		if (Collision)
+			return vector<rrtVertex*>();
+		temp1 = temp2;
+	}
+
+	/*Eigen::VectorXd temp;
+	for (unsigned int i = 0; i < vertices.size() - 1; i++)
+	{
+		temp = vertices[i]->posState;
+		projectionNewtonRaphson(temp);
+		if (setState(temp))
+			return vector<rrtVertex*>();
+	}*/
+
+	// check distance from the constraint manifold for the path of candidate vertices
+	/*for (unsigned int i = 0; i < vertices.size() - 1; i++)
 	{
 		Eigen::VectorXd dir = vertices[i + 1]->posState - vertices[i]->posState;
 		double length = dir.norm();
@@ -433,7 +469,7 @@ vector<rrtVertex*> TBrrtManager::getCandidateVertices(vector<rrtVertex*> vertice
 			if (curError > _smoothing_error_threshold)
 				return vector<rrtVertex*>();
 		}
-	}
+	}*/
 	return vertices;
 }
 
