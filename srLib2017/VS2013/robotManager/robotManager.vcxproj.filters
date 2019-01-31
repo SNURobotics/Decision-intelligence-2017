@@ -1,140 +1,50 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
+    <ClCompile Include="..\..\src\robotManager\environment.cpp" />
+    <ClCompile Include="..\..\src\robotManager\environmentBusbar.cpp" />
+    <ClCompile Include="..\..\src\robotManager\environment_2nd.cpp" />
+    <ClCompile Include="..\..\src\robotManager\environment_4th.cpp" />
+    <ClCompile Include="..\..\src\robotManager\environment_QBtech.cpp" />
+    <ClCompile Include="..\..\src\robotManager\environment_workcell.cpp" />
+    <ClCompile Include="..\..\src\robotManager\IndyRobot.cpp" />
+    <ClCompile Include="..\..\src\robotManager\indyRobotManager.cpp" />
+    <ClCompile Include="..\..\src\robotManager\MH12Robot.cpp" />
+    <ClCompile Include="..\..\src\robotManager\MH12RobotManager.cpp" />
+    <ClCompile Include="..\..\src\robotManager\robotManager.cpp" />
+    <ClCompile Include="..\..\src\robotManager\robotRRTManager.cpp" />
+    <ClCompile Include="..\..\src\robotManager\robotTaskManager.cpp" />
+    <ClCompile Include="..\..\src\robotManager\rrtVectorFields.cpp" />
+    <ClCompile Include="..\..\src\robotManager\SDA20DRobot.cpp" />
+    <ClCompile Include="..\..\src\robotManager\SDA20DRobotManager.cpp" />
+    <ClCompile Include="..\..\src\robotManager\UR3Robot.cpp" />
+    <ClCompile Include="..\..\src\robotManager\UR3RobotManager.cpp" />
+    <ClCompile Include="..\..\src\robotManager\UR5Robot.cpp" />
+    <ClCompile Include="..\..\src\robotManager\UR5RobotManager.cpp" />
+    <ClCompile Include="..\..\src\robotManager\environment_5th.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\robotManager\robotManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\robotManager\environment.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\robotManager\environment_2nd.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\robotManager\IndyRobot.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\robotManager\environmentBusbar.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\robotManager\robotRRTManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\robotManager\robotTaskManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\robotManager\indyRobotManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\robotManager\environment_QBtech.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\robotManager\environment_workcell.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\robotManager\UR3Robot.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\robotManager\UR3RobotManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\robotManager\rrtVectorFields.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\robotManager\environment_4th.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\robotManager\MH12Robot.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\robotManager\MH12RobotManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\robotManager\SDA20DRobot.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\robotManager\SDA20DRobotManager.cpp">
-    <ClCompile Include="..\..\src\robotManager\UR5Robot.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\robotManager\UR5RobotManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\src\robotManager\robotManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\robotManager\environment.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\robotManager\environment_2nd.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\robotManager\IndyRobot.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\robotManager\environmentBusbar.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\robotManager\makeSpecialCol.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\robotManager\robotRRTManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\robotManager\robotTaskManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\robotManager\indyRobotManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\robotManager\environment_QBtech.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\robotManager\environment_workcell.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\robotManager\UR3Robot.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\robotManager\UR3RobotManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\robotManager\rrtVectorFields.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\robotManager\environment_4th.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\robotManager\MH12Robot.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\robotManager\MH12RobotManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\robotManager\SDA20DRobot.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\robotManager\SDA20DRobotManager.h">
-    <ClInclude Include="..\..\src\robotManager\UR5Robot.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\robotManager\UR5RobotManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+    <ClInclude Include="..\..\src\robotManager\environment.h" />
+    <ClInclude Include="..\..\src\robotManager\environmentBusbar.h" />
+    <ClInclude Include="..\..\src\robotManager\environment_2nd.h" />
+    <ClInclude Include="..\..\src\robotManager\environment_4th.h" />
+    <ClInclude Include="..\..\src\robotManager\environment_QBtech.h" />
+    <ClInclude Include="..\..\src\robotManager\environment_workcell.h" />
+    <ClInclude Include="..\..\src\robotManager\IndyRobot.h" />
+    <ClInclude Include="..\..\src\robotManager\indyRobotManager.h" />
+    <ClInclude Include="..\..\src\robotManager\makeSpecialCol.h" />
+    <ClInclude Include="..\..\src\robotManager\MH12Robot.h" />
+    <ClInclude Include="..\..\src\robotManager\MH12RobotManager.h" />
+    <ClInclude Include="..\..\src\robotManager\robotManager.h" />
+    <ClInclude Include="..\..\src\robotManager\robotRRTManager.h" />
+    <ClInclude Include="..\..\src\robotManager\robotTaskManager.h" />
+    <ClInclude Include="..\..\src\robotManager\rrtVectorFields.h" />
+    <ClInclude Include="..\..\src\robotManager\SDA20DRobot.h" />
+    <ClInclude Include="..\..\src\robotManager\SDA20DRobotManager.h" />
+    <ClInclude Include="..\..\src\robotManager\UR3Robot.h" />
+    <ClInclude Include="..\..\src\robotManager\UR3RobotManager.h" />
+    <ClInclude Include="..\..\src\robotManager\UR5Robot.h" />
+    <ClInclude Include="..\..\src\robotManager\UR5RobotManager.h" />
+    <ClInclude Include="..\..\src\robotManager\environment_5th.h" />
   </ItemGroup>
 </Project>

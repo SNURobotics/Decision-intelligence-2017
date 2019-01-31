@@ -11,6 +11,7 @@
 #include <time.h>
 #include <ctime>
 #include "common/dataIO.h"
+#include "robotManager/environment_5th.h"
 
 // Robot
 SDA20D* sdaRobot = new SDA20D;
@@ -31,6 +32,7 @@ srLink* ee2 = new srLink;
 srSystem* obs2 = new srSystem;
 srCollision* colli2 = new srCollision;
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::TORQUE;
+MovingContact* obj1 = new MovingContact;
 SE3 Trobotbase1;
 void initDynamics();
 void rendering(int argc, char **argv);
@@ -40,6 +42,7 @@ void sdaRobotManagerSetting(int robotMode, int excludeNum = 0);
 void sdarrtSetting();
 void setObstacle();
 void setObstacle2();
+void setObjects();
 int activeJointIdx =0;
 vector<Eigen::VectorXd> traj(0);
 vector<Eigen::VectorXd> traj2(0);
@@ -58,10 +61,14 @@ int main(int argc, char **argv)
 {
 	srand(time(NULL));
     sdaRobotSetting();
+	setObjects();
 	setObstacle();
 	setObstacle2();
 
 	initDynamics();
+
+	obj1->setBaseLinkFrame(SE3(Vec3(1.0, 0.0, 0.0)));
+
 	if (useWaist == 0)
 		sdaRobotManagerSetting(SDA20DManager::MoveBothArmOnly);
 	else
@@ -128,7 +135,7 @@ int main(int argc, char **argv)
 	cout << armConstraint->getConstraintVector(q) << endl;
 
 	///////////////////////////// solve RRT ////////////////////////////
-	doPlanning = true;
+	doPlanning = false;
 	if (doPlanning)
 	{
 		for (int k = 0; k < 10; k++)
@@ -333,4 +340,9 @@ void setObstacle2()
 	obs2->SetBaseLinkType(srSystem::FIXED);
 	gSpace.AddSystem(obs2);
 	obs2->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, 0.7)));
+}
+
+void setObjects()
+{
+	gSpace.AddSystem((srSystem*)obj1);
 }
