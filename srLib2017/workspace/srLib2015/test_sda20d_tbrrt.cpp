@@ -348,6 +348,6 @@ void setObstacle2()
 
 void setObjects()
 {
-	//gSpace.AddSystem((srSystem*)obj1);
-	gSpace.AddSystem((srSystem*)obj2);
+	gSpace.AddSystem((srSystem*)obj1);
+	//gSpace.AddSystem((srSystem*)obj2);
 }
