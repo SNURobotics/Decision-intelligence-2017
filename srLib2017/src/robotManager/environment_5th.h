@@ -17,3 +17,12 @@ public:
 	void AssembleModel();
 	double m_collision_offset;
 };
+
+class FixedContact : public Object
+{
+public:
+	FixedContact(double collision_offset = 0.01);
+	~FixedContact();
+	void AssembleModel();
+	double m_collision_offset;
+};

@@ -33,6 +33,7 @@ srSystem* obs2 = new srSystem;
 srCollision* colli2 = new srCollision;
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::TORQUE;
 MovingContact* obj1 = new MovingContact;
+FixedContact* obj2 = new FixedContact;
 SE3 Trobotbase1;
 void initDynamics();
 void rendering(int argc, char **argv);
@@ -68,6 +69,7 @@ int main(int argc, char **argv)
 	initDynamics();
 
 	obj1->setBaseLinkFrame(SE3(Vec3(1.0, 0.0, 0.0)));
+	obj2->setBaseLinkFrame(SE3(Vec3(1.0, 0.0, 0.0)));
 
 	if (useWaist == 0)
 		sdaRobotManagerSetting(SDA20DManager::MoveBothArmOnly);
@@ -135,7 +137,7 @@ int main(int argc, char **argv)
 	cout << armConstraint->getConstraintVector(q) << endl;
 
 	///////////////////////////// solve RRT ////////////////////////////
-	doPlanning = true;
+	doPlanning = false;
 	RRTManager->printIter = false;
 	if (doPlanning)
 	{
@@ -346,5 +348,6 @@ void setObstacle2()
 
 void setObjects()
 {
-	gSpace.AddSystem((srSystem*)obj1);
+	//gSpace.AddSystem((srSystem*)obj1);
+	gSpace.AddSystem((srSystem*)obj2);
 }
