@@ -71,39 +71,39 @@ void Franka::SetJointLimit(bool elbowUp)
 	// R joint
 	if (elbowUp)
 	{
-		UpperJointLimit[Franka_Index::JOINT_1] = 360;
-		UpperJointLimit[Franka_Index::JOINT_2] = 360;
-		UpperJointLimit[Franka_Index::JOINT_3] = 360;
-		UpperJointLimit[Franka_Index::JOINT_4] = 360;
-		UpperJointLimit[Franka_Index::JOINT_5] = 360;
-		UpperJointLimit[Franka_Index::JOINT_6] = 360;
-		UpperJointLimit[Franka_Index::JOINT_7] = 360;
+		UpperJointLimit[Franka_Index::JOINT_1] = 166.003;
+		UpperJointLimit[Franka_Index::JOINT_2] = 101.001;
+		UpperJointLimit[Franka_Index::JOINT_3] = 166.003;
+		UpperJointLimit[Franka_Index::JOINT_4] = -3.99925;
+		UpperJointLimit[Franka_Index::JOINT_5] = 166.003;
+		UpperJointLimit[Franka_Index::JOINT_6] = 215.0024;
+		UpperJointLimit[Franka_Index::JOINT_7] = 166.003;
 
-		LowerJointLimit[Franka_Index::JOINT_1] = -360;
-		LowerJointLimit[Franka_Index::JOINT_2] = -360;
-		LowerJointLimit[Franka_Index::JOINT_3] = -360;
-		LowerJointLimit[Franka_Index::JOINT_4] = -360;
-		LowerJointLimit[Franka_Index::JOINT_5] = -360;
-		LowerJointLimit[Franka_Index::JOINT_6] = -360;
-		LowerJointLimit[Franka_Index::JOINT_7] = -360;
+		LowerJointLimit[Franka_Index::JOINT_1] = -166.003;
+		LowerJointLimit[Franka_Index::JOINT_2] = -101.001;
+		LowerJointLimit[Franka_Index::JOINT_3] = -166.003;
+		LowerJointLimit[Franka_Index::JOINT_4] = -176.0012;
+		LowerJointLimit[Franka_Index::JOINT_5] = -166.003;
+		LowerJointLimit[Franka_Index::JOINT_6] = -1.00268;
+		LowerJointLimit[Franka_Index::JOINT_7] = -166.003;
 	}
 	else
 	{
-		UpperJointLimit[Franka_Index::JOINT_1] = 360;
-		UpperJointLimit[Franka_Index::JOINT_2] = 360;
-		UpperJointLimit[Franka_Index::JOINT_3] = 360;
-		UpperJointLimit[Franka_Index::JOINT_4] = 360;
-		UpperJointLimit[Franka_Index::JOINT_5] = 360;
-		UpperJointLimit[Franka_Index::JOINT_6] = 360;
-		UpperJointLimit[Franka_Index::JOINT_7] = 360;
+		UpperJointLimit[Franka_Index::JOINT_1] = 166.003;
+		UpperJointLimit[Franka_Index::JOINT_2] = 101.001;
+		UpperJointLimit[Franka_Index::JOINT_3] = 166.003;
+		UpperJointLimit[Franka_Index::JOINT_4] = -3.99925;
+		UpperJointLimit[Franka_Index::JOINT_5] = 166.003;
+		UpperJointLimit[Franka_Index::JOINT_6] = 215.0024;
+		UpperJointLimit[Franka_Index::JOINT_7] = 166.003;
 
-		LowerJointLimit[Franka_Index::JOINT_1] = -360;
-		LowerJointLimit[Franka_Index::JOINT_2] = -360;
-		LowerJointLimit[Franka_Index::JOINT_3] = -360;
-		LowerJointLimit[Franka_Index::JOINT_4] = -360;
-		LowerJointLimit[Franka_Index::JOINT_5] = -360;
-		LowerJointLimit[Franka_Index::JOINT_6] = -360;
-		LowerJointLimit[Franka_Index::JOINT_7] = -360;
+		LowerJointLimit[Franka_Index::JOINT_1] = -166.003;
+		LowerJointLimit[Franka_Index::JOINT_2] = -101.001;
+		LowerJointLimit[Franka_Index::JOINT_3] = -166.003;
+		LowerJointLimit[Franka_Index::JOINT_4] = -176.0012;
+		LowerJointLimit[Franka_Index::JOINT_5] = -166.003;
+		LowerJointLimit[Franka_Index::JOINT_6] = -1.00268;
+		LowerJointLimit[Franka_Index::JOINT_7] = -166.003;
 	}
 
 
@@ -119,13 +119,13 @@ void Franka::SetJointLimit(bool elbowUp)
 void Franka::SetVelocityLimit()
 {
 	// unit: deg/s
-	VelocityLimit[Franka_Index::JOINT_1] = 180;
-	VelocityLimit[Franka_Index::JOINT_2] = 180;
-	VelocityLimit[Franka_Index::JOINT_3] = 180;
-	VelocityLimit[Franka_Index::JOINT_4] = 180;
-	VelocityLimit[Franka_Index::JOINT_5] = 180;
-	VelocityLimit[Franka_Index::JOINT_6] = 180;
-	VelocityLimit[Franka_Index::JOINT_7] = 180;
+	VelocityLimit[Franka_Index::JOINT_1] = 124.61832;
+	VelocityLimit[Franka_Index::JOINT_2] = 124.61832;
+	VelocityLimit[Franka_Index::JOINT_3] = 124.61832;
+	VelocityLimit[Franka_Index::JOINT_4] = 124.61832;
+	VelocityLimit[Franka_Index::JOINT_5] = 149.542;
+	VelocityLimit[Franka_Index::JOINT_6] = 149.542;
+	VelocityLimit[Franka_Index::JOINT_7] = 149.542;
 
 }
 
@@ -152,33 +152,87 @@ void Franka::AssembleModel(double gripperRot)
 	//gLink[Franka_Index::LINK_1].GetGeomInfo().SetFileName("../../../workspace/robot/Franka_3ds/link1.3ds");
 	
 	// TEMPORARY MODELINGS
-	gLink[Franka_Index::LINK_1].SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 	gLink[Franka_Index::LINK_1].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	gLink[Franka_Index::LINK_1].GetGeomInfo().SetDimension(Vec3(0.0, 0.0, 0.0));
+	gLink[Franka_Index::LINK_1].GetGeomInfo().SetDimension(Vec3(0.1, 0.1, 0.333));
 
 	gJoint[Franka_Index::JOINT_1]->SetActType(srJoint::HYBRID);
 	gJoint[Franka_Index::JOINT_1]->SetParentLink(&gLink[Franka_Index::LINK_1]);
 	gJoint[Franka_Index::JOINT_1]->SetChildLink(&gLink[Franka_Index::LINK_2]);
-	gJoint[Franka_Index::JOINT_1]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0,0.0), Vec3(0.0, 0.0, 0.0)));
-	gJoint[Franka_Index::JOINT_1]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0,0.0), Vec3(0.0, 0.0, -0.333*0.5)));
+	gJoint[Franka_Index::JOINT_1]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.1665)));
+	gJoint[Franka_Index::JOINT_1]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 	gJoint[Franka_Index::JOINT_1]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[Franka_Index::JOINT_1]->MakePositionLimit(false);
 
-	gLink[Franka_Index::LINK_2].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	gLink[Franka_Index::LINK_2].GetGeomInfo().SetDimension(Vec3(0.1, 0.1, 0.316));
+	gLink[Franka_Index::LINK_2].GetGeomInfo().SetShape(srGeometryInfo::BOX);   //dummy link
+	gLink[Franka_Index::LINK_2].GetGeomInfo().SetDimension(Vec3(0.0, 0.0, 0.0));
 
 	gJoint[Franka_Index::JOINT_2]->SetActType(srJoint::HYBRID);
 	gJoint[Franka_Index::JOINT_2]->SetParentLink(&gLink[Franka_Index::LINK_2]);
-	gJoint[Franka_Index::JOINT_2]->SetChildLink(&gLink[Franka_Index::ENDEFFECTOR]);		// CHANGE TO LINK_3 LATER
-	gJoint[Franka_Index::JOINT_2]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.333*0.5)));
-	gJoint[Franka_Index::JOINT_2]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.316*0.5)));
+	gJoint[Franka_Index::JOINT_2]->SetChildLink(&gLink[Franka_Index::LINK_3]);		
+	gJoint[Franka_Index::JOINT_2]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0)));
+	gJoint[Franka_Index::JOINT_2]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, -0.158)));
 	gJoint[Franka_Index::JOINT_2]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[Franka_Index::JOINT_2]->MakePositionLimit(false);
+
+	gLink[Franka_Index::LINK_3].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	gLink[Franka_Index::LINK_3].GetGeomInfo().SetDimension(Vec3(0.05, 0.05, 0.316));
+
+	gJoint[Franka_Index::JOINT_3]->SetActType(srJoint::HYBRID);
+	gJoint[Franka_Index::JOINT_3]->SetParentLink(&gLink[Franka_Index::LINK_3]);
+	gJoint[Franka_Index::JOINT_3]->SetChildLink(&gLink[Franka_Index::LINK_4]);		
+	gJoint[Franka_Index::JOINT_3]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.158)));
+	gJoint[Franka_Index::JOINT_3]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.0825, 0.0, 0.0)));
+	gJoint[Franka_Index::JOINT_3]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gJoint[Franka_Index::JOINT_3]->MakePositionLimit(false);
+
+	gLink[Franka_Index::LINK_4].GetGeomInfo().SetShape(srGeometryInfo::BOX);    //dummy link
+	gLink[Franka_Index::LINK_4].GetGeomInfo().SetDimension(Vec3(0.0, 0.0, 0.0));
+
+	gJoint[Franka_Index::JOINT_4]->SetActType(srJoint::HYBRID);
+	gJoint[Franka_Index::JOINT_4]->SetParentLink(&gLink[Franka_Index::LINK_4]);
+	gJoint[Franka_Index::JOINT_4]->SetChildLink(&gLink[Franka_Index::LINK_5]);
+	gJoint[Franka_Index::JOINT_4]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0)));
+	gJoint[Franka_Index::JOINT_4]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0825, 0.0, -0.192)));
+	gJoint[Franka_Index::JOINT_4]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gJoint[Franka_Index::JOINT_4]->MakePositionLimit(false);
+
+	gLink[Franka_Index::LINK_5].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	gLink[Franka_Index::LINK_5].GetGeomInfo().SetDimension(Vec3(0.1, 0.1, 0.384));
+
+	gJoint[Franka_Index::JOINT_5]->SetActType(srJoint::HYBRID);
+	gJoint[Franka_Index::JOINT_5]->SetParentLink(&gLink[Franka_Index::LINK_5]);
+	gJoint[Franka_Index::JOINT_5]->SetChildLink(&gLink[Franka_Index::LINK_6]);
+	gJoint[Franka_Index::JOINT_5]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.192)));
+	gJoint[Franka_Index::JOINT_5]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	gJoint[Franka_Index::JOINT_5]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gJoint[Franka_Index::JOINT_5]->MakePositionLimit(false);
+
+	gLink[Franka_Index::LINK_6].GetGeomInfo().SetShape(srGeometryInfo::BOX);    //dummy link
+	gLink[Franka_Index::LINK_6].GetGeomInfo().SetDimension(Vec3(0.0, 0.0, 0.0));
+
+	gJoint[Franka_Index::JOINT_6]->SetActType(srJoint::HYBRID);
+	gJoint[Franka_Index::JOINT_6]->SetParentLink(&gLink[Franka_Index::LINK_6]);
+	gJoint[Franka_Index::JOINT_6]->SetChildLink(&gLink[Franka_Index::LINK_7]);
+	gJoint[Franka_Index::JOINT_6]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0)));
+	gJoint[Franka_Index::JOINT_6]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(-0.044, 0.0, 0.0)));
+	gJoint[Franka_Index::JOINT_6]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gJoint[Franka_Index::JOINT_6]->MakePositionLimit(false);
+
+	gLink[Franka_Index::LINK_7].GetGeomInfo().SetShape(srGeometryInfo::BOX);    
+	gLink[Franka_Index::LINK_7].GetGeomInfo().SetDimension(Vec3(0.088, 0.05, 0.05));
+
+	gJoint[Franka_Index::JOINT_7]->SetActType(srJoint::HYBRID);
+	gJoint[Franka_Index::JOINT_7]->SetParentLink(&gLink[Franka_Index::LINK_7]);
+	gJoint[Franka_Index::JOINT_7]->SetChildLink(&gLink[Franka_Index::ENDEFFECTOR]);
+	gJoint[Franka_Index::JOINT_7]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 2*SR_PI_HALF), Vec3(0.044, 0.0, 0.0)));
+	gJoint[Franka_Index::JOINT_7]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.0535)));
+	gJoint[Franka_Index::JOINT_7]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gJoint[Franka_Index::JOINT_7]->MakePositionLimit(false);
 
 	// ADD FOR OTHER LINKS AND JOINTS
 	
 	gLink[Franka_Index::ENDEFFECTOR].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	gLink[Franka_Index::ENDEFFECTOR].GetGeomInfo().SetDimension(Vec3(0.05, 0.07, 0.2));
+	gLink[Franka_Index::ENDEFFECTOR].GetGeomInfo().SetDimension(Vec3(0.05, 0.07, 0.107));
 	
 
 	gWeldJoint[Franka_Index::WELDJOINT_GRIP_MARKER]->SetActType(srJoint::PASSIVE);
