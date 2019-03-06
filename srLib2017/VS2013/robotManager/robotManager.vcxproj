@@ -52,6 +52,7 @@
     <ClCompile Include="..\..\src\robotManager\environment_5th.cpp" />
     <ClCompile Include="..\..\src\robotManager\environment_QBtech.cpp" />
     <ClCompile Include="..\..\src\robotManager\environment_workcell.cpp" />
+    <ClCompile Include="..\..\src\robotManager\Franka.cpp" />
     <ClCompile Include="..\..\src\robotManager\IndyRobot.cpp" />
     <ClCompile Include="..\..\src\robotManager\indyRobotManager.cpp" />
     <ClCompile Include="..\..\src\robotManager\MH12Robot.cpp" />
@@ -78,6 +79,7 @@
     <ClInclude Include="..\..\src\robotManager\environment_5th.h" />
     <ClInclude Include="..\..\src\robotManager\environment_QBtech.h" />
     <ClInclude Include="..\..\src\robotManager\environment_workcell.h" />
+    <ClInclude Include="..\..\src\robotManager\Franka.h" />
     <ClInclude Include="..\..\src\robotManager\IndyRobot.h" />
     <ClInclude Include="..\..\src\robotManager\indyRobotManager.h" />
     <ClInclude Include="..\..\src\robotManager\makeSpecialCol.h" />
