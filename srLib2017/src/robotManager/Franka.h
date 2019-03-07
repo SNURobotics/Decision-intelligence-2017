@@ -22,7 +22,7 @@ class Franka_Index
 public:
 	enum Franka_Index_Link_Num
 	{
-		LINK_1, LINK_2, LINK_3, LINK_4, LINK_5, LINK_6, LINK_7, ENDEFFECTOR	 // add gipper links later
+		LINK_0, LINK_1, LINK_2, LINK_3, LINK_4, LINK_5, LINK_6, LINK_7, HAND	 // add gipper links later
 	};
 	enum Franka_Index_MarkerLink_Num
 	{
@@ -34,7 +34,7 @@ public:
 	};
 	enum Franka_Index_WELDJOINT_Num
 	{
-		WELDJOINT_GRIP_MARKER		// add if needed later
+		WELDJOINT_HAND, WELDJOINT_GRIP_MARKER		// add if needed later
 	};
 
 };

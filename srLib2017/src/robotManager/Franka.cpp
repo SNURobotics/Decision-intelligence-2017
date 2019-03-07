@@ -152,113 +152,126 @@ void Franka::AssembleModel(double gripperRot)
 	//gLink[Franka_Index::LINK_1].GetGeomInfo().SetFileName("../../../workspace/robot/Franka_3ds/link1.3ds");
 	
 	// TEMPORARY MODELINGS
-	gLink[Franka_Index::LINK_1].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	gLink[Franka_Index::LINK_1].GetGeomInfo().SetDimension(Vec3(0.1, 0.1, 0.333));
-	gLink[Franka_Index::LINK_1].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link0.3ds");
+	gLink[Franka_Index::LINK_0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	gLink[Franka_Index::LINK_0].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link0.3ds");
+	gLink[Franka_Index::LINK_0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0,0.0)));
 
 	gJoint[Franka_Index::JOINT_1]->SetActType(srJoint::HYBRID);
-	gJoint[Franka_Index::JOINT_1]->SetParentLink(&gLink[Franka_Index::LINK_1]);
-	gJoint[Franka_Index::JOINT_1]->SetChildLink(&gLink[Franka_Index::LINK_2]);
+	gJoint[Franka_Index::JOINT_1]->SetParentLink(&gLink[Franka_Index::LINK_0]);
+	gJoint[Franka_Index::JOINT_1]->SetChildLink(&gLink[Franka_Index::LINK_1]);
 	gJoint[Franka_Index::JOINT_1]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.1665)));
 	gJoint[Franka_Index::JOINT_1]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 	gJoint[Franka_Index::JOINT_1]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[Franka_Index::JOINT_1]->MakePositionLimit(false);
 
-	gLink[Franka_Index::LINK_2].GetGeomInfo().SetShape(srGeometryInfo::TDS);   //dummy link
-	gLink[Franka_Index::LINK_2].GetGeomInfo().SetDimension(Vec3(0.0, 0.0, 0.0));
-	gLink[Franka_Index::LINK_2].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link1.3ds");
+	gLink[Franka_Index::LINK_1].GetGeomInfo().SetShape(srGeometryInfo::TDS);   //dummy link
+	gLink[Franka_Index::LINK_1].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link1.3ds");
+	gLink[Franka_Index::LINK_1].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.1665)));
 
 	gJoint[Franka_Index::JOINT_2]->SetActType(srJoint::HYBRID);
-	gJoint[Franka_Index::JOINT_2]->SetParentLink(&gLink[Franka_Index::LINK_2]);
-	gJoint[Franka_Index::JOINT_2]->SetChildLink(&gLink[Franka_Index::LINK_3]);		
-	gJoint[Franka_Index::JOINT_2]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0)));
-	gJoint[Franka_Index::JOINT_2]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, -0.158)));
+	gJoint[Franka_Index::JOINT_2]->SetParentLink(&gLink[Franka_Index::LINK_1]);
+	gJoint[Franka_Index::JOINT_2]->SetChildLink(&gLink[Franka_Index::LINK_2]);		
+	gJoint[Franka_Index::JOINT_2]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(0.0, 0.0, 0.1665)));
+	gJoint[Franka_Index::JOINT_2]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(0.0, 0.0, -0.158)));
 	gJoint[Franka_Index::JOINT_2]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[Franka_Index::JOINT_2]->MakePositionLimit(false);
 
-	gLink[Franka_Index::LINK_3].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	gLink[Franka_Index::LINK_3].GetGeomInfo().SetDimension(Vec3(0.05, 0.05, 0.316));
-	gLink[Franka_Index::LINK_3].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link2.3ds");
+	gLink[Franka_Index::LINK_2].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	gLink[Franka_Index::LINK_2].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link2.3ds");
+	gLink[Franka_Index::LINK_2].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.158)));
 
 	gJoint[Franka_Index::JOINT_3]->SetActType(srJoint::HYBRID);
-	gJoint[Franka_Index::JOINT_3]->SetParentLink(&gLink[Franka_Index::LINK_3]);
-	gJoint[Franka_Index::JOINT_3]->SetChildLink(&gLink[Franka_Index::LINK_4]);		
+	gJoint[Franka_Index::JOINT_3]->SetParentLink(&gLink[Franka_Index::LINK_2]);
+	gJoint[Franka_Index::JOINT_3]->SetChildLink(&gLink[Franka_Index::LINK_3]);		
 	gJoint[Franka_Index::JOINT_3]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.158)));
-	gJoint[Franka_Index::JOINT_3]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.0825, 0.0, 0.0)));
+	gJoint[Franka_Index::JOINT_3]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 	gJoint[Franka_Index::JOINT_3]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[Franka_Index::JOINT_3]->MakePositionLimit(false);
 
-	gLink[Franka_Index::LINK_4].GetGeomInfo().SetShape(srGeometryInfo::TDS);    //dummy link
-	gLink[Franka_Index::LINK_4].GetGeomInfo().SetDimension(Vec3(0.0, 0.0, 0.0));
-	gLink[Franka_Index::LINK_4].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link3.3ds");
+	gLink[Franka_Index::LINK_3].GetGeomInfo().SetShape(srGeometryInfo::TDS);    //dummy link
+	gLink[Franka_Index::LINK_3].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link3.3ds");
+	gLink[Franka_Index::LINK_3].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0)));
 
 	gJoint[Franka_Index::JOINT_4]->SetActType(srJoint::HYBRID);
-	gJoint[Franka_Index::JOINT_4]->SetParentLink(&gLink[Franka_Index::LINK_4]);
-	gJoint[Franka_Index::JOINT_4]->SetChildLink(&gLink[Franka_Index::LINK_5]);
-	gJoint[Franka_Index::JOINT_4]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0)));
-	gJoint[Franka_Index::JOINT_4]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0825, 0.0, -0.192)));
+	gJoint[Franka_Index::JOINT_4]->SetParentLink(&gLink[Franka_Index::LINK_3]);
+	gJoint[Franka_Index::JOINT_4]->SetChildLink(&gLink[Franka_Index::LINK_4]);
+	gJoint[Franka_Index::JOINT_4]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0825, 0.0, 0.0)));
+	gJoint[Franka_Index::JOINT_4]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0)));
 	gJoint[Franka_Index::JOINT_4]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[Franka_Index::JOINT_4]->MakePositionLimit(false);
 
-	gLink[Franka_Index::LINK_5].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	gLink[Franka_Index::LINK_5].GetGeomInfo().SetDimension(Vec3(0.1, 0.1, 0.384));
-	gLink[Franka_Index::LINK_5].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link4.3ds");
+	gLink[Franka_Index::LINK_4].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	gLink[Franka_Index::LINK_4].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link4.3ds");
+	gLink[Franka_Index::LINK_4].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.0)));
 
 	gJoint[Franka_Index::JOINT_5]->SetActType(srJoint::HYBRID);
-	gJoint[Franka_Index::JOINT_5]->SetParentLink(&gLink[Franka_Index::LINK_5]);
-	gJoint[Franka_Index::JOINT_5]->SetChildLink(&gLink[Franka_Index::LINK_6]);
-	gJoint[Franka_Index::JOINT_5]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.192)));
-	gJoint[Franka_Index::JOINT_5]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	gJoint[Franka_Index::JOINT_5]->SetParentLink(&gLink[Franka_Index::LINK_4]);
+	gJoint[Franka_Index::JOINT_5]->SetChildLink(&gLink[Franka_Index::LINK_5]);
+	gJoint[Franka_Index::JOINT_5]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.0825, 0.0, 0.192)));
+	gJoint[Franka_Index::JOINT_5]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.192)));
 	gJoint[Franka_Index::JOINT_5]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[Franka_Index::JOINT_5]->MakePositionLimit(false);
 
-	gLink[Franka_Index::LINK_6].GetGeomInfo().SetShape(srGeometryInfo::TDS);    //dummy link
-	gLink[Franka_Index::LINK_6].GetGeomInfo().SetDimension(Vec3(0.0, 0.0, 0.0));
-	gLink[Franka_Index::LINK_6].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link5.3ds");
+	gLink[Franka_Index::LINK_5].GetGeomInfo().SetShape(srGeometryInfo::TDS);    //dummy link
+	gLink[Franka_Index::LINK_5].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link5.3ds");
+	gLink[Franka_Index::LINK_5].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0)));
 
 	gJoint[Franka_Index::JOINT_6]->SetActType(srJoint::HYBRID);
-	gJoint[Franka_Index::JOINT_6]->SetParentLink(&gLink[Franka_Index::LINK_6]);
-	gJoint[Franka_Index::JOINT_6]->SetChildLink(&gLink[Franka_Index::LINK_7]);
+	gJoint[Franka_Index::JOINT_6]->SetParentLink(&gLink[Franka_Index::LINK_5]);
+	gJoint[Franka_Index::JOINT_6]->SetChildLink(&gLink[Franka_Index::LINK_6]);
 	gJoint[Franka_Index::JOINT_6]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0)));
 	gJoint[Franka_Index::JOINT_6]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(-0.044, 0.0, 0.0)));
 	gJoint[Franka_Index::JOINT_6]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[Franka_Index::JOINT_6]->MakePositionLimit(false);
 
-	gLink[Franka_Index::LINK_7].GetGeomInfo().SetShape(srGeometryInfo::TDS);    
-	gLink[Franka_Index::LINK_7].GetGeomInfo().SetDimension(Vec3(0.088, 0.05, 0.05));
-	gLink[Franka_Index::LINK_7].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link6.3ds");
+	gLink[Franka_Index::LINK_6].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	gLink[Franka_Index::LINK_6].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link6.3ds");
+	gLink[Franka_Index::LINK_6].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(-0.044, 0.0, 0.0)));
 
 	gJoint[Franka_Index::JOINT_7]->SetActType(srJoint::HYBRID);
-	gJoint[Franka_Index::JOINT_7]->SetParentLink(&gLink[Franka_Index::LINK_7]);
-	gJoint[Franka_Index::JOINT_7]->SetChildLink(&gLink[Franka_Index::ENDEFFECTOR]);
-	gJoint[Franka_Index::JOINT_7]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 2*SR_PI_HALF), Vec3(0.044, 0.0, 0.0)));
-	gJoint[Franka_Index::JOINT_7]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.0535)));
+	gJoint[Franka_Index::JOINT_7]->SetParentLink(&gLink[Franka_Index::LINK_6]);
+	gJoint[Franka_Index::JOINT_7]->SetChildLink(&gLink[Franka_Index::LINK_7]);
+	gJoint[Franka_Index::JOINT_7]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.044, 0.0, 0.0)));
+	gJoint[Franka_Index::JOINT_7]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.107)));
 	gJoint[Franka_Index::JOINT_7]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[Franka_Index::JOINT_7]->MakePositionLimit(false);
 
-	// ADD FOR OTHER LINKS AND JOINTS
 	
-	gLink[Franka_Index::ENDEFFECTOR].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	gLink[Franka_Index::ENDEFFECTOR].GetGeomInfo().SetDimension(Vec3(0.05, 0.07, 0.107));
-	gLink[Franka_Index::ENDEFFECTOR].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link7.3ds");
-	
+	gLink[Franka_Index::LINK_7].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	gLink[Franka_Index::LINK_7].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link7.3ds");
+	gLink[Franka_Index::LINK_7].GetGeomInfo().SetLocalFrame(EulerXYZ(Vec3(SR_PI_HALF, -0.5*SR_PI_HALF, 0.0), Vec3(0.0, 0.0, -0.107)));
 
-	gWeldJoint[Franka_Index::WELDJOINT_GRIP_MARKER]->SetActType(srJoint::PASSIVE);
-	gWeldJoint[Franka_Index::WELDJOINT_GRIP_MARKER]->SetParentLink(&gLink[Franka_Index::ENDEFFECTOR]);
-	gWeldJoint[Franka_Index::WELDJOINT_GRIP_MARKER]->SetChildLink(&gMarkerLink[Franka_Index::MLINK_GRIP]);
-	gWeldJoint[Franka_Index::WELDJOINT_GRIP_MARKER]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
-	gWeldJoint[Franka_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(EulerZYX(Vec3(0.0, SR_PI, 0.0), Vec3(0.088, 0.0, 0.333 + 0.316 + 0.384 - 0.107 - 0.12)));		// consider offset for gripper assembly
+	gWeldJoint[Franka_Index::WELDJOINT_HAND]->SetActType(srJoint::PASSIVE);
+	gWeldJoint[Franka_Index::WELDJOINT_HAND]->SetParentLink(&gLink[Franka_Index::LINK_7]);
+	gWeldJoint[Franka_Index::WELDJOINT_HAND]->SetChildLink(&gLink[Franka_Index::HAND]);
+	gWeldJoint[Franka_Index::WELDJOINT_HAND]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	gWeldJoint[Franka_Index::WELDJOINT_HAND]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));		// consider offset for gripper assembly
+
 	
+	
+	gLink[Franka_Index::HAND].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	gLink[Franka_Index::HAND].GetGeomInfo().SetColor(0.1f, 0.1f, 0.1f);
+	gLink[Franka_Index::HAND].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/hand.3ds");
+	gLink[Franka_Index::HAND].GetGeomInfo().SetLocalFrame(EulerXYZ(Vec3(SR_PI_HALF, -SR_PI_HALF, 0.0), Vec3(0.0, 0.0, 0.0)));
+
+
 	// marker links (act as the reference frames for the outputs from forward kinematics etc.)
-	gMarkerLink[Franka_Index::MLINK_GRIP].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	gMarkerLink[Franka_Index::MLINK_GRIP].GetGeomInfo().SetDimension(Vec3(0.01, 0.01, 0.01));
+	gWeldJoint[Franka_Index::WELDJOINT_GRIP_MARKER]->SetActType(srJoint::PASSIVE);
+	gWeldJoint[Franka_Index::WELDJOINT_GRIP_MARKER]->SetParentLink(&gLink[Franka_Index::HAND]);
+	gWeldJoint[Franka_Index::WELDJOINT_GRIP_MARKER]->SetChildLink(&gMarkerLink[Franka_Index::MLINK_GRIP]);
+	gWeldJoint[Franka_Index::WELDJOINT_GRIP_MARKER]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.120)));
+	gWeldJoint[Franka_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));		// consider offset for gripper assembly
+
+
+	// marker links (act as the reference frames for the outputs from forward kinematics etc.)
+	gMarkerLink[Franka_Index::MLINK_GRIP].GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
 	gMarkerLink[Franka_Index::MLINK_GRIP].GetGeomInfo().SetColor(0.1f, 0.1f, 0.1f);
 	gMarkerLink[Franka_Index::MLINK_GRIP].SetInertia(Inertia(0.001));
-	gMarkerLink[Franka_Index::MLINK_GRIP].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/hand.3ds");
+	gMarkerLink[Franka_Index::MLINK_GRIP].GetGeomInfo().SetDimension(0.01);
 
 	// hand 뒤에 finger 추가 필요
 	
-	this->SetBaseLink(&gLink[Franka_Index::LINK_1]);
+	this->SetBaseLink(&gLink[Franka_Index::LINK_0]);
 	this->SetBaseLinkType(srSystem::FIXED);
 }
 
@@ -266,7 +279,7 @@ void Franka::AssembleCollision()
 {
 	m_numCollision = 0;
 
-	gLink[Franka_Index::LINK_2].AddCollision(&gCollision[m_numCollision]);
+	gLink[Franka_Index::LINK_1].AddCollision(&gCollision[m_numCollision]);
 	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.1, 0.1, 0.333));
 	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.0)));

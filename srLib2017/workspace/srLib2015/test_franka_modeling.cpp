@@ -98,9 +98,9 @@ void updateFunc()
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 
 	static double JointVal = 0;
-	int jointIdx = 0;
+	int jointIdx = 3;
 	((srStateJoint*)frankaRobot->m_KIN_Joints[jointIdx])->m_State.m_rValue[0] = JointVal;
-	JointVal += 0.01;
+	//JointVal += 0.01;
 
 	static int cnt = 0;
 	static int trajcnt = 0;
