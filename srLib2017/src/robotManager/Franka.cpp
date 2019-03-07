@@ -152,8 +152,9 @@ void Franka::AssembleModel(double gripperRot)
 	//gLink[Franka_Index::LINK_1].GetGeomInfo().SetFileName("../../../workspace/robot/Franka_3ds/link1.3ds");
 	
 	// TEMPORARY MODELINGS
-	gLink[Franka_Index::LINK_1].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	gLink[Franka_Index::LINK_1].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[Franka_Index::LINK_1].GetGeomInfo().SetDimension(Vec3(0.1, 0.1, 0.333));
+	gLink[Franka_Index::LINK_1].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link0.3ds");
 
 	gJoint[Franka_Index::JOINT_1]->SetActType(srJoint::HYBRID);
 	gJoint[Franka_Index::JOINT_1]->SetParentLink(&gLink[Franka_Index::LINK_1]);
@@ -163,8 +164,9 @@ void Franka::AssembleModel(double gripperRot)
 	gJoint[Franka_Index::JOINT_1]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[Franka_Index::JOINT_1]->MakePositionLimit(false);
 
-	gLink[Franka_Index::LINK_2].GetGeomInfo().SetShape(srGeometryInfo::BOX);   //dummy link
+	gLink[Franka_Index::LINK_2].GetGeomInfo().SetShape(srGeometryInfo::TDS);   //dummy link
 	gLink[Franka_Index::LINK_2].GetGeomInfo().SetDimension(Vec3(0.0, 0.0, 0.0));
+	gLink[Franka_Index::LINK_2].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link1.3ds");
 
 	gJoint[Franka_Index::JOINT_2]->SetActType(srJoint::HYBRID);
 	gJoint[Franka_Index::JOINT_2]->SetParentLink(&gLink[Franka_Index::LINK_2]);
@@ -174,8 +176,9 @@ void Franka::AssembleModel(double gripperRot)
 	gJoint[Franka_Index::JOINT_2]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[Franka_Index::JOINT_2]->MakePositionLimit(false);
 
-	gLink[Franka_Index::LINK_3].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	gLink[Franka_Index::LINK_3].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[Franka_Index::LINK_3].GetGeomInfo().SetDimension(Vec3(0.05, 0.05, 0.316));
+	gLink[Franka_Index::LINK_3].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link2.3ds");
 
 	gJoint[Franka_Index::JOINT_3]->SetActType(srJoint::HYBRID);
 	gJoint[Franka_Index::JOINT_3]->SetParentLink(&gLink[Franka_Index::LINK_3]);
@@ -185,8 +188,9 @@ void Franka::AssembleModel(double gripperRot)
 	gJoint[Franka_Index::JOINT_3]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[Franka_Index::JOINT_3]->MakePositionLimit(false);
 
-	gLink[Franka_Index::LINK_4].GetGeomInfo().SetShape(srGeometryInfo::BOX);    //dummy link
+	gLink[Franka_Index::LINK_4].GetGeomInfo().SetShape(srGeometryInfo::TDS);    //dummy link
 	gLink[Franka_Index::LINK_4].GetGeomInfo().SetDimension(Vec3(0.0, 0.0, 0.0));
+	gLink[Franka_Index::LINK_4].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link3.3ds");
 
 	gJoint[Franka_Index::JOINT_4]->SetActType(srJoint::HYBRID);
 	gJoint[Franka_Index::JOINT_4]->SetParentLink(&gLink[Franka_Index::LINK_4]);
@@ -196,8 +200,9 @@ void Franka::AssembleModel(double gripperRot)
 	gJoint[Franka_Index::JOINT_4]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[Franka_Index::JOINT_4]->MakePositionLimit(false);
 
-	gLink[Franka_Index::LINK_5].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	gLink[Franka_Index::LINK_5].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[Franka_Index::LINK_5].GetGeomInfo().SetDimension(Vec3(0.1, 0.1, 0.384));
+	gLink[Franka_Index::LINK_5].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link4.3ds");
 
 	gJoint[Franka_Index::JOINT_5]->SetActType(srJoint::HYBRID);
 	gJoint[Franka_Index::JOINT_5]->SetParentLink(&gLink[Franka_Index::LINK_5]);
@@ -207,8 +212,9 @@ void Franka::AssembleModel(double gripperRot)
 	gJoint[Franka_Index::JOINT_5]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[Franka_Index::JOINT_5]->MakePositionLimit(false);
 
-	gLink[Franka_Index::LINK_6].GetGeomInfo().SetShape(srGeometryInfo::BOX);    //dummy link
+	gLink[Franka_Index::LINK_6].GetGeomInfo().SetShape(srGeometryInfo::TDS);    //dummy link
 	gLink[Franka_Index::LINK_6].GetGeomInfo().SetDimension(Vec3(0.0, 0.0, 0.0));
+	gLink[Franka_Index::LINK_6].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link5.3ds");
 
 	gJoint[Franka_Index::JOINT_6]->SetActType(srJoint::HYBRID);
 	gJoint[Franka_Index::JOINT_6]->SetParentLink(&gLink[Franka_Index::LINK_6]);
@@ -218,8 +224,9 @@ void Franka::AssembleModel(double gripperRot)
 	gJoint[Franka_Index::JOINT_6]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[Franka_Index::JOINT_6]->MakePositionLimit(false);
 
-	gLink[Franka_Index::LINK_7].GetGeomInfo().SetShape(srGeometryInfo::BOX);    
+	gLink[Franka_Index::LINK_7].GetGeomInfo().SetShape(srGeometryInfo::TDS);    
 	gLink[Franka_Index::LINK_7].GetGeomInfo().SetDimension(Vec3(0.088, 0.05, 0.05));
+	gLink[Franka_Index::LINK_7].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link6.3ds");
 
 	gJoint[Franka_Index::JOINT_7]->SetActType(srJoint::HYBRID);
 	gJoint[Franka_Index::JOINT_7]->SetParentLink(&gLink[Franka_Index::LINK_7]);
@@ -231,8 +238,9 @@ void Franka::AssembleModel(double gripperRot)
 
 	// ADD FOR OTHER LINKS AND JOINTS
 	
-	gLink[Franka_Index::ENDEFFECTOR].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	gLink[Franka_Index::ENDEFFECTOR].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[Franka_Index::ENDEFFECTOR].GetGeomInfo().SetDimension(Vec3(0.05, 0.07, 0.107));
+	gLink[Franka_Index::ENDEFFECTOR].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link7.3ds");
 	
 
 	gWeldJoint[Franka_Index::WELDJOINT_GRIP_MARKER]->SetActType(srJoint::PASSIVE);
@@ -242,10 +250,13 @@ void Franka::AssembleModel(double gripperRot)
 	gWeldJoint[Franka_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(EulerZYX(Vec3(0.0, SR_PI, 0.0), Vec3(0.088, 0.0, 0.333 + 0.316 + 0.384 - 0.107 - 0.12)));		// consider offset for gripper assembly
 	
 	// marker links (act as the reference frames for the outputs from forward kinematics etc.)
-	gMarkerLink[Franka_Index::MLINK_GRIP].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	gMarkerLink[Franka_Index::MLINK_GRIP].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gMarkerLink[Franka_Index::MLINK_GRIP].GetGeomInfo().SetDimension(Vec3(0.01, 0.01, 0.01));
 	gMarkerLink[Franka_Index::MLINK_GRIP].GetGeomInfo().SetColor(0.1f, 0.1f, 0.1f);
 	gMarkerLink[Franka_Index::MLINK_GRIP].SetInertia(Inertia(0.001));
+	gMarkerLink[Franka_Index::MLINK_GRIP].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/hand.3ds");
+
+	// hand 뒤에 finger 추가 필요
 	
 	this->SetBaseLink(&gLink[Franka_Index::LINK_1]);
 	this->SetBaseLinkType(srSystem::FIXED);
