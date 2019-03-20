@@ -48,7 +48,7 @@ void Bin::AssembleModel()
 
 	for (int i = 0; i < m_numLink; i++)
 	{
-		m_ObjLink[i].GetGeomInfo().SetColor(0.3, 0.3, 0.3);
+		m_ObjLink[i].GetGeomInfo().SetColor(0.3f, 0.3f, 0.3f);
 		m_ObjLink[i].GetGeomInfo().SetDimension(dims[i]);
 		m_ObjLink[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	}
@@ -146,7 +146,7 @@ void Table4th::AssembleModel()
 
 	for (int i = 0; i < m_numLink; i++)
 	{
-		m_ObjLink[i].GetGeomInfo().SetColor(0.3, 0.3, 0.3);
+		m_ObjLink[i].GetGeomInfo().SetColor(0.3f, 0.3f, 0.3f);
 		m_ObjLink[i].GetGeomInfo().SetDimension(dims[i]);
 		m_ObjLink[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	}
@@ -222,7 +222,7 @@ void workingObject::AssembleModel()
 		m_ObjWeldJoint.push_back(*temp);
 	}
 
-	m_ObjLink[0].GetGeomInfo().SetColor(0.3, 0.4, 0.3); 
+	m_ObjLink[0].GetGeomInfo().SetColor(0.3f, 0.4f, 0.3f); 
 	//m_ObjLink[0].GetGeomInfo().SetDimension(dim);
 	//m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	//m_ObjLink[0].SetFrame(SE3(Vec3(0.0, 0.0, 0.5*0.05)));
@@ -231,7 +231,7 @@ void workingObject::AssembleModel()
 	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF), Vec3(-0.01675, 0.0, -0.004)));
 	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/mh12_3ds/cover.3ds");
-
+	//m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/busbar_3ds/busbar.3ds");
 	
 	//m_ObjWeldJoint[0].SetParentLink(&m_ObjLink[0]);
 	//m_ObjWeldJoint[0].SetChildLink(&m_ObjLink[1]);
@@ -477,7 +477,7 @@ void TableRetarget::AssembleModel()
 
 	for (int i = 0; i < m_numLink; i++)
 	{
-		m_ObjLink[i].GetGeomInfo().SetColor(0.3, 0.3, 0.3);
+		m_ObjLink[i].GetGeomInfo().SetColor(0.3f, 0.3f, 0.3f);
 		m_ObjLink[i].GetGeomInfo().SetDimension(dims[i]);
 		m_ObjLink[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	}
@@ -551,7 +551,7 @@ void BlueMaleConnector::AssembleModel()
 		m_ObjWeldJoint.push_back(*temp);
 	}
 
-	m_ObjLink[0].GetGeomInfo().SetColor(0.3, 0.4, 0.3);
+	m_ObjLink[0].GetGeomInfo().SetColor(0.3f, 0.4f, 0.3f);
 
 	m_ObjLink[0].SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
@@ -613,7 +613,7 @@ void RedMaleConnector::AssembleModel()
 		m_ObjWeldJoint.push_back(*temp);
 	}
 
-	m_ObjLink[0].GetGeomInfo().SetColor(0.3, 0.4, 0.3);
+	m_ObjLink[0].GetGeomInfo().SetColor(0.3f, 0.4f, 0.3f);
 
 	m_ObjLink[0].SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
@@ -677,7 +677,7 @@ void BlueFemaleConnector::AssembleModel()
 		m_ObjWeldJoint.push_back(*temp);
 	}
 
-	m_ObjLink[0].GetGeomInfo().SetColor(0.3, 0.4, 0.3);
+	m_ObjLink[0].GetGeomInfo().SetColor(0.3f, 0.4f, 0.3f);
 
 	m_ObjLink[0].SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
@@ -746,7 +746,7 @@ void RedFemaleConnector::AssembleModel()
 		m_ObjWeldJoint.push_back(*temp);
 	}
 
-	m_ObjLink[0].GetGeomInfo().SetColor(0.3, 0.4, 0.3);
+	m_ObjLink[0].GetGeomInfo().SetColor(0.3f, 0.4f, 0.3f);
 
 	m_ObjLink[0].SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);

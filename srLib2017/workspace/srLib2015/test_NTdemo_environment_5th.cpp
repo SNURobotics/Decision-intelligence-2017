@@ -8,8 +8,17 @@
 #include "robotManager\MH12RobotManager.h"
 #include "robotManager\MH12Robot.h"
 #include "robotManager\environment_4th.h"
+#include "NTdemoEnvSetting_5th.h"
 #include <time.h>
 
+// for communication
+#include <iostream>
+#include <Windows.h>
+#include <windowsx.h>
+
+// srSpace and renderer
+srSpace gSpace;
+myRenderer* renderer;
 
 // Robot
 MH12Robot* MHRobot = new MH12Robot;
@@ -18,8 +27,9 @@ Bin* bin = new Bin(0.01);
 
 Eigen::VectorXd qval;
 
-srSpace gSpace;
-myRenderer* renderer;
+// demo environment
+demoEnvironment* demoEnv;
+demoTaskManager* demoTask;
 
 srLink* ee = new srLink;
 srSystem* obs = new srSystem;
@@ -30,7 +40,7 @@ void rendering(int argc, char **argv);
 void updateFunc();
 void MHRobotSetting();
 void MHRobotManagerSetting();
-
+void envSetting();
 int activeJointIdx =0;
 vector<Eigen::VectorXd> traj(0);
 
@@ -38,14 +48,8 @@ int main(int argc, char **argv)
 {
 
     MHRobotSetting();
-
-	ee->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
-	ee->GetGeomInfo().SetDimension(0.03);
-	ee->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
-	obs->SetBaseLink(ee);
-	obs->SetBaseLinkType(srSystem::FIXED);
-	gSpace.AddSystem(obs);
-	gSpace.AddSystem(bin);
+	demoEnv = new demoEnvironment(5);
+	envSetting();
 	initDynamics();
 
 	
@@ -61,8 +65,7 @@ int main(int argc, char **argv)
 	//qval[4] = SR_PI_HALF/6;
 	//qval[5] = SR_PI_HALF/5;
 	rManager1->setJointVal(qval);
-	obs->GetBaseLink()->SetFrame(MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame());
-	bin->setBaseLinkFrame(SE3(Vec3(1.0, 0.0, 0.0)));
+
 	
 	int flag;
 	
@@ -105,7 +108,6 @@ void updateFunc()
 	//((srStateJoint*)MHRobot->m_KIN_Joints[activeJointIdx])->m_State.m_rValue[0] = JointVal;
 	((srStateJoint*)MHRobot->m_KIN_Joints[5])->m_State.m_rValue[0] = JointVal;
 	JointVal += 0.01;
-	obs->GetBaseLink()->SetFrame(MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame());
 	static int cnt = 0;
 	static int trajcnt = 0;
 	cnt++;
@@ -200,4 +202,9 @@ void MHRobotManagerSetting()
 
 	rManager1 = new MH12RobotManager(MHRobot, &gSpace);
 
+}
+
+void envSetting()
+{
+	demoEnv->setEnvironmentInSrSpace(&gSpace);
 }

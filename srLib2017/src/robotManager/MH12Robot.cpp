@@ -246,7 +246,7 @@ void MH12Robot::AssembleModel(double gripperRot)
 
 	gLink[MH12_Index::GRIPPER_1].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[MH12_Index::GRIPPER_1].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
-	gLink[MH12_Index::GRIPPER_1].GetGeomInfo().SetColor(0.2, 0.2, 0.2);
+	gLink[MH12_Index::GRIPPER_1].GetGeomInfo().SetColor(0.2f, 0.2f, 0.2f);
 	gLink[MH12_Index::GRIPPER_1].GetGeomInfo().SetFileName("../../../workspace/robot/mh12_3ds/gripper1.3ds");
 
 
@@ -258,7 +258,7 @@ void MH12Robot::AssembleModel(double gripperRot)
 
 	gLink[MH12_Index::GRIPPER_2].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[MH12_Index::GRIPPER_2].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
-	gLink[MH12_Index::GRIPPER_2].GetGeomInfo().SetColor(0.2, 0.2, 0.2);
+	gLink[MH12_Index::GRIPPER_2].GetGeomInfo().SetColor(0.2f, 0.2f, 0.2f);
 	gLink[MH12_Index::GRIPPER_2].GetGeomInfo().SetFileName("../../../workspace/robot/mh12_3ds/gripper2.3ds");
 
 	gWeldJoint[MH12_Index::WELDJOINT_GRIPJOINT_3]->SetParentLink(&gLink[MH12_Index::COUPLING]);
@@ -269,7 +269,7 @@ void MH12Robot::AssembleModel(double gripperRot)
 
 	gLink[MH12_Index::GRIPPER_3].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[MH12_Index::GRIPPER_3].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
-	gLink[MH12_Index::GRIPPER_3].GetGeomInfo().SetColor(0.2, 0.2, 0.2);
+	gLink[MH12_Index::GRIPPER_3].GetGeomInfo().SetColor(0.2f, 0.2f, 0.2f);
 	gLink[MH12_Index::GRIPPER_3].GetGeomInfo().SetFileName("../../../workspace/robot/mh12_3ds/gripper3.3ds");
 
 

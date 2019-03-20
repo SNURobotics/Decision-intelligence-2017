@@ -258,7 +258,7 @@ void UR3Robot::AssembleModel(double gripperRot)
 
 	gLink[UR3_Index::GRIPPER].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[UR3_Index::GRIPPER].GetGeomInfo().SetLocalFrame(SE3());
-	gLink[UR3_Index::GRIPPER].GetGeomInfo().SetColor(0.2, 0.2, 0.2);
+	gLink[UR3_Index::GRIPPER].GetGeomInfo().SetColor(0.2f, 0.2f, 0.2f);
 	gLink[UR3_Index::GRIPPER].GetGeomInfo().SetFileName("../../../workspace/robot/ur3_3ds/Robotiq_body.3ds");
 
 
@@ -269,7 +269,7 @@ void UR3Robot::AssembleModel(double gripperRot)
 
 	gLink[UR3_Index::GRIPPER_LINK_1_M].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[UR3_Index::GRIPPER_LINK_1_M].GetGeomInfo().SetLocalFrame(SE3());
-	gLink[UR3_Index::GRIPPER_LINK_1_M].GetGeomInfo().SetColor(0.2, 0.2, 0.2);
+	gLink[UR3_Index::GRIPPER_LINK_1_M].GetGeomInfo().SetColor(0.2f, 0.2f, 0.2f);
 	gLink[UR3_Index::GRIPPER_LINK_1_M].GetGeomInfo().SetFileName("../../../workspace/robot/ur3_3ds/Robotiq_link1_m.3ds");
 
 	gGripJoint[UR3_Index::GRIPJOINT_1_P]->SetParentLink(&gLink[UR3_Index::GRIPPER]);
@@ -289,7 +289,7 @@ void UR3Robot::AssembleModel(double gripperRot)
 
 	gLink[UR3_Index::GRIPPER_LINK_2_M].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[UR3_Index::GRIPPER_LINK_2_M].GetGeomInfo().SetLocalFrame(SE3());
-	gLink[UR3_Index::GRIPPER_LINK_2_M].GetGeomInfo().SetColor(0.2, 0.2, 0.2);
+	gLink[UR3_Index::GRIPPER_LINK_2_M].GetGeomInfo().SetColor(0.2f, 0.2f, 0.2f);
 	gLink[UR3_Index::GRIPPER_LINK_2_M].GetGeomInfo().SetFileName("../../../workspace/robot/ur3_3ds/Robotiq_link2a_m.3ds");
 
 	gGripJoint[UR3_Index::GRIPJOINT_2_P]->SetParentLink(&gLink[UR3_Index::GRIPPER]);
@@ -299,7 +299,7 @@ void UR3Robot::AssembleModel(double gripperRot)
 
 	gLink[UR3_Index::GRIPPER_LINK_2_P].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[UR3_Index::GRIPPER_LINK_2_P].GetGeomInfo().SetLocalFrame(SE3());
-	gLink[UR3_Index::GRIPPER_LINK_2_P].GetGeomInfo().SetColor(0.2, 0.2, 0.2);
+	gLink[UR3_Index::GRIPPER_LINK_2_P].GetGeomInfo().SetColor(0.2f, 0.2f, 0.2f);
 	gLink[UR3_Index::GRIPPER_LINK_2_P].GetGeomInfo().SetFileName("../../../workspace/robot/ur3_3ds/Robotiq_link2a_p.3ds");
 
 	gGripJoint[UR3_Index::GRIPJOINT_F_M]->SetParentLink(&gLink[UR3_Index::GRIPPER_LINK_1_M]);
@@ -309,7 +309,7 @@ void UR3Robot::AssembleModel(double gripperRot)
 
 	gLink[UR3_Index::GRIPPER_FINGER_M].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[UR3_Index::GRIPPER_FINGER_M].GetGeomInfo().SetLocalFrame(SE3());
-	gLink[UR3_Index::GRIPPER_FINGER_M].GetGeomInfo().SetColor(0.20, 0.20, 0.20);
+	gLink[UR3_Index::GRIPPER_FINGER_M].GetGeomInfo().SetColor(0.20f, 0.20f, 0.20f);
 	gLink[UR3_Index::GRIPPER_FINGER_M].GetGeomInfo().SetFileName("../../../workspace/robot/ur3_3ds/Robotiq_tip_m.3ds");
 
 	gGripJoint[UR3_Index::GRIPJOINT_F_P]->SetParentLink(&gLink[UR3_Index::GRIPPER_LINK_1_P]);
@@ -320,7 +320,7 @@ void UR3Robot::AssembleModel(double gripperRot)
 
 	gLink[UR3_Index::GRIPPER_FINGER_P].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[UR3_Index::GRIPPER_FINGER_P].GetGeomInfo().SetLocalFrame(SE3());
-	gLink[UR3_Index::GRIPPER_FINGER_P].GetGeomInfo().SetColor(0.20, 0.20, 0.20);
+	gLink[UR3_Index::GRIPPER_FINGER_P].GetGeomInfo().SetColor(0.20f, 0.20f, 0.20f);
 	gLink[UR3_Index::GRIPPER_FINGER_P].GetGeomInfo().SetFileName("../../../workspace/robot/ur3_3ds/Robotiq_tip_p.3ds");
 
 	gWeldJoint[UR3_Index::WELDJOINT_GRIP_MARKER]->SetActType(srJoint::PASSIVE);

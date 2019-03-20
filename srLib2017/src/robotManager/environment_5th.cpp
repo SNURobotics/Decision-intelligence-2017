@@ -44,7 +44,7 @@ void MovingContact::AssembleModel()
 
 	for (int i = 0; i < m_numLink; i++)
 	{
-		m_ObjLink[i].GetGeomInfo().SetColor(0.3, 0.3, 0.3);
+		m_ObjLink[i].GetGeomInfo().SetColor(0.3f, 0.3f, 0.3f);
 		m_ObjLink[i].GetGeomInfo().SetDimension(0.0);
 		m_ObjLink[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	}
@@ -152,7 +152,7 @@ void FixedContact::AssembleModel()
 
 	for (int i = 0; i < m_numLink; i++)
 	{
-		m_ObjLink[i].GetGeomInfo().SetColor(0.3, 0.3, 0.3);
+		m_ObjLink[i].GetGeomInfo().SetColor(0.3f, 0.3f, 0.3f);
 		m_ObjLink[i].GetGeomInfo().SetDimension(0.0);
 		m_ObjLink[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	}
