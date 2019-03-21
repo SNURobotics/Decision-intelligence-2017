@@ -14,10 +14,13 @@
 #include <sstream>
 #include <ctime>
 
+#define CONNECTION_START_SIGNAL 0
+#define CONNECTION_END_SIGNAL 5
 #define MOVE_SIGNAL 1
 #define GET_CURPOS_SIGNAL 2
 #define GRIPPER_ON_SIGNAL 3
 #define GRIPPER_OFF_SIGNAL 4
+
 #define MAX_TIME_DURATION   5.0
 #define GRASP_WAIT_TIME 50
 #define POSITION_THRESHOLD 1E-3
@@ -103,6 +106,8 @@ public:
 	void printImovCommand(SE3 Tstart, SE3 Tgoal);
 
 	// Yaskawa client communication functions
+	LRESULT startConnection();
+	LRESULT endConnection();
 	SE3 YKpos2SE3(const Eigen::VectorXd YKpos);
 	bool checkWaypoint(SE3 Tinit, SE3 Tgoal, int num = 10);
 	bool goToWaypoint(SE3 Twaypoint);	// send robot waypoint commands after planning

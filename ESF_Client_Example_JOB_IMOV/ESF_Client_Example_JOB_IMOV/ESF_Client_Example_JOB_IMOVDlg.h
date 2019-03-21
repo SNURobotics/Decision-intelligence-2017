@@ -41,13 +41,15 @@
 
 #define IMOV_SPEED			50		//500
 
-
+#define CONNECTION_START_SIGNAL 0
 #define MOVE_SIGNAL 1
 #define GET_CURPOS_SIGNAL 2
 #define GRIPPER_ON_SIGNAL 3
 #define GRIPPER_OFF_SIGNAL 4
+#define CONNECTION_END_SIGNAL 5
 
-
+//#define USE_DISCONNECT
+#define CONTINUE_SERVOING
 
 enum {X = 0, Y, Z, RX, RY, RZ};
 // CESF_Client_Example_JOB_IMOVDlg 대화 상자
@@ -120,6 +122,12 @@ public:
 	BOOL RelativePosMove();
 	BOOL IncrementalMove();
 	std::vector<double> GetCurPos();
+
+	// functions with out connection and disconnection functions
+	BOOL ServoControlFunc(BOOL IsOn);
+	BOOL JOBExcuteFunc(CString strJOBName);
+	BOOL CurPosReadFunc();
+	BOOL IncrementalMoveFunc();
 
 	afx_msg void OnDestroy();
 	afx_msg void OnBnClickedBtnClear();

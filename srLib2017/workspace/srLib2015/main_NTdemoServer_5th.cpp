@@ -132,21 +132,36 @@ int main(int argc, char **argv)
 	}
 	
 	// test code (19.03.21)
-	for (int i = 0; i < 100; i++)
+	//demoTask->endConnection();
+	//demoTask->startConnection();
+	//demoTask->endConnection();
+	demoTask->startConnection();
+	for (int i = 0; i < 2; i++)
 	{
 		demoTask->getCurPosSignal();
-		Sleep(100);
+		Sleep(1000);
 	}
-	//SE3 testPos1 = SE3();
-	//SE3 testPos2 = SE3();
-	//for (int i = 0; i < 10; i++)
-	//{
-	//	demoTask->goToWaypoint(testPos1);
-	//	Sleep(1000);
-	//	demoTask->goToWaypoint(testPos2);
-	//	Sleep(1000);
-	//}
-	
+	Eigen::VectorXd curPos(6);
+	curPos[0] = DEG2RAD(180.0);
+	curPos[1] = DEG2RAD(2);
+	curPos[2] = DEG2RAD(-132);
+	curPos[3] = 0.417;
+	curPos[4] = 0.088;
+	curPos[5] = 0.509;
+	SE3 testPos1 = demoTask->YKpos2SE3(curPos);
+	SE3 testPos2 = SE3(Vec3(0.0, 0.0, 0.1)) * testPos1;
+	demoTask->printImovCommand(demoTask->TcurRobot, testPos1);
+	for (int i = 0; i < 3; i++)
+	{
+		cout << "######################    " << i+1 << "    ########################" << endl;
+		demoTask->goToWaypoint(testPos1);
+		cout << "pos2 to pos1 (down) finished !!!!!!!!!!!!!" << endl;
+		Sleep(1000);
+		demoTask->goToWaypoint(testPos2);
+		cout << "pos1 to pos2 (up) finished !!!!!!!!!!!!!" << endl;
+		Sleep(1000);
+	}
+	demoTask->endConnection();
 
 		
 

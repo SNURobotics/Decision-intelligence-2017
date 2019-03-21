@@ -771,6 +771,38 @@ void demoTaskManager::printImovCommand(SE3 Tstart, SE3 Tgoal)
 	printf("imov command x: %f, y: %f, z: %f, Rx: %f, Ry: %f, Rz: %f\n", tempPos[0]*1000.0, tempPos[1] * 1000.0, tempPos[2] * 1000.0, tempOri[2] * (180.0 / SR_PI), tempOri[1] * (180.0 / SR_PI), tempOri[0] * (180.0 / SR_PI));
 }
 
+LRESULT demoTaskManager::startConnection()
+{
+	// send flag 0
+	char dummyMsg[256] = "dummy message";
+	isGetPos = false;
+	HWND hTargetWnd = FindWindow(NULL, L"ESF_Client_Example_JOB_IMOV");
+	COPYDATASTRUCT cds;
+	cds.dwData = CONNECTION_START_SIGNAL;
+	cds.cbData = sizeof(dummyMsg);
+	cds.lpData = dummyMsg;
+	//SendMessage(hTargetWnd, WM_COPYDATA, NULL, reinterpret_cast<LPARAM>(&cds));
+	PDWORD_PTR temp = NULL;
+	LRESULT success = SendMessageTimeout(hTargetWnd, WM_COPYDATA, NULL, reinterpret_cast<LPARAM>(&cds), SMTO_NORMAL, 10000, temp);
+	return success;
+}
+
+LRESULT demoTaskManager::endConnection()
+{
+	// send flag 5
+	char dummyMsg[256] = "dummy message";
+	isGetPos = false;
+	HWND hTargetWnd = FindWindow(NULL, L"ESF_Client_Example_JOB_IMOV");
+	COPYDATASTRUCT cds;
+	cds.dwData = CONNECTION_END_SIGNAL;
+	cds.cbData = sizeof(dummyMsg);
+	cds.lpData = dummyMsg;
+	//SendMessage(hTargetWnd, WM_COPYDATA, NULL, reinterpret_cast<LPARAM>(&cds));
+	PDWORD_PTR temp = NULL;
+	LRESULT success = SendMessageTimeout(hTargetWnd, WM_COPYDATA, NULL, reinterpret_cast<LPARAM>(&cds), SMTO_NORMAL, 10000, temp);
+	return success;
+}
+
 SE3 demoTaskManager::YKpos2SE3(const Eigen::VectorXd YKpos)
 {
 	return EulerZYX(Vec3(YKpos[2], YKpos[1], YKpos[0]), Vec3(YKpos[3], YKpos[4], YKpos[5]));
@@ -972,7 +1004,7 @@ LRESULT demoTaskManager::gripperOnSignal()
 
 LRESULT demoTaskManager::gripperOffSignal()
 {
-	// send flag 2
+	// send flag 3
 	char dummyMsg[256] = "dummy message";
 	isGetPos = false;
 	HWND hTargetWnd = FindWindow(NULL, L"ESF_Client_Example_JOB_IMOV");
