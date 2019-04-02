@@ -16,14 +16,14 @@ UR5Robot* URRobot = new UR5Robot;
 UR5RobotManager* rManager1;
 
 // objects
-Bin* bin = new Bin(0.01);
-BlueMaleConnector* blueMaleConnector = new BlueMaleConnector();
-BlueFemaleConnector* blueFemaleConnector = new BlueFemaleConnector();
-RedFemaleConnector* redFemaleConnector = new RedFemaleConnector();
-RedMaleConnector* redMaleConnector = new RedMaleConnector();
-TableRetarget* tableRetarget = new TableRetarget();
+//Bin* bin = new Bin(0.01);
+//BlueMaleConnector* blueMaleConnector = new BlueMaleConnector();
+//BlueFemaleConnector* blueFemaleConnector = new BlueFemaleConnector();
+//RedFemaleConnector* redFemaleConnector = new RedFemaleConnector();
+//RedMaleConnector* redMaleConnector = new RedMaleConnector();
+//TableRetarget* tableRetarget = new TableRetarget();
 
-workingObject* workingObj = new workingObject();
+//workingObject* workingObj = new workingObject();
 
 
 Eigen::VectorXd qval;
@@ -31,8 +31,8 @@ Eigen::VectorXd qval;
 srSpace gSpace;
 myRenderer* renderer;
 
-srLink* ee = new srLink;
-srSystem* obs = new srSystem;
+//srLink* ee = new srLink;
+//srSystem* obs = new srSystem;
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::TORQUE;
 SE3 Trobotbase1;
 void initDynamics();
@@ -60,7 +60,7 @@ int main(int argc, char **argv)
 	//gSpace.AddSystem(obs);
 	//gSpace.AddSystem(bin);
 	//gSpace.AddSystem(redFemaleConnector);
-	gSpace.AddSystem(tableRetarget);
+	//gSpace.AddSystem(tableRetarget);
 	initDynamics();
 
 
@@ -78,7 +78,7 @@ int main(int argc, char **argv)
 	//rManager1->setJointVal(qval);
 	//obs->GetBaseLink()->SetFrame(URRobot->gMarkerLink[UR5_Index::MLINK_GRIP].GetFrame());
 	//bin->setBaseLinkFrame(SE3(Vec3(1.0, 0.0, 0.0)));
-	tableRetarget->setBaseLinkFrame(SE3());
+	//tableRetarget->setBaseLinkFrame(SE3(SO3(), Vec3(0, 0, -1)));
 
 	int flag;
 
@@ -116,6 +116,13 @@ void updateFunc()
 {
 
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
+
+	//URRobot->gJoint[UR5_Index::JOINT_6]->m_State.m_rValue[0] += 0.01;
+	//URRobot->gGripJoint[UR5_Index::GRIPJOINT_Pal_1]->m_State.m_rValue[0] += 0.01;
+	//URRobot->gGripJoint[UR5_Index::GRIPJOINT_Pal_1]->m_State.m_rValue[0] += 0.01;
+	//URRobot->gGripJoint[UR5_Index::GRIPJOINT_B_1]->m_State.m_rValue[0] += 0.01;
+	//URRobot->gGripJoint[UR5_Index::GRIPJOINT_P_1]->m_State.m_rValue[0] += 0.01;
+	//URRobot->gGripJoint[UR5_Index::GRIPJOINT_M_1]->m_State.m_rValue[0] += 0.01;
 
 	//static double JointVal = 0;
 	//((srStateJoint*)MHRobot->m_KIN_Joints[activeJointIdx])->m_State.m_rValue[0] = JointVal;
