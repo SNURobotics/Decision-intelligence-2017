@@ -47,11 +47,8 @@ Server serv = Server::Server();
 char communication_flag;
 void communicationFunc(int argc, char **argv);
 
-
-
 struct CUR_POS
 {
-
 	double X;
 	double Y;
 	double Z;
@@ -59,31 +56,70 @@ struct CUR_POS
 	double Ry;
 	double Rz;
 };
+
+struct CUR_JOINT
+{
+	double q1;
+	double q2;
+	double q3;
+	double q4;
+	double q5;
+	double q6;
+};
+
 LRESULT CALLBACK getMessageFromRobot(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if (uMsg == WM_COPYDATA)
 	{
-		CUR_POS cur_pos;
 		COPYDATASTRUCT* pcds = (COPYDATASTRUCT*)lParam;
-		memcpy_s(&cur_pos, sizeof(cur_pos), pcds->lpData, pcds->cbData);
-		vector<double> curPos(0);
-		// convert deg -> rad, mm -> m
-		curPos.push_back(cur_pos.Rx*(SR_PI/180.0));
-		curPos.push_back(cur_pos.Ry*(SR_PI/180.0));
-		curPos.push_back(cur_pos.Rz*(SR_PI/180.0));
-		curPos.push_back(cur_pos.X*0.001);
-		curPos.push_back(cur_pos.Y*0.001);
-		curPos.push_back(cur_pos.Z*0.001);
-
-		double eps = 1e-5;
-		if (abs(curPos[0]) < eps && abs(curPos[1]) < eps && abs(curPos[2]) < eps && abs(curPos[3]) < eps && abs(curPos[4]) < eps && abs(curPos[5]) < eps)
+		if (pcds->dwData == 222)
 		{
-			cout << "RPOSC error: retry get currunt position" << endl;
-			demoTask->getCurPosSignal();
-			return 0;
+			CUR_POS cur_pos;
+			memcpy_s(&cur_pos, sizeof(cur_pos), pcds->lpData, pcds->cbData);
+			vector<double> curPos(0);
+			// convert deg -> rad, mm -> m
+			curPos.push_back(cur_pos.Rx*(SR_PI / 180.0));
+			curPos.push_back(cur_pos.Ry*(SR_PI / 180.0));
+			curPos.push_back(cur_pos.Rz*(SR_PI / 180.0));
+			curPos.push_back(cur_pos.X*0.001);
+			curPos.push_back(cur_pos.Y*0.001);
+			curPos.push_back(cur_pos.Z*0.001);
+
+			double eps = 1e-5;
+			if (abs(curPos[0]) < eps && abs(curPos[1]) < eps && abs(curPos[2]) < eps && abs(curPos[3]) < eps && abs(curPos[4]) < eps && abs(curPos[5]) < eps)
+			{
+				cout << "RPOSC error: retry get currunt position" << endl;
+				demoTask->getCurPosSignal();
+				return 0;
+			}
+			else
+				demoTask->setCurPos(curPos);
 		}
-		else
-			demoTask->setCurPos(curPos);
+		else if (pcds->dwData == 223)
+		{
+			/////////////////////////////////////////////////////// check later ///////////////////////////////////////////////////////
+			CUR_JOINT cur_joint;
+			memcpy_s(&cur_joint, sizeof(cur_joint), pcds->lpData, pcds->cbData);
+			vector<double> curJoint(0);
+			// convert deg -> rad, mm -> m
+			curJoint.push_back(cur_joint.q1*(SR_PI / 180.0));
+			curJoint.push_back(cur_joint.q2*(SR_PI / 180.0));
+			curJoint.push_back(cur_joint.q3*(SR_PI / 180.0));
+			curJoint.push_back(cur_joint.q4*(SR_PI / 180.0));
+			curJoint.push_back(cur_joint.q5*(SR_PI / 180.0));
+			curJoint.push_back(cur_joint.q6*(SR_PI / 180.0));
+			demoTask->setCurJoint(curJoint);
+			//double eps = 1e-5;
+			//if (abs(curJoint[0]) < eps && abs(curJoint[1]) < eps && abs(curJoint[2]) < eps && abs(curJoint[3]) < eps && abs(curJoint[4]) < eps && abs(curJoint[5]) < eps)
+			//{
+			//	cout << "RPOSJ error: retry get currunt position" << endl;
+			//	demoTask->getCurJointSignal();
+			//	return 0;
+			//}
+			//else
+			//	demoTask->setCurJoint(curJoint);
+			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		}
 
 		//std::cout << "==================" << std::endl;
 		//std::cout << "getMessageFromRobot function" << std::endl;
@@ -150,7 +186,7 @@ int main(int argc, char **argv)
 	curPos[5] = 0.509;
 	SE3 testPos1 = demoTask->YKpos2SE3(curPos);
 	SE3 testPos2 = SE3(Vec3(0.0, 0.0, 0.1)) * testPos1;
-	demoTask->printImovCommand(demoTask->TcurRobot, testPos1);
+	demoTask->printImovCommand(demoTask->getTcurRobot(), testPos1);
 	for (int i = 0; i < 3; i++)
 	{
 		cout << "######################    " << i+1 << "    ########################" << endl;

@@ -15,11 +15,12 @@
 #include <ctime>
 
 #define CONNECTION_START_SIGNAL 0
-#define CONNECTION_END_SIGNAL 5
 #define MOVE_SIGNAL 1
 #define GET_CURPOS_SIGNAL 2
 #define GRIPPER_ON_SIGNAL 3
 #define GRIPPER_OFF_SIGNAL 4
+#define CONNECTION_END_SIGNAL 5
+#define GET_CURJOINT_SIGNAL 6
 
 #define MAX_TIME_DURATION   5.0
 #define GRASP_WAIT_TIME 50
@@ -114,7 +115,10 @@ public:
 	bool goThroughWaypoints(vector<SE3> Twaypoints);
 	bool checkWaypointReached(SE3 Twaypoint);		// check if robot reached to the waypoint
 	LRESULT getCurPosSignal();						// send robot read cur pos command and set curRobotPos and TcurRobot
+	LRESULT getCurJointSignal();					// send robot read cur joint command and set curRobotPos and TcurRobot
 	void setCurPos(vector<double> values);
+	SE3 getTcurRobot();
+	void setCurJoint(vector<double> values);
 	LRESULT gripperOnSignal();
 	LRESULT gripperOffSignal();
 
@@ -144,9 +148,9 @@ public:
 	SE3 reachOffset;				// offset between grasp point and waypoint right before grasp point (to reach vertically to object)
 	SE3 goalOffset;					// offset between goal point and waypoint right before goal point (to reach vertically to object)
 
-	// Robot communication related variables
-	Eigen::VectorXd curRobotPos;	// current robot pos (Rx, Ry, Rz, px, py, pz)
-	SE3 TcurRobot;
+	
+	
+	
 	//struct MOVE_POS
 	//{
 	//	char Rx[256];
@@ -176,6 +180,8 @@ public:
 	vector<SE3> tempObjTraj;
 private:
 	int curGoalID;					// current goal ID (0: head, 1: tail)
+	// Robot communication related variables
+	SE3 TcurRobot;
 };
 
 

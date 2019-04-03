@@ -973,9 +973,33 @@ LRESULT demoTaskManager::getCurPosSignal()
 
 }
 
+LRESULT demoTaskManager::getCurJointSignal()
+{
+	std::cout << "getCurJointSignal() called" << std::endl;
+	// send flag 2
+	char dummyMsg[256] = "dummy message";
+	isGetPos = false;
+	HWND hTargetWnd = FindWindow(NULL, L"ESF_Client_Example_JOB_IMOV");
+	COPYDATASTRUCT cds;
+	cds.dwData = GET_CURJOINT_SIGNAL;
+	cds.cbData = sizeof(dummyMsg);
+	cds.lpData = dummyMsg;
+	//SendMessage(hTargetWnd, WM_COPYDATA, NULL, reinterpret_cast<LPARAM>(&cds));
+	PDWORD_PTR temp = NULL;
+	LRESULT success = SendMessageTimeout(hTargetWnd, WM_COPYDATA, NULL, reinterpret_cast<LPARAM>(&cds), SMTO_NORMAL, 1000, temp);
+	while (success == 0)
+		success = SendMessageTimeout(hTargetWnd, WM_COPYDATA, NULL, reinterpret_cast<LPARAM>(&cds), SMTO_NORMAL, 1000, temp);
+	return success;
+	// send message to robot (read cur pos command) here
+	//curRobotPos;
+	//TcurRobot = YKpos2SE3(curRobotPos);
+	////////////////////////////////////////////////////
+}
+
 void demoTaskManager::setCurPos(vector<double> values)
 {
 	std::cout << "setCurPos() called" << std::endl;
+	Eigen::VectorXd curRobotPos;	// current robot pos (Rx, Ry, Rz, px, py, pz)
 	curRobotPos.resize(6);
 	for (int i = 0; i < 6; i++)
 	{
@@ -984,6 +1008,24 @@ void demoTaskManager::setCurPos(vector<double> values)
 	TcurRobot = YKpos2SE3(curRobotPos);
 	isGetPos = true;
 
+}
+
+SE3 demoTaskManager::getTcurRobot()
+{
+	return TcurRobot;
+}
+
+void demoTaskManager::setCurJoint(vector<double> values)
+{
+	std::cout << "setCurJoint() called" << std::endl;
+	Eigen::VectorXd curRobotJoint;
+	curRobotJoint.resize(6);
+	for (int i = 0; i < 6; i++)
+	{
+		curRobotJoint(i) = values[i];
+	}
+	TcurRobot = rManager->forwardKin(curRobotJoint, &robot->gMarkerLink[MH12_Index::MLINK_GRIP]);
+	isGetPos = true;
 }
 
 LRESULT demoTaskManager::gripperOnSignal()
