@@ -306,7 +306,7 @@ bool SDA20DDualArmClosedLoopConstraint::project2ConstraintManifold(Eigen::Vector
 		f = -getConstraintVector(jointVal);
 		f_norm = f.norm();
 		delta_q = Q.inverse()*Jc.transpose()*(Jc*Q.inverse()*Jc.transpose()).inverse()*f;
-		for (int i = 0; i < numEffectiveArmJoints; i++)
+		for (unsigned int i = 0; i < numEffectiveArmJoints; i++)
 			jointVal(i) += 0.5*delta_q(i);
 		norm_delta_q = delta_q.norm();
 		//cout << "normq: " << norm_delta_q << endl;

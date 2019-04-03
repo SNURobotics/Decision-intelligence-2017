@@ -438,6 +438,13 @@ void UR5Robot::AssembleModel(double gripperRot)
 	gMarkerLink[UR5_Index::MLINK_GRIP].SetInertia(Inertia(0.001));
 	
 
+	gWeldJoint[UR5_Index::WELDJOINT_GRIP_MARKER]->SetActType(srJoint::PASSIVE);
+	gWeldJoint[UR5_Index::WELDJOINT_GRIP_MARKER]->SetParentLink(&gLink[UR5_Index::ENDEFFECTOR]);
+	gWeldJoint[UR5_Index::WELDJOINT_GRIP_MARKER]->SetChildLink(&gMarkerLink[UR5_Index::MLINK_GRIP]);
+	gWeldJoint[UR5_Index::WELDJOINT_GRIP_MARKER]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	//gWeldJoint[UR5_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(1.036, 0.0, 1.264)));
+	gWeldJoint[UR5_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-(0.134 - 0.119 + 0.09475 + 0.0815 + 0.143), 0.0, -(0.0862 + 0.425 + 0.392 + 0.09475))));
+
 	this->SetBaseLink(&gLink[UR5_Index::LINK_1]);
 	this->SetBaseLinkType(srSystem::FIXED);
 }
