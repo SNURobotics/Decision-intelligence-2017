@@ -22,6 +22,7 @@
     <ClCompile Include="..\..\src\robotManager\UR5Robot.cpp" />
     <ClCompile Include="..\..\src\robotManager\UR5RobotManager.cpp" />
     <ClCompile Include="..\..\src\robotManager\environment_5th.cpp" />
+    <ClCompile Include="..\..\src\robotManager\Franka.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\robotManager\environment.h" />
@@ -46,5 +47,6 @@
     <ClInclude Include="..\..\src\robotManager\UR5Robot.h" />
     <ClInclude Include="..\..\src\robotManager\UR5RobotManager.h" />
     <ClInclude Include="..\..\src\robotManager\environment_5th.h" />
+    <ClInclude Include="..\..\src\robotManager\Franka.h" />
   </ItemGroup>
 </Project>

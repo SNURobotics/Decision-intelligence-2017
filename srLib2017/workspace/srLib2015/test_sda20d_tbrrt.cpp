@@ -53,7 +53,7 @@ Eigen::VectorXd q;
 int useWaist = 1;
 Eigen::VectorXd tempJointVal = Eigen::VectorXd::Zero(14 + useWaist);
 Eigen::VectorXd tempJointVal2;
-bool doPlanning = false;
+bool doPlanning = true;
 
 SDA20DDualArmClosedLoopConstraint* armConstraint;
 TBrrtManager* RRTManager = new TBrrtManager(armConstraint);
@@ -137,7 +137,7 @@ int main(int argc, char **argv)
 	cout << armConstraint->getConstraintVector(q) << endl;
 
 	///////////////////////////// solve RRT ////////////////////////////
-	doPlanning = false;
+	doPlanning = true;
 	RRTManager->printIter = false;
 	if (doPlanning)
 	{

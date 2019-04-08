@@ -7,10 +7,10 @@ UR5Robot::UR5Robot(bool elbowUp, double gripperRot)
 	for (int i = 0; i < NUM_OF_RJOINT_UR5; i++)
 		gJoint[i] = new srRevoluteJoint;
 	
-	//for (int i = 0; i < NUM_OF_GRIPERJOINT_UR5; i++)
-	//	gGripJoint[i] = new srPrismaticJoint;
+	for (int i = 0; i < NUM_OF_GRIPERJOINT_UR5; i++)
+		gGripJoint[i] = new srRevoluteJoint;
 
-	for (int i = 0; i < NUM_OF_WJOINT_UR3; i++)
+	for (int i = 0; i < NUM_OF_WJOINT_UR5; i++)
 		gWeldJoint[i] = new srWeldJoint;
 
 	AssembleModel(gripperRot);
@@ -232,7 +232,7 @@ void UR5Robot::AssembleModel(double gripperRot)
 	gLink[UR5_Index::ENDEFFECTOR].GetGeomInfo().SetLocalFrame(Tcad2srlib);
 	gLink[UR5_Index::ENDEFFECTOR].GetGeomInfo().SetFileName("../../../workspace/robot/ur5_3ds/link7.3ds");
 
-	
+#ifndef _3_Finger
 	//gripper
 	gWeldJoint[UR5_Index::WELDJOINT_COUPLING]->SetParentLink(&gLink[UR5_Index::ENDEFFECTOR]);
 	gWeldJoint[UR5_Index::WELDJOINT_COUPLING]->SetChildLink(&gLink[UR5_Index::GRIPPER]);
@@ -252,11 +252,198 @@ void UR5Robot::AssembleModel(double gripperRot)
 	//gWeldJoint[UR5_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(1.036, 0.0, 1.264)));
 	gWeldJoint[UR5_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-(0.134 - 0.119 + 0.09475 + 0.0815 + 0.143), 0.0, -(0.0862 + 0.425 + 0.392 + 0.09475))));// consider offset for gripper assembly
 																															//gWeldJoint[UR3_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(SE3(Vec3(0.0, 0.00195, -(0.1928 + 0.2003 + 0.001))));		// consider offset for gripper assembly
-	// marker links
+#endif
+#ifdef _3_Finger
+	// 0.2, -0.005, 1.05 -SR_PI_HALF, SR_PI, 0.0
+	gWeldJoint[UR5_Index::WELDJOINT_COUPLING]->SetParentLink(&gLink[UR5_Index::ENDEFFECTOR]);
+	gWeldJoint[UR5_Index::WELDJOINT_COUPLING]->SetChildLink(&gLink[UR5_Index::GRIPPER_WRIST]);
+	gWeldJoint[UR5_Index::WELDJOINT_COUPLING]->SetParentLinkFrame(SE3());
+	gWeldJoint[UR5_Index::WELDJOINT_COUPLING]->SetChildLinkFrame(SE3(Vec3(-0.08, 0.0, 0.0)));
+	gWeldJoint[UR5_Index::WELDJOINT_COUPLING]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+
+	gLink[UR5_Index::GRIPPER_WRIST].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	gLink[UR5_Index::GRIPPER_WRIST].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.100, 0.055, 0.942)));
+	gLink[UR5_Index::GRIPPER_WRIST].GetGeomInfo().SetFileName("../../../workspace/robot/ur5_3ds/wrist.3ds");
+
+	gWeldJoint[UR5_Index::GRIPJOINT_W_1]->SetParentLink(&gLink[UR5_Index::GRIPPER_WRIST]);
+	gWeldJoint[UR5_Index::GRIPJOINT_W_1]->SetChildLink(&gLink[UR5_Index::GRIPPER_PALM]);
+	gWeldJoint[UR5_Index::GRIPJOINT_W_1]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	gWeldJoint[UR5_Index::GRIPJOINT_W_1]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.04128, 0.0, 0.0)));
+	gWeldJoint[UR5_Index::GRIPJOINT_W_1]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+
+	gLink[UR5_Index::GRIPPER_PALM].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	gLink[UR5_Index::GRIPPER_PALM].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.073, 0.062, 0.932)));
+	gLink[UR5_Index::GRIPPER_PALM].GetGeomInfo().SetFileName("../../../workspace/robot/ur5_3ds/palm.3ds");
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_1]->SetActType(srJoint::HYBRID);
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_1]->SetParentLink(&gLink[UR5_Index::GRIPPER_PALM]);
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_1]->SetChildLink(&gLink[UR5_Index::GRIPPER_FINGER_BASE_1]);
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_1]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(0.134, 0.062, 0.9615)));
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_1]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(0.134, 0.062, 0.9615)));
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_1]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_1]->MakePositionLimit(false);
+
+	gLink[UR5_Index::GRIPPER_FINGER_BASE_1].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	//gLink[UR5_Index::GRIPPER_FINGER_BASE_1].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	gLink[UR5_Index::GRIPPER_FINGER_BASE_1].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.073, 0.062, 0.9250)));
+	gLink[UR5_Index::GRIPPER_FINGER_BASE_1].GetGeomInfo().SetFileName("../../../workspace/robot/ur5_3ds/base_1.3ds");
+
+	gGripJoint[UR5_Index::GRIPJOINT_B_1]->SetActType(srJoint::HYBRID);
+	gGripJoint[UR5_Index::GRIPJOINT_B_1]->SetParentLink(&gLink[UR5_Index::GRIPPER_FINGER_BASE_1]);
+	gGripJoint[UR5_Index::GRIPJOINT_B_1]->SetChildLink(&gLink[UR5_Index::GRIPPER_FINGER_PROX_1]);
+	gGripJoint[UR5_Index::GRIPJOINT_B_1]->SetParentLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.134, 0.062, 0.9615) + Vec3(0.022, -0.015, 0.0)));
+	gGripJoint[UR5_Index::GRIPJOINT_B_1]->SetChildLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.134, 0.062, 0.9615) + Vec3(0.022, -0.015, 0.0)));
+	gGripJoint[UR5_Index::GRIPJOINT_B_1]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gGripJoint[UR5_Index::GRIPJOINT_B_1]->MakePositionLimit(false);
+
+	gLink[UR5_Index::GRIPPER_FINGER_PROX_1].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	//gLink[UR5_Index::GRIPPER_FINGER_PROX_1].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	gLink[UR5_Index::GRIPPER_FINGER_PROX_1].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.073, 0.123, 0.9250)));
+	gLink[UR5_Index::GRIPPER_FINGER_PROX_1].GetGeomInfo().SetFileName("../../../workspace/robot/ur5_3ds/prox_1.3ds");
+
+	gGripJoint[UR5_Index::GRIPJOINT_P_1]->SetActType(srJoint::HYBRID);
+	gGripJoint[UR5_Index::GRIPJOINT_P_1]->SetParentLink(&gLink[UR5_Index::GRIPPER_FINGER_PROX_1]);
+	gGripJoint[UR5_Index::GRIPJOINT_P_1]->SetChildLink(&gLink[UR5_Index::GRIPPER_FINGER_MED_1]);
+	gGripJoint[UR5_Index::GRIPJOINT_P_1]->SetParentLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.134, 0.062, 0.9615) + Vec3(0.022, -0.015, 0.0) + Vec3(0.0465, 0.033, 0.0)));
+	gGripJoint[UR5_Index::GRIPJOINT_P_1]->SetChildLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.134, 0.062, 0.9615) + Vec3(0.022, -0.015, 0.0) + Vec3(0.0465, 0.033, 0.0)));
+	gGripJoint[UR5_Index::GRIPJOINT_P_1]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gGripJoint[UR5_Index::GRIPJOINT_P_1]->MakePositionLimit(false);
+
+	gLink[UR5_Index::GRIPPER_FINGER_MED_1].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	//gLink[UR5_Index::GRIPPER_FINGER_MED_1].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	gLink[UR5_Index::GRIPPER_FINGER_MED_1].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.073, 0.131, 0.9250)));
+	gLink[UR5_Index::GRIPPER_FINGER_MED_1].GetGeomInfo().SetFileName("../../../workspace/robot/ur5_3ds/med_1.3ds");
+
+	gGripJoint[UR5_Index::GRIPJOINT_M_1]->SetActType(srJoint::HYBRID);
+	gGripJoint[UR5_Index::GRIPJOINT_M_1]->SetParentLink(&gLink[UR5_Index::GRIPPER_FINGER_MED_1]);
+	gGripJoint[UR5_Index::GRIPJOINT_M_1]->SetChildLink(&gLink[UR5_Index::GRIPPER_FINGER_DIST_1]);
+	gGripJoint[UR5_Index::GRIPJOINT_M_1]->SetParentLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.134, 0.062, 0.9615) + Vec3(0.022, -0.015, 0.0) + Vec3(0.0465, 0.033, 0.0) + Vec3(0.0305, 0.0218, 0.0)));
+	gGripJoint[UR5_Index::GRIPJOINT_M_1]->SetChildLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.134, 0.062, 0.9615) + Vec3(0.022, -0.015, 0.0) + Vec3(0.0465, 0.033, 0.0) + Vec3(0.0305, 0.0218, 0.0)));
+	gGripJoint[UR5_Index::GRIPJOINT_M_1]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gGripJoint[UR5_Index::GRIPJOINT_M_1]->MakePositionLimit(false);
+
+	gLink[UR5_Index::GRIPPER_FINGER_DIST_1].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	//gLink[UR5_Index::GRIPPER_FINGER_DIST_1].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	gLink[UR5_Index::GRIPPER_FINGER_DIST_1].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.073, 0.1205, 0.9250)));
+	gLink[UR5_Index::GRIPPER_FINGER_DIST_1].GetGeomInfo().SetFileName("../../../workspace/robot/ur5_3ds/dist_1.3ds");
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_2]->SetActType(srJoint::HYBRID);
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_2]->SetParentLink(&gLink[UR5_Index::GRIPPER_PALM]);
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_2]->SetChildLink(&gLink[UR5_Index::GRIPPER_FINGER_BASE_2]);
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_2]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(0.134, 0.062, 1.0345)));
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_2]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(0.134, 0.062, 1.0345)));
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_2]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_2]->MakePositionLimit(false);
+	
+	gLink[UR5_Index::GRIPPER_FINGER_BASE_2].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	gLink[UR5_Index::GRIPPER_FINGER_BASE_2].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.073, 0.062, 0.9976)));
+	gLink[UR5_Index::GRIPPER_FINGER_BASE_2].GetGeomInfo().SetFileName("../../../workspace/robot/ur5_3ds/base_1.3ds");
+
+	gGripJoint[UR5_Index::GRIPJOINT_B_2]->SetActType(srJoint::HYBRID);
+	gGripJoint[UR5_Index::GRIPJOINT_B_2]->SetParentLink(&gLink[UR5_Index::GRIPPER_FINGER_BASE_2]);
+	gGripJoint[UR5_Index::GRIPJOINT_B_2]->SetChildLink(&gLink[UR5_Index::GRIPPER_FINGER_PROX_2]);
+	gGripJoint[UR5_Index::GRIPJOINT_B_2]->SetParentLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.134, 0.062, 1.0345)+Vec3(0.022, -0.015, 0.0)));
+	gGripJoint[UR5_Index::GRIPJOINT_B_2]->SetChildLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.134, 0.062, 1.0345)+Vec3(0.022, -0.015, 0.0)));
+	gGripJoint[UR5_Index::GRIPJOINT_B_2]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gGripJoint[UR5_Index::GRIPJOINT_B_2]->MakePositionLimit(false);
+
+	gLink[UR5_Index::GRIPPER_FINGER_PROX_2].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	gLink[UR5_Index::GRIPPER_FINGER_PROX_2].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.073, 0.123, 0.9976)));
+	gLink[UR5_Index::GRIPPER_FINGER_PROX_2].GetGeomInfo().SetFileName("../../../workspace/robot/ur5_3ds/prox_1.3ds");
+
+	gGripJoint[UR5_Index::GRIPJOINT_P_2]->SetActType(srJoint::HYBRID);
+	gGripJoint[UR5_Index::GRIPJOINT_P_2]->SetParentLink(&gLink[UR5_Index::GRIPPER_FINGER_PROX_2]);
+	gGripJoint[UR5_Index::GRIPJOINT_P_2]->SetChildLink(&gLink[UR5_Index::GRIPPER_FINGER_MED_2]);
+	gGripJoint[UR5_Index::GRIPJOINT_P_2]->SetParentLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.134, 0.062, 1.0345) + Vec3(0.022, -0.015, 0.0) + Vec3(0.0465, 0.033, 0.0)));
+	gGripJoint[UR5_Index::GRIPJOINT_P_2]->SetChildLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.134, 0.062, 1.0345) + Vec3(0.022, -0.015, 0.0) + Vec3(0.0465, 0.033, 0.0)));
+	gGripJoint[UR5_Index::GRIPJOINT_P_2]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gGripJoint[UR5_Index::GRIPJOINT_P_2]->MakePositionLimit(false);
+
+	gLink[UR5_Index::GRIPPER_FINGER_MED_2].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	gLink[UR5_Index::GRIPPER_FINGER_MED_2].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.073, 0.131, 0.9976)));
+	gLink[UR5_Index::GRIPPER_FINGER_MED_2].GetGeomInfo().SetFileName("../../../workspace/robot/ur5_3ds/med_1.3ds");
+
+	gGripJoint[UR5_Index::GRIPJOINT_M_2]->SetActType(srJoint::HYBRID);
+	gGripJoint[UR5_Index::GRIPJOINT_M_2]->SetParentLink(&gLink[UR5_Index::GRIPPER_FINGER_MED_2]);
+	gGripJoint[UR5_Index::GRIPJOINT_M_2]->SetChildLink(&gLink[UR5_Index::GRIPPER_FINGER_DIST_2]);
+	gGripJoint[UR5_Index::GRIPJOINT_M_2]->SetParentLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.134, 0.062, 1.0345) + Vec3(0.022, -0.015, 0.0) + Vec3(0.0465, 0.033, 0.0) + Vec3(0.0305, 0.0218, 0.0)));
+	gGripJoint[UR5_Index::GRIPJOINT_M_2]->SetChildLinkFrame(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(0.134, 0.062, 1.0345) + Vec3(0.022, -0.015, 0.0) + Vec3(0.0465, 0.033, 0.0) + Vec3(0.0305, 0.0218, 0.0)));
+	gGripJoint[UR5_Index::GRIPJOINT_M_2]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gGripJoint[UR5_Index::GRIPJOINT_M_2]->MakePositionLimit(false);
+
+	gLink[UR5_Index::GRIPPER_FINGER_DIST_2].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	gLink[UR5_Index::GRIPPER_FINGER_DIST_2].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.073, 0.1205, 0.9976)));
+	gLink[UR5_Index::GRIPPER_FINGER_DIST_2].GetGeomInfo().SetFileName("../../../workspace/robot/ur5_3ds/dist_1.3ds");
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_3]->SetActType(srJoint::HYBRID);
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_3]->SetParentLink(&gLink[UR5_Index::GRIPPER_PALM]);
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_3]->SetChildLink(&gLink[UR5_Index::GRIPPER_FINGER_BASE_3]);
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_3]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(0.134, -0.062, (0.9615+1.0345)/2)));
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_3]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(0.134, -0.062, 1.0345)));
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_3]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gGripJoint[UR5_Index::GRIPJOINT_Pal_3]->MakePositionLimit(false);
+
+	gLink[UR5_Index::GRIPPER_FINGER_BASE_3].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	gLink[UR5_Index::GRIPPER_FINGER_BASE_3].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.073, -0.0, 1.0176)));
+	gLink[UR5_Index::GRIPPER_FINGER_BASE_3].GetGeomInfo().SetFileName("../../../workspace/robot/ur5_3ds/base_3.3ds");
+
+	gGripJoint[UR5_Index::GRIPJOINT_B_3]->SetActType(srJoint::HYBRID);
+	gGripJoint[UR5_Index::GRIPJOINT_B_3]->SetParentLink(&gLink[UR5_Index::GRIPPER_FINGER_BASE_3]);
+	gGripJoint[UR5_Index::GRIPJOINT_B_3]->SetChildLink(&gLink[UR5_Index::GRIPPER_FINGER_PROX_3]);
+	gGripJoint[UR5_Index::GRIPJOINT_B_3]->SetParentLinkFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.134, -0.062, 1.0345) + Vec3(0.022, 0.015, 0.0)));
+	gGripJoint[UR5_Index::GRIPJOINT_B_3]->SetChildLinkFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.134, -0.062, 1.0345) + Vec3(0.022, 0.015, 0.0)));
+	gGripJoint[UR5_Index::GRIPJOINT_B_3]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gGripJoint[UR5_Index::GRIPJOINT_B_3]->MakePositionLimit(false);
+
+	gLink[UR5_Index::GRIPPER_FINGER_PROX_3].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	gLink[UR5_Index::GRIPPER_FINGER_PROX_3].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.073, -0.0, 1.0191)));
+	gLink[UR5_Index::GRIPPER_FINGER_PROX_3].GetGeomInfo().SetFileName("../../../workspace/robot/ur5_3ds/prox_3.3ds");
+
+	gGripJoint[UR5_Index::GRIPJOINT_P_3]->SetActType(srJoint::HYBRID);
+	gGripJoint[UR5_Index::GRIPJOINT_P_3]->SetParentLink(&gLink[UR5_Index::GRIPPER_FINGER_PROX_3]);
+	gGripJoint[UR5_Index::GRIPJOINT_P_3]->SetChildLink(&gLink[UR5_Index::GRIPPER_FINGER_MED_3]);
+	gGripJoint[UR5_Index::GRIPJOINT_P_3]->SetParentLinkFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.134, -0.062, 1.0345) + Vec3(0.022, 0.015, 0.0) + Vec3(0.0465, -0.033, 0.0)));
+	gGripJoint[UR5_Index::GRIPJOINT_P_3]->SetChildLinkFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.134, -0.062, 1.0345) + Vec3(0.022, 0.015, 0.0) + Vec3(0.0465, -0.033, 0.0)));
+	gGripJoint[UR5_Index::GRIPJOINT_P_3]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gGripJoint[UR5_Index::GRIPJOINT_P_3]->MakePositionLimit(false);
+
+	gLink[UR5_Index::GRIPPER_FINGER_MED_3].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	gLink[UR5_Index::GRIPPER_FINGER_MED_3].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.073, -0.0, 1.0191)));
+	gLink[UR5_Index::GRIPPER_FINGER_MED_3].GetGeomInfo().SetFileName("../../../workspace/robot/ur5_3ds/med_3.3ds");
+
+	gGripJoint[UR5_Index::GRIPJOINT_M_3]->SetActType(srJoint::HYBRID);
+	gGripJoint[UR5_Index::GRIPJOINT_M_3]->SetParentLink(&gLink[UR5_Index::GRIPPER_FINGER_MED_3]);
+	gGripJoint[UR5_Index::GRIPJOINT_M_3]->SetChildLink(&gLink[UR5_Index::GRIPPER_FINGER_DIST_3]);
+	gGripJoint[UR5_Index::GRIPJOINT_M_3]->SetParentLinkFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.134, -0.062, 1.0345) + Vec3(0.022, 0.015, 0.0) + Vec3(0.0465, -0.033, 0.0) + Vec3(0.0305, -0.0218, 0.0)));
+	gGripJoint[UR5_Index::GRIPJOINT_M_3]->SetChildLinkFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.134, -0.062, 1.0345) + Vec3(0.022, 0.015, 0.0) + Vec3(0.0465, -0.033, 0.0) + Vec3(0.0305, -0.0218, 0.0)));
+	gGripJoint[UR5_Index::GRIPJOINT_M_3]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
+	gGripJoint[UR5_Index::GRIPJOINT_M_3]->MakePositionLimit(false);
+
+	gLink[UR5_Index::GRIPPER_FINGER_DIST_3].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	gLink[UR5_Index::GRIPPER_FINGER_DIST_3].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, 0.0), Vec3(0.073, -0.0, 1.0191)));
+	gLink[UR5_Index::GRIPPER_FINGER_DIST_3].GetGeomInfo().SetFileName("../../../workspace/robot/ur5_3ds/dist_3.3ds");
+
+
+
+#endif
+																															// marker links
 	gMarkerLink[UR5_Index::MLINK_GRIP].GetGeomInfo().SetDimension(Vec3(0.00, 0.00, 0.00));
 	gMarkerLink[UR5_Index::MLINK_GRIP].GetGeomInfo().SetColor(0.1f, 0.1f, 0.1f);
 	gMarkerLink[UR5_Index::MLINK_GRIP].SetInertia(Inertia(0.001));
 	
+
+	gWeldJoint[UR5_Index::WELDJOINT_GRIP_MARKER]->SetActType(srJoint::PASSIVE);
+	gWeldJoint[UR5_Index::WELDJOINT_GRIP_MARKER]->SetParentLink(&gLink[UR5_Index::ENDEFFECTOR]);
+	gWeldJoint[UR5_Index::WELDJOINT_GRIP_MARKER]->SetChildLink(&gMarkerLink[UR5_Index::MLINK_GRIP]);
+	gWeldJoint[UR5_Index::WELDJOINT_GRIP_MARKER]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	//gWeldJoint[UR5_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(1.036, 0.0, 1.264)));
+	gWeldJoint[UR5_Index::WELDJOINT_GRIP_MARKER]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-(0.134 - 0.119 + 0.09475 + 0.0815 + 0.143), 0.0, -(0.0862 + 0.425 + 0.392 + 0.09475))));
 
 	this->SetBaseLink(&gLink[UR5_Index::LINK_1]);
 	this->SetBaseLinkType(srSystem::FIXED);
@@ -312,7 +499,7 @@ void UR5Robot::AssembleCollision()
 	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.08, 0.02, 0.0));
 	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(0.09 + (0.14 + 0.02) / 2.0, 0.0, (0.0862 + 0.425 + 0.392 + 0.09475))));
 
-
+#ifndef _3_Finger
 	gLink[UR5_Index::GRIPPER].AddCollision(&gCollision[m_numCollision]);
 	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::CYLINDER);
 	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.085, 0.12, 0.0));
@@ -330,6 +517,28 @@ void UR5Robot::AssembleCollision()
 	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.03, 0.1, 0.028));
 	//gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-1.019, 1.269, 0.0087)));
 	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-(0.0862 + 0.425 + 0.392 + 0.09475) - (0.085 + 0.026 + 0.01) / 2.0, 0.205 + (0.14 + 0.02) / 2.0, 0.0)));
+#else
+	gLink[UR5_Index::GRIPPER_PALM].AddCollision(&gCollision[m_numCollision]);
+	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.11, 0.14, 0.16));
+	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.123, 0.0, 1.002)));
+
+	gLink[UR5_Index::GRIPPER_FINGER_DIST_1].AddCollision(&gCollision[m_numCollision]);
+	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.03, 0.02, 0.035));
+	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.253, 0.1025, 0.9620)));
+
+	gLink[UR5_Index::GRIPPER_FINGER_DIST_2].AddCollision(&gCollision[m_numCollision]);
+	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.03, 0.02, 0.035));
+	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.253, 0.1025, 0.9620 + 0.0726)));
+
+	gLink[UR5_Index::GRIPPER_FINGER_DIST_3].AddCollision(&gCollision[m_numCollision]);
+	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.03, 0.02, 0.035));
+	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.253, -0.1005 , 0.9620 + 0.0726)));
+#endif
+
 	
 }
 
