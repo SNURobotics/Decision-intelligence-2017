@@ -16,7 +16,8 @@ SDA20D* sdaRobot = new SDA20D;
 SDA20DManager* rManager1;
 SDA20DManager* rManager2;
 Bin* bin = new Bin(0.01);
-
+BoxForTape* boxfortape = new BoxForTape();
+Tape* tape = new Tape();
 Eigen::VectorXd qval;
 
 srSpace gSpace;
@@ -49,8 +50,9 @@ int main(int argc, char **argv)
 	obs->SetBaseLink(ee);
 	obs->SetBaseLinkType(srSystem::FIXED);
 	//gSpace.AddSystem(obs);
-	//gSpace.AddSystem(bin);
-
+	//Space.AddSystem(bin);
+	gSpace.AddSystem(boxfortape);
+	gSpace.AddSystem(tape);
 	initDynamics();
 	int excludeNum = 2;
 	sdaRobotManagerSetting(SDA20DManager::MoveRightArmOnly, excludeNum);
@@ -99,6 +101,8 @@ int main(int argc, char **argv)
 	////rManager1->setJointVal(qval);
 	//obs->GetBaseLink()->SetFrame(sdaRobot->gMarkerLink[SDA20D_Index::MLINK_RIGHT_T].GetFrame());
 	//bin->setBaseLinkFrame(SE3(Vec3(1.0, 0.0, 0.0)));
+	boxfortape->setBaseLinkFrame(SE3(Vec3(1.0, 0.0, 0.0)));
+	tape->setBaseLinkFrame(SE3(Vec3(1.0, 0.2, 0.0)));
 	//if (RRTManager->isExecuted())
 	//{
 	//	traj = RRTManager->extractPath();
