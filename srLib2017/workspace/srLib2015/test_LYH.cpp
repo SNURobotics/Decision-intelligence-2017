@@ -36,7 +36,7 @@ void URrobotManagerSetting();
 void URrrtSetting();
 void tempObjectSetting();
 
-BoxForTape* boxfortape = new BoxForTape(0.01);
+BoxForTape* boxfortape = new BoxForTape();
 
 Eigen::VectorXd qval;
 
@@ -46,6 +46,7 @@ Eigen::VectorXd point2;
 Eigen::VectorXd point3;
 vector<Eigen::VectorXd> ur5traj(0);
 vector<SE3> objTraj(0);
+vector<SE3> boxfortapeTraj(0);
 vector<Eigen::VectorXd> tempTraj(0);
 srLink* ee = new srLink;
 srSystem* obs = new srSystem;
@@ -93,6 +94,7 @@ int main(int argc, char **argv)
 	{
 		ur5RRTManager->setState(ur5traj[i]);
 		objTraj.push_back(obs->GetBaseLink()->GetFrame());
+		boxfortapeTraj.push_back(boxfortape->GetBaseLink()->GetFrame());
 	}
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
 	////////////////////////////////////////////////////////////
@@ -100,6 +102,7 @@ int main(int argc, char **argv)
 	///////////////// RRT planning for UR5 with object attached (point1 -> point2) ///////////////
 	start = clock();
 	point2 = Eigen::VectorXd::Ones(6);
+	ur5RRTManager->attachObject(static_cast<srSystem*>(boxfortape), &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());
 	ur5RRTManager->attachObject(obs, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());		// attaching object occurs here
 	ur5RRTManager->setStartandGoal(point1, point2);
 	ur5RRTManager->execute(0.1);
@@ -110,6 +113,7 @@ int main(int argc, char **argv)
 	{
 		ur5RRTManager->setState(tempTraj[i]);
 		objTraj.push_back(obs->GetBaseLink()->GetFrame());
+		boxfortapeTraj.push_back(boxfortape->GetBaseLink()->GetFrame());
 	}
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
 	///////////////////////////////////////////////////////////////////////////
@@ -129,6 +133,7 @@ int main(int argc, char **argv)
 	{
 		ur5RRTManager->setState(tempTraj[i]);
 		objTraj.push_back(obs->GetBaseLink()->GetFrame());
+		boxfortapeTraj.push_back(boxfortape->GetBaseLink()->GetFrame());
 	}
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
 	/////////////////////////////////////////////////////////////////////////////

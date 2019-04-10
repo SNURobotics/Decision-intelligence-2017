@@ -284,7 +284,7 @@ void FixedContact::AssembleModel()
 	this->SetSelfCollision(false);
 	//this->SetBaseLink(&m_ObjLink[m_numLink]);
 	this->SetBaseLink(&m_ObjLink[0]);
-	this->SetBaseLinkType(srSystem::KINEMATIC);
+	this->SetBaseLinkType(srSystem::FIXED);
 }
 
 BoxForTape::BoxForTape()
@@ -347,7 +347,7 @@ void BoxForTape::AssembleModel()
 
 	this->SetSelfCollision(false);
 	this->SetBaseLink(&m_ObjLink[0]);
-	this->SetBaseLinkType(srSystem::KINEMATIC);
+	this->SetBaseLinkType(srSystem::FIXED);
 
 }
 
