@@ -287,6 +287,7 @@ void FixedContact::AssembleModel()
 	this->SetBaseLinkType(srSystem::KINEMATIC);
 }
 
+<<<<<<< HEAD
 HDMI::HDMI(double collision_offset /*= 0.01*/)
 {
 	m_collision_offset = collision_offset;
@@ -302,11 +303,9 @@ void HDMI::AssembleModel()
 	m_numLink = 1;
 	m_numCollision = 2;
 	m_numWeldJoint = 0;
-}
-
-BoxForTape::BoxForTape(double collision_offset /*= 0.01*/)
+=======
+BoxForTape::BoxForTape()
 {
-	m_collision_offset = collision_offset;
 	AssembleModel();
 }
 
@@ -320,18 +319,22 @@ void BoxForTape::AssembleModel()
 	m_numWeldJoint = 0;
 	m_numCollision = 3;
 
-
+>>>>>>> 9610fa14d5572e87d4997384630d714407ecac82
 	for (int i = 0; i < m_numLink; i++)
 	{
 		srLink* temp = new srLink;
 		m_ObjLink.push_back(*temp);
 	}
+<<<<<<< HEAD
 
+=======
+>>>>>>> 9610fa14d5572e87d4997384630d714407ecac82
 	for (int i = 0; i < m_numCollision; i++)
 	{
 		srCollision* temp = new srCollision;
 		m_ObjCollision.push_back(*temp);
 	}
+<<<<<<< HEAD
 
 	for (int i = 0; i < m_numLink; i++)
 	{
@@ -437,7 +440,7 @@ void Soldering::AssembleModel()
 	m_numLink = 1;
 	m_numCollision = 5;
 	m_numWeldJoint = 0;
-
+=======
 	for (int i = 0; i < m_numWeldJoint; i++)
 	{
 		srWeldJoint* temp = new srWeldJoint;
@@ -477,9 +480,8 @@ void Soldering::AssembleModel()
 
 }
 
-Tape::Tape(double collision_offset /*= 0.01*/)
+Tape::Tape()
 {
-	m_collision_offset = collision_offset;
 	AssembleModel();
 }
 
@@ -493,17 +495,22 @@ void Tape::AssembleModel()
 	m_numWeldJoint = 2;
 	m_numCollision = 5;
 
+>>>>>>> 9610fa14d5572e87d4997384630d714407ecac82
 	for (int i = 0; i < m_numLink; i++)
 	{
 		srLink* temp = new srLink;
 		m_ObjLink.push_back(*temp);
 	}
+<<<<<<< HEAD
 
+=======
+>>>>>>> 9610fa14d5572e87d4997384630d714407ecac82
 	for (int i = 0; i < m_numCollision; i++)
 	{
 		srCollision* temp = new srCollision;
 		m_ObjCollision.push_back(*temp);
 	}
+<<<<<<< HEAD
 
 	for (int i = 0; i < m_numLink; i++)
 	{
@@ -627,7 +634,7 @@ void Settop::AssembleModel()
 	this->SetBaseLink(&m_ObjLink[0]);
 	this->SetBaseLinkType(srSystem::KINEMATIC);
 	this->SetSelfCollision(false);
-
+=======
 	for (int i = 0; i < m_numWeldJoint; i++)
 	{
 		srWeldJoint* temp = new srWeldJoint;
@@ -701,5 +708,6 @@ void Settop::AssembleModel()
 	this->SetSelfCollision(false);
 	this->SetBaseLink(&m_ObjLink[0]);
 	this->SetBaseLinkType(srSystem::KINEMATIC);
+>>>>>>> 9610fa14d5572e87d4997384630d714407ecac82
 
 }

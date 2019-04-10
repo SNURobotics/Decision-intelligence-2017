@@ -62,3 +62,21 @@ public:
 	void AssembleModel();
 	double m_collision_offset;
 };
+
+class BoxForTape : public Object
+{
+public:
+	BoxForTape(double collision_offset = 0.0);
+	~BoxForTape();
+	void AssembleModel();
+	double m_collision_offset;
+};
+
+class Tape : public Object
+{
+public:
+	Tape(double collision_offset = 0.0);
+	~Tape();
+	void AssembleModel();
+	double m_collision_offset;
+};

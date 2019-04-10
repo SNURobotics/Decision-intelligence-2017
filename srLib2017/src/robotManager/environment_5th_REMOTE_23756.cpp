@@ -287,26 +287,8 @@ void FixedContact::AssembleModel()
 	this->SetBaseLinkType(srSystem::KINEMATIC);
 }
 
-HDMI::HDMI(double collision_offset /*= 0.01*/)
+BoxForTape::BoxForTape()
 {
-	m_collision_offset = collision_offset;
-	AssembleModel();
-}
-
-HDMI::~HDMI()
-{
-}
-
-void HDMI::AssembleModel()
-{
-	m_numLink = 1;
-	m_numCollision = 2;
-	m_numWeldJoint = 0;
-}
-
-BoxForTape::BoxForTape(double collision_offset /*= 0.01*/)
-{
-	m_collision_offset = collision_offset;
 	AssembleModel();
 }
 
@@ -320,124 +302,16 @@ void BoxForTape::AssembleModel()
 	m_numWeldJoint = 0;
 	m_numCollision = 3;
 
-
 	for (int i = 0; i < m_numLink; i++)
 	{
 		srLink* temp = new srLink;
 		m_ObjLink.push_back(*temp);
 	}
-
 	for (int i = 0; i < m_numCollision; i++)
 	{
 		srCollision* temp = new srCollision;
 		m_ObjCollision.push_back(*temp);
 	}
-
-	for (int i = 0; i < m_numLink; i++)
-	{
-		m_ObjLink[i].GetGeomInfo().SetColor(0.09, 0.09, 0.09);
-		m_ObjLink[i].GetGeomInfo().SetDimension(0.0);
-		m_ObjLink[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	}
-	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/HDMI_Power_Set top box_Soldering iron/HDMI.3ds");
-	m_ObjLink[0].GetGeomInfo().SetLocalFrame(SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0))));
-
-
-	Vec3 colli_offset(m_collision_offset);
-	Vec3 dim0(0.035, 0.0178, 0.01);	// base part
-	Vec3 dim1(0.009, 0.014, 0.004);	// tip
-
-	m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[0].GetGeomInfo().SetDimension(dim0 + colli_offset);
-	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.0)));
-	m_ObjLink[0].AddCollision(&m_ObjCollision[0]);
-
-	m_ObjCollision[1].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[1].GetGeomInfo().SetDimension(dim1 + colli_offset);
-	m_ObjCollision[1].SetLocalFrame(SE3(Vec3(0.022, 0.0, 0.0)));
-	m_ObjLink[0].AddCollision(&m_ObjCollision[1]);
-
-	this->SetBaseLink(&m_ObjLink[0]);
-	this->SetBaseLinkType(srSystem::KINEMATIC);
-	this->SetSelfCollision(false);
-
-}
-
-Power::Power(double collision_offset /*= 0.01*/)
-{
-	m_collision_offset = collision_offset;
-	AssembleModel();
-}
-
-Power::~Power()
-{
-}
-
-void Power::AssembleModel()
-{
-	m_numLink = 1;
-	m_numCollision = 2;
-	m_numWeldJoint = 0;
-	for (int i = 0; i < m_numLink; i++)
-	{
-		srLink* temp = new srLink;
-		m_ObjLink.push_back(*temp);
-	}
-
-	for (int i = 0; i < m_numCollision; i++)
-	{
-		srCollision* temp = new srCollision;
-		m_ObjCollision.push_back(*temp);
-	}
-
-	for (int i = 0; i < m_numLink; i++)
-	{
-		m_ObjLink[i].GetGeomInfo().SetColor(0.09, 0.09, 0.09);
-		m_ObjLink[i].GetGeomInfo().SetDimension(0.0);
-		m_ObjLink[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	}
-	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/HDMI_Power_Set top box_Soldering iron/Power cable real.3ds");
-	m_ObjLink[0].GetGeomInfo().SetLocalFrame(SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0))));
-
-
-	Vec3 colli_offset(m_collision_offset);
-	Vec3 dim0(0.02, 0.014, 0.008);	// base part
-	Vec3 dim1(0.006, 0.007, 0.0015);	// tip
-
-	m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[0].GetGeomInfo().SetDimension(dim0 + colli_offset);
-	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.0)));
-	m_ObjLink[0].AddCollision(&m_ObjCollision[0]);
-
-	m_ObjCollision[1].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[1].GetGeomInfo().SetDimension(dim1 + colli_offset);
-	m_ObjCollision[1].SetLocalFrame(SE3(Vec3(0.013, 0.0, -0.00005)));
-	m_ObjLink[0].AddCollision(&m_ObjCollision[1]);
-
-	this->SetBaseLink(&m_ObjLink[0]);
-	this->SetBaseLinkType(srSystem::KINEMATIC);
-	this->SetSelfCollision(false);
-
-}
-
-Soldering::Soldering(double collision_offset /*= 0.01*/)
-{
-	m_collision_offset = collision_offset;
-	AssembleModel();
-}
-
-Soldering::~Soldering()
-{
-}
-
-void Soldering::AssembleModel()
-{
-	m_numLink = 1;
-	m_numCollision = 5;
-	m_numWeldJoint = 0;
-
 	for (int i = 0; i < m_numWeldJoint; i++)
 	{
 		srWeldJoint* temp = new srWeldJoint;
@@ -477,9 +351,8 @@ void Soldering::AssembleModel()
 
 }
 
-Tape::Tape(double collision_offset /*= 0.01*/)
+Tape::Tape()
 {
-	m_collision_offset = collision_offset;
 	AssembleModel();
 }
 
@@ -498,136 +371,11 @@ void Tape::AssembleModel()
 		srLink* temp = new srLink;
 		m_ObjLink.push_back(*temp);
 	}
-
 	for (int i = 0; i < m_numCollision; i++)
 	{
 		srCollision* temp = new srCollision;
 		m_ObjCollision.push_back(*temp);
 	}
-
-	for (int i = 0; i < m_numLink; i++)
-	{
-		m_ObjLink[i].GetGeomInfo().SetColor(0.09, 0.09, 0.09);
-		m_ObjLink[i].GetGeomInfo().SetDimension(0.0);
-		m_ObjLink[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	}
-	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/HDMI_Power_Set top box_Soldering iron/soldering iron.3ds");
-	m_ObjLink[0].GetGeomInfo().SetLocalFrame(SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0))));
-
-
-	Vec3 colli_offset(m_collision_offset);
-	Vec3 dim0(0.08, 0.03, 0.03);	// base part
-	Vec3 dim1(0.02, 0.04, 0.04);	// base part2
-	Vec3 dim2(0.05, 0.02, 0.02);	// base part3
-	Vec3 dim3(0.02, 0.012, 0.012);	// tip
-	Vec3 dim4(0.08, 0.008, 0.008);	// injector
-	// Vec3 dim5(0.086, 0.002, 0.002);	// injector tube
-
-
-	m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[0].GetGeomInfo().SetDimension(dim0 + colli_offset);
-	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.0)));
-	m_ObjLink[0].AddCollision(&m_ObjCollision[0]);
-
-	m_ObjCollision[1].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[1].GetGeomInfo().SetDimension(dim1 + colli_offset);
-	m_ObjCollision[1].SetLocalFrame(SE3(Vec3(0.05, 0.0, 0.0)));
-	m_ObjLink[0].AddCollision(&m_ObjCollision[1]);
-
-	m_ObjCollision[2].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[2].GetGeomInfo().SetDimension(dim2 + colli_offset);
-	m_ObjCollision[2].SetLocalFrame(SE3(Vec3(0.085, 0.0, 0.0)));
-	m_ObjLink[0].AddCollision(&m_ObjCollision[2]);
-
-	m_ObjCollision[3].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[3].GetGeomInfo().SetDimension(dim3 + colli_offset);
-	m_ObjCollision[3].SetLocalFrame(SE3(Vec3(0.12, 0.0, 0.0)));
-	m_ObjLink[0].AddCollision(&m_ObjCollision[3]);
-
-	m_ObjCollision[4].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[4].GetGeomInfo().SetDimension(dim4 + colli_offset);
-	m_ObjCollision[4].SetLocalFrame(SE3(Vec3(0.0, -0.026, 0.0)));
-	m_ObjLink[0].AddCollision(&m_ObjCollision[4]);
-
-	//m_ObjCollision[5].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	//m_ObjCollision[5].GetGeomInfo().SetDimension(dim5 + colli_offset);
-	//m_ObjCollision[5].SetLocalFrame(SE3(Vec3(0.082, -0.013, 0.0)));
-	//m_ObjLink[0].AddCollision(&m_ObjCollision[5]);
-
-	this->SetBaseLink(&m_ObjLink[0]);
-	this->SetBaseLinkType(srSystem::KINEMATIC);
-	this->SetSelfCollision(false);
-
-}
-
-Settop::Settop(double collision_offset /*= 0.01*/)
-{
-	m_collision_offset = collision_offset;
-	AssembleModel();
-}
-
-Settop::~Settop()
-{
-}
-
-void Settop::AssembleModel()
-{
-	m_numLink = 1;
-	m_numCollision = 9;
-	m_numWeldJoint = 0;
-	for (int i = 0; i < m_numLink; i++)
-	{
-		srLink* temp = new srLink;
-		m_ObjLink.push_back(*temp);
-	}
-
-	for (int i = 0; i < m_numCollision; i++)
-	{
-		srCollision* temp = new srCollision;
-		m_ObjCollision.push_back(*temp);
-	}
-
-	for (int i = 0; i < m_numLink; i++)
-	{
-		m_ObjLink[i].GetGeomInfo().SetColor(0.09, 0.09, 0.09);
-		m_ObjLink[i].GetGeomInfo().SetDimension(0.0);
-		m_ObjLink[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	}
-	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/HDMI_Power_Set top box_Soldering iron/set top box.3ds");
-	m_ObjLink[0].GetGeomInfo().SetLocalFrame(SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0))));
-
-
-	Vec3 colli_offset(m_collision_offset);
-	Vec3 dim0(0.085, 0.094, 0.02);	// base part
-
-	vector<pair<Vec3, SE3>> hole1GeomInfo = makeRectangleHole(SE3(Vec3(0.0425, -0.0235, 0.0)), Vec3(0.009, 0.047, 0.02), Vec3(0.0, 0.0035, 0.0), Vec3(0.009, 0.014, 0.004)); //HDMI hole
-	for (unsigned int i = 0; i < hole1GeomInfo.size(); i++)
-	{
-		m_ObjCollision[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-		m_ObjCollision[i].GetGeomInfo().SetDimension(hole1GeomInfo[i].first);
-		m_ObjCollision[i].SetLocalFrame(hole1GeomInfo[i].second);
-		m_ObjLink[0].AddCollision(&m_ObjCollision[i]);
-	}
-	vector<pair<Vec3, SE3>> hole2GeomInfo = makeRectangleHole(SE3(Vec3(0.0425, 0.0235, 0.0)), Vec3(0.009, 0.047, 0.02), Vec3(0.0015, -0.0065, -0.00005), Vec3(0.006, 0.007, 0.0015)); //Power hole
-	for (unsigned int i = 4; i < hole2GeomInfo.size(); i++)
-	{
-		m_ObjCollision[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-		m_ObjCollision[i].GetGeomInfo().SetDimension(hole2GeomInfo[i].first);
-		m_ObjCollision[i].SetLocalFrame(hole2GeomInfo[i].second);
-		m_ObjLink[0].AddCollision(&m_ObjCollision[i]);
-	}
-
-	m_ObjCollision[8].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[8].GetGeomInfo().SetDimension(dim0 + colli_offset);
-	m_ObjCollision[8].SetLocalFrame(SE3(Vec3(-0.000045, 0.0, 0.0)));
-	m_ObjLink[0].AddCollision(&m_ObjCollision[8]);
-
-	this->SetBaseLink(&m_ObjLink[0]);
-	this->SetBaseLinkType(srSystem::KINEMATIC);
-	this->SetSelfCollision(false);
-
 	for (int i = 0; i < m_numWeldJoint; i++)
 	{
 		srWeldJoint* temp = new srWeldJoint;
