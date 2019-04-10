@@ -66,7 +66,7 @@ public:
 class BoxForTape : public Object
 {
 public:
-	BoxForTape(double collision_offset = 0.01);
+	BoxForTape(double collision_offset =0.01);
 	~BoxForTape();
 	void AssembleModel();
 	double m_collision_offset;

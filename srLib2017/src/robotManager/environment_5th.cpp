@@ -288,7 +288,7 @@ void FixedContact::AssembleModel()
 }
 
 
-HDMI::HDMI(double collision_offset = 0.01)
+HDMI::HDMI(double collision_offset /*= 0.01*/)
 {
 	m_collision_offset = collision_offset;
 	AssembleModel();
@@ -305,7 +305,7 @@ void HDMI::AssembleModel()
 	m_numWeldJoint = 0;
 }
 
-BoxForTape::BoxForTape(double collision_offset= 0.01)
+BoxForTape::BoxForTape(double collision_offset /*= 0.01*/ )
 {
 	m_collision_offset = collision_offset;
 	AssembleModel();
@@ -479,7 +479,7 @@ void Soldering::AssembleModel()
 }
 
 
-Tape::Tape(double collision_offset = 0.01)
+Tape::Tape(double collision_offset /*= 0.01*/)
 {
 	m_collision_offset = collision_offset;
 	AssembleModel();
