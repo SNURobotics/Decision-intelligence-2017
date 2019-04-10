@@ -287,7 +287,7 @@ void FixedContact::AssembleModel()
 	this->SetBaseLinkType(srSystem::FIXED);
 }
 
-BoxForTape::BoxForTape()
+BoxForTape::BoxForTape(double collision_offset = 0.01)
 {
 	AssembleModel();
 }
@@ -351,7 +351,7 @@ void BoxForTape::AssembleModel()
 
 }
 
-Tape::Tape()
+Tape::Tape(double collision_offset = 0.01)
 {
 	AssembleModel();
 }

@@ -36,7 +36,7 @@ void URrobotManagerSetting();
 void URrrtSetting();
 void tempObjectSetting();
 
-BoxForTape* boxfortape = new BoxForTape();
+BoxForTape* boxfortape = new BoxForTape(0.01);
 
 Eigen::VectorXd qval;
 

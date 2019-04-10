@@ -30,15 +30,17 @@ public:
 class BoxForTape : public Object
 {
 public:
-	BoxForTape();
+	BoxForTape(double collision_offset = 0.01);
 	~BoxForTape();
 	void AssembleModel();
+	double m_collision_offset;
 };
 
 class Tape : public Object
 {
 public:
-	Tape();
+	Tape(double collision_offset = 0.01);
 	~Tape();
 	void AssembleModel();
+	double m_collision_offset;
 };
