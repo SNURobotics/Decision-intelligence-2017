@@ -9,6 +9,7 @@
 #include "robotManager\UR3Robot.h"
 #include "robotManager\UR5RobotManager.h"
 #include "robotManager\UR5Robot.h"
+#include "robotManager\environment_5th.h"
 #include <time.h>
 #include "robotManager\robotRRTManager.h"
 
@@ -22,6 +23,13 @@ UR5Robot* ur5 = new UR5Robot;
 UR5RobotManager* ur5Manager;
 robotRRTManager* ur3RRTManager = new robotRRTManager;
 robotRRTManager* ur5RRTManager = new robotRRTManager;
+
+HDMI* hdmi = new HDMI();
+Power* power = new Power();
+Settop* settop = new Settop();
+Soldering* soldering = new Soldering();
+PCB* pcb = new PCB();
+PCBJig* pcbjig = new PCBJig();
 
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::TORQUE;
 SE3 T_ur3base;
@@ -53,7 +61,12 @@ int main(int argc, char **argv)
 	// robot, object, environment settings should come before initDynamics()
     URrobotSetting();
 	tempObjectSetting();
-	
+	gSpace.AddSystem(hdmi);
+	gSpace.AddSystem(power);
+	gSpace.AddSystem(settop);
+	gSpace.AddSystem(soldering);
+	gSpace.AddSystem(pcb);
+	gSpace.AddSystem(pcbjig);
 	initDynamics();
 
 	// robotManager setting should come after initDynamics()
@@ -70,7 +83,15 @@ int main(int argc, char **argv)
 	URrrtSetting();
 	
 	// place object in space
-	obs->GetBaseLink()->SetFrame(SE3(Vec3(-0.5, 0.5, 0.5)));
+	obs->GetBaseLink()->SetFrame(EulerXYZ(Vec3(0, 0, -SR_PI / 2), Vec3(-0.5, -0.8, 0.12)));
+	cout << ur5Manager->forwardKin(qval, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP]) << endl;
+
+	hdmi->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI / 2), Vec3(-0.2, -0.5, 0)));
+	power->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI / 2), Vec3(-0.3, -0.5, 0)));
+	settop->setBaseLinkFrame(SE3(Vec3(-0.5, -0.3, 0)));
+	soldering->setBaseLinkFrame(EulerXYZ(Vec3(0, SR_PI / 2, 0), Vec3(-0.5, -0.8, 0.12)));
+	pcb->setBaseLinkFrame(EulerXYZ(Vec3(0, SR_PI / 2, 0), Vec3(-0.2, 0.5, 0)));
+	pcbjig->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), Vec3(-2, -0.5, 0.31)));
 
 	/////////////// RRT planning to reach object (point0 -> point1) ///////////////
 	clock_t start = clock();
@@ -124,7 +145,7 @@ int main(int argc, char **argv)
 		objTraj.push_back(obs->GetBaseLink()->GetFrame());
 	}
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
-	/////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////
 
 	rendering(argc, argv);
 
@@ -166,8 +187,12 @@ void updateFunc()
 		trajcnt++;
 	
 	// plot planned trajectory
-	ur5Manager->setJointVal(ur5traj[trajcnt % ur5traj.size()]);
-	obs->GetBaseLink()->SetFrame(objTraj[trajcnt % ur5traj.size()]);
+	if (ur5traj.size() > 0)
+	{
+		ur5Manager->setJointVal(ur5traj[trajcnt % ur5traj.size()]);
+		obs->GetBaseLink()->SetFrame(objTraj[trajcnt % ur5traj.size()]);
+	}
+	
 	
 }
 
