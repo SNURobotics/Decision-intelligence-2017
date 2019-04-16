@@ -321,7 +321,7 @@ void HDMI::AssembleModel()
 		m_ObjLink[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	}
 	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/HDMI_Power_Settopbox_Solderingiron/HDMI.3ds");
+	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/objects_3ds/HDMI.3ds");
 	m_ObjLink[0].GetGeomInfo().SetLocalFrame(SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0))));
 
 
@@ -379,7 +379,7 @@ void Power::AssembleModel()
 		m_ObjLink[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	}
 	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/HDMI_Power_Settopbox_Solderingiron/Power cable real.3ds");
+	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/objects_3ds/Power cable real.3ds");
 	m_ObjLink[0].GetGeomInfo().SetLocalFrame(SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0))));
 
 
@@ -439,7 +439,7 @@ void Settop::AssembleModel()
 		m_ObjLink[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	}
 	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/HDMI_Power_Settopbox_Solderingiron/set top box.3ds");
+	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/objects_3ds/set top box.3ds");
 	m_ObjLink[0].GetGeomInfo().SetLocalFrame(SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0))));
 
 
@@ -508,7 +508,7 @@ void PCB::AssembleModel()
 		m_ObjLink[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	}
 	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/HDMI_Power_Settopbox_Solderingiron/PCB.3ds");
+	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/objects_3ds/PCB.3ds");
 	m_ObjLink[0].GetGeomInfo().SetLocalFrame(SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0))));
 
 
@@ -561,7 +561,7 @@ void PCBJig::AssembleModel()
 		m_ObjLink[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	}
 	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/HDMI_Power_Settopbox_Solderingiron/Jig.3ds");
+	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/objects_3ds/Jig.3ds");
 	m_ObjLink[0].GetGeomInfo().SetLocalFrame(SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0))));
 
 
@@ -614,8 +614,179 @@ void Soldering::AssembleModel()
 		m_ObjLink[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	}
 	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/HDMI_Power_Settopbox_Solderingiron/soldering iron.3ds");
+	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/objects_3ds/soldering iron.3ds");
 	m_ObjLink[0].GetGeomInfo().SetLocalFrame(SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0))));
+
+
+	Vec3 colli_offset(m_collision_offset);
+	Vec3 dim0(0.08, 0.03, 0.03);	// base part
+	Vec3 dim1(0.02, 0.04, 0.04);	// base part2
+	Vec3 dim2(0.05, 0.02, 0.02);	// base part3
+	Vec3 dim3(0.02, 0.012, 0.012);	// tip
+	Vec3 dim4(0.08, 0.008, 0.008);	// injector
+	// Vec3 dim5(0.086, 0.002, 0.002);	// injector tube
+
+
+	/*m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[0].GetGeomInfo().SetDimension(dim0 + colli_offset);
+	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.0)));
+	m_ObjLink[0].AddCollision(&m_ObjCollision[0]);
+
+	m_ObjCollision[1].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[1].GetGeomInfo().SetDimension(dim1 + colli_offset);
+	m_ObjCollision[1].SetLocalFrame(SE3(Vec3(0.05, 0.0, 0.0)));
+	m_ObjLink[0].AddCollision(&m_ObjCollision[1]);
+
+	m_ObjCollision[2].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[2].GetGeomInfo().SetDimension(dim2 + colli_offset);
+	m_ObjCollision[2].SetLocalFrame(SE3(Vec3(0.085, 0.0, 0.0)));
+	m_ObjLink[0].AddCollision(&m_ObjCollision[2]);
+
+	m_ObjCollision[3].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[3].GetGeomInfo().SetDimension(dim3 + colli_offset);
+	m_ObjCollision[3].SetLocalFrame(SE3(Vec3(0.12, 0.0, 0.0)));
+	m_ObjLink[0].AddCollision(&m_ObjCollision[3]);
+
+	m_ObjCollision[4].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[4].GetGeomInfo().SetDimension(dim4 + colli_offset);
+	m_ObjCollision[4].SetLocalFrame(SE3(Vec3(0.0, -0.026, 0.0)));
+	m_ObjLink[0].AddCollision(&m_ObjCollision[4]);*/
+
+	//m_ObjCollision[5].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	//m_ObjCollision[5].GetGeomInfo().SetDimension(dim5 + colli_offset);
+	//m_ObjCollision[5].SetLocalFrame(SE3(Vec3(0.082, -0.013, 0.0)));
+	//m_ObjLink[0].AddCollision(&m_ObjCollision[5]);
+
+	this->SetBaseLink(&m_ObjLink[0]);
+	this->SetBaseLinkType(srSystem::KINEMATIC);
+	this->SetSelfCollision(false);
+
+}
+
+BoxForTape::BoxForTape(double collision_offset /*= 0.01*/)
+{
+	m_collision_offset = collision_offset;
+	AssembleModel();
+}
+
+BoxForTape::~BoxForTape()
+{
+}
+
+void BoxForTape::AssembleModel()
+{
+	m_numLink = 1;
+	m_numWeldJoint = 0;
+	m_numCollision = 3;
+
+	for (int i = 0; i < m_numLink; i++)
+	{
+		srLink* temp = new srLink;
+		m_ObjLink.push_back(*temp);
+	}
+	for (int i = 0; i < m_numCollision; i++)
+	{
+		srCollision* temp = new srCollision;
+		m_ObjCollision.push_back(*temp);
+	}
+	for (int i = 0; i < m_numWeldJoint; i++)
+	{
+		srWeldJoint* temp = new srWeldJoint;
+		m_ObjWeldJoint.push_back(*temp);
+	}
+
+	m_ObjLink[0].GetGeomInfo().SetColor(0.3, 0.4, 0.3);
+
+	m_ObjLink[0].SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+
+		//m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF), Vec3(-0.01675, 0.0, -0.004)));
+		//m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.10007, 0.09307, 0.0888)));
+	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0))); // SetLocalFrame --> Orientation: SolidworkssrLib에서 solidworks로 가는 SO3, Position: srLib frame의 orientation 기준으로 원점 이동하고 싶은 만큼 입력
+	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/objects_3ds/BoxForTape.3ds");
+
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[0]);
+	m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[0].GetGeomInfo().SetDimension(Vec3(0.06, 0.03, 0.02));
+	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.0)));
+
+	
+	Vec3 colli_offset(m_collision_offset);
+	Vec3 dim0(0.3, 0.3, 0.32);	// base part
+
+
+	m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[0].GetGeomInfo().SetDimension(dim0 + colli_offset);
+	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(0.0, 0.0, -0.16)));
+	m_ObjLink[0].AddCollision(&m_ObjCollision[0]);
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[1]);
+	m_ObjCollision[1].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[1].GetGeomInfo().SetDimension(Vec3(0.002, 0.002, 0.03));
+	//m_ObjCollision[1].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.060 / 2.0)));
+	m_ObjCollision[1].SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.02, 0.0, 0.025)));
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[2]);
+	m_ObjCollision[2].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[2].GetGeomInfo().SetDimension(Vec3(0.002, 0.002, 0.03));
+	//m_ObjCollision[1].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.060 / 2.0)));
+	m_ObjCollision[2].SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.02, 0.0, 0.025)));
+
+	this->SetSelfCollision(false);
+	this->SetBaseLink(&m_ObjLink[0]);
+	this->SetBaseLinkType(srSystem::KINEMATIC);
+
+}
+
+Tape::Tape(double collision_offset /*= 0.01*/)
+{
+	m_collision_offset = collision_offset;
+	AssembleModel();
+}
+
+Tape::~Tape()
+{
+}
+
+void Tape::AssembleModel()
+{
+	m_numLink = 3;
+	m_numWeldJoint = 2;
+	m_numCollision = 5;
+
+	for (int i = 0; i < m_numLink; i++)
+	{
+		srLink* temp = new srLink;
+		m_ObjLink.push_back(*temp);
+	}
+	for (int i = 0; i < m_numCollision; i++)
+	{
+		srCollision* temp = new srCollision;
+		m_ObjCollision.push_back(*temp);
+	}
+	for (int i = 0; i < m_numWeldJoint; i++)
+	{
+		srLink* temp = new srLink;
+		m_ObjLink.push_back(*temp);
+	}
+
+	m_ObjLink[0].GetGeomInfo().SetColor(0.5, 0.1, 0.2);
+	m_ObjLink[0].SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	//m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF), Vec3(-0.01675, 0.0, -0.004)));
+	//m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.10007, 0.09307, 0.0888)));
+	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0))); // SetLocalFrame --> Orientation: SolidworkssrLib에서 solidworks로 가는 SO3, Position: srLib frame의 orientation 기준으로 원점 이동하고 싶은 만큼 입력
+	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/objects_3ds/Taping1.3ds");
+
+	// dummy link
+	m_ObjLink[1].GetGeomInfo().SetColor(0.3, 0.4, 0.3);
+	m_ObjLink[1].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	m_ObjLink[1].GetGeomInfo().SetFileName("../../../workspace/robot/objects_3ds/Taping2.3ds");
+
+	m_ObjLink[2].GetGeomInfo().SetColor(0.3, 0.4, 0.3);
+	m_ObjLink[2].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	m_ObjLink[2].GetGeomInfo().SetFileName("../../../workspace/robot/objects_3ds/Taping3.3ds");
 
 
 	Vec3 colli_offset(m_collision_offset);
