@@ -63,10 +63,28 @@ public:
 	double m_collision_offset;
 };
 
+class PCB : public Object
+{
+public:
+	PCB(double collision_offset = 0.0);
+	~PCB();
+	void AssembleModel();
+	double m_collision_offset;
+};
+
+class PCBJig : public Object
+{
+public:
+	PCBJig(double collision_offset = 0.0);
+	~PCBJig();
+	void AssembleModel();
+	double m_collision_offset;
+};
+
 class BoxForTape : public Object
 {
 public:
-	BoxForTape(double collision_offset =0.01);
+	BoxForTape(double collision_offset = 0.0);
 	~BoxForTape();
 	void AssembleModel();
 	double m_collision_offset;
@@ -75,7 +93,7 @@ public:
 class Tape : public Object
 {
 public:
-	Tape(double collision_offset = 0.01);
+	Tape(double collision_offset = 0.0);
 	~Tape();
 	void AssembleModel();
 	double m_collision_offset;

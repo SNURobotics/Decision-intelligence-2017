@@ -37,7 +37,7 @@ void URrobotManagerSetting();
 void URrrtSetting();
 void tempObjectSetting();
 
-Settop* settop = new Settop(0.01);
+//Settop* settop = new Settop(0.01);
 
 Eigen::VectorXd qval;
 
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 	// robot, object, environment settings should come before initDynamics()
 	URrobotSetting();
 	tempObjectSetting();
-	gSpace.AddSystem(settop);
+	//gSpace.AddSystem(settop);
 
 	initDynamics();
 
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
 
 	// place object in space
 	obs->GetBaseLink()->SetFrame(SE3(Vec3(-0.5, 0.5, 0.5)));
-	settop->setBaseLinkFrame(SE3(Vec3(1.0, 0.0, 0.0)));
+	//settop->setBaseLinkFrame(SE3(Vec3(1.0, 0.0, 0.0)));
 
 	/////////////// RRT planning to reach object (point0 -> point1) ///////////////
 	clock_t start = clock();
