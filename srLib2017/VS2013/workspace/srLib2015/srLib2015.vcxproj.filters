@@ -143,10 +143,10 @@
     <ClCompile Include="..\..\..\workspace\srLib2015\test_franka_modeling.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\test_ur3_planning.cpp">
+    <ClCompile Include="..\..\..\workspace\srLib2015\test_LYH.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\test_LYH.cpp">
+    <ClCompile Include="..\..\..\workspace\srLib2015\Test_LYH_settup_box.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

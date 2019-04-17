@@ -43,7 +43,7 @@ void updateFunc();
 void URrobotSetting();
 void URrobotManagerSetting();
 void URrrtSetting();
-void tempObjectSetting();
+// void tempObjectSetting();
 Eigen::VectorXd qval;
 
 Eigen::VectorXd point0;
@@ -56,7 +56,7 @@ vector<Eigen::VectorXd> ur5traj3(0);
 vector<SE3> objTraj(0);
 vector<Eigen::VectorXd> tempTraj(0);
 srLink* ee = new srLink;
-srSystem* obs = new srSystem;
+// srSystem* obs = new srSystem;
 SE3 Tobs2robot = SE3();
 
 vector<Eigen::VectorXd> GripTraj(0);
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
 	srand(NULL);
 	// robot, object, environment settings should come before initDynamics()
     URrobotSetting();
-	tempObjectSetting();
+	// tempObjectSetting();
 	gSpace.AddSystem(hdmi);
 	gSpace.AddSystem(power);
 	gSpace.AddSystem(settop);
@@ -92,7 +92,7 @@ int main(int argc, char **argv)
 	URrrtSetting();
 	
 	// place object in space
-	obs->GetBaseLink()->SetFrame(EulerXYZ(Vec3(0, 0, -SR_PI / 2), Vec3(-0.5, -0.8, 0.12)));
+	// obs->GetBaseLink()->SetFrame(EulerXYZ(Vec3(0, 0, -SR_PI / 2), Vec3(-0.5, -0.8, 0.12)));
 	cout << ur5Manager->forwardKin(qval, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP]) << endl;
 
 	hdmi->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI / 2), Vec3(-0.2, -0.5, 0)));
@@ -104,11 +104,13 @@ int main(int argc, char **argv)
 	tape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.5, 0.5, 0)));
 	boxfortape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.4, -0.5, 0)));
 
+	
+
 	/////////////// RRT planning to reach object (point0 -> point1) ///////////////
 	clock_t start = clock();
 	point0 = Eigen::VectorXd::Zero(6);
 	int flag = 0;
-	point1 = ur5Manager->inverseKin(obs->GetBaseLink()->GetFrame() * Tobs2robot, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
+	point1 = ur5Manager->inverseKin(settop->GetBaseLink()->GetFrame() * Tobs2robot, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(EulerXYZ(Vec3(SR_PI_HALF, 0, 0), Vec3(0.05, 0, 0))), flag);
 	cout << "inverse kinematics flag: " <<  flag << endl;
 	ur5RRTManager->setStartandGoal(point0, point1);
 	ur5RRTManager->execute(0.1);
@@ -117,15 +119,23 @@ int main(int argc, char **argv)
 	for (unsigned int i = 0; i < ur5traj1.size(); i++)
 	{
 		ur5RRTManager->setState(ur5traj1[i]);
-		objTraj.push_back(obs->GetBaseLink()->GetFrame());
+		objTraj.push_back(settop->GetBaseLink()->GetFrame());
 	}
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
 	////////////////////////////////////////////////////////////
 
 	///////////////// RRT planning for UR5 with object attached (point1 -> point2) ///////////////
 	start = clock();
-	point2 = Eigen::VectorXd::Ones(6);
-	ur5RRTManager->attachObject(obs, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());		// attaching object occurs here
+	Eigen::VectorXd point2(6);
+	point2(0) = 0;
+	point2(1) = SR_PI_HALF;
+	point2(2) = -1.5*SR_PI_HALF;
+	point2(3) = 0;
+	point2(4) = 0;
+	point2(5) = 0;
+
+	//point2 = ur5Manager->inverseKin(SE3(EulerXYZ(Vec3(SR_PI_HALF, 0, 0), Vec3(0.1, 0, 0))), &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
+	ur5RRTManager->attachObject(settop, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3(EulerXYZ(Vec3(SR_PI_HALF, 0, 0), Vec3(0.05, 0, 0))));		// attaching object occurs here
 	ur5RRTManager->setStartandGoal(point1, point2);
 	ur5RRTManager->execute(0.1);
 	ur5traj2 = ur5RRTManager->extractPath(20);
@@ -133,27 +143,27 @@ int main(int argc, char **argv)
 	for (unsigned int i = 0; i < ur5traj2.size(); i++)
 	{
 		ur5RRTManager->setState(ur5traj2[i]);
-		objTraj.push_back(obs->GetBaseLink()->GetFrame());
+		objTraj.push_back(settop->GetBaseLink()->GetFrame());
 	}
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
 	///////////////////////////////////////////////////////////////////////////
 
-	//////////////// RRT planning for UR5 with object detached (point2 -> point3) ///////////////
-	start = clock();
-	SE3 Tgoal = SE3(Vec3(-0.5, 0.5, 0.5));
-	point3 = ur5Manager->inverseKin(Tgoal, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
-	cout << "inverse kinematics flag: " << flag << endl;
-	ur5RRTManager->detachObject();		// detaching object from robot occurs here
-	ur5RRTManager->setStartandGoal(point2, point3);
-	ur5RRTManager->execute(0.1);
-	ur5traj3 = ur5RRTManager->extractPath(20);
-	// set object trajectory
-	for (unsigned int i = 0; i < ur5traj3.size(); i++)
-	{
-		ur5RRTManager->setState(ur5traj3[i]);
-		objTraj.push_back(obs->GetBaseLink()->GetFrame());
-	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	////////////////// RRT planning for UR5 with object detached (point2 -> point3) ///////////////
+	//start = clock();
+	//SE3 Tgoal = SE3(Vec3(-0.5, 0.5, 0.5));
+	//point3 = ur5Manager->inverseKin(Tgoal, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
+	//cout << "inverse kinematics flag: " << flag << endl;
+	//ur5RRTManager->detachObject();		// detaching object from robot occurs here
+	//ur5RRTManager->setStartandGoal(point2, point3);
+	//ur5RRTManager->execute(0.1);
+	//ur5traj3 = ur5RRTManager->extractPath(20);
+	//// set object trajectory
+	//for (unsigned int i = 0; i < ur5traj3.size(); i++)
+	//{
+	//	ur5RRTManager->setState(ur5traj3[i]);
+	//	objTraj.push_back(settop->GetBaseLink()->GetFrame());
+	//}
+	//cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
 	///////////////////////////////////////////////////////////////////////////////
 
 	rendering(argc, argv);
@@ -202,7 +212,7 @@ void updateFunc()
 	if (trajcnt < ur5traj1.size()) 
 	{
 		ur5Manager->setJointVal(ur5traj1[trajcnt % ur5traj1.size()]);
-		obs->GetBaseLink()->SetFrame(objTraj[trajcnt % ur5traj1.size()]);
+		settop->GetBaseLink()->SetFrame(objTraj[trajcnt % ur5traj1.size()]);
 		if (trajcnt == ur5traj1.size() - 1) {
 			Eigen::VectorXd tempPos = Eigen::VectorXd::Zero(3);
 			tempPos(0) = -0.629;
@@ -216,12 +226,12 @@ void updateFunc()
 	else if (trajcnt < ur5traj1.size() + ur5traj2.size()) 
 	{
 		ur5Manager->setJointVal(ur5traj2[(trajcnt - ur5traj1.size()) % ur5traj2.size()]);
-		obs->GetBaseLink()->SetFrame(objTraj[trajcnt % (ur5traj1.size() + ur5traj2.size())]);
+		settop->GetBaseLink()->SetFrame(objTraj[trajcnt % (ur5traj1.size() + ur5traj2.size())]);
 		if (trajcnt == ur5traj1.size() + ur5traj2.size() - 1) {
 			Eigen::VectorXd tempPos = Eigen::VectorXd::Zero(3);
-			tempPos(0) = 0;
-			tempPos(1) = 0;
-			tempPos(2) = 0;
+			tempPos(0) = -0.629;
+			tempPos(1) = -0.629;
+			tempPos(2) = 0.629;
 			((srStateJoint*)(ur5Manager->m_gripperInfo->m_gripJoint[0]))->m_State.m_rValue[0] = tempPos(0);
 			((srStateJoint*)(ur5Manager->m_gripperInfo->m_gripJoint[1]))->m_State.m_rValue[0] = tempPos(1);
 			((srStateJoint*)(ur5Manager->m_gripperInfo->m_gripJoint[2]))->m_State.m_rValue[0] = tempPos(2);
@@ -230,7 +240,7 @@ void updateFunc()
 	else if (trajcnt < ur5traj1.size() + ur5traj2.size() + ur5traj3.size()) 
 	{
 		ur5Manager->setJointVal(ur5traj3[(trajcnt - ur5traj1.size() - ur5traj2.size()) % ur5traj3.size()]);
-		obs->GetBaseLink()->SetFrame(objTraj[trajcnt % (ur5traj1.size() + ur5traj2.size() + ur5traj3.size())]);
+		settop->GetBaseLink()->SetFrame(objTraj[trajcnt % (ur5traj1.size() + ur5traj2.size() + ur5traj3.size())]);
 	}
 
 
@@ -288,20 +298,20 @@ void URrrtSetting()
 	ur5RRTManager->setStateBound(ur5->getLowerJointLimit(), ur5->getUpperJointLimit());
 }
 
-void tempObjectSetting()
-{
-	double dim = 0.05;
-	ee->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
-	ee->GetGeomInfo().SetDimension(dim);
-	ee->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
-	srCollision* tempCol = new srCollision;
-	tempCol->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
-	tempCol->GetGeomInfo().SetDimension(dim);
-	ee->AddCollision(tempCol);
-	obs->SetBaseLink(ee);
-	obs->SetBaseLinkType(srSystem::FIXED);
-	gSpace.AddSystem(obs);
-}
+//void tempObjectSetting()
+//{
+//	double dim = 0.05;
+//	ee->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
+//	ee->GetGeomInfo().SetDimension(dim);
+//	ee->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
+//	srCollision* tempCol = new srCollision;
+//	tempCol->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
+//	tempCol->GetGeomInfo().SetDimension(dim);
+//	ee->AddCollision(tempCol);
+//	settop->SetBaseLink(ee);
+//	settop->SetBaseLinkType(srSystem::FIXED);
+//	gSpace.AddSystem(settop);
+//}
 
 vector<Eigen::VectorXd> makeGriptraj(double gripangle, Eigen::VectorXd currentPos)
 {
