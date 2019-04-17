@@ -110,7 +110,7 @@ int main(int argc, char **argv)
 	clock_t start = clock();
 	point0 = Eigen::VectorXd::Zero(6);
 	int flag = 0;
-	point1 = ur5Manager->inverseKin(settop->GetBaseLink()->GetFrame() * Tobs2robot, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(EulerXYZ(Vec3(SR_PI_HALF, 0, 0), Vec3(0.05, 0, 0))), flag);
+	point1 = ur5Manager->inverseKin(settop->GetBaseLink()->GetFrame() * Tobs2robot, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(EulerXYZ(Vec3(SR_PI_HALF, 0, SR_PI_HALF), Vec3(0.05, 0, 0))), flag);
 	cout << "inverse kinematics flag: " <<  flag << endl;
 	ur5RRTManager->setStartandGoal(point0, point1);
 	ur5RRTManager->execute(0.1);
@@ -126,16 +126,16 @@ int main(int argc, char **argv)
 
 	///////////////// RRT planning for UR5 with object attached (point1 -> point2) ///////////////
 	start = clock();
-	Eigen::VectorXd point2(6);
+	/*Eigen::VectorXd point2(6);
 	point2(0) = 0;
-	point2(1) = SR_PI_HALF;
-	point2(2) = -1.5*SR_PI_HALF;
+	point2(1) = -0.3*SR_PI_HALF;
+	point2(2) = 1.5*SR_PI_HALF;
 	point2(3) = 0;
 	point2(4) = 0;
-	point2(5) = 0;
+	point2(5) = 0;*/
 
-	//point2 = ur5Manager->inverseKin(SE3(EulerXYZ(Vec3(SR_PI_HALF, 0, 0), Vec3(0.1, 0, 0))), &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
-	ur5RRTManager->attachObject(settop, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3(EulerXYZ(Vec3(SR_PI_HALF, 0, 0), Vec3(0.05, 0, 0))));		// attaching object occurs here
+	point2 = ur5Manager->inverseKin(SE3(EulerXYZ(Vec3(0, 0, 0), Vec3(-0.4, -0.2, 0))), &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
+	ur5RRTManager->attachObject(settop, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3(EulerXYZ(Vec3(SR_PI_HALF, 0, SR_PI_HALF), Vec3(0.05, 0, 0))));		// attaching object occurs here
 	ur5RRTManager->setStartandGoal(point1, point2);
 	ur5RRTManager->execute(0.1);
 	ur5traj2 = ur5RRTManager->extractPath(20);
