@@ -93,24 +93,34 @@ int main(int argc, char **argv)
 	URrrtSetting();
 	
 	// place object in space
-	obs->GetBaseLink()->SetFrame(EulerXYZ(Vec3(0, 0, -SR_PI / 2), Vec3(-0.5, -0.8, 0.12)));
+	obs->GetBaseLink()->SetFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.5, -0.8, 0.12)));
 	cout << ur5Manager->forwardKin(qval, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP]) << endl;
 
-	//hdmi->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI / 2), Vec3(-0.2, -0.5, 0)));
-	//power->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI / 2), Vec3(-0.3, -0.5, 0)));
-	//settop->setBaseLinkFrame(SE3(Vec3(-0.5, -0.3, 0)));
-	soldering->setBaseLinkFrame(EulerXYZ(Vec3(0, SR_PI / 2, 0), Vec3(-0.5, -0.8, 1)));
-	//pcb->setBaseLinkFrame(EulerXYZ(Vec3(0, SR_PI / 2, 0), Vec3(-0.2, 0.5, 0)));
-	//pcbjig->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), Vec3(-2, -0.5, 0.31)));
-	//tape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.5, 0.5, 0)));
-	//boxfortape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.4, -0.5, 0)));
+
+	/*hdmi->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI_HALF), Vec3(-0.2, -0.5, 0)));
+	power->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI_HALF), Vec3(-0.3, -0.5, 0)));
+	settop->setBaseLinkFrame(SE3(Vec3(-0.5, -0.3, 0)));*/
+	//soldering->setBaseLinkFrame(EulerXYZ(Vec3(0, SR_PI_HALF, 0), Vec3(-0.5, -0.2, 0.4)));
+	soldering->setBaseLinkFrame(ur5Manager->forwardKin(qval, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP]));
+	/*pcb->setBaseLinkFrame(EulerXYZ(Vec3(0, SR_PI / 2, 0), Vec3(-0.2, 0.5, 0)));
+	pcbjig->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), Vec3(-2, -0.5, 0.31)));
+	tape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.5, 0.5, 0)));
+	boxfortape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.4, -0.5, 0)));*/
+
+	//ur5Manager->setJointVal(Eigen::VectorXd::Zero(6));
+	//ur5RRTManager->attachObject(soldering, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], EulerXYZ(Vec3(0, SR_PI_HALF, 0), Vec3(-0, -0, 0)));		// attaching object occurs here
+	//ur5RRTManager->setState(Eigen::VectorXd::Zero(6));
+
+	Tobs2robot = EulerXYZ(Vec3(0, -SR_PI_HALF, 0), Vec3(-0, -0, 0));
 
 	/////////////// RRT planning to reach object (point0 -> point1) ///////////////
 	clock_t start = clock();
 	point0 = Eigen::VectorXd::Zero(6);
 	int flag = 0;
-	point1 = ur5Manager->inverseKin(soldering->GetBaseLink()->GetFrame() * EulerXYZ(Vec3(0, SR_PI / 2, 0), Vec3(-0, -0, 0.2)) * Tobs2robot, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
+	point1 = ur5Manager->inverseKin(soldering->GetBaseLink()->GetFrame() * Tobs2robot, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
 	cout << "inverse kinematics flag: " <<  flag << endl;
+	cout << soldering->GetBaseLink()->GetFrame() * Tobs2robot << endl;
+	cout << ur5->gMarkerLink[UR5_Index::MLINK_GRIP].GetFrame() << endl;
 	ur5RRTManager->setStartandGoal(point0, point1);
 	ur5RRTManager->execute(0.1);
 	ur5traj1 = ur5RRTManager->extractPath(20);
@@ -118,16 +128,16 @@ int main(int argc, char **argv)
 	for (unsigned int i = 0; i < ur5traj1.size(); i++)
 	{
 		ur5RRTManager->setState(ur5traj1[i]);
-		objTraj.push_back(soldering->GetBaseLink()->GetFrame() * EulerXYZ(Vec3(0, SR_PI / 2, 0), Vec3(-0, -0, 0.2)));
+		objTraj.push_back(soldering->GetBaseLink()->GetFrame());
 	}
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
-	////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////
 
-	///////////////// RRT planning for UR5 with object attached (point1 -> point2) ///////////////
+	/////////////////// RRT planning for UR5 with object attached (point1 -> point2) ///////////////
 	start = clock();
 	SE3 Tmid = EulerXYZ(Vec3(0, 0, 0), Vec3(-2, -0.5, 0.7));
 	point2 = ur5Manager->inverseKin(Tmid, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
-	ur5RRTManager->attachObject(soldering, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());		// attaching object occurs here
+	ur5RRTManager->attachObject(soldering, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], Inv(Tobs2robot));		// attaching object occurs here
 	ur5RRTManager->setStartandGoal(point1, point0);
 	ur5RRTManager->execute(0.1);
 	ur5traj2 = ur5RRTManager->extractPath(20);
@@ -135,12 +145,12 @@ int main(int argc, char **argv)
 	for (unsigned int i = 0; i < ur5traj2.size(); i++)
 	{
 		ur5RRTManager->setState(ur5traj2[i]);
-		objTraj.push_back(soldering->GetBaseLink()->GetFrame() * EulerXYZ(Vec3(0, SR_PI / 2, 0), Vec3(-0, -0, 0.2)));
+		objTraj.push_back(soldering->GetBaseLink()->GetFrame());
 	}
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
 	///////////////////////////////////////////////////////////////////////////
 
-	//////////////// RRT planning for UR5 with object detached (point2 -> point3) ///////////////
+	////////////////// RRT planning for UR5 with object detached (point2 -> point3) ///////////////
 	start = clock();
 	SE3 Tgoal = SE3(Vec3(-0.5, 0.5, 0.5));
 	point3 = ur5Manager->inverseKin(Tgoal, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
@@ -153,7 +163,7 @@ int main(int argc, char **argv)
 	for (unsigned int i = 0; i < ur5traj3.size(); i++)
 	{
 		ur5RRTManager->setState(ur5traj3[i]);
-		objTraj.push_back(soldering->GetBaseLink()->GetFrame() * EulerXYZ(Vec3(0, SR_PI / 2, 0), Vec3(-0, -0, 0.2)));
+		objTraj.push_back(soldering->GetBaseLink()->GetFrame());
 	}
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
 	///////////////////////////////////////////////////////////////////////////////
@@ -201,7 +211,7 @@ void updateFunc()
 
 	// plot planned trajectory
 
-	double graspAngle = -0.6;
+	double graspAngle = 0.6;
 	if (trajcnt < ur5traj1.size()) 
 	{
 		ur5Manager->setJointVal(ur5traj1[trajcnt % ur5traj1.size()]);
@@ -234,6 +244,9 @@ void updateFunc()
 	{
 		ur5Manager->setJointVal(ur5traj3[(trajcnt - ur5traj1.size() - ur5traj2.size()) % ur5traj3.size()]);
 		soldering->GetBaseLink()->SetFrame(objTraj[trajcnt % (ur5traj1.size() + ur5traj2.size() + ur5traj3.size())]);
+		if (trajcnt == ur5traj1.size() + ur5traj2.size() + ur5traj3.size() - 1) {
+			trajcnt = 0;
+		}
 	}
 
 	

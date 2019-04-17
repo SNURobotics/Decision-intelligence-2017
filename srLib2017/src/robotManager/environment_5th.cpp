@@ -627,7 +627,7 @@ void Soldering::AssembleModel()
 	// Vec3 dim5(0.086, 0.002, 0.002);	// injector tube
 
 
-	/*m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	m_ObjCollision[0].GetGeomInfo().SetDimension(dim0 + colli_offset);
 	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.0)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[0]);
@@ -650,7 +650,7 @@ void Soldering::AssembleModel()
 	m_ObjCollision[4].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	m_ObjCollision[4].GetGeomInfo().SetDimension(dim4 + colli_offset);
 	m_ObjCollision[4].SetLocalFrame(SE3(Vec3(0.0, -0.026, 0.0)));
-	m_ObjLink[0].AddCollision(&m_ObjCollision[4]);*/
+	m_ObjLink[0].AddCollision(&m_ObjCollision[4]);
 
 	//m_ObjCollision[5].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	//m_ObjCollision[5].GetGeomInfo().SetDimension(dim5 + colli_offset);
