@@ -171,37 +171,39 @@ int main(int argc, char **argv)
 	//demoTask->endConnection();
 	//demoTask->startConnection();
 	//demoTask->endConnection();
-	demoTask->startConnection();
-	for (int i = 0; i < 2; i++)
-	{
-		demoTask->getCurPosSignal();
-		Sleep(1000);
-	}
-	Eigen::VectorXd curPos(6);
-	curPos[0] = DEG2RAD(180.0);
-	curPos[1] = DEG2RAD(2);
-	curPos[2] = DEG2RAD(-132);
-	curPos[3] = 0.417;
-	curPos[4] = 0.088;
-	curPos[5] = 0.509;
-	SE3 testPos1 = demoTask->YKpos2SE3(curPos);
-	SE3 testPos2 = SE3(Vec3(0.0, 0.0, 0.1)) * testPos1;
-	demoTask->printImovCommand(demoTask->getTcurRobot(), testPos1);
-	for (int i = 0; i < 3; i++)
-	{
-		cout << "######################    " << i+1 << "    ########################" << endl;
-		demoTask->goToWaypoint(testPos1);
-		cout << "pos2 to pos1 (down) finished !!!!!!!!!!!!!" << endl;
-		Sleep(1000);
-		demoTask->goToWaypoint(testPos2);
-		cout << "pos1 to pos2 (up) finished !!!!!!!!!!!!!" << endl;
-		Sleep(1000);
-	}
-	demoTask->endConnection();
+	//demoTask->startConnection();
+	//for (int i = 0; i < 2; i++)
+	//{
+	//	demoTask->getCurPosSignal();
+	//	Sleep(1000);
+	//}
+	//Eigen::VectorXd curPos(6);
+	//curPos[0] = DEG2RAD(180.0);
+	//curPos[1] = DEG2RAD(2);
+	//curPos[2] = DEG2RAD(-132);
+	//curPos[3] = 0.417;
+	//curPos[4] = 0.088;
+	//curPos[5] = 0.509;
+	//SE3 testPos1 = demoTask->YKpos2SE3(curPos);
+	//SE3 testPos2 = SE3(Vec3(0.0, 0.0, 0.1)) * testPos1;
+	//demoTask->printImovCommand(demoTask->getTcurRobot(), testPos1);
+	//for (int i = 0; i < 3; i++)
+	//{
+	//	cout << "######################    " << i+1 << "    ########################" << endl;
+	//	demoTask->goToWaypoint(testPos1);
+	//	cout << "pos2 to pos1 (down) finished !!!!!!!!!!!!!" << endl;
+	//	Sleep(1000);
+	//	demoTask->goToWaypoint(testPos2);
+	//	cout << "pos1 to pos2 (up) finished !!!!!!!!!!!!!" << endl;
+	//	Sleep(1000);
+	//}
+	//demoTask->endConnection();
 
 		
 
-	//qval.setZero(6);
+	qval.setZero(6);
+	//qval[2] = 1.0;
+	//rManager1->setJointVal(qval);
 	//qval[0] = DEG2RAD(0.0);
 	//qval[1] = DEG2RAD(0.0);
 	//qval[2] = DEG2RAD(0.0);		// joint 3 15deg error?? robot -15deg 일때랑 여기 0deg일때랑 비슷
@@ -340,7 +342,7 @@ void updateFunc()
 {
 
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
-
+	cout << gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP();
 	//static double JointVal = 0;
 	////((srStateJoint*)MHRobot->m_KIN_Joints[activeJointIdx])->m_State.m_rValue[0] = JointVal;
 	//((srStateJoint*)MHRobot->m_KIN_Joints[5])->m_State.m_rValue[0] = JointVal;
