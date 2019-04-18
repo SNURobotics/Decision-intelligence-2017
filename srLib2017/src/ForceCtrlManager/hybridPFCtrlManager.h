@@ -38,7 +38,7 @@ public:
 	vector<se3>							V_des_trj;
 	vector<se3>							Vdot_des_trj;
 	vector<dse3>						Fext_des_trj;		// desired trajectory of contact force expressed in contact frame
-	Eigen::MatrixXd						SelectMtx;
+	Eigen::MatrixXd						SelectMtx;			// SelectMtx*V = 0 should be satisfied in contact frame
 	
 	static dse3							F_int;		// integration of (F_d - F)
 	static se3							X_int;		// integration of (X_e)

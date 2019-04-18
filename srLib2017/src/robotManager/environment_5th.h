@@ -52,6 +52,8 @@ public:
 	~Settop();
 	void AssembleModel();
 	double m_collision_offset;
+	SE3 hdmi_hole;
+	SE3 power_hole;
 };
 
 class Soldering : public Object

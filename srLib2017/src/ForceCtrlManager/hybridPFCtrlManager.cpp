@@ -171,7 +171,7 @@ void hybridPFCtrlManager_6dof::hybridPFControl(int metric)
 	}
 	else
 		error_se3 = Log(T%T_des);
-
+	//cout << error_se3 << endl;
 	// hybrid motion and force control
 	se3 AdVd = Ad(Te, V_des_trj[t]);
 	se3 Ve = AdVd - V;

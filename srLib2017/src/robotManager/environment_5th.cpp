@@ -327,7 +327,7 @@ void HDMI::AssembleModel()
 
 	Vec3 colli_offset(m_collision_offset);
 	Vec3 dim0(0.035, 0.0178, 0.01);	// base part
-	Vec3 dim1(0.009, 0.014, 0.004);	// tip
+	Vec3 dim1(0.01, 0.014, 0.004);	// tip
 
 	m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	m_ObjCollision[0].GetGeomInfo().SetDimension(dim0 + colli_offset);
@@ -385,7 +385,7 @@ void Power::AssembleModel()
 
 	Vec3 colli_offset(m_collision_offset);
 	Vec3 dim0(0.02, 0.014, 0.008);	// base part
-	Vec3 dim1(0.006, 0.007, 0.0015);	// tip
+	Vec3 dim1(0.0065, 0.007, 0.0015);	// tip
 
 	m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	m_ObjCollision[0].GetGeomInfo().SetDimension(dim0 + colli_offset);
@@ -408,6 +408,8 @@ void Power::AssembleModel()
 Settop::Settop(double collision_offset /*= 0.01*/)
 {
 	m_collision_offset = collision_offset;
+	hdmi_hole = EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(0.047, -0.02, 0.0));
+	power_hole = EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(0.047, 0.017, 0.0));
 	AssembleModel();
 }
 
@@ -434,7 +436,7 @@ void Settop::AssembleModel()
 
 	for (int i = 0; i < m_numLink; i++)
 	{
-		m_ObjLink[i].GetGeomInfo().SetColor(0.09, 0.09, 0.09);
+		m_ObjLink[i].GetGeomInfo().SetColor(0.2, 0.2, 0.2);
 		m_ObjLink[i].GetGeomInfo().SetDimension(0.0);
 		m_ObjLink[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	}
@@ -455,7 +457,7 @@ void Settop::AssembleModel()
 		m_ObjCollision[i].SetLocalFrame(hole1GeomInfo[i].second);
 		m_ObjLink[0].AddCollision(&m_ObjCollision[i]);
 	}
-	vector<pair<Vec3, SE3>> hole2GeomInfo = makeRectangleHole(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(0.044, 0.0235, 0.0)), Vec3(0.02, 0.047, 0.006), Vec3(0.0015, -0.0065, -0.00005), Vec3(0.00155, 0.0075, 0.006)); //Power hole
+	vector<pair<Vec3, SE3>> hole2GeomInfo = makeRectangleHole(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(0.044, 0.0235, 0.0)), Vec3(0.02, 0.047, 0.006), Vec3(0.0, -0.0065, -0.00005), Vec3(0.002, 0.008, 0.006)); //Power hole
 	for (unsigned int i = 0; i < hole2GeomInfo.size(); i++)
 	{
 		m_ObjCollision[i + 4].GetGeomInfo().SetShape(srGeometryInfo::BOX);
