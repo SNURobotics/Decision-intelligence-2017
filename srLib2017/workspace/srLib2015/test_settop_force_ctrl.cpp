@@ -12,6 +12,7 @@
 #include "robotManager\environment_5th.h"
 #include <time.h>
 #include "robotManager\robotRRTManager.h"
+#include "ForceCtrlManager\hybridPFCtrlManager.h"
 
 
 srSpace gSpace;
@@ -24,6 +25,9 @@ UR5RobotManager* ur5Manager;
 robotRRTManager* ur3RRTManager = new robotRRTManager;
 robotRRTManager* ur5RRTManager = new robotRRTManager;
 
+hybridPFCtrlManager_6dof* hctrl = new hybridPFCtrlManager_6dof();
+vector<SE3> Tdes;
+
 HDMI* hdmi = new HDMI();
 Power* power = new Power();
 Settop* settop = new Settop();
@@ -32,7 +36,6 @@ PCB* pcb = new PCB();
 PCBJig* pcbjig = new PCBJig();
 Tape* tape = new Tape();
 BoxForTape* boxfortape = new BoxForTape();
-
 
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::TORQUE;
 SE3 T_ur3base;
@@ -44,6 +47,7 @@ void updateFunc();
 void URrobotSetting();
 void URrobotManagerSetting();
 void URrrtSetting();
+void setHybridPFCtrl();
 // void tempObjectSetting();
 Eigen::VectorXd qval;
 
@@ -59,6 +63,8 @@ vector<Eigen::VectorXd> tempTraj(0);
 srLink* ee = new srLink;
 // srSystem* obs = new srSystem;
 SE3 Tobs2robot = SE3();
+SE3 Tur52settop = EulerXYZ(Vec3(SR_PI_HALF, 0, SR_PI_HALF), Vec3(0.05, 0, 0));
+SE3 Tur32settop_init = EulerZYX(Vec3(SR_PI_HALF, SR_PI_HALF, 0.0), Vec3(0.0, 0.0, 0.08));
 
 vector<Eigen::VectorXd> GripTraj(0);
 vector<Eigen::VectorXd> makeGriptraj(double gripangle, Eigen::VectorXd currentPos);
@@ -96,40 +102,37 @@ int main(int argc, char **argv)
 	// obs->GetBaseLink()->SetFrame(EulerXYZ(Vec3(0, 0, -SR_PI / 2), Vec3(-0.5, -0.8, 0.12)));
 	cout << ur5Manager->forwardKin(qval, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP]) << endl;
 
-
-	hdmi->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI_HALF), Vec3(-0.2, -0.5, 0)));
-	power->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI_HALF), Vec3(-0.3, -0.5, 0)));
+	hdmi->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI / 2), Vec3(-0.2, -0.5, 0)));
+	power->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI / 2), Vec3(-0.3, -0.5, 0)));
 	settop->setBaseLinkFrame(SE3(Vec3(-0.5, -0.3, 0)));
-	soldering->setBaseLinkFrame(ur5Manager->forwardKin(qval, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP]));
+	soldering->setBaseLinkFrame(EulerXYZ(Vec3(0, SR_PI / 2, 0), Vec3(-0.5, -0.8, 0.12)));
 	pcb->setBaseLinkFrame(EulerXYZ(Vec3(0, SR_PI / 2, 0), Vec3(-0.2, 0.5, 0)));
-	pcbjig->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), Vec3(-2, -0.5, 0.31)));
+	pcbjig->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), Vec3(-1, -1, 0.31)));
 	tape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.5, 0.5, 0)));
 	boxfortape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.4, -0.5, 0)));
 
+	
 
 	/////////////// RRT planning to reach object (point0 -> point1) ///////////////
-	clock_t start = clock();
-	point0 = Eigen::VectorXd::Zero(6);
+	//clock_t start = clock();
+	//point0 = Eigen::VectorXd::Zero(6);
 	int flag = 0;
-	point1 = ur5Manager->inverseKin(settop->GetBaseLink()->GetFrame() * Tobs2robot, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(EulerXYZ(Vec3(SR_PI_HALF, 0, SR_PI_HALF), Vec3(0.05, 0, 0))), flag);
+	//point1 = ur5Manager->inverseKin(settop->GetBaseLink()->GetFrame() * Tobs2robot, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(EulerXYZ(Vec3(SR_PI_HALF, 0, SR_PI_HALF), Vec3(0.05, 0, 0))), flag);
+	//cout << "inverse kinematics flag: " <<  flag << endl;
+	//ur5RRTManager->setStartandGoal(point0, point1);
+	//ur5RRTManager->execute(0.1);
+	//ur5traj1 = ur5RRTManager->extractPath(20);
+	//// set object trajectory
+	//for (unsigned int i = 0; i < ur5traj1.size(); i++)
+	//{
+	//	ur5RRTManager->setState(ur5traj1[i]);
+	//	objTraj.push_back(settop->GetBaseLink()->GetFrame());
+	//}
+	//cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	////////////////////////////////////////////////////////////
 
-	cout << "inverse kinematics flag: " <<  flag << endl;
-	cout << soldering->GetBaseLink()->GetFrame() * Tobs2robot << endl;
-	cout << ur5->gMarkerLink[UR5_Index::MLINK_GRIP].GetFrame() << endl;
-	ur5RRTManager->setStartandGoal(point0, point1);
-	ur5RRTManager->execute(0.1);
-	ur5traj1 = ur5RRTManager->extractPath(20);
-	// set object trajectory
-	for (unsigned int i = 0; i < ur5traj1.size(); i++)
-	{
-		ur5RRTManager->setState(ur5traj1[i]);
-		objTraj.push_back(settop->GetBaseLink()->GetFrame());
-	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
-	//////////////////////////////////////////////////////////////
-
-	/////////////////// RRT planning for UR5 with object attached (point1 -> point2) ///////////////
-	start = clock();
+	///////////////// RRT planning for UR5 with object attached (point1 -> point2) ///////////////
+	//start = clock();
 	/*Eigen::VectorXd point2(6);
 	point2(0) = 0;
 	point2(1) = -0.3*SR_PI_HALF;
@@ -137,23 +140,39 @@ int main(int argc, char **argv)
 	point2(3) = 0;
 	point2(4) = 0;
 	point2(5) = 0;*/
+	SE3 Tsettop = EulerXYZ(Vec3(SR_PI_HALF, 0, SR_PI_HALF), Vec3(-0.25, -0.2, 0));
+	Eigen::VectorXd ur5_invkinInit = Eigen::VectorXd::Zero(6);
+	ur5_invkinInit[0] = -1.754548; ur5_invkinInit[1] = 2.409134; ur5_invkinInit[2] = -1.813758;
+	ur5_invkinInit[3] = -2.546216; ur5_invkinInit[4] = -1.754548; ur5_invkinInit[5] = 3.141593;
+	point2 = ur5Manager->inverseKin(Tsettop / Tur52settop, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag, ur5_invkinInit);
+	cout << point2.transpose() << endl;
+	cout << flag << endl;
+	
+	ur5RRTManager->attachObject(settop, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], Tur52settop);		// attaching object occurs here
+	ur5Manager->setJointVal(point2);
+	settop->setBaseLinkFrame(Tsettop);
 
-	point2 = ur5Manager->inverseKin(SE3(EulerXYZ(Vec3(0, 0, 0), Vec3(-0.4, -0.2, 0))), &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
-	ur5RRTManager->attachObject(settop, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3(EulerXYZ(Vec3(SR_PI_HALF, 0, SR_PI_HALF), Vec3(0.05, 0, 0))));		// attaching object occurs here
-	ur5RRTManager->setStartandGoal(point1, point2);
-	ur5RRTManager->execute(0.1);
-	ur5traj2 = ur5RRTManager->extractPath(20);
-	// set object trajectory
-	for (unsigned int i = 0; i < ur5traj2.size(); i++)
-	{
-		ur5RRTManager->setState(ur5traj2[i]);
-		objTraj.push_back(settop->GetBaseLink()->GetFrame());
-	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	cout << ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() << endl;
+	Eigen::VectorXd ur3_invkinInit = Eigen::VectorXd::Zero(6);
+	ur3_invkinInit[0] = 1.0; ur3_invkinInit[1] = -1.5; ur3_invkinInit[2] = -0.567605;
+	ur3_invkinInit[3] = 0.76; ur3_invkinInit[4] = -1.570796; ur3_invkinInit[5] = -0.5;
+	Eigen::VectorXd q = ur3Manager->inverseKin(Tsettop / Tur32settop_init, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag, ur3_invkinInit);
+	//ur3Manager->setJointVal(Eigen::VectorXd::Zero(6));
+	cout << q.transpose() << endl;
+	cout << flag << endl;
+	//ur5RRTManager->setStartandGoal(point1, point2);
+	//ur5RRTManager->execute(0.1);
+	//ur5traj2 = ur5RRTManager->extractPath(20);
+	//// set object trajectory
+	//for (unsigned int i = 0; i < ur5traj2.size(); i++)
+	//{
+	//	ur5RRTManager->setState(ur5traj2[i]);
+	//	objTraj.push_back(settop->GetBaseLink()->GetFrame());
+	//}
+	//cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
 	///////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for UR5 with object detached (point2 -> point3) ///////////////
-
 	//start = clock();
 	//SE3 Tgoal = SE3(Vec3(-0.5, 0.5, 0.5));
 	//point3 = ur5Manager->inverseKin(Tgoal, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
@@ -214,17 +233,15 @@ void updateFunc()
 
 	// plot planned trajectory
 
-	double graspAngle = 0.6;
 	if (trajcnt < ur5traj1.size()) 
 	{
 		ur5Manager->setJointVal(ur5traj1[trajcnt % ur5traj1.size()]);
-
 		settop->GetBaseLink()->SetFrame(objTraj[trajcnt % ur5traj1.size()]);
 		if (trajcnt == ur5traj1.size() - 1) {
 			Eigen::VectorXd tempPos = Eigen::VectorXd::Zero(3);
-			tempPos(0) = -graspAngle;
-			tempPos(1) = -graspAngle;
-			tempPos(2) = graspAngle;
+			tempPos(0) = -0.629;
+			tempPos(1) = -0.629;
+			tempPos(2) = 0.629;
 			((srStateJoint*)(ur5Manager->m_gripperInfo->m_gripJoint[0]))->m_State.m_rValue[0] = tempPos(0);
 			((srStateJoint*)(ur5Manager->m_gripperInfo->m_gripJoint[1]))->m_State.m_rValue[0] = tempPos(1);
 			((srStateJoint*)(ur5Manager->m_gripperInfo->m_gripJoint[2]))->m_State.m_rValue[0] = tempPos(2);
@@ -250,6 +267,7 @@ void updateFunc()
 		settop->GetBaseLink()->SetFrame(objTraj[trajcnt % (ur5traj1.size() + ur5traj2.size() + ur5traj3.size())]);
 	}
 
+
 	
 }
 
@@ -260,7 +278,7 @@ void URrobotSetting()
 	// ur3 setting
 	gSpace.AddSystem((srSystem*)ur3);
 	ur3->GetBaseLink()->SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
-	ur3->SetActType(srJoint::ACTTYPE::HYBRID);
+	ur3->SetActType(srJoint::ACTTYPE::TORQUE);
 
 	vector<int> gpIdx(2);
 	gpIdx[0] = 0;
@@ -332,4 +350,52 @@ vector<Eigen::VectorXd> makeGriptraj(double gripangle, Eigen::VectorXd currentPo
 		gripTraj.push_back(tempPos);
 	}
 	return gripTraj;
+}
+
+void setHybridPFCtrl()
+{
+	// initial config should be aligned to the contact plane
+	// assume target object is rigidly attached to robot end-effector
+	hctrl->isSystemSet = hctrl->setSystem((robotManager*)ur3Manager, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], Tur32settop_init, settop->GetBaseLink());
+	hctrl->setTimeStep(ur3Manager->m_space->m_Timestep_dyn_fixed);
+	double kv_v = 0.25e2, kp_v = 0.25*kv_v*kv_v, ki_v = 0.25e3, kp_f = 1.0e-1, ki_f = 1.0e-1;
+	hctrl->setGain(kv_v, kp_v, ki_v, kp_f, ki_f);
+	//hctrl->Kp_v = kp_v * Eigen::MatrixXd::Identity(6, 6);
+	//hctrl->Kv_v = kv_v * Eigen::MatrixXd::Identity(6, 6);
+	//hctrl->Ki_v = ki_v * Eigen::MatrixXd::Identity(6, 6);
+	//hctrl->Ki_f = ki_f * Eigen::MatrixXd::Identity(6, 6);
+	//hctrl->Kp_f = kp_f * Eigen::MatrixXd::Identity(6, 6);
+
+	// S*V = 0 should be satisfied
+	// pos controlled dir: trans x, y, rot z
+	// force controlled dir: moment x, y, force z
+	Eigen::MatrixXd S = Eigen::MatrixXd::Zero(3, 6);
+	S(0, 0) = 1.0;
+	S(1, 1) = 1.0;
+	S(2, 5) = 1.0;
+	Eigen::MatrixXd S2 = Eigen::MatrixXd::Zero(1, 6);
+	S2(0, 5) = 1.0;
+
+	//hctrl->setSelectionMatrix(S);
+	hctrl->setSelectionMatrix(Eigen::MatrixXd());	//Eigen::MatrixXd(), S
+
+
+	// set desired trajectory (trajectory of the busbar)
+	//generateRefTraj(TbusbarInit, TgoalPos.GetPosition());
+	SE3 initPosOffset, TgoalPos;
+	Tdes.resize(1);
+	TgoalPos = SE3(Vec3(initPosOffset.GetPosition()[0], initPosOffset.GetPosition()[1], 0.0)) * TgoalPos;
+	Tdes[0] = TgoalPos;
+
+	vector<dse3> Fdes(1, dse3(0.0));		// expressed in end-effector frame
+	Fdes[0][0] = 0.00;
+	Fdes[0][1] = 0.0;
+	Fdes[0][5] = -1.0;
+
+	Eigen::VectorXd q_config;
+	hctrl->isDesTrjSet = hctrl->setDesiredTraj(Tdes, Fdes);
+	hctrl->setDesiredJointVal(q_config);
+	hctrl->F_int = dse3(0.0);
+	hctrl->X_int = se3(0.0);
+	ur3Manager->setJointValVelAcc(q_config, Eigen::VectorXd::Zero(q_config.size()), Eigen::VectorXd::Zero(q_config.size()));
 }
