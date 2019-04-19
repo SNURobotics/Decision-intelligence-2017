@@ -537,6 +537,23 @@ void UR5Robot::AssembleCollision()
 	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.03, 0.02, 0.035));
 	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.253, -0.1005 , 0.9620 + 0.0726)));
+
+	gLink[UR5_Index::GRIPPER_FINGER_MED_1].AddCollision(&gCollision[m_numCollision]);
+	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.04, 0.02, 0.035));
+	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.203, 0.1025, 0.9620)));
+
+	gLink[UR5_Index::GRIPPER_FINGER_MED_2].AddCollision(&gCollision[m_numCollision]);
+	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.04, 0.02, 0.035));
+	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.203, 0.1025, 0.9620 + 0.0726)));
+
+	gLink[UR5_Index::GRIPPER_FINGER_MED_3].AddCollision(&gCollision[m_numCollision]);
+	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.04, 0.02, 0.035));
+	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.203, -0.1005, 0.9620 + 0.0726)));
+
+
 #endif
 
 	
