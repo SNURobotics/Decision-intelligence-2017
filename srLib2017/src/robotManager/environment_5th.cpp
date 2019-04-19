@@ -420,7 +420,7 @@ Settop::~Settop()
 void Settop::AssembleModel()
 {
 	m_numLink = 1;
-	m_numCollision = 1;
+	m_numCollision = 10;
 	m_numWeldJoint = 0;
 	for (int i = 0; i < m_numLink; i++)
 	{
