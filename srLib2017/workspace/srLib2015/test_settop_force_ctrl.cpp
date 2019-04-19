@@ -131,7 +131,7 @@ int main(int argc, char **argv)
 	ur3_invkinInit[0] = -2.796488; ur3_invkinInit[1] = -SR_PI_HALF; ur3_invkinInit[2] = 1.787395;
 	ur3_invkinInit[3] = -1.75; ur3_invkinInit[4] = -1.570796; ur3_invkinInit[5] = 1.915901;
 
-	Eigen::VectorXd q = ur3Manager->inverseKin(SE3(Vec3(0.0,0.0,-0.008)) * Tsettop * Tsettop2obj, &ur3->gLink[UR3_Index::OBJECT], true, SE3(), flag, ur3_invkinInit);
+	Eigen::VectorXd q = ur3Manager->inverseKin(SE3(Vec3(0.0,0.0,-0.0085)) * Tsettop * Tsettop2obj, &ur3->gLink[UR3_Index::OBJECT], true, SE3(), flag, ur3_invkinInit);
 	//ur3Manager->setJointVal(Eigen::VectorXd::Zero(6));
 	cout << q.transpose() << endl;
 	cout << flag << endl;

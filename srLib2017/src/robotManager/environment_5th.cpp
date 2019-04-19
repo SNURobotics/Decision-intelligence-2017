@@ -420,7 +420,7 @@ Settop::~Settop()
 void Settop::AssembleModel()
 {
 	m_numLink = 1;
-	m_numCollision = 10;
+	m_numCollision = 1;
 	m_numWeldJoint = 0;
 	for (int i = 0; i < m_numLink; i++)
 	{
@@ -449,7 +449,7 @@ void Settop::AssembleModel()
 	Vec3 dim0(0.085, 0.094, 0.02);  // base part
 	Vec3 dim1(0.003, 0.047, 0.02);  // between part
 	//SE3(Vec3(0.0425, -0.0235, 0.0))
-	vector<pair<Vec3, SE3>> hole1GeomInfo = makeRectangleHole(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(0.0425, -0.0235, 0.0)), Vec3(0.02, 0.047, 0.009), Vec3(0.0, 0.0035, 0.0), Vec3(0.0045, 0.0145, 0.009)); //HDMI hole
+	vector<pair<Vec3, SE3>> hole1GeomInfo = makeRectangleHole(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(0.0425, -0.0235, 0.0)), Vec3(0.02, 0.047, 0.009), Vec3(0.0, 0.0035, 0.0), Vec3(0.005, 0.015, 0.009)); //HDMI hole
 	for (unsigned int i = 0; i < hole1GeomInfo.size(); i++)
 	{
 		m_ObjCollision[i].GetGeomInfo().SetShape(srGeometryInfo::BOX);
@@ -466,15 +466,15 @@ void Settop::AssembleModel()
 		m_ObjLink[0].AddCollision(&m_ObjCollision[i + 4]);
 	}
 
-	m_ObjCollision[8].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[8].GetGeomInfo().SetDimension(dim0 + colli_offset);
-	m_ObjCollision[8].SetLocalFrame(SE3(Vec3(-0.000045, 0.0, 0.0)));
-	m_ObjLink[0].AddCollision(&m_ObjCollision[8]);
+	m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[0].GetGeomInfo().SetDimension(dim0 + colli_offset);
+	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(-0.0045, 0.0, 0.0)));
+	m_ObjLink[0].AddCollision(&m_ObjCollision[0]);
 
-	m_ObjCollision[9].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	/*m_ObjCollision[9].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	m_ObjCollision[9].GetGeomInfo().SetDimension(dim1 + colli_offset);
 	m_ObjCollision[9].SetLocalFrame(SE3(Vec3(0.0395, 0.0235, 0.0)));
-	m_ObjLink[0].AddCollision(&m_ObjCollision[8]);
+	m_ObjLink[0].AddCollision(&m_ObjCollision[9]);*/
 
 	this->SetBaseLink(&m_ObjLink[0]);
 	this->SetBaseLinkType(srSystem::KINEMATIC);
