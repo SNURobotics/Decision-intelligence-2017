@@ -466,15 +466,15 @@ void Settop::AssembleModel()
 		m_ObjLink[0].AddCollision(&m_ObjCollision[i + 4]);
 	}
 
-	m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[0].GetGeomInfo().SetDimension(dim0 + colli_offset);
-	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(-0.0045, 0.0, 0.0)));
-	m_ObjLink[0].AddCollision(&m_ObjCollision[0]);
+	m_ObjCollision[8].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[8].GetGeomInfo().SetDimension(dim0 + colli_offset);
+	m_ObjCollision[8].SetLocalFrame(SE3(Vec3(-0.0045, 0.0, 0.0)));
+	m_ObjLink[0].AddCollision(&m_ObjCollision[8]);
 
-	/*m_ObjCollision[9].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[9].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	m_ObjCollision[9].GetGeomInfo().SetDimension(dim1 + colli_offset);
 	m_ObjCollision[9].SetLocalFrame(SE3(Vec3(0.0395, 0.0235, 0.0)));
-	m_ObjLink[0].AddCollision(&m_ObjCollision[9]);*/
+	m_ObjLink[0].AddCollision(&m_ObjCollision[9]);
 
 	this->SetBaseLink(&m_ObjLink[0]);
 	this->SetBaseLinkType(srSystem::KINEMATIC);
