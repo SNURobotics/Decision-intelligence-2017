@@ -518,6 +518,7 @@ void PCB::AssembleModel()
 	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/objects_3ds/PCB.3ds");
 	m_ObjLink[0].GetGeomInfo().SetLocalFrame(SE3(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0))));
+	m_ObjLink[0].GetGeomInfo().SetColor(0.1, 0.2, 0.1);
 
 
 	Vec3 colli_offset(m_collision_offset);

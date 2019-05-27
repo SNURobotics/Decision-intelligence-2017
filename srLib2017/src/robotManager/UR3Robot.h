@@ -17,7 +17,7 @@
 #define DEGREE_OF_FREEDOM_UR3_JOINT 	6
 #define NUM_OF_COLLISION_UR3			1000
 
-#define GRASP_HDMI
+//#define GRASP_HDMI
 //#define GRASP_POWER
 
 
