@@ -158,5 +158,8 @@
     <ClCompile Include="..\..\..\workspace\srLib2015\soldering_No1.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\soldering_No5.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
