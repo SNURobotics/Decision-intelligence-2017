@@ -54,12 +54,14 @@ Eigen::VectorXd point3;
 vector<Eigen::VectorXd> ur5traj1(0);
 vector<Eigen::VectorXd> ur5traj2(0);
 vector<Eigen::VectorXd> ur5traj3(0);
+vector<Eigen::VectorXd> ur3traj1(0);
+vector<Eigen::VectorXd> ur3traj2(0);
+vector<Eigen::VectorXd> ur3traj3(0);
 vector<SE3> objTraj(0);
 vector<Eigen::VectorXd> tempTraj(0);
 srLink* ee = new srLink;
 srSystem* obs = new srSystem;
 SE3 Tobs2robot = SE3();
-SE3 Tpcb2robot = SE3();
 
 vector<Eigen::VectorXd> GripTraj(0);
 vector<Eigen::VectorXd> makeGriptraj(double gripangle, Eigen::VectorXd currentPos);
@@ -73,7 +75,7 @@ int main(int argc, char **argv)
 	//gSpace.AddSystem(hdmi);
 	//gSpace.AddSystem(power);
 	//gSpace.AddSystem(settop);
-	gSpace.AddSystem(soldering);
+	//gSpace.AddSystem(soldering);
 	gSpace.AddSystem(pcb);
 	gSpace.AddSystem(pcbjig);
 	//gSpace.AddSystem(tape);
@@ -95,17 +97,14 @@ int main(int argc, char **argv)
 
 	// place object in space
 	obs->GetBaseLink()->SetFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.5, -0.8, 0.12)));
-	cout << ur5Manager->forwardKin(qval, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP]) << endl;
+	cout << ur3Manager->forwardKin(qval, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP]) << endl;
 
 
 	//hdmi->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI_HALF), Vec3(-0.2, -0.5, 0)));
 	//power->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI_HALF), Vec3(-0.3, -0.5, 0)));
 	//settop->setBaseLinkFrame(SE3(Vec3(-0.5, -0.3, 0)));
-
-	//soldering->setBaseLinkFrame(ur5Manager->forwardKin(qval, &ur5->gMarkerLink[UR3_Index::MLINK_GRIP]));
-	soldering->setBaseLinkFrame(EulerXYZ(Vec3(0, SR_PI_HALF, 0), Vec3(-0.5, 0.45, 0.12)));
-
-	//pcb->setBaseLinkFrame(EulerXYZ(Vec3(0, SR_PI_HALF, 0), Vec3(-0.0, 0.35, 0.12)));
+	//soldering->setBaseLinkFrame(ur3Manager->forwardKin(qval, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP]));
+	pcb->setBaseLinkFrame(EulerXYZ(Vec3(0, SR_PI_HALF, 0), Vec3(-0.0, 0.35, 0.12)));
 	pcbjig->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), Vec3(-0.5, -0.35, 0.31)));
 	//tape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.5, 0.5, 0)));
 	//boxfortape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.4, -0.5, 0)));
@@ -125,63 +124,50 @@ int main(int argc, char **argv)
 	SE3 pcbpos = ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() * Inv(EulerXYZ(Vec3(0, SR_PI_HALF, 0), Vec3(-0.08, 0, 0)));
 	pcb->setBaseLinkFrame(pcbpos);
 
-	Tobs2robot = EulerXYZ(Vec3(0, -SR_PI_HALF, 0), Vec3(-0, -0, -0.05));
-	Tpcb2robot = EulerXYZ(Vec3(-0, SR_PI, 0), Vec3(0.10, -0, -0.13));
+	Tobs2robot = EulerXYZ(Vec3(0, SR_PI_HALF, 0), Vec3(-0.08, 0, 0));
 
 	/////////////// RRT planning to reach object (point0 -> point1) ///////////////
 	clock_t start = clock();
-	point0 = Eigen::VectorXd::Zero(6);
+	point0 = UR3angle;
 	int flag = 0;
-	point1 = ur5Manager->inverseKin(soldering->GetBaseLink()->GetFrame() * Tobs2robot, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
+	point1 = ur3Manager->inverseKin(EulerXYZ(Vec3(0, SR_PI_HALF, 0), Vec3(-0.0, 0.35, 0.12)) * Tobs2robot, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag);
 	cout << "inverse kinematics flag: " << flag << endl;
-	cout << soldering->GetBaseLink()->GetFrame() * Tobs2robot << endl;
-	cout << ur5->gMarkerLink[UR5_Index::MLINK_GRIP].GetFrame() << endl;
-	ur5RRTManager->setStartandGoal(point0, point1);
-	ur5RRTManager->execute(0.1);
-	ur5traj1 = ur5RRTManager->extractPath(20);
+	ur3RRTManager->attachObject(pcb, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], Inv(Tobs2robot));		// attaching object occurs here
+	//cout << pcb->GetBaseLink()->GetFrame() * Tobs2robot << endl;
+	//cout << ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() << endl;
+	ur3RRTManager->setStartandGoal(point0, point1);
+	ur3RRTManager->execute(0.1);
+	ur3traj1 = ur3RRTManager->extractPath(20);
 	// set object trajectory
-	for (unsigned int i = 0; i < ur5traj1.size(); i++)
+	for (unsigned int i = 0; i < ur3traj1.size(); i++)
 	{
-		ur5RRTManager->setState(ur5traj1[i]);
-		objTraj.push_back(soldering->GetBaseLink()->GetFrame());
+		ur3RRTManager->setState(ur3traj1[i]);
+		objTraj.push_back(pcb->GetBaseLink()->GetFrame());
 	}
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
 	//////////////////////////////////////////////////////////////
 
-	/////////////////// RRT planning for UR5 with object attached (point1 -> point2) ///////////////
+	/////////////////// RRT planning for ur3 with object attached (point1 -> point2) ///////////////
 	start = clock();
-	SE3 Tmid = pcbpos * Tpcb2robot;
-	point2 = ur5Manager->inverseKin(Tmid, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
-	ur5RRTManager->attachObject(soldering, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], Inv(Tobs2robot));		// attaching object occurs here
-	ur5RRTManager->setStartandGoal(point1, point2);
-	ur5RRTManager->execute(0.1);
-	ur5traj2 = ur5RRTManager->extractPath(20);
+	SE3 Tmid = EulerXYZ(Vec3(0, -SR_PI_HALF, 0), Vec3(-0.6, -0.6, 0.7));
+	point2 = Eigen::VectorXd::Zero(6);
+	point2[1] = -SR_PI_HALF;
+	point2[3] = -SR_PI_HALF;
+	point2[4] = SR_PI_HALF;
+	cout << "inverse kinematics flag: " << flag << endl;
+	//ur3RRTManager->attachObject(pcb, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], Inv(Tobs2robot));		// attaching object occurs here
+	ur3RRTManager->detachObject();		// detaching object from robot occurs here
+	ur3RRTManager->setStartandGoal(point1, point2);
+	ur3RRTManager->execute(0.1);
+	ur3traj2 = ur3RRTManager->extractPath(20);
 	// set object trajectory
-	for (unsigned int i = 0; i < ur5traj2.size(); i++)
+	for (unsigned int i = 0; i < ur3traj2.size(); i++)
 	{
-		ur5RRTManager->setState(ur5traj2[i]);
-		objTraj.push_back(soldering->GetBaseLink()->GetFrame());
+		ur3RRTManager->setState(ur3traj2[i]);
+		objTraj.push_back(pcb->GetBaseLink()->GetFrame());
 	}
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
 	///////////////////////////////////////////////////////////////////////////
-
-	////////////////// RRT planning for UR5 with object detached (point2 -> point3) ///////////////
-	start = clock();
-	SE3 Tgoal = SE3(Vec3(-0.5, 0.5, 0.5));
-	point3 = ur5Manager->inverseKin(Tgoal, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
-	cout << "inverse kinematics flag: " << flag << endl;
-	//ur5RRTManager->detachObject();		// detaching object from robot occurs here
-	ur5RRTManager->setStartandGoal(point2, point1);
-	ur5RRTManager->execute(0.1);
-	ur5traj3 = ur5RRTManager->extractPath(20);
-	// set object trajectory
-	for (unsigned int i = 0; i < ur5traj3.size(); i++)
-	{
-		ur5RRTManager->setState(ur5traj3[i]);
-		objTraj.push_back(soldering->GetBaseLink()->GetFrame());
-	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
-	///////////////////////////////////////////////////////////////////////////////
 
 	rendering(argc, argv);
 
@@ -214,7 +200,7 @@ void initDynamics()
 void updateFunc()
 {
 	//GripTraj = makeGriptraj(30, tempTraj.back());
-	//ur5traj.insert(ur5traj.end(), GripTraj.begin(), GripTraj.end());
+	//ur3traj.insert(ur3traj.end(), GripTraj.begin(), GripTraj.end());
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 
 	static int cnt = 0;
@@ -226,55 +212,91 @@ void updateFunc()
 
 	// plot planned trajectory
 
-	double graspAngle = 0.6;
-	if (trajcnt < ur5traj1.size())
+	//cout << ((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[0]))->m_State.m_rValue[0] << endl;
+	//cout << ((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[1]))->m_State.m_rValue[0] << endl;
+	//cout << ((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[2]))->m_State.m_rValue[0] << endl;
+	//cout << ((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[3]))->m_State.m_rValue[0] << endl;
+	//cout << ((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[4]))->m_State.m_rValue[0] << endl;
+	//cout << ((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[5]))->m_State.m_rValue[0] << endl;
+	Eigen::VectorXd tempPos = Eigen::VectorXd::Zero(6);
+	double graspAngle = 0.2;
+	double idleAngle = -0.825148;
+	if (trajcnt == 1)
 	{
-		ur5Manager->setJointVal(ur5traj1[trajcnt % ur5traj1.size()]);
-		soldering->GetBaseLink()->SetFrame(objTraj[trajcnt % ur5traj1.size()]);
-		if (trajcnt == ur5traj1.size() - 1) {
-			Eigen::VectorXd tempPos = Eigen::VectorXd::Zero(3);
+		tempPos(0) = idleAngle;
+		tempPos(1) = idleAngle;
+		tempPos(2) = -idleAngle;
+		tempPos(3) = -idleAngle;
+		tempPos(4) = -idleAngle;
+		tempPos(5) = idleAngle;
+		((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[0]))->m_State.m_rValue[0] = tempPos(0);
+		((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[1]))->m_State.m_rValue[0] = tempPos(1);
+		((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[2]))->m_State.m_rValue[0] = tempPos(2);
+		((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[3]))->m_State.m_rValue[0] = tempPos(3);
+		((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[4]))->m_State.m_rValue[0] = tempPos(4);
+		((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[5]))->m_State.m_rValue[0] = tempPos(5);
+	}
+	if (trajcnt < ur3traj1.size())
+	{
+		ur3Manager->setJointVal(ur3traj1[trajcnt % ur3traj1.size()]);
+		pcb->GetBaseLink()->SetFrame(objTraj[trajcnt % ur3traj1.size()]);
+		if (trajcnt == ur3traj1.size() - 1) {
 			tempPos(0) = -graspAngle;
 			tempPos(1) = -graspAngle;
 			tempPos(2) = graspAngle;
-			((srStateJoint*)(ur5Manager->m_gripperInfo->m_gripJoint[0]))->m_State.m_rValue[0] = tempPos(0);
-			((srStateJoint*)(ur5Manager->m_gripperInfo->m_gripJoint[1]))->m_State.m_rValue[0] = tempPos(1);
-			((srStateJoint*)(ur5Manager->m_gripperInfo->m_gripJoint[2]))->m_State.m_rValue[0] = tempPos(2);
+			tempPos(3) = graspAngle;
+			tempPos(4) = graspAngle;
+			tempPos(5) = -graspAngle;
+			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[0]))->m_State.m_rValue[0] = tempPos(0);
+			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[1]))->m_State.m_rValue[0] = tempPos(1);
+			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[2]))->m_State.m_rValue[0] = tempPos(2);
+			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[3]))->m_State.m_rValue[0] = tempPos(3);
+			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[4]))->m_State.m_rValue[0] = tempPos(4);
+			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[5]))->m_State.m_rValue[0] = tempPos(5);
 		}
 	}
-	else if (trajcnt < ur5traj1.size() + ur5traj2.size())
+	else if (trajcnt < ur3traj1.size() + ur3traj2.size())
 	{
-		ur5Manager->setJointVal(ur5traj2[(trajcnt - ur5traj1.size()) % ur5traj2.size()]);
-		soldering->GetBaseLink()->SetFrame(objTraj[trajcnt % (ur5traj1.size() + ur5traj2.size())]);
-		if (trajcnt == ur5traj1.size() + ur5traj2.size() - 1) {
-			Eigen::VectorXd tempPos = Eigen::VectorXd::Zero(3);
-			//tempPos(0) = 0;
-			//tempPos(1) = 0;
-			//tempPos(2) = 0;
+		ur3Manager->setJointVal(ur3traj2[(trajcnt - ur3traj1.size()) % ur3traj2.size()]);
+		pcb->GetBaseLink()->SetFrame(objTraj[trajcnt % (ur3traj1.size() + ur3traj2.size())]);
+		if (trajcnt == ur3traj1.size() + ur3traj2.size() - 1) {
 			tempPos(0) = -graspAngle;
 			tempPos(1) = -graspAngle;
 			tempPos(2) = graspAngle;
-			((srStateJoint*)(ur5Manager->m_gripperInfo->m_gripJoint[0]))->m_State.m_rValue[0] = tempPos(0);
-			((srStateJoint*)(ur5Manager->m_gripperInfo->m_gripJoint[1]))->m_State.m_rValue[0] = tempPos(1);
-			((srStateJoint*)(ur5Manager->m_gripperInfo->m_gripJoint[2]))->m_State.m_rValue[0] = tempPos(2);
-		}
-	}
-	else if (trajcnt < ur5traj1.size() + ur5traj2.size() + ur5traj3.size())
-	{
-		ur5Manager->setJointVal(ur5traj3[(trajcnt - ur5traj1.size() - ur5traj2.size()) % ur5traj3.size()]);
-		soldering->GetBaseLink()->SetFrame(objTraj[trajcnt % (ur5traj1.size() + ur5traj2.size() + ur5traj3.size())]);
-		if (trajcnt == ur5traj1.size() + ur5traj2.size() + ur5traj3.size() - 1) {
+			tempPos(3) = graspAngle;
+			tempPos(4) = graspAngle;
+			tempPos(5) = -graspAngle;
+			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[0]))->m_State.m_rValue[0] = tempPos(0);
+			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[1]))->m_State.m_rValue[0] = tempPos(1);
+			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[2]))->m_State.m_rValue[0] = tempPos(2);
+			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[3]))->m_State.m_rValue[0] = tempPos(3);
+			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[4]))->m_State.m_rValue[0] = tempPos(4);
+			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[5]))->m_State.m_rValue[0] = tempPos(5);
+
 			trajcnt = 0;
-			Eigen::VectorXd tempPos = Eigen::VectorXd::Zero(3);
-			tempPos(0) = 0;
-			tempPos(1) = 0;
-			tempPos(2) = 0;
-			((srStateJoint*)(ur5Manager->m_gripperInfo->m_gripJoint[0]))->m_State.m_rValue[0] = tempPos(0);
-			((srStateJoint*)(ur5Manager->m_gripperInfo->m_gripJoint[1]))->m_State.m_rValue[0] = tempPos(1);
-			((srStateJoint*)(ur5Manager->m_gripperInfo->m_gripJoint[2]))->m_State.m_rValue[0] = tempPos(2);
 		}
 	}
+	else if (trajcnt < ur3traj1.size() + ur3traj2.size() + ur3traj3.size())
+	{
+		ur3Manager->setJointVal(ur3traj3[(trajcnt - ur3traj1.size() - ur3traj2.size()) % ur3traj3.size()]);
+		pcb->GetBaseLink()->SetFrame(objTraj[trajcnt % (ur3traj1.size() + ur3traj2.size() + ur3traj3.size())]);
+		if (trajcnt == ur3traj1.size() + ur3traj2.size() + ur3traj3.size() - 1) {
+			tempPos(0) = -graspAngle;
+			tempPos(1) = -graspAngle;
+			tempPos(2) = graspAngle;
+			tempPos(3) = graspAngle;
+			tempPos(4) = graspAngle;
+			tempPos(5) = -graspAngle;
+			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[0]))->m_State.m_rValue[0] = tempPos(0);
+			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[1]))->m_State.m_rValue[0] = tempPos(1);
+			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[2]))->m_State.m_rValue[0] = tempPos(2);
+			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[3]))->m_State.m_rValue[0] = tempPos(3);
+			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[4]))->m_State.m_rValue[0] = tempPos(4);
+			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[5]))->m_State.m_rValue[0] = tempPos(5);
 
-
+			trajcnt = 0;
+		}
+	}
 }
 
 

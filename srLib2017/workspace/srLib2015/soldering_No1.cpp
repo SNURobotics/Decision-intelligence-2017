@@ -75,7 +75,7 @@ int main(int argc, char **argv)
 	//gSpace.AddSystem(hdmi);
 	//gSpace.AddSystem(power);
 	//gSpace.AddSystem(settop);
-	gSpace.AddSystem(soldering);
+	//gSpace.AddSystem(soldering);
 	gSpace.AddSystem(pcb);
 	gSpace.AddSystem(pcbjig);
 	//gSpace.AddSystem(tape);
@@ -103,7 +103,7 @@ int main(int argc, char **argv)
 	//hdmi->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI_HALF), Vec3(-0.2, -0.5, 0)));
 	//power->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI_HALF), Vec3(-0.3, -0.5, 0)));
 	//settop->setBaseLinkFrame(SE3(Vec3(-0.5, -0.3, 0)));
-	soldering->setBaseLinkFrame(ur3Manager->forwardKin(qval, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP]));
+	//soldering->setBaseLinkFrame(ur3Manager->forwardKin(qval, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP]));
 	pcb->setBaseLinkFrame(EulerXYZ(Vec3(0, SR_PI_HALF, 0), Vec3(-0.0, 0.35, 0.12)));
 	pcbjig->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), Vec3(-0.5, -0.35, 0.31)));
 	//tape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.5, 0.5, 0)));
@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 
 	/////////////// RRT planning to reach object (point0 -> point1) ///////////////
 	clock_t start = clock();
-	point0 = Eigen::VectorXd::Zero(6);
+	point0 = qval;
 	int flag = 0;
 	point1 = ur3Manager->inverseKin(pcb->GetBaseLink()->GetFrame() * Tobs2robot, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag);
 	cout << "inverse kinematics flag: " << flag << endl;
