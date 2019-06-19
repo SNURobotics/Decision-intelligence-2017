@@ -711,36 +711,36 @@ void BoxForTape::AssembleModel()
 
 		//m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF), Vec3(-0.01675, 0.0, -0.004)));
 		//m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.10007, 0.09307, 0.0888)));
-	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0))); // SetLocalFrame --> Orientation: SolidworkssrLib에서 solidworks로 가는 SO3, Position: srLib frame의 orientation 기준으로 원점 이동하고 싶은 만큼 입력
-	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/objects_3ds/BoxForTape.3ds");
+	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(-0.1, 0.05, -0.01))); // SetLocalFrame --> Orientation: SolidworkssrLib에서 solidworks로 가는 SO3, Position: srLib frame의 orientation 기준으로 원점 이동하고 싶은 만큼 입력
+	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/objects_3ds/wireing_zig.3ds");
 
 
 	m_ObjLink[0].AddCollision(&m_ObjCollision[0]);
 	m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[0].GetGeomInfo().SetDimension(Vec3(0.06, 0.03, 0.02));
+	m_ObjCollision[0].GetGeomInfo().SetDimension(Vec3(0.20, 0.10, 0.01));
 	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.0)));
 
 	
 	Vec3 colli_offset(m_collision_offset);
-	Vec3 dim0(0.3, 0.3, 0.32);	// base part
+	Vec3 dim0(0.20, 0.10, 0.01);	// base part
 
 
 	m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	m_ObjCollision[0].GetGeomInfo().SetDimension(dim0 + colli_offset);
-	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(0.0, 0.0, -0.16)));
+	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(0.0, 0.0, -0.005)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[0]);
 
 	m_ObjLink[0].AddCollision(&m_ObjCollision[1]);
 	m_ObjCollision[1].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[1].GetGeomInfo().SetDimension(Vec3(0.002, 0.002, 0.03));
+	m_ObjCollision[1].GetGeomInfo().SetDimension(Vec3(0.01, 0.01, 0.08));
 	//m_ObjCollision[1].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.060 / 2.0)));
-	m_ObjCollision[1].SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.02, 0.0, 0.025)));
+	m_ObjCollision[1].SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.06, 0.0, 0.04)));
 
 	m_ObjLink[0].AddCollision(&m_ObjCollision[2]);
 	m_ObjCollision[2].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[2].GetGeomInfo().SetDimension(Vec3(0.002, 0.002, 0.03));
+	m_ObjCollision[2].GetGeomInfo().SetDimension(Vec3(0.01, 0.01, 0.08));
 	//m_ObjCollision[1].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.060 / 2.0)));
-	m_ObjCollision[2].SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.02, 0.0, 0.025)));
+	m_ObjCollision[2].SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.06, 0.0, 0.04)));
 
 	this->SetSelfCollision(false);
 	this->SetBaseLink(&m_ObjLink[0]);
