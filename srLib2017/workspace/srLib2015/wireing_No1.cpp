@@ -66,6 +66,8 @@ SE3 Tobs2robot = SE3();
 vector<Eigen::VectorXd> GripTraj(0);
 vector<Eigen::VectorXd> makeGriptraj(double gripangle, Eigen::VectorXd currentPos);
 
+Lines* wire = new Lines();
+
 int main(int argc, char **argv)
 {
 	srand(NULL);
@@ -115,6 +117,9 @@ int main(int argc, char **argv)
 
 	Tobs2robot = EulerXYZ(Vec3(SR_PI_HALF, 0, 0), Vec3(0.19, 0.06, 0.05));
 
+	wire->addPoint(Vec3());
+	wire->setColor(0.2, 0.2, 0.2, 0.9);
+
 	/////////////// RRT planning to reach object (point0 -> point1) ///////////////
 	clock_t start = clock();
 	point0 = qval;
@@ -126,15 +131,22 @@ int main(int argc, char **argv)
 	ur3RRTManager->setStartandGoal(point0, point1);
 	ur3RRTManager->execute(0.1);
 	ur3traj1 = ur3RRTManager->extractPath(20);
+
+	//Eigen::VectorXd tempJointval = ur3Manager->getJointVal();
 	// set object trajectory
 	for (unsigned int i = 0; i < ur3traj1.size(); i++)
 	{
 		ur3RRTManager->setState(ur3traj1[i]);
 		//objTraj.push_back(boxfortape->GetBaseLink()->GetFrame());
+		//ur3Manager->setJointVal(ur3traj1[i]);
+		SE3 gripSE3 = ur3Manager->forwardKin(ur3traj1[i], &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], SE3());
+		
+		wire->addPoint(gripSE3.GetPosition());
 	}
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	//ur3Manager->setJointVal(tempJointval);
 	//////////////////////////////////////////////////////////////
-
+	
 	/////////////////// RRT planning for ur3 with object attached (point1 -> point2) ///////////////
 	//start = clock();
 	//SE3 Tmid = EulerXYZ(Vec3(0, -SR_PI_HALF, 0), Vec3(-0.6, -0.6, 0.7));
@@ -187,6 +199,8 @@ void rendering(int argc, char **argv)
 	renderer->InitializeRenderer(argc, argv, windows, false);
 	renderer->InitializeNode(&gSpace);
 	renderer->setUpdateFunc(updateFunc);
+
+	renderer->addNode(wire);
 
 	renderer->RunRendering();
 }
