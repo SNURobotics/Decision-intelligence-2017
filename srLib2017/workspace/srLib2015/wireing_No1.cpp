@@ -22,6 +22,12 @@ UR3RobotManager* ur3Manager;
 UR5Robot* ur5 = new UR5Robot;
 UR5RobotManager* ur5Manager;
 robotRRTManager* ur3RRTManager = new robotRRTManager;
+// Floor
+srLink* floor_link = new srLink;
+srSystem* Floor = new srSystem;
+srCollision* floor_colli = new srCollision;
+void setObstacle();
+// RRTManager
 robotRRTManager* ur5RRTManager = new robotRRTManager;
 
 //HDMI* hdmi = new HDMI();
@@ -82,6 +88,9 @@ int main(int argc, char **argv)
 	//gSpace.AddSystem(pcbjig);
 	gSpace.AddSystem(tape);
 	gSpace.AddSystem(boxfortape);
+
+	setObstacle();
+
 	initDynamics();
 
 	// robotManager setting should come after initDynamics()
@@ -117,8 +126,8 @@ int main(int argc, char **argv)
 
 	Tobs2robot = EulerXYZ(Vec3(SR_PI_HALF, 0, 0), Vec3(0.19, 0.06, 0.05));
 
-	wire->addPoint(Vec3());
-	wire->setColor(0.2, 0.2, 0.2, 0.9);
+	//wire->addPoint(Vec3());
+	wire->setColor(0, 0, 0, 0.9);
 
 	/////////////// RRT planning to reach object (point0 -> point1) ///////////////
 	clock_t start = clock();
@@ -132,7 +141,6 @@ int main(int argc, char **argv)
 	ur3RRTManager->execute(0.1);
 	ur3traj1 = ur3RRTManager->extractPath(20);
 
-	//Eigen::VectorXd tempJointval = ur3Manager->getJointVal();
 	// set object trajectory
 	for (unsigned int i = 0; i < ur3traj1.size(); i++)
 	{
@@ -140,11 +148,9 @@ int main(int argc, char **argv)
 		//objTraj.push_back(boxfortape->GetBaseLink()->GetFrame());
 		//ur3Manager->setJointVal(ur3traj1[i]);
 		SE3 gripSE3 = ur3Manager->forwardKin(ur3traj1[i], &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], SE3());
-		
 		wire->addPoint(gripSE3.GetPosition());
 	}
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
-	//ur3Manager->setJointVal(tempJointval);
 	//////////////////////////////////////////////////////////////
 	
 	/////////////////// RRT planning for ur3 with object attached (point1 -> point2) ///////////////
@@ -239,12 +245,18 @@ void updateFunc()
 	double idleAngle = -0.825148;
 	if (trajcnt == 1)
 	{
-		tempPos(0) = -graspAngle;
+		/*tempPos(0) = -graspAngle;
 		tempPos(1) = -graspAngle;
 		tempPos(2) = graspAngle;
 		tempPos(3) = graspAngle;
 		tempPos(4) = graspAngle;
-		tempPos(5) = -graspAngle;
+		tempPos(5) = -graspAngle;*/
+		tempPos(0) = idleAngle;
+		tempPos(1) = idleAngle;
+		tempPos(2) = -idleAngle;
+		tempPos(3) = -idleAngle;
+		tempPos(4) = -idleAngle;
+		tempPos(5) = idleAngle;
 		((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[0]))->m_State.m_rValue[0] = tempPos(0);
 		((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[1]))->m_State.m_rValue[0] = tempPos(1);
 		((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[2]))->m_State.m_rValue[0] = tempPos(2);
@@ -256,6 +268,10 @@ void updateFunc()
 	{
 		ur3Manager->setJointVal(ur3traj1[trajcnt % ur3traj1.size()]);
 		//pcb->GetBaseLink()->SetFrame(objTraj[trajcnt % ur3traj1.size()]);
+		wire->clearPoints();
+		wire->addPoint(Vec3(-0.5, -0.5, 1));
+		wire->addPoint(ur3Manager->forwardKin(ur3traj1[trajcnt % ur3traj1.size()], &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], SE3()).GetPosition());
+		wire->glRender();
 		if (trajcnt == ur3traj1.size() - 1) {
 			tempPos(0) = idleAngle;
 			tempPos(1) = idleAngle;
@@ -393,4 +409,20 @@ vector<Eigen::VectorXd> makeGriptraj(double gripangle, Eigen::VectorXd currentPo
 		gripTraj.push_back(tempPos);
 	}
 	return gripTraj;
+}
+
+void setObstacle()
+{
+	floor_link->GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	Vec3 obs_size = Vec3(5.0, 5.0, 0.05);
+	Vec3 obs_col_size = Vec3(5.0, 5.0, 0.05);
+	floor_link->GetGeomInfo().SetDimension(obs_size);
+	floor_link->GetGeomInfo().SetColor(0.1, 0.1, 0.1);
+	floor_colli->GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	floor_colli->GetGeomInfo().SetDimension(obs_col_size);
+	floor_link->AddCollision(floor_colli);
+	Floor->SetBaseLink(floor_link);
+	Floor->SetBaseLinkType(srSystem::FIXED);
+	gSpace.AddSystem(Floor);
+	Floor->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -0.20)));
 }
