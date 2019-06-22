@@ -51,6 +51,7 @@ void URrobotSetting();
 void URrobotManagerSetting();
 void URrrtSetting();
 void tempObjectSetting();
+Eigen::VectorXd robustInverseKinematics(SE3 finalpos);
 Eigen::VectorXd qval;
 
 Eigen::VectorXd point0;
@@ -66,7 +67,7 @@ vector<Eigen::VectorXd> ur3traj3(0);
 vector<SE3> objTraj(0);
 vector<Eigen::VectorXd> tempTraj(0);
 srLink* ee = new srLink;
-srSystem* obs = new srSystem;
+//srSystem* obs = new srSystem;
 SE3 Tobs2robot = SE3();
 
 vector<Eigen::VectorXd> GripTraj(0);
@@ -79,7 +80,7 @@ int main(int argc, char **argv)
 	srand(NULL);
 	// robot, object, environment settings should come before initDynamics()
 	URrobotSetting();
-	tempObjectSetting();
+	//tempObjectSetting();
 	//gSpace.AddSystem(hdmi);
 	//gSpace.AddSystem(power);
 	//gSpace.AddSystem(settop);
@@ -107,8 +108,8 @@ int main(int argc, char **argv)
 	URrrtSetting();
 
 	// place object in space
-	obs->GetBaseLink()->SetFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.5, -0.8, 0.12)));
-	cout << ur3Manager->forwardKin(qval, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP]) << endl;
+	//obs->GetBaseLink()->SetFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.5, -0.8, 0.12)));
+	//cout << ur3Manager->forwardKin(qval, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP]) << endl;
 
 
 	//hdmi->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI_HALF), Vec3(-0.2, -0.5, 0)));
@@ -133,8 +134,10 @@ int main(int argc, char **argv)
 	clock_t start = clock();
 	point0 = qval;
 	int flag = 0;
-	point1 = ur3Manager->inverseKin(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag);
-	cout << "inverse kinematics flag: " << flag << endl;
+	//point1 = ur3Manager->inverseKin(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag);
+	//cout << "inverse kinematics flag: " << flag << endl;
+	point1 = robustInverseKinematics(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot);
+
 	cout << tape->GetBaseLink()->GetFrame() * Tobs2robot << endl;
 	cout << ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() << endl;
 	ur3RRTManager->setStartandGoal(point0, point1);
@@ -391,9 +394,9 @@ void tempObjectSetting()
 	tempCol->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
 	tempCol->GetGeomInfo().SetDimension(dim);
 	ee->AddCollision(tempCol);
-	obs->SetBaseLink(ee);
-	obs->SetBaseLinkType(srSystem::FIXED);
-	gSpace.AddSystem(obs);
+	//obs->SetBaseLink(ee);
+	//obs->SetBaseLinkType(srSystem::FIXED);
+	//gSpace.AddSystem(obs);
 }
 
 vector<Eigen::VectorXd> makeGriptraj(double gripangle, Eigen::VectorXd currentPos)
@@ -417,12 +420,42 @@ void setObstacle()
 	Vec3 obs_size = Vec3(5.0, 5.0, 0.05);
 	Vec3 obs_col_size = Vec3(5.0, 5.0, 0.05);
 	floor_link->GetGeomInfo().SetDimension(obs_size);
-	floor_link->GetGeomInfo().SetColor(0.1, 0.1, 0.1);
+	floor_link->GetGeomInfo().SetColor(0.4, 0.4, 0.4);
 	floor_colli->GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	floor_colli->GetGeomInfo().SetDimension(obs_col_size);
 	floor_link->AddCollision(floor_colli);
 	Floor->SetBaseLink(floor_link);
 	Floor->SetBaseLinkType(srSystem::FIXED);
 	gSpace.AddSystem(Floor);
-	Floor->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -0.20)));
+	Floor->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -0.05)));
+}
+
+Eigen::VectorXd robustInverseKinematics(SE3 finalpos)
+{
+	srand((unsigned int)time(NULL));
+
+	int flag = 0;
+	Eigen::VectorXd lower = ur3->getLowerJointLimit();
+	Eigen::VectorXd upper = ur3->getUpperJointLimit();
+	Eigen::VectorXd initial = Eigen::VectorXd::Zero(lower.size());
+	Eigen::VectorXd currentpos = ur3Manager->getJointVal();
+
+	for (int i = 0; i < 15; i++) {
+		Eigen::VectorXd tempsol;
+		for (int j = 0; j < lower.size(); j++) {
+			int temp = int((upper[j] - lower[j]) * 1000);
+			initial[j] = (rand() % temp) / 1000 + lower[j];
+		}
+		tempsol = ur3Manager->inverseKin(finalpos, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag, initial);
+		cout << "inverse kinematics flag: " << flag << endl;
+
+		ur3Manager->setJointVal(tempsol);
+		if (!ur3Manager->checkCollision() && flag == 0) {
+			ur3Manager->setJointVal(currentpos);
+			return tempsol;
+		}
+	}
+	cout << "Cannot find solution..." << endl;
+	ur3Manager->setJointVal(currentpos);
+	return Eigen::VectorXd::Zero(lower.size());
 }
