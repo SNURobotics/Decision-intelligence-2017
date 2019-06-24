@@ -842,3 +842,53 @@ void Tape::AssembleModel()
 	this->SetSelfCollision(false);
 
 }
+
+WireBlock::WireBlock(double collision_offset /*= 0.01*/)
+{
+	m_collision_offset = collision_offset;
+	AssembleModel();
+}
+
+WireBlock::~WireBlock()
+{
+}
+
+void WireBlock::AssembleModel()
+{
+	m_numLink = 1;
+	m_numCollision = 1;
+
+	for (int i = 0; i < m_numLink; i++)
+	{
+		srLink* temp = new srLink;
+		m_ObjLink.push_back(*temp);
+	}
+	for (int i = 0; i < m_numCollision; i++)
+	{
+		srCollision* temp = new srCollision;
+		m_ObjCollision.push_back(*temp);
+	}
+	for (int i = 0; i < m_numWeldJoint; i++)
+	{
+		srLink* temp = new srLink;
+		m_ObjLink.push_back(*temp);
+	}
+
+	m_ObjLink[0].GetGeomInfo().SetColor(0.1, 0.1, 0.1);
+	m_ObjLink[0].SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::CYLINDER);
+	m_ObjLink[0].GetGeomInfo().SetDimension(0.05, 0.1, 0.0);
+	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0))); // SetLocalFrame --> Orientation: SolidworkssrLib에서 solidworks로 가는 SO3, Position: srLib frame의 orientation 기준으로 원점 이동하고 싶은 만큼 입력
+
+	Vec3 colli_offset(m_collision_offset);
+	Vec3 dim0(0.05, 0.05, 0.1);	// base part
+
+	m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[0].GetGeomInfo().SetDimension(dim0 + colli_offset);
+	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.0)));
+	m_ObjLink[0].AddCollision(&m_ObjCollision[0]);
+
+	this->SetBaseLink(&m_ObjLink[0]);
+	this->SetBaseLinkType(srSystem::KINEMATIC);
+	this->SetSelfCollision(false);
+}

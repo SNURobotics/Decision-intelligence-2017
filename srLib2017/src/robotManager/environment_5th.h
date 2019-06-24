@@ -100,3 +100,12 @@ public:
 	void AssembleModel();
 	double m_collision_offset;
 };
+
+class WireBlock : public Object
+{
+public:
+	WireBlock(double collision_offset = 0.0);
+	~WireBlock();
+	void AssembleModel();
+	double m_collision_offset;
+};
