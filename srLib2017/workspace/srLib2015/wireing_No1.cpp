@@ -55,7 +55,7 @@ void URrobotSetting();
 void URrobotManagerSetting();
 void URrrtSetting();
 void tempObjectSetting();
-Eigen::VectorXd robustInverseKinematics(SE3 finalpos);
+Eigen::VectorXd robustInverseKinematics(SE3 finalpos, Eigen::VectorXd original);
 Eigen::VectorXd qval;
 
 Eigen::VectorXd point0;
@@ -132,6 +132,7 @@ int main(int argc, char **argv)
 	//ur5RRTManager->setState(Eigen::VectorXd::Zero(6));
 
 	Tobs2robot = EulerXYZ(Vec3(SR_PI_HALF, 0, 0), Vec3(0.19, 0.06, 0.05));
+	// Tobs2robot = EulerXYZ(Vec3(SR_PI_HALF, -SR_PI_HALF, 0), Vec3(0.25, 0.05, 0.07));
 
 	//wire->addPoint(Vec3());
 	wire->setColor(0, 0, 0, 0.9);
@@ -142,7 +143,7 @@ int main(int argc, char **argv)
 	int flag = 0;
 	//point1 = ur3Manager->inverseKin(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag);
 	//cout << "inverse kinematics flag: " << flag << endl;
-	point1 = robustInverseKinematics(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot);
+	point1 = robustInverseKinematics(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot, point0);
 
 	cout << tape->GetBaseLink()->GetFrame() * Tobs2robot << endl;
 	cout << ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() << endl;
@@ -429,7 +430,7 @@ void setFloor()
 	Floor->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -0.05)));
 }
 
-Eigen::VectorXd robustInverseKinematics(SE3 finalpos)
+Eigen::VectorXd robustInverseKinematics(SE3 finalpos, Eigen::VectorXd original)
 {
 	srand((unsigned int)time(NULL));
 
@@ -439,7 +440,9 @@ Eigen::VectorXd robustInverseKinematics(SE3 finalpos)
 	Eigen::VectorXd initial = Eigen::VectorXd::Zero(lower.size());
 	Eigen::VectorXd currentpos = ur3Manager->getJointVal();
 
-	for (int i = 0; i < 20; i++) {
+	vector<Eigen::VectorXd> solList(0);
+
+	for (int i = 0; i < 25; i++) {
 		Eigen::VectorXd tempsol;
 		for (int j = 0; j < lower.size(); j++) {
 			int temp = int((upper[j] - lower[j]) * 1000);
@@ -450,11 +453,27 @@ Eigen::VectorXd robustInverseKinematics(SE3 finalpos)
 
 		ur3Manager->setJointVal(tempsol);
 		if (!ur3Manager->checkCollision() && flag == 0) {
-			ur3Manager->setJointVal(currentpos);
-			return tempsol;
+			solList.push_back(tempsol);
+			//ur3Manager->setJointVal(currentpos);
+			//return tempsol;
 		}
 	}
-	cout << "Cannot find solution..." << endl;
-	ur3Manager->setJointVal(currentpos);
-	return Eigen::VectorXd::Zero(lower.size());
+	if (solList.size() == 0) {
+		cout << "Cannot find solution..." << endl;
+		ur3Manager->setJointVal(currentpos);
+		return Eigen::VectorXd::Zero(lower.size());
+	}
+	else {
+		double temp = 10000;
+		double newsize = 0;
+		Eigen::VectorXd sol = Eigen::VectorXd::Zero(lower.size());
+		for (int i = 0; i < solList.size(); i++) {
+			newsize = (solList[i] - original).squaredNorm();
+			if (temp > newsize) {
+				temp = newsize;
+				sol = solList[i];
+			}
+		}
+		return sol;
+	}
 }
