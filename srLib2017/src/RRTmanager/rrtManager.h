@@ -52,6 +52,7 @@ public:
 	void									execute(double _step_size);
 	bool									isExecuted();
 	virtual vector<Eigen::VectorXd>			extractPath(int smoothingNum = 200);
+	virtual vector<Eigen::VectorXd>			extractPathOptimal();
 	
 	bool									collisionChecking(const Eigen::VectorXd& pos1, const Eigen::VectorXd& pos2, double step_size_collision = 0.01);
 	
@@ -70,6 +71,7 @@ protected:
 	virtual void							connectParentAndChild(rrtVertex* parentVertex, rrtVertex* childVertex);
 	int										randomInt(int LB, int UB);
 	list<rrtVertex*>						smoothingPath(list<rrtVertex*>& path, int smoothingnum);
+	list<rrtVertex*>						smoothingPathOptimal(list<rrtVertex*>& path);
 	virtual double							getDistance(const Eigen::VectorXd& vertPos1, const Eigen::VectorXd& vertPos2);
 	list<Eigen::VectorXd>					fillingPath(list<rrtVertex*>& path);
 

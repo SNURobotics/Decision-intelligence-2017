@@ -392,6 +392,55 @@ vector<Eigen::VectorXd> rrtManager::extractPath(int smoothingNum /*= 200*/)
 	return outputPath;
 }
 
+vector<Eigen::VectorXd> rrtManager::extractPathOptimal()
+{
+	list<rrtVertex*> path;
+
+	rrtVertex*  pCurrent;
+	if (startTree.find(connectedVertex1) == startTree.end())
+	{
+		rrtVertex* temp = connectedVertex1;
+		connectedVertex1 = connectedVertex2;
+		connectedVertex2 = temp;
+	}
+	pCurrent = connectedVertex1;
+	path.push_front(pCurrent);
+	pCurrent = pCurrent->parentVertex;
+	while (pCurrent != NULL)
+	{
+		path.push_front(pCurrent);
+		pCurrent = pCurrent->parentVertex;
+	}
+	pCurrent = connectedVertex2->parentVertex;
+	while (pCurrent != NULL)
+	{
+		path.push_back(pCurrent);
+		pCurrent = pCurrent->parentVertex;
+	}
+
+	list<rrtVertex*>::reverse_iterator iter = path.rbegin();
+	list<rrtVertex*>::reverse_iterator iter_end = path.rend(); iter_end--;
+	list<rrtVertex*>::reverse_iterator iter2;
+
+	for (iter; iter != iter_end; iter++)
+	{
+		advance(iter, 1);
+		iter2 = iter;				// parent vertex
+		advance(iter, -1);			// child vertex
+		connectParentAndChild((*iter2), (*iter));
+	}
+
+	path = smoothingPathOptimal(path);
+	list<Eigen::VectorXd> filledPath = fillingPath(path);
+	list<Eigen::VectorXd>::iterator iter_path = filledPath.begin();
+	vector<Eigen::VectorXd> outputPath(filledPath.size());
+	for (unsigned int i = 0; i < outputPath.size(); i++, iter_path++)
+	{
+		outputPath[i] = *iter_path;
+	}
+	return outputPath;
+}
+
 void rrtManager::connectParentAndChild(rrtVertex * parentVertex, rrtVertex * childVertex)
 {
 	childVertex->parentVertex = parentVertex;
@@ -600,6 +649,76 @@ list<rrtVertex*> rrtManager::smoothingPath(list<rrtVertex*>& path, int smoothing
 	
 	return path;
 
+}
+
+
+list<rrtVertex*> rrtManager::smoothingPathOptimal(list<rrtVertex*>& path)
+{
+	list<rrtVertex*> tmpPath;
+
+	list<rrtVertex*>::iterator iter1 = path.begin();
+	list<rrtVertex*>::iterator iter2 = path.begin();
+
+	vector<rrtVertex*> vertices(2);
+	vector<rrtVertex*> tempVertices;
+
+	for (int iterator = 0; iterator < 1; iterator++) {
+		iter1 = path.begin();
+		vertices[0] = *iter1;
+		advance(iter1, path.size() - 1);
+		int point;
+		bool loopFlag = 1;
+		cout << "step1: " << path.size() << endl;
+		for (point = 0; point < path.size() - 2; point++)
+		{	
+			if (loopFlag) {
+				vertices[1] = *iter1;
+				tempVertices = getCandidateVertices(vertices);
+				vector<rrtVertex*> removedVertex;
+				double cmp_rrtpath = getRRTpathSmoothingCost(vertices[0], vertices[1], removedVertex);
+				if (tempVertices.size() > 0)
+				{
+					replaceVertices(path, tempVertices, removedVertex);
+					cout << "step2: " << path.size() << endl;
+					loopFlag = 0;
+					if (point == 0) {
+						cout << "Early termination" << endl;
+						return path;
+					}
+				}
+				advance(iter1, -1);
+			}
+		}
+		loopFlag = 1;
+		int maxstep = path.size();
+		for (int step1 = 0; step1 < maxstep; step1++)
+		{
+			iter1 = path.begin();
+			advance(iter1, step1);
+			vertices[0] = *iter1;
+
+			for (int step2 = maxstep-1; step2 > step1; step2--)
+			{
+				iter2 = path.begin();
+				advance(iter2, step2);
+				vertices[1] = *iter2;
+
+				if (loopFlag) {
+					tempVertices = getCandidateVertices(vertices);
+					vector<rrtVertex*> removedVertex;
+					double cmp_rrtpath = getRRTpathSmoothingCost(vertices[0], vertices[1], removedVertex);
+					if (tempVertices.size() > 0)
+					{
+						replaceVertices(path, tempVertices, removedVertex);
+						cout << "step3: " << path.size() << endl;
+						maxstep = path.size();
+						step2 -= removedVertex.size();
+					}
+				}
+			}
+		}
+	}
+	return path;
 }
 
 int rrtManager::randomInt(int LB, int UB)
