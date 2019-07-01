@@ -473,6 +473,50 @@ vector<rrtVertex*> TBrrtManager::getCandidateVertices(vector<rrtVertex*> vertice
 	return vertices;
 }
 
+list<rrtVertex*> TBrrtManager::smoothingPath(list<rrtVertex*>& path, int smoothingnum)
+{
+	// Connenct two adjecent nodes, covering all area
+	int pathsize_tmp = path.size();
+
+	for (int iterSmoothing = 0; iterSmoothing < smoothingnum; iterSmoothing++)
+	{
+		for (int iterator = 0; iterator < pathsize_tmp - 2; iterator++) {
+			// pick two adjecent vertices
+			vector<rrtVertex*> vertices(2);
+			list<rrtVertex*>::iterator iter;
+			iter = path.begin();
+			advance(iter, iterator);
+			vertices[0] = *iter;
+			iter = path.begin();
+			advance(iter, iterator+2);
+			vertices[1] = *iter;
+
+			// calculate rrtpath smoothing cost between two vertices
+			vector<rrtVertex*> removedVertex;
+			double cmp_rrtpath = getRRTpathSmoothingCost(vertices[0], vertices[1], removedVertex);
+			double cmp;
+
+			// get candidate vertices without collision (tempVertices should contain both initial and end of vertices)
+			vector<rrtVertex*> tempVertices = getCandidateVertices(vertices);
+
+			if (tempVertices.size() > 0)
+			{
+				cmp = getNewPathSmoothingCost(tempVertices);
+
+				if (cmp < cmp_rrtpath)
+					replaceVertices(path, tempVertices, removedVertex);
+			}
+			pathsize_tmp = path.size();
+		}
+		/*if (path.size() >= pathsize_old) 
+			return path;
+		else 
+			pathsize_old = path.size();*/
+	}
+	return path;
+
+}
+
 //bool TBrrtManager::replaceVertices(list<rrtVertex*>& path, vector<rrtVertex*>& tempVertices, vector<rrtVertex*>& removedVertex)
 //{
 //	list<rrtVertex*> tmpPath;

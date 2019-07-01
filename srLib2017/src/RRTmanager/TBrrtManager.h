@@ -44,6 +44,7 @@ protected: // innerloop function
 protected: // smoothing function
 	//virtual vector<rrtVertex*>				getRandomVertices(list<rrtVertex*>& path);
 	virtual vector<rrtVertex*>				getCandidateVertices(vector<rrtVertex*> vertices);
+	list<rrtVertex*>						smoothingPath(list<rrtVertex*>& path, int smoothingnum);
 	//virtual bool							replaceVertices(list<rrtVertex*>& path, vector<rrtVertex*>& tempVertices, vector<rrtVertex*>& removedVertex);
 
 

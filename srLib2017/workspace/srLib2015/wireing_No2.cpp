@@ -81,6 +81,8 @@ SE3 Tobs2robot3 = SE3();
 SE3 Tobs2robot4 = SE3();
 SE3 Tobs2robot5 = SE3();
 
+bool isFirstLoop = 1;
+
 // Grip angle setting
 double graspAngle = 1.1;
 double idleAngle = -0.0;
@@ -94,6 +96,7 @@ Lines* wire1 = new Lines();
 Lines* wire2 = new Lines();
 Lines* wire3 = new Lines();
 Lines* wire4 = new Lines();
+vector<Vec3> wireNodes(0);
 
 int main(int argc, char **argv)
 {
@@ -217,7 +220,8 @@ int main(int argc, char **argv)
 
 	ur5RRTManager->setStartandGoal(point0, point1);
 	ur5RRTManager->execute(0.1);
-	ur5traj1 = ur5RRTManager->extractPath(20);
+	//ur5traj1 = ur5RRTManager->extractPath(20);
+	ur5traj1 = ur5RRTManager->extractPathOptimal();
 
 	// set object trajectory
 	for (unsigned int i = 0; i < ur5traj1.size(); i++)
@@ -238,7 +242,8 @@ int main(int argc, char **argv)
 
 	ur5RRTManager->setStartandGoal(point1, point2);
 	ur5RRTManager->execute(0.05);
-	ur5traj2 = ur5RRTManager->extractPath(20);
+	//ur5traj2 = ur5RRTManager->extractPath(20);
+	ur5traj2 = ur5RRTManager->extractPathOptimal();
 	// set object trajectory
 	for (unsigned int i = 0; i < ur5traj2.size(); i++)
 	{
@@ -254,7 +259,8 @@ int main(int argc, char **argv)
 
 	ur5RRTManager->setStartandGoal(point2, point3);
 	ur5RRTManager->execute(0.05);
-	ur5traj3 = ur5RRTManager->extractPath(20);
+	//ur5traj3 = ur5RRTManager->extractPath(20);
+	ur5traj3 = ur5RRTManager->extractPathOptimal();
 	// set object trajectory
 	for (unsigned int i = 0; i < ur5traj3.size(); i++)
 	{
@@ -270,7 +276,8 @@ int main(int argc, char **argv)
 
 	ur5RRTManager->setStartandGoal(point3, point4);
 	ur5RRTManager->execute(0.05);
-	ur5traj4 = ur5RRTManager->extractPath(20);
+	//ur5traj4 = ur5RRTManager->extractPath(20);
+	ur5traj4 = ur5RRTManager->extractPathOptimal();
 	// set object trajectory
 	for (unsigned int i = 0; i < ur5traj4.size(); i++)
 	{
@@ -287,7 +294,8 @@ int main(int argc, char **argv)
 
 	ur5RRTManager->setStartandGoal(point4, point1);
 	ur5RRTManager->execute(0.05);
-	ur5traj5 = ur5RRTManager->extractPath(30);
+	//ur5traj5 = ur5RRTManager->extractPath(30);
+	ur5traj5 = ur5RRTManager->extractPathOptimal();
 	// set object trajectory
 	for (unsigned int i = 0; i < ur5traj5.size(); i++)
 	{
@@ -339,93 +347,113 @@ void updateFunc()
 	static int trajcnt = 0;
 	cnt++;
 
-	if (cnt % 10 == 0)
+	if (cnt % 10 == 0) {
 		trajcnt++;
 
-	// plot planned trajectory
-	Eigen::VectorXd tempPos = Eigen::VectorXd::Zero(6);
-	if (trajcnt == 1)
-	{
-		wire1->clearPoints();
-		wire2->clearPoints();
-		wire3->clearPoints();
-		wire4->clearPoints();
+		// plot planned trajectory
 		Eigen::VectorXd tempPos = Eigen::VectorXd::Zero(6);
-		ur5Manager->setGripperPosition(gripPos);
-	}
-	if (trajcnt < ur5traj1.size())
-	{
-		ur5Manager->setJointVal(ur5traj1[trajcnt % ur5traj1.size()]);
-		wireBlock->GetBaseLink()->SetFrame(objTraj[trajcnt % ur5traj1.size()]);
-		if (trajcnt == ur5traj1.size() - 1) {
+		if (trajcnt == 1)
+		{
+			wire1->clearPoints();
+			wire2->clearPoints();
+			wire3->clearPoints();
+			wire4->clearPoints();
+			Eigen::VectorXd tempPos = Eigen::VectorXd::Zero(6);
 			ur5Manager->setGripperPosition(gripPos);
 		}
-	}
-	else if (trajcnt < ur5traj1.size() + ur5traj2.size())
-	{
-		SE3 lastPoint = wireBlock->getBaseLinkFrame();
-		SE3 currentPoint = ur5Manager->forwardKin(ur5traj2[(trajcnt - ur5traj1.size()) % ur5traj2.size()], &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());
-		wire1->clearPoints();
-		wire1->addPoint(lastPoint.GetPosition());
-		wire1->addPoint(currentPoint.GetPosition() + Vec3(0, 0, -0.06));
-		wire1->glRender();
-		ur5Manager->setJointVal(ur5traj2[(trajcnt - ur5traj1.size()) % ur5traj2.size()]);
-		if (trajcnt == ur5traj1.size() + ur5traj2.size() - 1) {
-			ur5Manager->setGripperPosition(gripPos);
+		if (trajcnt < ur5traj1.size())
+		{
+			ur5Manager->setJointVal(ur5traj1[trajcnt % ur5traj1.size()]);
+			wireBlock->GetBaseLink()->SetFrame(objTraj[trajcnt % ur5traj1.size()]);
+			if (trajcnt == ur5traj1.size() - 1) {
+				ur5Manager->setGripperPosition(gripPos);
+			}
 		}
-	}
-	else if (trajcnt < ur5traj1.size() + ur5traj2.size() + ur5traj3.size())
-	{
-		//SE3 lastPoint = ur5Manager->forwardKin(ur5traj1[ur5traj1.size() - 1], &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());
-		SE3 lastPoint = wireBlock->getBaseLinkFrame();
-		SE3 currentPoint = ur5Manager->forwardKin(ur5traj3[(trajcnt - ur5traj1.size() - ur5traj2.size()) % ur5traj3.size()], &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());
-		wire1->clearPoints();
-		wire1->addPoint(lastPoint.GetPosition());
-		wire1->addPoint(currentPoint.GetPosition() + Vec3(0, 0, -0.06));
-		wire1->glRender();
-		ur5Manager->setJointVal(ur5traj3[(trajcnt - ur5traj1.size() - ur5traj2.size()) % ur5traj3.size()]);
-		if (trajcnt == ur5traj1.size() + ur5traj2.size() + ur5traj3.size() - 1) {
-			ur5Manager->setGripperPosition(gripPos);
+		else if (trajcnt < ur5traj1.size() + ur5traj2.size())
+		{
+			SE3 lastPoint;
+			if (isFirstLoop)
+				lastPoint = wireBlock->getBaseLinkFrame();
+			else {
+				lastPoint = boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(0.066, -0.005, 0.060));
+			}
+			SE3 currentPoint = ur5Manager->forwardKin(ur5traj2[(trajcnt - ur5traj1.size()) % ur5traj2.size()], &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());
+			wire1->clearPoints();
+			wire1->addPoint(lastPoint.GetPosition());
+			wire1->addPoint(currentPoint.GetPosition() + Vec3(0, 0, -0.06));
+			wire1->glRender();
+			ur5Manager->setJointVal(ur5traj2[(trajcnt - ur5traj1.size()) % ur5traj2.size()]);
+			if (trajcnt == ur5traj1.size() + ur5traj2.size() - 1) {
+				ur5Manager->setGripperPosition(gripPos);
+
+				wire2->clearPoints();
+				wireNodes.push_back(lastPoint.GetPosition() + Vec3(0, 0, double((rand() % 100) - 50) / 50000));
+				for (int i = 0; i < wireNodes.size(); i++) wire2->addPoint(wireNodes[i]);
+
+			}
 		}
-	}
-	else if (trajcnt < ur5traj1.size() + ur5traj2.size() + ur5traj3.size() + ur5traj4.size())
-	{
-		wire1->clearPoints();
-		wire1->addPoint(wireBlock->getBaseLinkFrame().GetPosition());
-		wire1->addPoint(boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(-0.066, -0.005, 0.060)).GetPosition());
-		wire1->glRender();
-		wire3->clearPoints();
-		wire3->addPoint(boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(-0.066, 0.005, 0.060)).GetPosition());
-		wire3->addPoint(boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(-0.066, -0.005, 0.060)).GetPosition());
-		wire3->glRender();
-		//SE3 lastPoint = ur5Manager->forwardKin(ur5traj3[ur5traj3.size() - 1], &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());
-		SE3 lastPoint = boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(-0.066, 0.005, 0.120));
-		SE3 currentPoint = ur5Manager->forwardKin(ur5traj4[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur5traj3.size()) % ur5traj4.size()], &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());
-		wire2->clearPoints();
-		wire2->addPoint(lastPoint.GetPosition() + Vec3(0, 0, -0.06));
-		wire2->addPoint(currentPoint.GetPosition() + Vec3(0, 0, -0.06));
-		wire2->glRender();
-		ur5Manager->setJointVal(ur5traj4[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur5traj3.size()) % ur5traj4.size()]);
-		if (trajcnt == ur5traj1.size() + ur5traj2.size() + ur5traj3.size() + ur5traj4.size() - 1) {
-			ur5Manager->setGripperPosition(gripPos);
+		else if (trajcnt < ur5traj1.size() + ur5traj2.size() + ur5traj3.size())
+		{
+			//SE3 lastPoint = ur5Manager->forwardKin(ur5traj1[ur5traj1.size() - 1], &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());
+			SE3 lastPoint;
+			if (isFirstLoop)
+				lastPoint = wireBlock->getBaseLinkFrame();
+			else {
+				lastPoint = boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(0.066, -0.005, 0.060));
+			}
+			SE3 currentPoint = ur5Manager->forwardKin(ur5traj3[(trajcnt - ur5traj1.size() - ur5traj2.size()) % ur5traj3.size()], &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());
+			wire1->clearPoints();
+			wire1->addPoint(lastPoint.GetPosition());
+			wire1->addPoint(currentPoint.GetPosition() + Vec3(0, 0, -0.06));
+			wire1->glRender();
+			ur5Manager->setJointVal(ur5traj3[(trajcnt - ur5traj1.size() - ur5traj2.size()) % ur5traj3.size()]);
+			if (trajcnt == ur5traj1.size() + ur5traj2.size() + ur5traj3.size() - 1) {
+				ur5Manager->setGripperPosition(gripPos);
+
+				wire2->clearPoints();
+				wireNodes.push_back(boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(-0.066, -0.005, 0.060)).GetPosition() + Vec3(0, 0, double((rand() % 100) - 50) / 50000));
+				wireNodes.push_back(boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(-0.066, 0.005, 0.060)).GetPosition() + Vec3(0, 0, double((rand() % 100) - 50) / 50000));
+				for (int i = 0; i < wireNodes.size(); i++) wire2->addPoint(wireNodes[i]);
+
+			}
 		}
-	}
-	else if (trajcnt < ur5traj1.size() + ur5traj2.size() + ur5traj3.size() + ur5traj4.size() + ur5traj5.size())
-	{
-		wire3->clearPoints();
-		wire3->addPoint(boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(-0.066, 0.005, 0.060)).GetPosition());
-		wire3->addPoint(boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(-0.066, -0.005, 0.060)).GetPosition());
-		wire3->glRender();
-		SE3 lastPoint = boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(-0.066, 0.005, 0.120));
-		SE3 currentPoint = ur5Manager->forwardKin(ur5traj5[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur5traj3.size() - ur5traj4.size()) % ur5traj5.size()], &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());
-		wire2->clearPoints();
-		wire2->addPoint(lastPoint.GetPosition() + Vec3(0, 0, -0.06));
-		wire2->addPoint(currentPoint.GetPosition() + Vec3(0, 0, -0.06));
-		wire2->glRender();
-		ur5Manager->setJointVal(ur5traj5[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur5traj3.size() - ur5traj4.size()) % ur5traj5.size()]);
-		if (trajcnt == ur5traj1.size() + ur5traj2.size() + ur5traj3.size() + ur5traj4.size() + ur5traj5.size() - 1) {
-			ur5Manager->setGripperPosition(gripPos);
-			trajcnt = -15;
+		else if (trajcnt < ur5traj1.size() + ur5traj2.size() + ur5traj3.size() + ur5traj4.size())
+		{
+			//SE3 lastPoint = ur5Manager->forwardKin(ur5traj3[ur5traj3.size() - 1], &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());
+			SE3 lastPoint = boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(-0.066, 0.005, 0.120));
+			SE3 currentPoint = ur5Manager->forwardKin(ur5traj4[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur5traj3.size()) % ur5traj4.size()], &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());
+			wire1->clearPoints();
+			wire1->addPoint(lastPoint.GetPosition() + Vec3(0, 0, -0.06));
+			wire1->addPoint(currentPoint.GetPosition() + Vec3(0, 0, -0.06));
+			wire1->glRender();
+			ur5Manager->setJointVal(ur5traj4[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur5traj3.size()) % ur5traj4.size()]);
+			if (trajcnt == ur5traj1.size() + ur5traj2.size() + ur5traj3.size() + ur5traj4.size() - 1) {
+				ur5Manager->setGripperPosition(gripPos);
+			}
+		}
+		else if (trajcnt < ur5traj1.size() + ur5traj2.size() + ur5traj3.size() + ur5traj4.size() + ur5traj5.size())
+		{
+			SE3 lastPoint = boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(-0.066, 0.005, 0.120));
+			SE3 currentPoint = ur5Manager->forwardKin(ur5traj5[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur5traj3.size() - ur5traj4.size()) % ur5traj5.size()], &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());
+			wire1->clearPoints();
+			wire1->addPoint(lastPoint.GetPosition() + Vec3(0, 0, -0.06));
+			wire1->addPoint(currentPoint.GetPosition() + Vec3(0, 0, -0.06));
+			wire1->glRender();
+			ur5Manager->setJointVal(ur5traj5[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur5traj3.size() - ur5traj4.size()) % ur5traj5.size()]);
+			if (trajcnt == ur5traj1.size() + ur5traj2.size() + ur5traj3.size() + ur5traj4.size() + ur5traj5.size() - 1) {
+				ur5Manager->setGripperPosition(gripPos);
+
+				wire2->clearPoints();
+				wireNodes.push_back(boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(0.066, 0.005, 0.060)).GetPosition() + Vec3(0, 0, double((rand() % 100) - 50) / 50000));
+				wireNodes.push_back(boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(0.066, -0.005, 0.060)).GetPosition() + Vec3(0, 0, double((rand() % 100) - 50) / 50000));
+				//for (int i = 0; i < wireNodes.size(); i++) wire2->addPoint(wireNodes[i]);
+				for (int i = 0; i < wireNodes.size(); i++) {
+					wire2->addPoint(ur5->gMarkerLink[UR5_Index::MLINK_GRIP].GetFrame()*Inv(boxfortape->getBaseLinkFrame())*wireNodes[i]);
+				}
+
+				isFirstLoop = 0;
+				trajcnt = ur5traj1.size();
+			}
 		}
 	}
 }

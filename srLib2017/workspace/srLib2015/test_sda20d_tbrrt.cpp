@@ -141,6 +141,7 @@ int main(int argc, char **argv)
 	RRTManager->printIter = false;
 	if (doPlanning)
 	{
+		clock_t start = clock();
 		for (int k = 0; k < 1; k++)
 		{
 			vector<unsigned int> colliIdx(0);
@@ -157,7 +158,7 @@ int main(int argc, char **argv)
 			//for (unsigned int i = 0; i < traj.size(); i++)
 			//	constraintVec.push_back(armConstraint->getConstraintVector(traj[i]));
 			//saveDataToText(constraintVec, "../../../data/tbrrt_traj/tbrrt_traj_constraintVec.txt");
-			traj2 = RRTManager->extractPath(200);
+			traj2 = RRTManager->extractPath(10);
 			saveDataToText(traj2, "../../../data/tbrrt_traj/tbrrt_traj_test2.txt");
 			vector<Eigen::VectorXd> constraintVec2(0);
 			for (unsigned int i = 0; i < traj2.size(); i++)
@@ -181,6 +182,7 @@ int main(int argc, char **argv)
 				cout << colliIdx[i] << ", ";
 			cout << endl;
 		}
+		cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
 	}
 	
 	///////////////////////////////////////////////////////////////////
