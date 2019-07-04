@@ -63,14 +63,14 @@ Eigen::VectorXd point1;
 Eigen::VectorXd point2;
 Eigen::VectorXd point3;
 Eigen::VectorXd point4;
+Eigen::VectorXd point5;
 vector<Eigen::VectorXd> ur5traj1(0);
 vector<Eigen::VectorXd> ur5traj2(0);
 vector<Eigen::VectorXd> ur5traj3(0);
 vector<Eigen::VectorXd> ur5traj4(0);
 vector<Eigen::VectorXd> ur5traj5(0);
-vector<Eigen::VectorXd> ur3traj1(0);
-vector<Eigen::VectorXd> ur3traj2(0);
-vector<Eigen::VectorXd> ur3traj3(0);
+vector<Eigen::VectorXd> ur5traj6(0);
+
 vector<SE3> objTraj(0);
 vector<Eigen::VectorXd> tempTraj(0);
 srLink* ee = new srLink;
@@ -81,7 +81,7 @@ SE3 Tobs2robot3 = SE3();
 SE3 Tobs2robot4 = SE3();
 SE3 Tobs2robot5 = SE3();
 
-bool isFirstLoop = 1;
+int loopNumFlag = 0;
 
 // Grip angle setting
 double graspAngle = 1.1;
@@ -289,10 +289,9 @@ int main(int argc, char **argv)
 	////////////////// RRT planning for ur3 with object detached (point4 -> point5) ///////////////
 	start = clock();
 	ur5Manager->setGripperPosition(gripPos);
-	point1 = robustInverseKinematics(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot5, point4);
-	//point1 = robustInverseKinematics(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot5, point4);
+	point5 = robustInverseKinematics(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot5, point4);
 
-	ur5RRTManager->setStartandGoal(point4, point1);
+	ur5RRTManager->setStartandGoal(point4, point5);
 	ur5RRTManager->execute(0.05);
 	//ur5traj5 = ur5RRTManager->extractPath(30);
 	ur5traj5 = ur5RRTManager->extractPathOptimal();
@@ -300,6 +299,22 @@ int main(int argc, char **argv)
 	for (unsigned int i = 0; i < ur5traj5.size(); i++)
 	{
 		ur5RRTManager->setState(ur5traj5[i]);
+	}
+	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	///////////////////////////////////////////////////////////////////////////////
+
+	////////////////// RRT planning for ur3 with object detached (point4 -> point5) ///////////////
+	start = clock();
+	ur5Manager->setGripperPosition(gripPos);
+
+	ur5RRTManager->setStartandGoal(point5, point1);
+	ur5RRTManager->execute(0.05);
+	//ur5traj5 = ur5RRTManager->extractPath(30);
+	ur5traj6 = ur5RRTManager->extractPathOptimal();
+	// set object trajectory
+	for (unsigned int i = 0; i < ur5traj6.size(); i++)
+	{
+		ur5RRTManager->setState(ur5traj6[i]);
 	}
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
 	///////////////////////////////////////////////////////////////////////////////
@@ -372,7 +387,7 @@ void updateFunc()
 		else if (trajcnt < ur5traj1.size() + ur5traj2.size())
 		{
 			SE3 lastPoint;
-			if (isFirstLoop)
+			if (loopNumFlag == 0)
 				lastPoint = wireBlock->getBaseLinkFrame();
 			else {
 				lastPoint = boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(0.066, -0.005, 0.060));
@@ -396,7 +411,7 @@ void updateFunc()
 		{
 			//SE3 lastPoint = ur5Manager->forwardKin(ur5traj1[ur5traj1.size() - 1], &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());
 			SE3 lastPoint;
-			if (isFirstLoop)
+			if (loopNumFlag == 0)
 				lastPoint = wireBlock->getBaseLinkFrame();
 			else {
 				lastPoint = boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(0.066, -0.005, 0.060));
@@ -407,6 +422,7 @@ void updateFunc()
 			wire1->addPoint(currentPoint.GetPosition() + Vec3(0, 0, -0.06));
 			wire1->glRender();
 			ur5Manager->setJointVal(ur5traj3[(trajcnt - ur5traj1.size() - ur5traj2.size()) % ur5traj3.size()]);
+
 			if (trajcnt == ur5traj1.size() + ur5traj2.size() + ur5traj3.size() - 1) {
 				ur5Manager->setGripperPosition(gripPos);
 
@@ -415,6 +431,18 @@ void updateFunc()
 				wireNodes.push_back(boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(-0.066, 0.005, 0.060)).GetPosition() + Vec3(0, 0, double((rand() % 100) - 50) / 50000));
 				for (int i = 0; i < wireNodes.size(); i++) wire2->addPoint(wireNodes[i]);
 
+				if (loopNumFlag == 2) {
+
+					for (int i = 0; i < wireNodes.size(); i++) cout << wireNodes[i] << endl;
+					cout << endl;
+					cout << ur5Manager->getJointVal() << endl;
+					cout << endl;
+					cout << ur3Manager->getJointVal() << endl;
+
+					wireNodes.clear();
+					loopNumFlag = 0;
+					trajcnt = -15;
+				}
 			}
 		}
 		else if (trajcnt < ur5traj1.size() + ur5traj2.size() + ur5traj3.size() + ur5traj4.size())
@@ -439,19 +467,35 @@ void updateFunc()
 			wire1->addPoint(lastPoint.GetPosition() + Vec3(0, 0, -0.06));
 			wire1->addPoint(currentPoint.GetPosition() + Vec3(0, 0, -0.06));
 			wire1->glRender();
+
 			ur5Manager->setJointVal(ur5traj5[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur5traj3.size() - ur5traj4.size()) % ur5traj5.size()]);
 			if (trajcnt == ur5traj1.size() + ur5traj2.size() + ur5traj3.size() + ur5traj4.size() + ur5traj5.size() - 1) {
 				ur5Manager->setGripperPosition(gripPos);
 
 				wire2->clearPoints();
 				wireNodes.push_back(boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(0.066, 0.005, 0.060)).GetPosition() + Vec3(0, 0, double((rand() % 100) - 50) / 50000));
-				wireNodes.push_back(boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(0.066, -0.005, 0.060)).GetPosition() + Vec3(0, 0, double((rand() % 100) - 50) / 50000));
-				//for (int i = 0; i < wireNodes.size(); i++) wire2->addPoint(wireNodes[i]);
-				for (int i = 0; i < wireNodes.size(); i++) {
-					wire2->addPoint(ur5->gMarkerLink[UR5_Index::MLINK_GRIP].GetFrame()*Inv(boxfortape->getBaseLinkFrame())*wireNodes[i]);
-				}
+				for (int i = 0; i < wireNodes.size(); i++) wire2->addPoint(wireNodes[i]);
+			}
+		}
+		else if (trajcnt < ur5traj1.size() + ur5traj2.size() + ur5traj3.size() + ur5traj4.size() + ur5traj5.size() + ur5traj6.size())
+		{
+			SE3 lastPoint = boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(0.066, 0.005, 0.120));
+			SE3 currentPoint = ur5Manager->forwardKin(ur5traj6[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur5traj3.size() - ur5traj4.size() - ur5traj5.size()) % ur5traj6.size()], &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());
+			wire1->clearPoints();
+			wire1->addPoint(lastPoint.GetPosition() + Vec3(0, 0, -0.06));
+			wire1->addPoint(currentPoint.GetPosition() + Vec3(0, 0, -0.06));
+			wire1->glRender();
 
-				isFirstLoop = 0;
+			ur5Manager->setJointVal(ur5traj6[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur5traj3.size() - ur5traj4.size() - ur5traj5.size()) % ur5traj6.size()]);
+			if (trajcnt == ur5traj1.size() + ur5traj2.size() + ur5traj3.size() + ur5traj4.size() + ur5traj5.size() + ur5traj6.size() - 1)
+			{
+				ur5Manager->setGripperPosition(gripPos);
+
+				wire2->clearPoints();
+				wireNodes.push_back(boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(0.066, -0.005, 0.060)).GetPosition() + Vec3(0, 0, double((rand() % 100) - 50) / 50000));
+				for (int i = 0; i < wireNodes.size(); i++) wire2->addPoint(wireNodes[i]);
+
+				loopNumFlag++;
 				trajcnt = ur5traj1.size();
 			}
 		}

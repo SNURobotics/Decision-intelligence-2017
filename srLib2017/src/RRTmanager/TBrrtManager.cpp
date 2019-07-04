@@ -418,10 +418,11 @@ vector<rrtVertex*> TBrrtManager::getCandidateVertices(vector<rrtVertex*> vertice
 			return vector<rrtVertex*>();
 	}*/
 
-	Eigen::VectorXd temp1 = vertices[0]->posState;
+	Eigen::VectorXd temp1;
 	Eigen::VectorXd temp2;
 	for (unsigned int i = 0; i < vertices.size() - 1; i++)
 	{
+		temp1 = vertices[i]->posState;
 		temp2 = vertices[i + 1]->posState;
 		// collision checking
 		Eigen::VectorXd dir = temp2 - temp1;
@@ -441,7 +442,7 @@ vector<rrtVertex*> TBrrtManager::getCandidateVertices(vector<rrtVertex*> vertice
 
 		if (Collision)
 			return vector<rrtVertex*>();
-		temp1 = temp2;
+		//temp1 = temp2;
 	}
 
 	/*Eigen::VectorXd temp;
@@ -477,13 +478,18 @@ list<rrtVertex*> TBrrtManager::smoothingPath(list<rrtVertex*>& path, int smoothi
 {
 	// Connenct two adjecent nodes, covering all area
 	int pathsize_tmp = path.size();
+	int pathsize_old = path.size();
+	double cost_old = getRRTpathSmoothingCost(path.front(), path.back(), vector<rrtVertex*>(0));
+
+	vector<rrtVertex*> vertices(2);
+	list<rrtVertex*>::iterator iter;
 
 	for (int iterSmoothing = 0; iterSmoothing < smoothingnum; iterSmoothing++)
 	{
+		// Version 1
+		vertices = vector<rrtVertex*>(2);
 		for (int iterator = 0; iterator < pathsize_tmp - 2; iterator++) {
 			// pick two adjecent vertices
-			vector<rrtVertex*> vertices(2);
-			list<rrtVertex*>::iterator iter;
 			iter = path.begin();
 			advance(iter, iterator);
 			vertices[0] = *iter;
@@ -508,10 +514,114 @@ list<rrtVertex*> TBrrtManager::smoothingPath(list<rrtVertex*>& path, int smoothi
 			}
 			pathsize_tmp = path.size();
 		}
-		/*if (path.size() >= pathsize_old) 
+
+		//// Version 2
+		//for (int iterator = 0; (iterator * 2 + 3) < pathsize_tmp; iterator++) {
+		//	// pick two adjecent vertices
+		//	if (iterSmoothing % 2 == 0) {
+		//		iter = path.begin();
+		//		advance(iter, 2 * iterator);
+		//		vertices[0] = *iter;
+		//		iter = path.begin();
+		//		advance(iter, 2 * iterator + 2);
+		//		vertices[1] = *iter;
+		//	}
+		//	else {
+		//		iter = path.begin();
+		//		advance(iter, 2 * iterator + 1);
+		//		vertices[0] = *iter;
+		//		iter = path.begin();
+		//		advance(iter, 2 * iterator + 3);
+		//		vertices[1] = *iter;
+		//	}
+
+		//	// calculate rrtpath smoothing cost between two vertices
+		//	vector<rrtVertex*> removedVertex;
+		//	double cmp_rrtpath = getRRTpathSmoothingCost(vertices[0], vertices[1], removedVertex);
+		//	double cmp;
+
+		//	// get candidate vertices without collision (tempVertices should contain both initial and end of vertices)
+		//	vector<rrtVertex*> tempVertices = getCandidateVertices(vertices);
+
+		//	if (tempVertices.size() > 0)
+		//	{
+		//		cmp = getNewPathSmoothingCost(tempVertices);
+
+		//		if (cmp < cmp_rrtpath) {
+		//			/*vector<rrtVertex*> tempVerticesWithMid(3);
+		//			tempVerticesWithMid[0] = tempVertices[0];
+		//			tempVerticesWithMid[2] = tempVertices[1];
+		//			rrtVertex* tempVertex = new rrtVertex();
+		//			tempVertex->posState = (tempVertices[0]->posState + tempVertices[1]->posState) / 2;
+		//			tempVerticesWithMid[1] = tempVertex;
+		//			replaceVertices(path, tempVerticesWithMid, removedVertex);*/
+
+		//			list<rrtVertex*>::iterator iter;
+		//			if (iterSmoothing % 2 == 0) {
+		//				iter = path.begin();
+		//				advance(iter, 2 * iterator + 1);
+		//				(*iter)->posState = (tempVertices.front()->posState + tempVertices.back()->posState) / 2;
+		//			}
+		//			else {
+		//				iter = path.begin();
+		//				advance(iter, 2 * iterator + 2);
+		//				(*iter)->posState = (tempVertices.front()->posState + tempVertices.back()->posState) / 2;
+		//			}
+		//		}
+		//	}
+		//	pathsize_tmp = path.size();
+		//}
+
+		vertices = vector<rrtVertex*>(3);
+		for (int iterator = 0; iterator < path.size() - 2; iterator++) 
+		{
+			// pick two adjecent vertices
+			iter = path.begin();
+			advance(iter, iterator);
+			vertices[0] = *iter;
+			iter = path.begin();
+			advance(iter, iterator + 1);
+			vertices[1] = *iter;
+			iter = path.begin();
+			advance(iter, iterator + 2);
+			vertices[2] = *iter;
+
+			rrtVertex* tmpVertex = new rrtVertex();
+			tmpVertex->posState = vertices[1]->posState * 0.9 + (vertices[0]->posState + vertices[2]->posState) / 2 * 0.1;
+			tmpVertex->parentVertex = vertices[0];
+			tmpVertex->distance2parent = getDistance(tmpVertex->posState, vertices[0]->posState);
+			tmpVertex->cost_bw_parent = getCost(tmpVertex, vertices[0]);
+			vertices[1] = tmpVertex;
+
+			// get candidate vertices without collision (tempVertices should contain both initial and end of vertices)
+			vector<rrtVertex*> tempVertices = getCandidateVertices(vertices);
+
+			if (tempVertices.size() > 0)
+			{
+				iter = path.begin();
+				advance(iter, iterator + 1);
+				*(*iter) = *vertices[1];
+				advance(iter, 1);
+				(*iter)->distance2parent = getDistance((*iter)->posState, vertices[1]->posState);
+				(*iter)->cost_bw_parent = getCost((*iter), vertices[1]);
+			}
+		}
+
+		string str;
+		str += "../../../data/tbrrt_traj/tbrrt_traj_iter";
+		str += to_string(iterSmoothing+1)+".txt";
+		list<Eigen::VectorXd> filledPath = fillingPath(path);
+		saveDataToText(filledPath, str);
+
+		double cost = getRRTpathSmoothingCost(path.front(), path.back(), vector<rrtVertex*>(0));
+		cout << path.size() << " " << pathsize_old << endl;
+		cout << cost << " " << cost_old << endl;
+		if (path.size() >= pathsize_old && cost >= cost_old * 0.99)
 			return path;
-		else 
-			pathsize_old = path.size();*/
+		else {
+			pathsize_old = path.size();
+			cost_old = cost;
+		}
 	}
 	return path;
 

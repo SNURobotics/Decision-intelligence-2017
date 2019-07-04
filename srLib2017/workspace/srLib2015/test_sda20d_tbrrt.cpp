@@ -46,6 +46,7 @@ void setObstacle2();
 void setObjects();
 int activeJointIdx =0;
 vector<Eigen::VectorXd> traj(0);
+vector<Eigen::VectorXd> traj1(0);
 vector<Eigen::VectorXd> traj2(0);
 Eigen::VectorXd qTemp;
 Eigen::VectorXd q;
@@ -158,7 +159,7 @@ int main(int argc, char **argv)
 			//for (unsigned int i = 0; i < traj.size(); i++)
 			//	constraintVec.push_back(armConstraint->getConstraintVector(traj[i]));
 			//saveDataToText(constraintVec, "../../../data/tbrrt_traj/tbrrt_traj_constraintVec.txt");
-			traj2 = RRTManager->extractPath(10);
+			traj2 = RRTManager->extractPath(20);
 			saveDataToText(traj2, "../../../data/tbrrt_traj/tbrrt_traj_test2.txt");
 			vector<Eigen::VectorXd> constraintVec2(0);
 			for (unsigned int i = 0; i < traj2.size(); i++)

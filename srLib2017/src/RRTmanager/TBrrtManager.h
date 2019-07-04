@@ -48,7 +48,6 @@ protected: // smoothing function
 	//virtual bool							replaceVertices(list<rrtVertex*>& path, vector<rrtVertex*>& tempVertices, vector<rrtVertex*>& removedVertex);
 
 
-
 protected: // TB-RRT functions
 	// tangent space
 	//void									getTangentBasis(const Eigen::VectorXd& vertPos1);	// retrieve current node's TB basis form constraint manifold
