@@ -129,7 +129,7 @@ int main(int argc, char **argv)
 	boxfortape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.4, -0.5, 0)));
 
 	/////////////// RRT planning to reach object (1. approaching the settup box & 2. grasping the settup box) ///////////////
-	cout << "1. approaching the settup box & 2. grasping the settup box";
+	cout << "1. approaching the settup box & 2. grasping the settup box" << endl;
 	clock_t start = clock();
 	UR5point0 = Eigen::VectorXd::Zero(6);
 	int flag = 0;
@@ -152,7 +152,7 @@ int main(int argc, char **argv)
 	//////////////////////////////////////////////////////////////
 
 	/////////////////// RRT planning for UR5 with object attached (3. placing the settup box) ///////////////
-	cout << "3. placing the settup box";
+	cout << "3. placing the settup box" << endl;
 	/*Eigen::VectorXd point2(6);
 	point2(0) = 0;
 	point2(1) = -0.3*SR_PI_HALF;
@@ -180,7 +180,7 @@ int main(int argc, char **argv)
 	///////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for UR3 with object detached (4. Approaching the hdmi connector & 5. grasping the hdmi connector) ///////////////
-	cout << "4. Approaching the hdmi connector & 5. grasping the hdmi connector";
+	cout << "4. Approaching the hdmi connector & 5. grasping the hdmi connector" << endl;
 	start = clock();
 	UR3point0 = qval;
 	ur3_invkinInit[0] = -2.796488; ur3_invkinInit[1] = -SR_PI_HALF; ur3_invkinInit[2] = 1.787395;
@@ -202,7 +202,7 @@ int main(int argc, char **argv)
 	///////////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for UR3 with object detached (6. Bringing the hdmi to the settup box) ///////////////
-	cout << "6. Bringing the hdmi to the settup box";
+	cout << "6. Bringing the hdmi to the settup box" << endl;
 	start = clock();
 	ur3_invkinInit[0] = -2.796488; ur3_invkinInit[1] = -SR_PI_HALF; ur3_invkinInit[2] = 1.787395;
 	ur3_invkinInit[3] = -1.75; ur3_invkinInit[4] = -1.570796; ur3_invkinInit[5] = 1.915901;
@@ -226,7 +226,7 @@ int main(int argc, char **argv)
 
 
 	////////////////// RRT planning for UR3 with object detached (7. Pusing the hdmi into the settup box) ///////////////
-	cout << "7. Pusing the hdmi into the settup box";
+	cout << "7. Pusing the hdmi into the settup box" << endl;
 	start = clock();
 
 	cout << "inverse kinematics flag: " << flag << endl;
@@ -247,7 +247,7 @@ int main(int argc, char **argv)
 	///////////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for UR3 with object detached (8. Approaching the power cable & 9. grasping the power cable) ///////////////
-	cout << "8. Approaching the power cable & 9. grasping the power cable";
+	cout << "8. Approaching the power cable & 9. grasping the power cable" << endl;
 	start = clock();
 	ur3RRTManager->detachObject();		
 
@@ -267,7 +267,7 @@ int main(int argc, char **argv)
 	/////////////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for UR3 with object detached (10. Bringing the cable to the settup box) ///////////////
-	cout << "10. Bringing the cable to the settup box";
+	cout << "10. Bringing the cable to the settup box" << endl;
 	start = clock();
 	ur3RRTManager->attachObject(power, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], SE3(EulerXYZ(Vec3(-SR_PI_HALF, 0, -SR_PI_HALF), Vec3(0, 0, 0.))));		// attaching object occurs here
 
@@ -289,7 +289,7 @@ int main(int argc, char **argv)
 	/////////////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for UR3 with object detached (11. Pushing the cable into the settup box) ///////////////
-	cout << "11. Pushing the cable into the settup box";
+	cout << "11. Pushing the cable into the settup box" << endl;
 	start = clock();
 	
 	cout << "inverse kinematics flag: " << flag << endl;
@@ -465,6 +465,13 @@ void URrrtSetting()
 		ur5planningJoint[i] = (srStateJoint*)ur5->gJoint[i];
 	ur5RRTManager->setSystem(ur5planningJoint);
 	ur5RRTManager->setStateBound(ur5->getLowerJointLimit(), ur5->getUpperJointLimit());
+
+	ur3RRTManager->printIter = false;
+	ur3RRTManager->printFinish = false;
+	ur3RRTManager->printDist = false;
+	ur5RRTManager->printIter = false;
+	ur5RRTManager->printFinish = false;
+	ur5RRTManager->printDist = false;
 }
 
 //void tempObjectSetting()
