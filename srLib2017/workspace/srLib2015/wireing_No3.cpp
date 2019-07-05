@@ -156,6 +156,16 @@ int main(int argc, char **argv)
 	gripPos(4) = -graspAngle;
 	gripPos(5) = graspAngle;
 
+	Vec3 marginPos = Vec3();
+	string in_line;
+	ifstream in("../../../data/environment_setting/wireing_rod_position.txt");
+	int i = 0;
+	while (getline(in, in_line)) {
+		marginPos[i] = stod(in_line);
+		i++;
+	}
+	in.close();
+
 	//hdmi->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI_HALF), Vec3(-0.2, -0.5, 0)));
 	//power->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI_HALF), Vec3(-0.3, -0.5, 0)));
 	//settop->setBaseLinkFrame(SE3(Vec3(-0.5, -0.3, 0)));
@@ -163,24 +173,38 @@ int main(int argc, char **argv)
 	//pcb->setBaseLinkFrame(EulerXYZ(Vec3(0, SR_PI_HALF, 0), Vec3(-0.0, 0.35, 0.12)));
 	//pcbjig->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), Vec3(-0.5, -0.35, 0.31)));
 	tape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), Vec3(-0.4, 0.3, 0.2)));
-	boxfortape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), Vec3(-0.4, -0.5, 0)));
+	boxfortape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), marginPos));
 	//wireBlock->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), Vec3(-0.6, -0.2, 0)));
 
 	Eigen::VectorXd UR3angle = Eigen::VectorXd::Zero(6);
-	UR3angle[0] = 1.075181;
+	in = ifstream("../../../data/environment_setting/wireing_No1_output.txt");
+	i = 0;
+	while (getline(in, in_line)) {
+		UR3angle[i] = stod(in_line);
+		i++;
+	}
+	in.close();
+	/*UR3angle[0] = 1.075181;
 	UR3angle[1] = -2.303650;
 	UR3angle[2] = -2.052102;
 	UR3angle[3] = -1.927433;
 	UR3angle[4] = -2.066412;
-	UR3angle[5] = -0.000000;
+	UR3angle[5] = -0.000000;*/
 
 	Eigen::VectorXd UR5angle = Eigen::VectorXd::Zero(6);
-	UR5angle[0] = 0.613712;
+	in = ifstream("../../../data/environment_setting/wireing_No2_output.txt");
+	i = 0;
+	while (getline(in, in_line)) {
+		UR5angle[i] = stod(in_line);
+		i++;
+	}
+	in.close();
+	/*UR5angle[0] = 0.613712;
 	UR5angle[1] = 0.550476;
 	UR5angle[2] = 1.288623;
 	UR5angle[3] = -0.268302;
 	UR5angle[4] = -1.570796;
-	UR5angle[5] = 0.613712;
+	UR5angle[5] = 0.613712;*/
 
 	ur3Manager->setJointVal(UR3angle);
 	ur5Manager->setJointVal(UR5angle);
@@ -208,33 +232,43 @@ int main(int argc, char **argv)
 	wire3->setLineWidth(3);
 	wire4->setLineWidth(3);
 
-	//wireNodes.push_back(Vec3(-0.210, -0.505, 0.049));
-	wireNodes.push_back(Vec3(-0.466, -0.505, 0.059));
-	wireNodes.push_back(Vec3(-0.466, -0.495, 0.060));
-	wireNodes.push_back(Vec3(-0.334, -0.495, 0.059));
-	wireNodes.push_back(Vec3(-0.334, -0.505, 0.060));
-	wireNodes.push_back(Vec3(-0.334, -0.505, 0.060));
-	wireNodes.push_back(Vec3(-0.466, -0.505, 0.061));
-	wireNodes.push_back(Vec3(-0.466, -0.495, 0.061));
-	wireNodes.push_back(Vec3(-0.334, -0.495, 0.060));
-	wireNodes.push_back(Vec3(-0.334, -0.505, 0.060));
-	wireNodes.push_back(Vec3(-0.334, -0.505, 0.060));
-	wireNodes.push_back(Vec3(-0.466, -0.505, 0.059));
-	wireNodes.push_back(Vec3(-0.466, -0.495, 0.059));
+
+	in = ifstream("../../../data/environment_setting/wireing_wire.txt");
+	i = 0;
+	Vec3 tempwire = Vec3();
+	while (getline(in, in_line)) {
+		tempwire[i % 3] = stod(in_line);
+		if (i % 3 == 2) wireNodes.push_back(tempwire);
+		i++;
+	}
+	in.close();
+	////wireNodes.push_back(Vec3(-0.210, -0.505, 0.049));
+	//wireNodes.push_back(Vec3(-0.466, -0.505, 0.059));
+	//wireNodes.push_back(Vec3(-0.466, -0.495, 0.060));
+	//wireNodes.push_back(Vec3(-0.334, -0.495, 0.059));
+	//wireNodes.push_back(Vec3(-0.334, -0.505, 0.060));
+	//wireNodes.push_back(Vec3(-0.334, -0.505, 0.060));
+	//wireNodes.push_back(Vec3(-0.466, -0.505, 0.061));
+	//wireNodes.push_back(Vec3(-0.466, -0.495, 0.061));
+	//wireNodes.push_back(Vec3(-0.334, -0.495, 0.060));
+	//wireNodes.push_back(Vec3(-0.334, -0.505, 0.060));
+	//wireNodes.push_back(Vec3(-0.334, -0.505, 0.060));
+	//wireNodes.push_back(Vec3(-0.466, -0.505, 0.059));
+	//wireNodes.push_back(Vec3(-0.466, -0.495, 0.059));
 
 	/////////////// RRT planning to reach object (point0 -> point1) ///////////////
 	clock_t start = clock();
 	point0 = UR3angle;
 	int flag = 0;
 	ur3Manager->setGripperPosition(gripPos);
-	point1 = robustInverseKinematics(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot1, point0, 25);
+	point1 = robustInverseKinematics(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot1, point0, 20);
 
 	//cout << wireBlock->GetBaseLink()->GetFrame() * Tobs2robot1 << endl;
 	cout << ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() << endl;
 	
 	ur3RRTManager->setStartandGoal(point0, point1);
 	ur3RRTManager->execute(0.1);
-	ur3traj1 = ur3RRTManager->extractPathOptimal();
+	ur3traj1 = ur3RRTManager->extractPath(20);
 
 	// set object trajectory
 	for (unsigned int i = 0; i < ur3traj1.size(); i++)
@@ -242,21 +276,23 @@ int main(int argc, char **argv)
 		ur3RRTManager->setState(ur3traj1[i]);
 		SE3 gripSE3 = ur3Manager->forwardKin(ur3traj1[i], &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], SE3());
 	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	double time1 = (clock() - start) / (double)CLOCKS_PER_SEC;
+	double error1 = (point1 - ur3traj1[ur3traj1.size() - 1]).norm() / point1.norm();
+	cout << "time for planning: " << time1 << endl;
 	//////////////////////////////////////////////////////////////
 
 	/////////////////// RRT planning for ur3 with object attached (point1 -> point2) ///////////////
 	start = clock();
 	ur3Manager->setGripperPosition(idlePos);
-	point2 = robustInverseKinematics(tape->GetBaseLink()->GetFrame() * Tobs2robot2, point1, 25);
+	point2 = robustInverseKinematics(tape->GetBaseLink()->GetFrame() * Tobs2robot2, point1, 20);
 
 	ur3RRTManager->setStartandGoal(point1, point2);
 	ur3RRTManager->execute(0.1);
 	ur3traj2 = ur3RRTManager->extractPathOptimal();
 	for (unsigned int i = 0; i < 3; i++) {
 		Tobs2robot2 = EulerXYZ(Vec3(0.0, 0.0, 0.0), Vec3(-0.008, -0.00, -0.00)) * Tobs2robot2;
-		point2 = robustInverseKinematics(tape->GetBaseLink()->GetFrame() * Tobs2robot2, point2, 10);
-		//point2 = ur3Manager->inverseKin(tape->GetBaseLink()->GetFrame() * Tobs2robot2, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag, point2);
+		//point2 = robustInverseKinematics(tape->GetBaseLink()->GetFrame() * Tobs2robot2, point2, 15);
+		point2 = ur3Manager->inverseKin(tape->GetBaseLink()->GetFrame() * Tobs2robot2, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag, point2);
 		ur3traj2.push_back(point2);
 	}
 	// set object trajectory
@@ -264,13 +300,15 @@ int main(int argc, char **argv)
 	{
 		ur3RRTManager->setState(ur3traj2[i]);
 	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	double time2 = (clock() - start) / (double)CLOCKS_PER_SEC;
+	double error2 = (point2 - ur3traj2[ur3traj2.size() - 1]).norm() / point2.norm();
+	cout << "time for planning: " << time2 << endl;
 	///////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for ur5 with object detached (point2 -> point3) ///////////////
 	start = clock();
 	ur5Manager->setGripperPosition(temp);
-	point3 = robustInverseKinematics_UR5(tape->GetBaseLink()->GetFrame() * Tobs2robot3, UR5angle, 25);
+	point3 = robustInverseKinematics_UR5(tape->GetBaseLink()->GetFrame() * Tobs2robot3, UR5angle, 20);
 
 	ur5RRTManager->setStartandGoal(UR5angle, point3);
 	ur5RRTManager->execute(0.1);
@@ -278,8 +316,8 @@ int main(int argc, char **argv)
 	ur5traj3 = ur5RRTManager->extractPathOptimal();
 	for (unsigned int i = 0; i < 3; i++) {
 		Tobs2robot3 = EulerXYZ(Vec3(), Vec3(-0.0, -0.00, -0.008)) * Tobs2robot3;
-		point3 = robustInverseKinematics_UR5(tape->GetBaseLink()->GetFrame() * Tobs2robot3, point3, 10);
-		//point3 = ur5Manager->inverseKin(tape->GetBaseLink()->GetFrame() * Tobs2robot3, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag, point3);
+		//point3 = robustInverseKinematics_UR5(tape->GetBaseLink()->GetFrame() * Tobs2robot3, point3, 15);
+		point3 = ur5Manager->inverseKin(tape->GetBaseLink()->GetFrame() * Tobs2robot3, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag, point3);
 		ur5traj3.push_back(point3);
 	}
 
@@ -288,7 +326,9 @@ int main(int argc, char **argv)
 	{
 		ur5RRTManager->setState(ur5traj3[i]);
 	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	double time3 = (clock() - start) / (double)CLOCKS_PER_SEC;
+	double error3 = (point3 - ur5traj3[ur5traj3.size() - 1]).norm() / point3.norm();
+	cout << "time for planning: " << time3 << endl;
 	ur5Manager->setJointVal(UR5angle);
 	///////////////////////////////////////////////////////////////////////////////
 
@@ -306,41 +346,35 @@ int main(int argc, char **argv)
 	{
 		ur3RRTManager->setState(ur3traj4[i]);
 	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	double time4 = (clock() - start) / (double)CLOCKS_PER_SEC;
+	double error4 = (qval - ur3traj4[ur3traj4.size() - 1]).norm() / qval.norm();
+	cout << "time for planning: " << time4 << endl;
 	///////////////////////////////////////////////////////////////////////////////
 
-	//////////////////// RRT planning for ur3 with object detached (point4 -> point5) ///////////////
-	//start = clock();
-	//ur5Manager->setGripperPosition(gripPos);
-	//point5 = robustInverseKinematics(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot5, point4);
+	cout << endl;
+	cout << "8. Grab wire using UR3" << endl;
+	cout << "time for planning: " << time1 << " error:" << error1 << ", ";
+	if (error1 * 100 <= 5 && time1 <= 0.6) cout << "success";
+	else cout << "fail";
+	cout << endl << endl;
 
-	//ur5RRTManager->setStartandGoal(point4, point5);
-	//ur5RRTManager->execute(0.05);
-	////ur5traj5 = ur5RRTManager->extractPath(30);
-	//ur5traj5 = ur5RRTManager->extractPathOptimal();
-	//// set object trajectory
-	//for (unsigned int i = 0; i < ur5traj5.size(); i++)
-	//{
-	//	ur5RRTManager->setState(ur5traj5[i]);
-	//}
-	//cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
-	/////////////////////////////////////////////////////////////////////////////////
+	cout << "9. Put wire into wire tie machine" << endl;
+	cout << "time for planning: " << time2 << " error:" << error2 << ", ";
+	if (error2 * 100 <= 5 && time2 <= 0.6) cout << "success";
+	else cout << "fail";
+	cout << endl << endl;
 
-	//////////////////// RRT planning for ur3 with object detached (point4 -> point5) ///////////////
-	//start = clock();
-	//ur5Manager->setGripperPosition(gripPos);
+	cout << "10. Tie wire with UR5" << endl;
+	cout << "time for planning: " << time3 << " error:" << error3 << ", ";
+	if (error3 * 100 <= 5 && time3 <= 0.6) cout << "success";
+	else cout << "fail";
+	cout << endl << endl;
 
-	//ur5RRTManager->setStartandGoal(point5, point1);
-	//ur5RRTManager->execute(0.05);
-	////ur5traj5 = ur5RRTManager->extractPath(30);
-	//ur5traj6 = ur5RRTManager->extractPathOptimal();
-	//// set object trajectory
-	//for (unsigned int i = 0; i < ur5traj6.size(); i++)
-	//{
-	//	ur5RRTManager->setState(ur5traj6[i]);
-	//}
-	//cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
-	/////////////////////////////////////////////////////////////////////////////////
+	cout << "11. Unfold UR3 gripper & move to zero configuration" << endl;
+	cout << "time for planning: " << time4 << " error:" << error4 << ", ";
+	if (error4 * 100 <= 5 && time4 <= 0.6) cout << "success";
+	else cout << "fail";
+	cout << endl << endl;
 
 	rendering(argc, argv);
 

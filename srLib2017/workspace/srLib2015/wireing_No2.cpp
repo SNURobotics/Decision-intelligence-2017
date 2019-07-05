@@ -149,6 +149,16 @@ int main(int argc, char **argv)
 	gripPos(4) = graspAngle;
 	gripPos(5) = -graspAngle;
 
+	Vec3 marginPos = Vec3();
+	string in_line;
+	ifstream in("../../../data/environment_setting/wireing_rod_position.txt");
+	int i = 0;
+	while (getline(in, in_line)) {
+		marginPos[i] = stod(in_line);
+		i++;
+	}
+	in.close();
+
 	//hdmi->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI_HALF), Vec3(-0.2, -0.5, 0)));
 	//power->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI_HALF), Vec3(-0.3, -0.5, 0)));
 	//settop->setBaseLinkFrame(SE3(Vec3(-0.5, -0.3, 0)));
@@ -156,24 +166,23 @@ int main(int argc, char **argv)
 	//pcb->setBaseLinkFrame(EulerXYZ(Vec3(0, SR_PI_HALF, 0), Vec3(-0.0, 0.35, 0.12)));
 	//pcbjig->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), Vec3(-0.5, -0.35, 0.31)));
 	tape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI_HALF), Vec3(-0.5, 0.5, 0.2)));
-	boxfortape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), Vec3(-0.4, -0.5, 0)));
+	boxfortape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), marginPos));
 	//wireBlock->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), Vec3(-0.6, -0.2, 0)));
 
 	Eigen::VectorXd UR3angle = Eigen::VectorXd::Zero(6);
-	UR3angle[0] = 1.075181;
+	in = ifstream("../../../data/environment_setting/wireing_No1_output.txt");
+	i = 0;
+	while (getline(in, in_line)) {
+		UR3angle[i] = stod(in_line);
+		i++;
+	}
+	in.close();
+	/*UR3angle[0] = 1.075181;
 	UR3angle[1] = -2.303650;
 	UR3angle[2] = -2.052102;
 	UR3angle[3] = -1.927433;
 	UR3angle[4] = -2.066412;
-	UR3angle[5] = -0.000000;
-
-	// Another UR3 angle
-	/*UR3angle[0] = -1.51939;
-	UR3angle[1] = -0.0410182;
-	UR3angle[2] = 0.080894;
-	UR3angle[3] = -0.0398755;
-	UR3angle[4] = -3.09018;
-	UR3angle[5] = 2.76138e-07;*/
+	UR3angle[5] = -0.000000;*/
 
 	ur3Manager->setJointVal(UR3angle);
 	SE3 wirepos = ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() * Inv(EulerXYZ(Vec3(0, 0, 0), Vec3(0.0, 0.0, -0.065)));
@@ -232,7 +241,9 @@ int main(int argc, char **argv)
 		SE3 gripSE3 = ur5Manager->forwardKin(ur5traj1[i], &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());
 		//wire->addPoint(gripSE3.GetPosition());
 	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	double time1 = (clock() - start) / (double)CLOCKS_PER_SEC;
+	double error1 = (point1 - ur5traj1[ur5traj1.size() - 1]).norm() / point1.norm();
+	cout << "time for planning: " << time1 << endl;
 	//////////////////////////////////////////////////////////////
 
 	/////////////////// RRT planning for ur3 with object attached (point1 -> point2) ///////////////
@@ -249,7 +260,9 @@ int main(int argc, char **argv)
 	{
 		ur5RRTManager->setState(ur5traj2[i]);
 	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	double time2 = (clock() - start) / (double)CLOCKS_PER_SEC;
+	double error2 = (point2 - ur5traj2[ur5traj2.size() - 1]).norm() / point2.norm();
+	cout << "time for planning: " << time2 << endl;
 	///////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for ur3 with object detached (point2 -> point3) ///////////////
@@ -266,8 +279,17 @@ int main(int argc, char **argv)
 	{
 		ur5RRTManager->setState(ur5traj3[i]);
 	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	double time3 = (clock() - start) / (double)CLOCKS_PER_SEC;
+	double error3 = (point3 - ur5traj3[ur5traj3.size() - 1]).norm() / point3.norm();
+	cout << "time for planning: " << time3 << endl;
 	///////////////////////////////////////////////////////////////////////////////
+
+	string out_line;
+	ofstream out("../../../data/environment_setting/wireing_No2_output.txt");
+	for (int i = 0; i < ur5Manager->m_lowerJointLimit.size(); i++) {
+		out << ur5Manager->getJointVal()[i] << endl;
+	}
+	out.close();
 
 	////////////////// RRT planning for ur3 with object detached (point3 -> point4) ///////////////
 	start = clock();
@@ -283,7 +305,9 @@ int main(int argc, char **argv)
 	{
 		ur5RRTManager->setState(ur5traj4[i]);
 	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	double time4 = (clock() - start) / (double)CLOCKS_PER_SEC;
+	double error4 = (point4 - ur5traj4[ur5traj4.size() - 1]).norm() / point4.norm();
+	cout << "time for planning: " << time4 << endl;
 	///////////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for ur3 with object detached (point4 -> point5) ///////////////
@@ -300,7 +324,9 @@ int main(int argc, char **argv)
 	{
 		ur5RRTManager->setState(ur5traj5[i]);
 	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	double time5 = (clock() - start) / (double)CLOCKS_PER_SEC;
+	double error5 = (point5 - ur5traj5[ur5traj5.size() - 1]).norm() / point5.norm();
+	cout << "time for planning: " << time5 << endl;
 	///////////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for ur3 with object detached (point4 -> point5) ///////////////
@@ -316,8 +342,47 @@ int main(int argc, char **argv)
 	{
 		ur5RRTManager->setState(ur5traj6[i]);
 	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	double time6 = (clock() - start) / (double)CLOCKS_PER_SEC;
+	double error6 = (point1 - ur5traj6[ur5traj6.size() - 1]).norm() / point1.norm();
+	cout << "time for planning: " << time6 << endl;
 	///////////////////////////////////////////////////////////////////////////////
+
+	cout << endl;
+	cout << "2. Moving UR5 to waypoint 1" << endl;
+	cout << "time for planning: " << time1 << " error:" << error1 << ", ";
+	if (error1 * 100 <= 5 && time1 <= 0.6) cout << "success";
+	else cout << "fail";
+	cout << endl << endl;
+
+	cout << "3. Moving UR5 to waypoint 2" << endl;
+	cout << "time for planning: " << time2 << " error:" << error2 << ", ";
+	if (error2 * 100 <= 5 && time2 <= 0.6) cout << "success";
+	else cout << "fail";
+	cout << endl << endl;
+
+	cout << "4. Moving UR5 to waypoint 3" << endl;
+	cout << "time for planning: " << time3 << " error:" << error3 << ", ";
+	if (error3 * 100 <= 5 && time3 <= 0.6) cout << "success";
+	else cout << "fail";
+	cout << endl << endl;
+
+	cout << "5. Moving UR5 to waypoint 4" << endl;
+	cout << "time for planning: " << time4 << " error:" << error4 << ", ";
+	if (error4 * 100 <= 5 && time4 <= 0.6) cout << "success";
+	else cout << "fail";
+	cout << endl << endl;
+
+	cout << "6. Moving UR5 to waypoint 5" << endl;
+	cout << "time for planning: " << time5 << " error:" << error5 << ", ";
+	if (error5 * 100 <= 5 && time5 <= 0.6) cout << "success";
+	else cout << "fail";
+	cout << endl << endl;
+
+	cout << "7. Moving UR5 to waypoint 1 again" << endl;
+	cout << "time for planning: " << time6 << " error:" << error6 << ", ";
+	if (error6 * 100 <= 5 && time6 <= 0.6) cout << "success";
+	else cout << "fail";
+	cout << endl << endl;
 
 	rendering(argc, argv);
 
@@ -340,6 +405,7 @@ void rendering(int argc, char **argv)
 	renderer->addNode(wire2);
 	renderer->addNode(wire3);
 	renderer->addNode(wire4);
+	renderer->addNode(new Grid(10, 0.1));
 
 	renderer->RunRendering();
 }
@@ -432,12 +498,18 @@ void updateFunc()
 				for (int i = 0; i < wireNodes.size(); i++) wire2->addPoint(wireNodes[i]);
 
 				if (loopNumFlag == 2) {
+					string out_line;
+					ofstream out("../../../data/environment_setting/wireing_wire.txt");
+					for (int i = 0; i < wireNodes.size() - 1; i++) {
+						for (int j = 0; j < 3; j++) out << wireNodes[i + 1][j] << endl;
+					}
+					out.close();
 
-					for (int i = 0; i < wireNodes.size(); i++) cout << wireNodes[i] << endl;
+					/*for (int i = 0; i < wireNodes.size(); i++) cout << wireNodes[i] << endl;
 					cout << endl;
 					cout << ur5Manager->getJointVal() << endl;
 					cout << endl;
-					cout << ur3Manager->getJointVal() << endl;
+					cout << ur3Manager->getJointVal() << endl;*/
 
 					wireNodes.clear();
 					loopNumFlag = 0;
@@ -589,7 +661,7 @@ void setFloor()
 	Vec3 obs_size = Vec3(5.0, 5.0, 0.05);
 	Vec3 obs_col_size = Vec3(5.0, 5.0, 0.05);
 	floor_link->GetGeomInfo().SetDimension(obs_size);
-	floor_link->GetGeomInfo().SetColor(0.4, 0.4, 0.4);
+	floor_link->GetGeomInfo().SetColor(1.0, 1.0, 1.0);
 	floor_colli->GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	floor_colli->GetGeomInfo().SetDimension(obs_col_size);
 	floor_link->AddCollision(floor_colli);
@@ -615,7 +687,7 @@ Eigen::VectorXd robustInverseKinematics(SE3 finalpos, Eigen::VectorXd original)
 		Eigen::VectorXd tempsol;
 		for (int j = 0; j < lower.size(); j++) {
 			int temp = int((upper[j] - lower[j]) * 1000);
-			initial[j] = (rand() % temp) / 1000 + lower[j];
+			initial[j] = double(rand() % temp) / 1000 + lower[j];
 		}
 		tempsol = ur5Manager->inverseKin(finalpos, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag, initial);
 		//cout << "inverse kinematics flag: " << flag << endl;

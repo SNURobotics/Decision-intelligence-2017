@@ -19,7 +19,7 @@ public:
 		//m_camera = new Camera(2.0, 0.4*SR_PI_HALF, 0.5*SR_PI_HALF);
 		//m_camera = new Camera(2.0, 0.2*SR_PI_HALF, -0.5*SR_PI_HALF);
 		//m_camera = new Camera(2.5, 0.25*SR_PI_HALF, -0.4*SR_PI_HALF);	// replanning
-		m_camera = new Camera(2.5, 0.25*SR_PI_HALF, 0.4*SR_PI_HALF);	// replanning (task level)
+		m_camera = new Camera(2.5, SR_PI_HALF + 0.001, 0);	// replanning (task level)
 		// workcell view
 		//Vec3 focus = Vec3(0.025, 1.095, 1.176);
 		//m_camera = new Camera(2.5, 0.3*SR_PI_HALF, 2.0*SR_PI_HALF, focus);
