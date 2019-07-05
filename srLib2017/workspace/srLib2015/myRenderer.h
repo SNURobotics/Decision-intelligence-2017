@@ -19,14 +19,14 @@ public:
 		//m_camera = new Camera(2.0, 0.4*SR_PI_HALF, 0.5*SR_PI_HALF);
 		//m_camera = new Camera(2.0, 0.2*SR_PI_HALF, -0.5*SR_PI_HALF);
 		//m_camera = new Camera(2.5, 0.25*SR_PI_HALF, -0.4*SR_PI_HALF);	// replanning
-		m_camera = new Camera(2.5, 0.25*SR_PI_HALF, 0.4*SR_PI_HALF);	// replanning (task level)
+		m_camera = new Camera(2, SR_PI_HALF+0.001, 0);	// replanning (task level)
 		// workcell view
 		//Vec3 focus = Vec3(0.025, 1.095, 1.176);
 		//m_camera = new Camera(2.5, 0.3*SR_PI_HALF, 2.0*SR_PI_HALF, focus);
 		///////////////////////////////////////////////////////////
 		Light* light = new Light;
 		Light* light2 = new Light;
-		Grid* grid = new Grid(10, 1);
+		Grid* grid = new Grid(10, 0.1);
 		Shader* shader = new Shader();
 		Group*	nodeGroup = new Group();
 		Group* coordinateGroup = new Group();

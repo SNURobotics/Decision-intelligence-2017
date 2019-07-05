@@ -12,6 +12,7 @@
 #include "robotManager\environment_5th.h"
 #include <time.h>
 #include "robotManager\robotRRTManager.h"
+#include "common/dataIO.h"
 
 
 srSpace gSpace;
@@ -68,6 +69,14 @@ vector<Eigen::VectorXd> makeGriptraj(double gripangle, Eigen::VectorXd currentPo
 
 int main(int argc, char **argv)
 {
+	///////////////////////// test file read /////////////////////////
+	string str = "../../../data/environment_setting/soldering.txt";
+	vector<int> lineNums(2);
+	lineNums[0] = 1;
+	lineNums[1] = 3;
+	vector<vector<double>> poss = loadDataFromTextSpecifiedLines(str, lineNums);
+	//////////////////////////////////////////////////////////////////
+
 	srand(NULL);
 	// robot, object, environment settings should come before initDynamics()
 	URrobotSetting();
@@ -105,7 +114,7 @@ int main(int argc, char **argv)
 	//settop->setBaseLinkFrame(SE3(Vec3(-0.5, -0.3, 0)));
 	//soldering->setBaseLinkFrame(ur3Manager->forwardKin(qval, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP]));
 	pcb->setBaseLinkFrame(EulerXYZ(Vec3(0, SR_PI_HALF, 0), Vec3(-0.0, 0.35, 0.12)));
-	pcbjig->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), Vec3(-0.5, -0.35, 0.31)));
+	pcbjig->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), Vec3(poss[0][0], poss[0][1], 0.31)));
 	//tape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.5, 0.5, 0)));
 	//boxfortape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.4, -0.5, 0)));
 
