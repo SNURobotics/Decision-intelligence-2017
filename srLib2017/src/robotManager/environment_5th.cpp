@@ -1,4 +1,4 @@
-#include "makeSpecialCol.h"
+ï»¿#include "makeSpecialCol.h"
 #include "common\utils.h"
 #include "environment_5th.h"
 
@@ -711,7 +711,7 @@ void BoxForTape::AssembleModel()
 
 		//m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF), Vec3(-0.01675, 0.0, -0.004)));
 		//m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.10007, 0.09307, 0.0888)));
-	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(-0.1, 0.05, -0.01))); // SetLocalFrame --> Orientation: SolidworkssrLib¿¡¼­ solidworks·Î °¡´Â SO3, Position: srLib frameÀÇ orientation ±âÁØÀ¸·Î ¿øÁ¡ ÀÌµ¿ÇÏ°í ½ÍÀº ¸¸Å­ ÀÔ·Â
+	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(-0.1, 0.05, -0.01))); // SetLocalFrame --> Orientation: SolidworkssrLibì—ì„œ solidworksë¡œ ê°€ëŠ” SO3, Position: srLib frameì˜ orientation ê¸°ì¤€ìœ¼ë¡œ ì›ì  ì´ë™í•˜ê³  ì‹¶ì€ ë§Œí¼ ì…ë ¥
 	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/objects_3ds/wireing_zig.3ds");
 
 
@@ -761,8 +761,8 @@ Tape::~Tape()
 void Tape::AssembleModel()
 {
 	m_numLink = 3;
-	m_numWeldJoint = 2;
-	m_numCollision = 5;
+	m_numWeldJoint = 1;
+	m_numCollision = 6;
 
 	for (int i = 0; i < m_numLink; i++)
 	{
@@ -776,8 +776,8 @@ void Tape::AssembleModel()
 	}
 	for (int i = 0; i < m_numWeldJoint; i++)
 	{
-		srLink* temp = new srLink;
-		m_ObjLink.push_back(*temp);
+		srWeldJoint* temp = new srWeldJoint;
+		m_ObjWeldJoint.push_back(*temp);
 	}
 
 	m_ObjLink[0].GetGeomInfo().SetColor(0.5, 0.1, 0.2);
@@ -785,61 +785,69 @@ void Tape::AssembleModel()
 	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	//m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF), Vec3(-0.01675, 0.0, -0.004)));
 	//m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.10007, 0.09307, 0.0888)));
-	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0))); // SetLocalFrame --> Orientation: SolidworkssrLib¿¡¼­ solidworks·Î °¡´Â SO3, Position: srLib frameÀÇ orientation ±âÁØÀ¸·Î ¿øÁ¡ ÀÌµ¿ÇÏ°í ½ÍÀº ¸¸Å­ ÀÔ·Â
-	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/objects_3ds/Taping1.3ds");
+	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0))); // SetLocalFrame --> Orientation: SolidworkssrLibï¿½ï¿½ï¿½ï¿½ solidworksï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ SO3, Position: srLib frameï¿½ï¿½ orientation ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å­ ï¿½Ô·ï¿½
+	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/env5_3ds/Taping1.3ds");
 
 	// dummy link
 	m_ObjLink[1].GetGeomInfo().SetColor(0.3, 0.4, 0.3);
 	m_ObjLink[1].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	m_ObjLink[1].GetGeomInfo().SetFileName("../../../workspace/robot/objects_3ds/Taping2.3ds");
+	m_ObjLink[1].GetGeomInfo().SetFileName("../../../workspace/robot/env5_3ds/Taping2.3ds");
 
 	m_ObjLink[2].GetGeomInfo().SetColor(0.3, 0.4, 0.3);
 	m_ObjLink[2].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	m_ObjLink[2].GetGeomInfo().SetFileName("../../../workspace/robot/objects_3ds/Taping3.3ds");
+	m_ObjLink[2].GetGeomInfo().SetFileName("../../../workspace/robot/env5_3ds/Taping3.3ds");
 
+	m_ObjWeldJoint[0].SetParentLink(&m_ObjLink[0]);
+	//m_ObjWeldJoint[0].SetParentLinkFrame(SE3(Vec3(-0.01, 0.0, dim[2] - 0.0004))); // change to exact value later
+	m_ObjWeldJoint[0].SetParentLinkFrame(); // change to exact value later
+	m_ObjWeldJoint[0].SetChildLink(&m_ObjLink[1]);
+	m_ObjWeldJoint[0].SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.01, 0.0, -0.0075)));
 
-	Vec3 colli_offset(m_collision_offset);
-	Vec3 dim0(0.08, 0.03, 0.03);	// base part
-	Vec3 dim1(0.02, 0.04, 0.04);	// base part2
-	Vec3 dim2(0.05, 0.02, 0.02);	// base part3
-	Vec3 dim3(0.02, 0.012, 0.012);	// tip
-	Vec3 dim4(0.08, 0.008, 0.008);	// injector
-	// Vec3 dim5(0.086, 0.002, 0.002);	// injector tube
-
+	re.SetActType(srJoint::HYBRID);
+	re.SetParentLink(&m_ObjLink[1]);
+	//m_ObjWeldJoint[0].SetParentLinkFrame(SE3(Vec3(-0.01, 0.0, dim[2] - 0.0004))); // change to exact value later
+	re.SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0))); // change to exact value later
+	re.SetChildLink(&m_ObjLink[2]);
+	re.SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.6, SR_PI_HALF), Vec3(0.0, 0.0, 0.0)));
 
 	m_ObjCollision[0].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[0].GetGeomInfo().SetDimension(dim0 + colli_offset);
-	m_ObjCollision[0].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.0)));
+	m_ObjCollision[0].GetGeomInfo().SetDimension(Vec3(0.08, 0.015, 0.005));
+	m_ObjCollision[0].SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.02, 0.0, -0.0025)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[0]);
 
 	m_ObjCollision[1].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[1].GetGeomInfo().SetDimension(dim1 + colli_offset);
-	m_ObjCollision[1].SetLocalFrame(SE3(Vec3(0.05, 0.0, 0.0)));
+	m_ObjCollision[1].GetGeomInfo().SetDimension(Vec3(0.06, 0.015, 0.06));
+	//m_ObjCollision[1].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.060 / 2.0)));
+	m_ObjCollision[1].SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.05, 0.0, -0.03)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[1]);
 
 	m_ObjCollision[2].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[2].GetGeomInfo().SetDimension(dim2 + colli_offset);
-	m_ObjCollision[2].SetLocalFrame(SE3(Vec3(0.085, 0.0, 0.0)));
+	m_ObjCollision[2].GetGeomInfo().SetDimension(Vec3(0.065, 0.015, 0.0075));
+	//m_ObjCollision[1].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.060 / 2.0)));
+	m_ObjCollision[2].SetLocalFrame(Inv(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.01, 0.0, -0.0075))) * EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0225, 0.0, -0.00375)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[2]);
 
 	m_ObjCollision[3].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[3].GetGeomInfo().SetDimension(dim3 + colli_offset);
-	m_ObjCollision[3].SetLocalFrame(SE3(Vec3(0.12, 0.0, 0.0)));
+	m_ObjCollision[3].GetGeomInfo().SetDimension(Vec3(0.02, 0.015, 0.01));
+	//m_ObjCollision[1].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.060 / 2.0)));
+	m_ObjCollision[3].SetLocalFrame(Inv(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.01, 0.0, -0.0075))) * EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.005)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[3]);
 
 	m_ObjCollision[4].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	m_ObjCollision[4].GetGeomInfo().SetDimension(dim4 + colli_offset);
-	m_ObjCollision[4].SetLocalFrame(SE3(Vec3(0.0, -0.026, 0.0)));
+	m_ObjCollision[4].GetGeomInfo().SetDimension(Vec3(0.052, 0.011, 0.002));
+	//m_ObjCollision[1].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.060 / 2.0)));
+	m_ObjCollision[4].SetLocalFrame(Inv(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.01, 0.0, -0.0075))) * Inv(EulerZYX(Vec3(0.0, 0.6, 0.0), Vec3(0.0, 0.0, 0.0))) * EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.026, 0.0, 0.001)));
 	m_ObjLink[0].AddCollision(&m_ObjCollision[4]);
 
-	//m_ObjCollision[5].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	//m_ObjCollision[5].GetGeomInfo().SetDimension(dim5 + colli_offset);
-	//m_ObjCollision[5].SetLocalFrame(SE3(Vec3(0.082, -0.013, 0.0)));
-	//m_ObjLink[0].AddCollision(&m_ObjCollision[5]);
+	m_ObjCollision[5].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[5].GetGeomInfo().SetDimension(Vec3(0.010, 0.011, 0.010));
+	//m_ObjCollision[1].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.060 / 2.0)));
+	m_ObjCollision[5].SetLocalFrame(Inv(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(-0.01, 0.0, -0.0075))) * Inv(EulerZYX(Vec3(0.0, 0.6, 0.0), Vec3(0.0, 0.0, 0.0))) * EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.047, 0.0, -0.005)));
+	m_ObjLink[0].AddCollision(&m_ObjCollision[5]);
 
+	this->SetSelfCollision(false);
 	this->SetBaseLink(&m_ObjLink[0]);
 	this->SetBaseLinkType(srSystem::KINEMATIC);
-	this->SetSelfCollision(false);
 
 }
 
@@ -878,7 +886,7 @@ void WireBlock::AssembleModel()
 	m_ObjLink[0].SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::CYLINDER);
 	m_ObjLink[0].GetGeomInfo().SetDimension(0.05, 0.1, 0.0);
-	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0))); // SetLocalFrame --> Orientation: SolidworkssrLib¿¡¼­ solidworks·Î °¡´Â SO3, Position: srLib frameÀÇ orientation ±âÁØÀ¸·Î ¿øÁ¡ ÀÌµ¿ÇÏ°í ½ÍÀº ¸¸Å­ ÀÔ·Â
+	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0))); // SetLocalFrame --> Orientation: SolidworkssrLibì—ì„œ solidworksë¡œ ê°€ëŠ” SO3, Position: srLib frameì˜ orientation ê¸°ì¤€ìœ¼ë¡œ ì›ì  ì´ë™í•˜ê³  ì‹¶ì€ ë§Œí¼ ì…ë ¥
 
 	Vec3 colli_offset(m_collision_offset);
 	Vec3 dim0(0.05, 0.05, 0.1);	// base part

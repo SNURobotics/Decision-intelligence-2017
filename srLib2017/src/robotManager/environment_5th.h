@@ -99,6 +99,7 @@ public:
 	~Tape();
 	void AssembleModel();
 	double m_collision_offset;
+	srRevoluteJoint re;
 };
 
 class WireBlock : public Object
