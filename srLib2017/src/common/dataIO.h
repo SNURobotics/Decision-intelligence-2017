@@ -98,3 +98,37 @@ static Eigen::VectorXd loadVectorFromText(std::string str, int colNum)
 
 	return tmpOneData;
 }
+
+static std::vector<std::vector<double>> loadDataFromTextSpecifiedLines(std::string str, std::vector<int> lineNums)
+{
+	std::ifstream fin;
+	fin.open(str);
+	char buffer[250];
+	char* token;
+	char* context = NULL;
+	std::vector<std::vector<double>> data;
+	int rowNum = 0;
+	int lineIdx = 0;
+	while (!fin.eof())
+	{
+		fin.getline(buffer, sizeof(buffer));
+		if (rowNum == lineNums[lineIdx])
+		{
+			std::vector<double> tempdata(0);
+			token = strtok_s(buffer, " ", &context);
+			while (token != NULL)
+			{
+				tempdata.push_back(atof(token));
+				token = strtok_s(NULL, " ", &context);
+			}
+			lineIdx++;
+			data.push_back(tempdata);
+		}
+		rowNum++;
+	}
+	//data.pop_back();
+
+	fin.close();
+
+	return data;
+}

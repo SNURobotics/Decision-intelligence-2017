@@ -13,6 +13,7 @@
 #include <time.h>
 #include "robotManager\robotRRTManager.h"
 #include "ForceCtrlManager\hybridPFCtrlManager.h"
+#include "common/dataIO.h"
 
 
 srSpace gSpace;
@@ -93,6 +94,17 @@ vector<Eigen::VectorXd> makeGriptraj(double gripangle, Eigen::VectorXd currentPo
 
 int main(int argc, char **argv)
 {
+
+	///////////////////////// test file read /////////////////////////
+	string str = "../../../data/environment_setting/test.txt";
+	vector<int> lineNums(3);
+	lineNums[0] = 1;
+	lineNums[1] = 3;
+	lineNums[2] = 5;
+	vector<vector<double>> poss = loadDataFromTextSpecifiedLines(str, lineNums);
+	//////////////////////////////////////////////////////////////////
+
+
 	srand(NULL);
 	// robot, object, environment settings (including AddSystem) should come before initDynamics()
     URrobotSetting();
