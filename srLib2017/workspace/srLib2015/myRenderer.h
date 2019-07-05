@@ -26,7 +26,7 @@ public:
 		///////////////////////////////////////////////////////////
 		Light* light = new Light;
 		Light* light2 = new Light;
-		Grid* grid = new Grid(10, 1);
+		Grid* grid = new Grid(10, 0.1);
 		Shader* shader = new Shader();
 		Group*	nodeGroup = new Group();
 		Group* coordinateGroup = new Group();
