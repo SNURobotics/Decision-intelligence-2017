@@ -268,7 +268,7 @@ int main(int argc, char **argv)
 	point1 = robustInverseKinematics(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot1, point0, 20);
 
 	//cout << wireBlock->GetBaseLink()->GetFrame() * Tobs2robot1 << endl;
-	cout << ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() << endl;
+	//cout << ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() << endl;
 	
 	ur3RRTManager->setStartandGoal(point0, point1);
 	ur3RRTManager->execute(0.1);
@@ -282,7 +282,7 @@ int main(int argc, char **argv)
 	}
 	double time1 = (clock() - start) / (double)CLOCKS_PER_SEC;
 	double error1 = (point1 - ur3traj1[ur3traj1.size() - 1]).norm() / point1.norm();
-	cout << "time for planning: " << time1 << endl;
+	//cout << "time for planning: " << time1 << endl;
 	//////////////////////////////////////////////////////////////
 
 	/////////////////// RRT planning for ur3 with object attached (point1 -> point2) ///////////////
@@ -306,7 +306,7 @@ int main(int argc, char **argv)
 	}
 	double time2 = (clock() - start) / (double)CLOCKS_PER_SEC;
 	double error2 = (point2 - ur3traj2[ur3traj2.size() - 1]).norm() / point2.norm();
-	cout << "time for planning: " << time2 << endl;
+	//cout << "time for planning: " << time2 << endl;
 	///////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for ur5 with object detached (point2 -> point3) ///////////////
@@ -345,7 +345,7 @@ int main(int argc, char **argv)
 	
 	double time3 = (clock() - start) / (double)CLOCKS_PER_SEC;
 	double error3 = (point3 - ur5traj3_2[ur5traj3_2.size() - 1]).norm() / point3.norm();
-	cout << "time for planning: " << time3 << endl;
+	//cout << "time for planning: " << time3 << endl;
 	ur5Manager->setJointVal(UR5angle);
 	///////////////////////////////////////////////////////////////////////////////
 
@@ -365,7 +365,7 @@ int main(int argc, char **argv)
 	}
 	double time4 = (clock() - start) / (double)CLOCKS_PER_SEC;
 	double error4 = (qval - ur3traj4[ur3traj4.size() - 1]).norm() / qval.norm();
-	cout << "time for planning: " << time4 << endl;
+	//cout << "time for planning: " << time4 << endl;
 	///////////////////////////////////////////////////////////////////////////////
 
 	cout << fixed;
@@ -570,6 +570,13 @@ void URrrtSetting()
 		ur5planningJoint[i] = (srStateJoint*)ur5->gJoint[i];
 	ur5RRTManager->setSystem(ur5planningJoint);
 	ur5RRTManager->setStateBound(ur5->getLowerJointLimit(), ur5->getUpperJointLimit());
+
+	ur3RRTManager->printIter = false;
+	ur3RRTManager->printFinish = false;
+	ur3RRTManager->printDist = false;
+	ur5RRTManager->printIter = false;
+	ur5RRTManager->printFinish = false;
+	ur5RRTManager->printDist = false;
 }
 
 void tempObjectSetting()

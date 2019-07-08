@@ -668,7 +668,7 @@ list<rrtVertex*> rrtManager::smoothingPathOptimal(list<rrtVertex*>& path)
 		advance(iter1, path.size() - 1);
 		int point;
 		bool loopFlag = 1;
-		cout << "step1: " << path.size() << endl;
+		//cout << "step1: " << path.size() << endl;
 		for (point = 0; point < path.size() - 2; point++)
 		{	
 			if (loopFlag) {
@@ -679,10 +679,10 @@ list<rrtVertex*> rrtManager::smoothingPathOptimal(list<rrtVertex*>& path)
 				if (tempVertices.size() > 0)
 				{
 					replaceVertices(path, tempVertices, removedVertex);
-					cout << "step2: " << path.size() << endl;
+					//cout << "step2: " << path.size() << endl;
 					loopFlag = 0;
 					if (point == 0) {
-						cout << "Early termination" << endl;
+						//cout << "Early termination" << endl;
 						return path;
 					}
 				}
@@ -710,7 +710,7 @@ list<rrtVertex*> rrtManager::smoothingPathOptimal(list<rrtVertex*>& path)
 					if (tempVertices.size() > 0)
 					{
 						replaceVertices(path, tempVertices, removedVertex);
-						cout << "step3: " << path.size() << endl;
+						//cout << "step3: " << path.size() << endl;
 						maxstep = path.size();
 						step2 -= removedVertex.size();
 					}
