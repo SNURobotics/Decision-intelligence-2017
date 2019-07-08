@@ -211,8 +211,8 @@ int main(int argc, char **argv)
 	else cout << "fail";
 	cout << endl << endl;
 	cout << "5. Move tool to initial position" << endl;
-	cout << "time for planning: " << time3 << " error:" << error3 << ", ";
-	if (error3 * 100 <= 5 && time3 <= 0.6) cout << "success";
+	cout << "time for planning: " << time3 ;
+	if ( time3 <= 0.6) cout << "success";
 	else cout << "fail";
 	cout << endl << endl;
 
