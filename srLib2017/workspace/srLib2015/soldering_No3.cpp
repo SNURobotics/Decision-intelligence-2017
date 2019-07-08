@@ -185,12 +185,12 @@ int main(int argc, char **argv)
 	cout << fixed;
 	cout.precision(2);
 	cout << endl;
-	cout << "6. Move PCB plate to initial position" << endl;
+	cout << "9. Move PCB plate to initial position" << endl;
 	cout << "time for planning: " << time1 << " error:" << error1 << ", ";
 	if (error1 * 100 <= 5 && time1 <= 0.6) cout << "success";
 	else cout << "fail";
 	cout << endl << endl;
-	cout << "7. Move UR3 to zero configuration" << endl;
+	cout << "10. Move UR3 to zero configuration" << endl;
 	cout << "time for planning: " << time2 << " error:" << error2 << ", ";
 	if (error2 * 100 <= 5 && time2 <= 0.6) cout << "success";
 	else cout << "fail";

@@ -200,19 +200,14 @@ int main(int argc, char **argv)
 	cout << fixed;
 	cout.precision(2);
 	cout << endl;
-	cout << "3. Move to soldering iron tool" << endl;
+	cout << "5 Move to soldering iron tool" << endl;
 	cout << "time for planning: " << time1 << " error:" << error1 << ", ";
 	if (error1 * 100 <= 5 && time1 <= 0.6) cout << "success";
 	else cout << "fail";
 	cout << endl << endl;
-	cout << "4. Grab tool, approach to PCB plate and soldering" << endl;
+	cout << "6. Grab tool & 7. approach to PCB plate & 8. soldering" << endl;
 	cout << "time for planning: " << time2 << " error:" << error2 << ", ";
 	if (error2 * 100 <= 5 && time2 <= 0.6) cout << "success";
-	else cout << "fail";
-	cout << endl << endl;
-	cout << "5. Move tool to initial position" << endl;
-	cout << "time for planning: " << time3 ;
-	if ( time3 <= 0.6) cout << "success";
 	else cout << "fail";
 	cout << endl << endl;
 

@@ -175,7 +175,7 @@ int main(int argc, char **argv)
 	if (error1 * 100 <= 5 && time1 <= 0.6) cout << "success";
 	else cout << "fail";
 	cout << endl << endl;
-	cout << "2. Grab PCB plate, move it to zig and hold it" << endl;
+	cout << "2. Grab PCB plate & 3. move it to zig & 4. hold it" << endl;
 	cout << "time for planning: " << time2 << " error:" << error2 << ", ";
 	if (error2 * 100 <= 5 && time2 <= 0.6) cout << "success";
 	else cout << "fail";
