@@ -139,21 +139,21 @@ int main(int argc, char **argv)
 	
 	// place object in space
 	// obs->GetBaseLink()->SetFrame(EulerXYZ(Vec3(0, 0, -SR_PI / 2), Vec3(-0.5, -0.8, 0.12)));
-	cout << ur5Manager->forwardKin(qval, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP]) << endl;
+	//cout << ur5Manager->forwardKin(qval, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP]) << endl;
 
 	int flag = 0;
 	
 	ur5_invkinInit[0] = -1.754548; ur5_invkinInit[1] = 2.409134; ur5_invkinInit[2] = -1.813758;
 	ur5_invkinInit[3] = -2.546216; ur5_invkinInit[4] = -1.754548; ur5_invkinInit[5] = 3.141593;
 	point2 = ur5Manager->inverseKin(Tsettop / Tur52settop, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag, ur5_invkinInit);
-	cout << point2.transpose() << endl;
-	cout << flag << endl;
+	//cout << point2.transpose() << endl;
+	//cout << flag << endl;
 	
 	ur5RRTManager->attachObject(settop, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], Tur52settop);		// attaching object occurs here
 	ur5Manager->setJointVal(point2);
 	settop->setBaseLinkFrame(Tsettop);
 
-	cout << ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() << endl;
+	//cout << ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() << endl;
 	
 
 	ur3_invkinInit[0] = -2.796488; ur3_invkinInit[1] = -SR_PI_HALF; ur3_invkinInit[2] = 1.787395;
@@ -161,8 +161,8 @@ int main(int argc, char **argv)
 
 	Eigen::VectorXd q = ur3Manager->inverseKin(SE3(Vec3(0.0,0.0,-0.005)) * Tsettop * Tsettop2obj, &ur3->gLink[UR3_Index::OBJECT], true, SE3(), flag, ur3_invkinInit);
 	//ur3Manager->setJointVal(Eigen::VectorXd::Zero(6));
-	cout << q.transpose() << endl;
-	cout << flag << endl;
+	//cout << q.transpose() << endl;
+	//cout << flag << endl;
 	ur3Manager->setJointVal(q);
 	SE3 Tur32hdmi = EulerZYX(Vec3(-SR_PI_HALF, -SR_PI_HALF, 0.0), Vec3(0.0, 0.0, 0.0));
 	//hdmi->setBaseLinkFrame(ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame()*EulerXYZ(Vec3(0, 0, 0), Vec3(0.0, 0.0, 0.1)));
@@ -183,8 +183,8 @@ int main(int argc, char **argv)
 	initPosOffset[1] = poss[0][1];
 	initPosOffset[2] = 0.05;
 	setHybridPFCtrl(initPosOffset);
-	cout << ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() * Tee2contact << endl;
-	cout << Tsettop * Tsettop2contactGoal << endl;
+	//cout << ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() * Tee2contact << endl;
+	//cout << Tsettop * Tsettop2contactGoal << endl;
 
 	rendering(argc, argv);
 
@@ -225,8 +225,8 @@ void updateFunc()
 	static bool successPrinted = false;
 	cnt++;
 	ur3Manager->setGripperDistance(0.01);
-	if (cnt == 1)
-		cout << gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP();
+	//if (cnt == 1)
+	//	cout << gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP();
 
 	// hybrid position force control
 	clock_t start = clock();
