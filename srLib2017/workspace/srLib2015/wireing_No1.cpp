@@ -178,8 +178,8 @@ int main(int argc, char **argv)
 	//cout << "inverse kinematics flag: " << flag << endl;
 	point1 = robustInverseKinematics(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot, point0, 20);
 
-	cout << tape->GetBaseLink()->GetFrame() * Tobs2robot << endl;
-	cout << ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() << endl;
+	//cout << tape->GetBaseLink()->GetFrame() * Tobs2robot << endl;
+	//cout << ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() << endl;
 
 	ur3RRTManager->attachObject(wireBlock, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], Inv(EulerXYZ(Vec3(0, 0, 0), Vec3(0.0, 0.0, -0.065))));
 	ur3RRTManager->setStartandGoal(point0, point1);
@@ -199,7 +199,7 @@ int main(int argc, char **argv)
 	}
 	double time1 = (clock() - start) / (double)CLOCKS_PER_SEC;
 	double error1 = (point1 - ur3traj1[ur3traj1.size() - 1]).norm() / point1.norm();
-	cout << "time for planning: " << time1 << endl;
+	//cout << "time for planning: " << time1 << endl;
 	//////////////////////////////////////////////////////////////
 
 	string out_line;
@@ -336,6 +336,13 @@ void URrrtSetting()
 		ur5planningJoint[i] = (srStateJoint*)ur5->gJoint[i];
 	ur5RRTManager->setSystem(ur5planningJoint);
 	ur5RRTManager->setStateBound(ur5->getLowerJointLimit(), ur5->getUpperJointLimit());
+
+	ur3RRTManager->printIter = false;
+	ur3RRTManager->printFinish = false;
+	ur3RRTManager->printDist = false;
+	ur5RRTManager->printIter = false;
+	ur5RRTManager->printFinish = false;
+	ur5RRTManager->printDist = false;
 }
 
 void tempObjectSetting()

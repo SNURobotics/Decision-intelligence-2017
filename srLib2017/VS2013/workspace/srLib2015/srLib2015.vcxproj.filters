@@ -146,9 +146,6 @@
     <ClCompile Include="..\..\..\workspace\srLib2015\test_LYH.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\Test_LYH_settup_box.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\test_settop_force_ctrl.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -158,12 +155,6 @@
     <ClCompile Include="..\..\..\workspace\srLib2015\soldering_No1.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\soldering_No5.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\soldering_No10.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\wireing_No1.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
@@ -171,6 +162,15 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\wireing_No3.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\Task1_Assembly_SettopBox.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\soldering_No10.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\soldering_No5.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

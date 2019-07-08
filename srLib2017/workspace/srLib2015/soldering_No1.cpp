@@ -141,7 +141,9 @@ int main(int argc, char **argv)
 		ur3RRTManager->setState(ur3traj1[i]);
 		objTraj.push_back(pcb->GetBaseLink()->GetFrame());
 	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	double time1 = (clock() - start) / (double)CLOCKS_PER_SEC;
+	double error1 = (point1 - ur3traj1[ur3traj1.size() - 1]).norm() / point1.norm();
+	cout << "time for planning: " << time1 << endl;
 	//////////////////////////////////////////////////////////////
 
 	/////////////////// RRT planning for ur3 with object attached (point1 -> point2) ///////////////
@@ -159,26 +161,25 @@ int main(int argc, char **argv)
 		ur3RRTManager->setState(ur3traj2[i]);
 		objTraj.push_back(pcb->GetBaseLink()->GetFrame());
 	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
-	///////////////////////////////////////////////////////////////////////////
+	double time2 = (clock() - start) / (double)CLOCKS_PER_SEC;
+	double error2 = (point2 - ur3traj2[ur3traj2.size() - 1]).norm() / point2.norm();
+	cout << "time for planning: " << time2 << endl;
 
-	////////////////// RRT planning for ur3 with object detached (point2 -> point3) ///////////////
-	start = clock();
-	//SE3 Tgoal = SE3(Vec3(-0.5, 0.5, 0.5));
-	//point3 = ur3Manager->inverseKin(Tgoal, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag);
-	//cout << "inverse kinematics flag: " << flag << endl;
-	ur3RRTManager->detachObject();		// detaching object from robot occurs here
-	ur3RRTManager->setStartandGoal(point2, point0);
-	ur3RRTManager->execute(0.1);
-	ur3traj3 = ur3RRTManager->extractPath(20);
-	// set object trajectory
-	for (unsigned int i = 0; i < ur3traj3.size(); i++)
-	{
-		ur3RRTManager->setState(ur3traj3[i]);
-		objTraj.push_back(pcb->GetBaseLink()->GetFrame());
-	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
 	///////////////////////////////////////////////////////////////////////////////
+	
+	cout << fixed;
+	cout.precision(2);
+	cout << endl;
+	cout << "1. Approch to PCB plate" << endl;
+	cout << "time for planning: " << time1 << " error:" << error1 << ", ";
+	if (error1 * 100 <= 5 && time1 <= 0.6) cout << "success";
+	else cout << "fail";
+	cout << endl << endl;
+	cout << "2. Grab PCB plate, move it to zig and hold it" << endl;
+	cout << "time for planning: " << time2 << " error:" << error2 << ", ";
+	if (error2 * 100 <= 5 && time2 <= 0.6) cout << "success";
+	else cout << "fail";
+	cout << endl << endl;
 
 	rendering(argc, argv);
 
