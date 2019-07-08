@@ -87,6 +87,7 @@ double max_x = 0.005;
 double min_x = -0.005;
 double max_y = 0.0025;
 double min_y = -0.0025;
+bool is_hdmi = true;
 #endif // GRASP_HDMI
 #ifdef GRASP_POWER
 SE3 Tsettop2obj = Tsettop2power_init;
@@ -99,6 +100,7 @@ double max_x = 0.005;
 double min_x = -0.005;
 double max_y = 0.0025;
 double min_y = -0.0025;
+bool is_hdmi = false;
 #endif // GRASP_POWER
 
 vector<dse3> Fdes;
@@ -273,7 +275,12 @@ void updateFunc()
 		success_cnt = 0;
 	if (success_cnt > 100 && !successPrinted && abs(pos_diff[2]) < 0.0011)
 	{
-		cout << "success!!!" << endl;
+		cout << "(converged)" << endl;
+		if (is_hdmi)
+			cout << endl << "7. Pushing the hdmi into the settop box (force control)" << endl;
+		else
+			cout << endl << "11. Pushing the cable into the settup box (force control)" << endl;
+		cout << "calculation time: " << calc_time << ",  error rate: " << error_rate_Fnorm << ",  success" << endl;
 		successPrinted = true;
 	}
 }
