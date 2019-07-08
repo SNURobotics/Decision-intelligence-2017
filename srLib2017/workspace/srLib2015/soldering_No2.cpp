@@ -24,6 +24,13 @@ UR5Robot* ur5 = new UR5Robot;
 UR5RobotManager* ur5Manager;
 robotRRTManager* ur3RRTManager = new robotRRTManager;
 robotRRTManager* ur5RRTManager = new robotRRTManager;
+Eigen::VectorXd robustInverseKinematics_UR5(SE3 finalpos, Eigen::VectorXd original, int maxiter);
+
+// Floor
+srLink* floor_link = new srLink;
+srSystem* Floor = new srSystem;
+srCollision* floor_colli = new srCollision;
+void setFloor();
 
 //HDMI* hdmi = new HDMI();
 //Power* power = new Power();
@@ -87,6 +94,9 @@ int main(int argc, char **argv)
 	gSpace.AddSystem(pcbjig);
 	//gSpace.AddSystem(tape);
 	//gSpace.AddSystem(boxfortape);
+
+	setFloor();
+
 	initDynamics();
 
 	// robotManager setting should come after initDynamics()
@@ -124,12 +134,21 @@ int main(int argc, char **argv)
 	//ur5RRTManager->setState(Eigen::VectorXd::Zero(6));
 
 	Eigen::VectorXd UR3angle = Eigen::VectorXd::Zero(6);
+	ifstream in("../../../data/environment_setting/soldering_No1_output.txt");
+	string in_line;
+	int i = 0;
+	while (getline(in, in_line)) {
+		UR3angle[i] = stod(in_line);
+		i++;
+	}
+	in.close();
+	/*Eigen::VectorXd UR3angle = Eigen::VectorXd::Zero(6);
 	UR3angle[0] = -2.219436;
 	UR3angle[1] = -1.015442;
 	UR3angle[2] = 0.602799;
 	UR3angle[3] = 0.412643;
 	UR3angle[4] = 2.492953;
-	UR3angle[5] = 1.570796;
+	UR3angle[5] = 1.570796;*/
 	ur3Manager->setJointVal(UR3angle);
 	SE3 pcbpos = ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() * Inv(EulerXYZ(Vec3(0, SR_PI_HALF, 0), Vec3(-0.08, 0, 0)));
 	pcb->setBaseLinkFrame(pcbpos);
@@ -141,7 +160,8 @@ int main(int argc, char **argv)
 	clock_t start = clock();
 	point0 = Eigen::VectorXd::Zero(6);
 	int flag = 0;
-	point1 = ur5Manager->inverseKin(soldering->GetBaseLink()->GetFrame() * Tobs2robot, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
+	point1 = robustInverseKinematics_UR5(soldering->GetBaseLink()->GetFrame() * Tobs2robot, point0, 20);
+	//point1 = ur5Manager->inverseKin(soldering->GetBaseLink()->GetFrame() * Tobs2robot, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
 	cout << "inverse kinematics flag: " << flag << endl;
 	cout << soldering->GetBaseLink()->GetFrame() * Tobs2robot << endl;
 	cout << ur5->gMarkerLink[UR5_Index::MLINK_GRIP].GetFrame() << endl;
@@ -162,7 +182,8 @@ int main(int argc, char **argv)
 	/////////////////// RRT planning for UR5 with object attached (point1 -> point2) ///////////////
 	start = clock();
 	SE3 Tmid = pcbpos * Tpcb2robot;
-	point2 = ur5Manager->inverseKin(Tmid, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
+	point2 = robustInverseKinematics_UR5(Tmid, point1, 20);
+	//point2 = ur5Manager->inverseKin(Tmid, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
 	ur5RRTManager->attachObject(soldering, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], Inv(Tobs2robot));		// attaching object occurs here
 	ur5RRTManager->setStartandGoal(point1, point2);
 	ur5RRTManager->execute(0.1);
@@ -181,7 +202,8 @@ int main(int argc, char **argv)
 	////////////////// RRT planning for UR5 with object detached (point2 -> point3) ///////////////
 	start = clock();
 	SE3 Tgoal = SE3(Vec3(-0.5, 0.5, 0.5));
-	point3 = ur5Manager->inverseKin(Tgoal, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
+	point3 = robustInverseKinematics_UR5(Tgoal, point2, 20);
+	//point3 = ur5Manager->inverseKin(Tgoal, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
 	cout << "inverse kinematics flag: " << flag << endl;
 	//ur5RRTManager->detachObject();		// detaching object from robot occurs here
 	ur5RRTManager->setStartandGoal(point2, point1);
@@ -384,4 +406,73 @@ vector<Eigen::VectorXd> makeGriptraj(double gripangle, Eigen::VectorXd currentPo
 		gripTraj.push_back(tempPos);
 	}
 	return gripTraj;
+}
+
+void setFloor()
+{
+	floor_link->GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	Vec3 obs_size = Vec3(5.0, 5.0, 0.05);
+	Vec3 obs_col_size = Vec3(5.0, 5.0, 0.05);
+	floor_link->GetGeomInfo().SetDimension(obs_size);
+	floor_link->GetGeomInfo().SetColor(1.0, 1.0, 1.0);
+	floor_colli->GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	floor_colli->GetGeomInfo().SetDimension(obs_col_size);
+	floor_link->AddCollision(floor_colli);
+	Floor->SetBaseLink(floor_link);
+	Floor->SetBaseLinkType(srSystem::FIXED);
+	gSpace.AddSystem(Floor);
+	Floor->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -0.05)));
+}
+
+Eigen::VectorXd robustInverseKinematics_UR5(SE3 finalpos, Eigen::VectorXd original, int maxiter)
+{
+	srand((unsigned int)time(NULL));
+
+	int flag = 0;
+	Eigen::VectorXd lower = ur5->getLowerJointLimit();
+	Eigen::VectorXd upper = ur5->getUpperJointLimit();
+	Eigen::VectorXd initial = Eigen::VectorXd::Zero(lower.size());
+	Eigen::VectorXd currentpos = ur5Manager->getJointVal();
+
+	vector<Eigen::VectorXd> solList(0);
+
+	for (int i = 0; i < maxiter; i++) {
+		Eigen::VectorXd tempsol;
+		if (i == 0) initial = original;
+		else {
+			for (int j = 0; j < lower.size(); j++) {
+				int temp = int((upper[j] - lower[j]) * 1000);
+				initial[j] = double(rand() % temp) / 1000 + lower[j];
+			}
+		}
+		tempsol = ur5Manager->inverseKin(finalpos, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag, initial);
+		//cout << "inverse kinematics flag: " << flag << endl;
+
+		ur5Manager->setJointVal(tempsol);
+		if (!ur5Manager->checkCollision() && flag == 0) {
+			solList.push_back(tempsol);
+			//ur5Manager->setJointVal(currentpos);
+			//return tempsol;
+		}
+	}
+	ur5Manager->setJointVal(currentpos);
+	if (solList.size() == 0) {
+		cout << "Cannot find solution..." << endl;
+		return Eigen::VectorXd::Zero(lower.size());
+	}
+	else {
+		double temp = 10000;
+		double newsize = 0;
+		Eigen::VectorXd sol = Eigen::VectorXd::Zero(lower.size());
+		Eigen::VectorXd weight = ur5Manager->getBodyJacobian(currentpos, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3()).colwise().squaredNorm();
+		for (int i = 0; i < solList.size(); i++) {
+			//newsize = (solList[i] - original).squaredNorm();
+			newsize = (solList[i] - original).transpose().cwiseAbs() * weight;
+			if (temp > newsize) {
+				temp = newsize;
+				sol = solList[i];
+			}
+		}
+		return sol;
+	}
 }

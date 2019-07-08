@@ -123,12 +123,21 @@ int main(int argc, char **argv)
 	//ur5RRTManager->setState(Eigen::VectorXd::Zero(6));
 
 	Eigen::VectorXd UR3angle = Eigen::VectorXd::Zero(6);
+	ifstream in("../../../data/environment_setting/soldering_No1_output.txt");
+	string in_line;
+	int i = 0;
+	while (getline(in, in_line)) {
+		UR3angle[i] = stod(in_line);
+		i++;
+	}
+	in.close();
+	/*Eigen::VectorXd UR3angle = Eigen::VectorXd::Zero(6);
 	UR3angle[0] = -2.219436;
 	UR3angle[1] = -1.015442;
 	UR3angle[2] = 0.602799;
 	UR3angle[3] = 0.412643;
 	UR3angle[4] = 2.492953;
-	UR3angle[5] = 1.570796;
+	UR3angle[5] = 1.570796;*/
 	ur3Manager->setJointVal(UR3angle);
 	SE3 pcbpos = ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() * Inv(EulerXYZ(Vec3(0, SR_PI_HALF, 0), Vec3(-0.08, 0, 0)));
 	pcb->setBaseLinkFrame(pcbpos);

@@ -25,6 +25,11 @@ UR5RobotManager* ur5Manager;
 robotRRTManager* ur3RRTManager = new robotRRTManager;
 robotRRTManager* ur5RRTManager = new robotRRTManager;
 
+srLink* floor_link = new srLink;
+srSystem* Floor = new srSystem;
+srCollision* floor_colli = new srCollision;
+void setFloor();
+
 //HDMI* hdmi = new HDMI();
 //Power* power = new Power();
 //Settop* settop = new Settop();
@@ -89,6 +94,9 @@ int main(int argc, char **argv)
 	gSpace.AddSystem(pcbjig);
 	//gSpace.AddSystem(tape);
 	//gSpace.AddSystem(boxfortape);
+
+	setFloor();
+
 	initDynamics();
 
 	// robotManager setting should come after initDynamics()
@@ -167,6 +175,12 @@ int main(int argc, char **argv)
 
 	///////////////////////////////////////////////////////////////////////////////
 	
+	string out_line;
+	ofstream out("../../../data/environment_setting/soldering_No1_output.txt");
+	for (int i = 0; i < ur3Manager->m_lowerJointLimit.size(); i++) {
+		out << ur3Manager->getJointVal()[i] << endl;
+	}
+
 	cout << fixed;
 	cout.precision(2);
 	cout << endl;
@@ -272,12 +286,12 @@ void updateFunc()
 		ur3Manager->setJointVal(ur3traj2[(trajcnt - ur3traj1.size()) % ur3traj2.size()]);
 		pcb->GetBaseLink()->SetFrame(objTraj[trajcnt % (ur3traj1.size() + ur3traj2.size())]);
 		if (trajcnt == ur3traj1.size() + ur3traj2.size() - 1) {
-			tempPos(0) = -graspAngle;
-			tempPos(1) = -graspAngle;
-			tempPos(2) = graspAngle;
-			tempPos(3) = graspAngle;
-			tempPos(4) = graspAngle;
-			tempPos(5) = -graspAngle;
+			tempPos(0) = idleAngle;
+			tempPos(1) = idleAngle;
+			tempPos(2) = -idleAngle;
+			tempPos(3) = -idleAngle;
+			tempPos(4) = -idleAngle;
+			tempPos(5) = idleAngle;
 			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[0]))->m_State.m_rValue[0] = tempPos(0);
 			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[1]))->m_State.m_rValue[0] = tempPos(1);
 			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[2]))->m_State.m_rValue[0] = tempPos(2);
@@ -291,12 +305,12 @@ void updateFunc()
 		ur3Manager->setJointVal(ur3traj3[(trajcnt - ur3traj1.size() - ur3traj2.size()) % ur3traj3.size()]);
 		pcb->GetBaseLink()->SetFrame(objTraj[trajcnt % (ur3traj1.size() + ur3traj2.size() + ur3traj3.size())]);
 		if (trajcnt == ur3traj1.size() + ur3traj2.size() + ur3traj3.size() - 1) {
-			tempPos(0) = -graspAngle;
-			tempPos(1) = -graspAngle;
-			tempPos(2) = graspAngle;
-			tempPos(3) = graspAngle;
-			tempPos(4) = graspAngle;
-			tempPos(5) = -graspAngle;
+			tempPos(0) = idleAngle;
+			tempPos(1) = idleAngle;
+			tempPos(2) = -idleAngle;
+			tempPos(3) = -idleAngle;
+			tempPos(4) = -idleAngle;
+			tempPos(5) = idleAngle;
 			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[0]))->m_State.m_rValue[0] = tempPos(0);
 			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[1]))->m_State.m_rValue[0] = tempPos(1);
 			((srStateJoint*)(ur3Manager->m_gripperInfo->m_gripJoint[2]))->m_State.m_rValue[0] = tempPos(2);
@@ -388,4 +402,20 @@ vector<Eigen::VectorXd> makeGriptraj(double gripangle, Eigen::VectorXd currentPo
 		gripTraj.push_back(tempPos);
 	}
 	return gripTraj;
+}
+
+void setFloor()
+{
+	floor_link->GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	Vec3 obs_size = Vec3(5.0, 5.0, 0.05);
+	Vec3 obs_col_size = Vec3(5.0, 5.0, 0.05);
+	floor_link->GetGeomInfo().SetDimension(obs_size);
+	floor_link->GetGeomInfo().SetColor(1.0, 1.0, 1.0);
+	floor_colli->GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	floor_colli->GetGeomInfo().SetDimension(obs_col_size);
+	floor_link->AddCollision(floor_colli);
+	Floor->SetBaseLink(floor_link);
+	Floor->SetBaseLinkType(srSystem::FIXED);
+	gSpace.AddSystem(Floor);
+	Floor->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -0.05)));
 }
