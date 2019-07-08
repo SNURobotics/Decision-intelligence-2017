@@ -371,25 +371,25 @@ int main(int argc, char **argv)
 	cout << fixed;
 	cout.precision(2);
 	cout << endl;
-	cout << "8. Grab wire using UR3" << endl;
+	cout << "8. Grab aligned wire using UR3" << endl;
 	cout << "time for planning: " << time1 << " error:" << error1 << ", ";
 	if (error1 * 100 <= 5 && time1 <= 0.6) cout << "success";
 	else cout << "fail";
 	cout << endl << endl;
 
-	cout << "9. Put wire into wire tie machine" << endl;
+	cout << "9. Put grabbed wire into wire tie machine using UR3" << endl;
 	cout << "time for planning: " << time2 << " error:" << error2 << ", ";
 	if (error2 * 100 <= 5 && time2 <= 0.6) cout << "success";
 	else cout << "fail";
 	cout << endl << endl;
 
-	cout << "10. Tie wire with UR5" << endl;
+	cout << "10. Approach and actuate wire tie machine with UR5" << endl;
 	cout << "time for planning: " << time3 << " error:" << error3 << ", ";
 	if (error3 * 100 <= 5 && time3 <= 0.6) cout << "success";
 	else cout << "fail";
 	cout << endl << endl;
 
-	cout << "11. Unfold UR3 gripper & move to zero configuration" << endl;
+	cout << "11. Unfold UR3 gripper and move UR3 to zero configuration" << endl;
 	cout << "time for planning: " << time4 << " error:" << error4 << ", ";
 	if (error4 * 100 <= 5 && time4 <= 0.6) cout << "success";
 	else cout << "fail";
