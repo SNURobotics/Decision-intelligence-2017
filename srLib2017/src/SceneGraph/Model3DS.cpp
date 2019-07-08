@@ -396,30 +396,31 @@ void Model3DS::Draw( double scaleFactor )
 			// Loop through the faces as sorted by material and draw them
 			for (int j = 0; j < Objects[i].numMatFaces; j++)
 			{
-				// Use the material's texture
-				if (Materials != NULL)
-					Materials[Objects[i].MatFaces[j].MatIndex].tex.Use();
+				if (Objects[i].MatFaces != NULL) {
+					// Use the material's texture
+					if (Materials != NULL)
+						//Materials[Objects[i].MatFaces[j].MatIndex].tex.Use();
 
-				glPushMatrix();
-					
-					//glScaled(0.01,0.01,0.01);	
-					// Move the model
-					glTranslatef(Objects[i].pos.x, Objects[i].pos.y, Objects[i].pos.z);
-
-					// Rotate the model
-					glRotatef(Objects[i].rot.z, 0.0f, 0.0f, 1.0f);
-					glRotatef(Objects[i].rot.y, 0.0f, 1.0f, 0.0f);
-					glRotatef(Objects[i].rot.x, 1.0f, 0.0f, 0.0f);
-
-					glRotatef(90, 1.0, 0, 0);
-					// Draw the faces using an index to the vertex array
 					glPushMatrix();
-						glDrawElements(GL_TRIANGLES, Objects[i].MatFaces[j].numSubFaces, GL_UNSIGNED_SHORT, Objects[i].MatFaces[j].subFaces);
-					glPopMatrix();
-				glPopMatrix();
 
-				Materials[Objects[i].MatFaces[j].MatIndex].tex.DisUse();
-				
+						//glScaled(0.01,0.01,0.01);	
+						// Move the model
+						glTranslatef(Objects[i].pos.x, Objects[i].pos.y, Objects[i].pos.z);
+
+						// Rotate the model
+						glRotatef(Objects[i].rot.z, 0.0f, 0.0f, 1.0f);
+						glRotatef(Objects[i].rot.y, 0.0f, 1.0f, 0.0f);
+						glRotatef(Objects[i].rot.x, 1.0f, 0.0f, 0.0f);
+
+						glRotatef(90, 1.0, 0, 0);
+						// Draw the faces using an index to the vertex array
+						glPushMatrix();
+							glDrawElements(GL_TRIANGLES, Objects[i].MatFaces[j].numSubFaces, GL_UNSIGNED_SHORT, Objects[i].MatFaces[j].subFaces);
+						glPopMatrix();
+					glPopMatrix();
+
+					Materials[Objects[i].MatFaces[j].MatIndex].tex.DisUse();
+				}
 
 			}
 

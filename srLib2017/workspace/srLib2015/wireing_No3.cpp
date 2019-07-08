@@ -68,6 +68,7 @@ Eigen::VectorXd point5;
 vector<Eigen::VectorXd> ur5traj1(0);
 vector<Eigen::VectorXd> ur5traj2(0);
 vector<Eigen::VectorXd> ur5traj3(0);
+vector<Eigen::VectorXd> ur5traj3_2(0);
 vector<Eigen::VectorXd> ur5traj4(0);
 vector<Eigen::VectorXd> ur5traj5(0);
 vector<Eigen::VectorXd> ur5traj6(0);
@@ -95,6 +96,9 @@ double graspAngle = 0.1;
 double idleAngle = -0.825148; // for UR3
 Eigen::VectorXd idlePos = Eigen::VectorXd::Zero(6);
 Eigen::VectorXd gripPos = Eigen::VectorXd::Zero(6);
+
+Eigen::VectorXd UR5angle;
+Eigen::VectorXd UR3angle;
 
 vector<Eigen::VectorXd> GripTraj(0);
 vector<Eigen::VectorXd> makeGriptraj(double gripangle, Eigen::VectorXd currentPos);
@@ -176,7 +180,7 @@ int main(int argc, char **argv)
 	boxfortape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), marginPos));
 	//wireBlock->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, 0), Vec3(-0.6, -0.2, 0)));
 
-	Eigen::VectorXd UR3angle = Eigen::VectorXd::Zero(6);
+	UR3angle = Eigen::VectorXd::Zero(6);
 	in = ifstream("../../../data/environment_setting/wireing_No1_output.txt");
 	i = 0;
 	while (getline(in, in_line)) {
@@ -191,7 +195,7 @@ int main(int argc, char **argv)
 	UR3angle[4] = -2.066412;
 	UR3angle[5] = -0.000000;*/
 
-	Eigen::VectorXd UR5angle = Eigen::VectorXd::Zero(6);
+	UR5angle = Eigen::VectorXd::Zero(6);
 	in = ifstream("../../../data/environment_setting/wireing_No2_output.txt");
 	i = 0;
 	while (getline(in, in_line)) {
@@ -315,10 +319,22 @@ int main(int argc, char **argv)
 	//ur5traj3 = ur5RRTManager->extractPath(20);
 	ur5traj3 = ur5RRTManager->extractPathOptimal();
 	for (unsigned int i = 0; i < 3; i++) {
-		Tobs2robot3 = EulerXYZ(Vec3(), Vec3(-0.0, -0.00, -0.008)) * Tobs2robot3;
-		//point3 = robustInverseKinematics_UR5(tape->GetBaseLink()->GetFrame() * Tobs2robot3, point3, 15);
+		Tobs2robot3 = EulerXYZ(Vec3(), Vec3(-0.0, -0.00, -0.005)) * Tobs2robot3;
+		//point3 = robustInverseKinematics_UR5(tape->GetBaseLink()->GetFrame() * Tobs2robot3, point3, 10);
 		point3 = ur5Manager->inverseKin(tape->GetBaseLink()->GetFrame() * Tobs2robot3, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag, point3);
+		//cout << ur5Manager->getBodyJacobian(point3, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3()) << endl;
 		ur5traj3.push_back(point3);
+	}
+	ur5traj3_2.clear();
+	for (unsigned int i = 0; i < 3; i++) {
+		ur5traj3_2.push_back(point3);
+	}
+	for (unsigned int i = 0; i < 6; i++) {
+		Tobs2robot3 = EulerXYZ(Vec3(), Vec3(-0.01, -0.00, 0.01)) * Tobs2robot3;
+		//point3 = robustInverseKinematics_UR5(tape->GetBaseLink()->GetFrame() * Tobs2robot3, point3, 10);
+		point3 = ur5Manager->inverseKin(tape->GetBaseLink()->GetFrame() * Tobs2robot3, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag, point3);
+		//cout << ur5Manager->getBodyJacobian(point3, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3()) << endl;
+		ur5traj3_2.push_back(point3);
 	}
 
 	// set object trajectory
@@ -326,8 +342,9 @@ int main(int argc, char **argv)
 	{
 		ur5RRTManager->setState(ur5traj3[i]);
 	}
+	
 	double time3 = (clock() - start) / (double)CLOCKS_PER_SEC;
-	double error3 = (point3 - ur5traj3[ur5traj3.size() - 1]).norm() / point3.norm();
+	double error3 = (point3 - ur5traj3_2[ur5traj3_2.size() - 1]).norm() / point3.norm();
 	cout << "time for planning: " << time3 << endl;
 	ur5Manager->setJointVal(UR5angle);
 	///////////////////////////////////////////////////////////////////////////////
@@ -339,7 +356,7 @@ int main(int argc, char **argv)
 	
 	ur3RRTManager->setStartandGoal(point2, qval);
 	ur3RRTManager->execute(0.1);
-	//ur5traj4 = ur5RRTManager->extractPath(20);
+	//ur3traj4 = ur3RRTManager->extractPath(20);
 	ur3traj4 = ur3RRTManager->extractPathOptimal();
 	// set object trajectory
 	for (unsigned int i = 0; i < ur3traj4.size(); i++)
@@ -393,6 +410,13 @@ void rendering(int argc, char **argv)
 
 	renderer->InitializeRenderer(argc, argv, windows, false);
 	renderer->InitializeNode(&gSpace);
+
+	ur3Manager->setJointVal(UR3angle);
+	ur5Manager->setJointVal(UR5angle);
+	Eigen::VectorXd temp(6);
+	temp << -1.1, -1.1, 1.1, 1.1, 1.1, -1.1;
+	ur5Manager->setGripperPosition(temp);
+
 	renderer->setUpdateFunc(updateFunc);
 
 	renderer->addNode(wire1);
@@ -478,12 +502,19 @@ void updateFunc()
 				ur3Manager->setGripperPosition(gripPos);
 			}
 		}
-		else if (trajcnt < ur3traj1.size() + ur3traj2.size() + ur5traj3.size() + ur3traj4.size())
+		else if (trajcnt < ur3traj1.size() + ur3traj2.size() + ur5traj3.size() + ur5traj3_2.size())
+		{
+			ur5Manager->setJointVal(ur5traj3_2[(trajcnt - ur3traj1.size() - ur3traj2.size() - ur5traj3.size()) % ur5traj3_2.size()]);
+			ur3Manager->setJointVal(ur3traj2[ur3traj2.size() - 1]);
+			if (trajcnt == ur3traj1.size() + ur3traj2.size() + ur5traj3.size() + ur5traj3_2.size() - 1) {
+				ur3Manager->setGripperPosition(gripPos);
+			}
+		}
+		else if (trajcnt < ur3traj1.size() + ur3traj2.size() + ur5traj3.size() + ur5traj3_2.size() + ur3traj4.size())
 		{
 			ur3Manager->setGripperPosition(gripPos);
-			ur3Manager->setJointVal(ur3traj4[(trajcnt - ur3traj1.size() - ur3traj2.size() - ur5traj3.size()) % ur3traj4.size()]);
-			ur5Manager->setJointVal(ur5traj3[ur5traj3.size()-1]);
-			if (trajcnt == ur3traj1.size() + ur3traj2.size() + ur5traj3.size() + ur3traj4.size() - 1) {
+			ur3Manager->setJointVal(ur3traj4[(trajcnt - ur3traj1.size() - ur3traj2.size() - ur5traj3.size() - ur5traj3_2.size()) % ur3traj4.size()]);
+			if (trajcnt == ur3traj1.size() + ur3traj2.size() + ur5traj3.size() + ur5traj3_2.size() + ur3traj4.size() - 1) {
 				ur3Manager->setGripperPosition(idlePos);
 			}
 		}
