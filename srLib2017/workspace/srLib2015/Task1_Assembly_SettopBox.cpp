@@ -178,7 +178,7 @@ int main(int argc, char **argv)
 		cout << "Given set-top box position is out of the range, nominal values is chosen" << endl;
 		settup_init = SE3(Vec3(-0.5, -0.3, 0));
 	}
-	if (HDMI_x < Hdmi_x_left || Hdmi_x_right < HDMI_x || HDMI_y < Hdmi_y_left || Hdmi_y_left < HDMI_y)
+	if (HDMI_x < Hdmi_x_left || Hdmi_x_right < HDMI_x || HDMI_y < Hdmi_y_left || Hdmi_y_right < HDMI_y)
 	{
 		cout << "Given HDMI position is out of the range, nominal values is chosen" << endl;
 		hdmi_init = EulerXYZ(Vec3(0, 0, -SR_PI_HALF / 2), Vec3(0.25, -0.55, 0));
@@ -234,7 +234,7 @@ int main(int argc, char **argv)
 	//boxfortape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.4, -0.5, 0)));
 
 	///////////// RRT planning to reach object (1. approaching the settup box & 2. grasping the settup box) ///////////////
-	cout << endl << "1. approaching the settup box & 2. grasping the settup box" << endl;
+	cout << endl << "1. Approaching the settop box & 2. Grasping the settop box" << endl;
 	clock_t start = clock();
 	UR5point0 = Eigen::VectorXd::Zero(6);
 	int flag = 0;
@@ -260,7 +260,7 @@ int main(int argc, char **argv)
 	//////////////////////////////////////////////////////////////
 
 	/////////////////// RRT planning for UR5 with object attached (3. placing the settup box) ///////////////
-	cout << endl << "3. placing the settup box" << endl;
+	cout << endl << "3. Placing the settop box" << endl;
 	/*Eigen::VectorXd point2(6);
 	point2(0) = 0;
 	point2(1) = -0.3*SR_PI_HALF;
@@ -288,7 +288,7 @@ int main(int argc, char **argv)
 	///////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for UR3 with object detached (4. Approaching the hdmi connector & 5. grasping the hdmi connector) ///////////////
-	cout << endl << "4. Approaching the hdmi connector & 5. grasping the hdmi connector" << endl;
+	cout << endl << "4. Approaching the hdmi connector & 5. Grasping the hdmi connector" << endl;
 	start = clock();
 	UR3point0 = qval;
 	ur3_invkinInit[0] = -2.796488; ur3_invkinInit[1] = -SR_PI_HALF; ur3_invkinInit[2] = 1.787395;
@@ -311,7 +311,7 @@ int main(int argc, char **argv)
 	///////////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for UR3 with object detached (6. Bringing the hdmi to the settup box) ///////////////
-	cout << endl << "6. Bringing the hdmi to the settup box" << endl;
+	cout << endl << "6. Bringing the hdmi to the settop box" << endl;
 	start = clock();
 
 	UR3point2 = UR3robustInverseKinematics(Tsettop * Tsettop2hdmi_init *Inv(SE3(EulerXYZ(Vec3(-SR_PI_HALF, 0, -SR_PI_HALF), Vec3(0, 0, 0.)))), UR3point1);
@@ -334,7 +334,7 @@ int main(int argc, char **argv)
 
 
 	////////////////// RRT planning for UR3 with object detached (7. Pusing the hdmi into the settup box) ///////////////
-	cout << endl << "7. Pusing the hdmi into the settup box" << endl;
+	cout << endl << "7. Pushing the hdmi into the settop box" << endl;
 	start = clock();
 
 	//cout << "inverse kinematics flag: " << flag << endl;
@@ -349,7 +349,7 @@ int main(int argc, char **argv)
 	///////////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for UR3 with object detached (8. Approaching the power cable & 9. grasping the power cable) ///////////////
-	cout << endl << "8. Approaching the power cable & 9. grasping the power cable" << endl;
+	cout << endl << "8. Approaching the power cable & 9. Grasping the power cable" << endl;
 	start = clock();
 	ur3RRTManager->detachObject();
 
@@ -368,7 +368,7 @@ int main(int argc, char **argv)
 	/////////////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for UR3 with object detached (10. Bringing the cable to the settup box) ///////////////
-	cout << endl << "10. Bringing the cable to the settup box" << endl;
+	cout << endl << "10. Bringing the cable to the settop box" << endl;
 	start = clock();
 	ur3RRTManager->attachObject(power, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], SE3(EulerXYZ(Vec3(-SR_PI_HALF, 0, -SR_PI_HALF), Vec3(0, 0, 0.))));		// attaching object occurs here
 
