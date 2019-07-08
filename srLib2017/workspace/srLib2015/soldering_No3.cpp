@@ -106,7 +106,7 @@ int main(int argc, char **argv)
 
 	// place object in space
 	obs->GetBaseLink()->SetFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.5, -0.8, 0.12)));
-	cout << ur3Manager->forwardKin(qval, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP]) << endl;
+	//cout << ur3Manager->forwardKin(qval, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP]) << endl;
 
 
 	//hdmi->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI_HALF), Vec3(-0.2, -0.5, 0)));
@@ -149,7 +149,7 @@ int main(int argc, char **argv)
 	point0 = UR3angle;
 	int flag = 0;
 	point1 = ur3Manager->inverseKin(EulerXYZ(Vec3(0, SR_PI_HALF, 0), Vec3(-0.0, 0.35, 0.12)) * Tobs2robot, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag);
-	cout << "inverse kinematics flag: " << flag << endl;
+	//cout << "inverse kinematics flag: " << flag << endl;
 	ur3RRTManager->attachObject(pcb, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], Inv(Tobs2robot));		// attaching object occurs here
 	//cout << pcb->GetBaseLink()->GetFrame() * Tobs2robot << endl;
 	//cout << ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() << endl;
@@ -164,7 +164,7 @@ int main(int argc, char **argv)
 	}
 	double time1 = (clock() - start) / (double)CLOCKS_PER_SEC;
 	double error1 = (point1 - ur3traj1[ur3traj1.size() - 1]).norm() / point1.norm();
-	cout << "time for planning: " << time1 << endl;
+	//cout << "time for planning: " << time1 << endl;
 	//////////////////////////////////////////////////////////////
 
 	/////////////////// RRT planning for ur3 with object attached (point1 -> point2) ///////////////
@@ -174,7 +174,7 @@ int main(int argc, char **argv)
 	point2[1] = -SR_PI_HALF;
 	point2[3] = -SR_PI_HALF;
 	point2[4] = SR_PI_HALF;
-	cout << "inverse kinematics flag: " << flag << endl;
+	//cout << "inverse kinematics flag: " << flag << endl;
 	//ur3RRTManager->attachObject(pcb, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], Inv(Tobs2robot));		// attaching object occurs here
 	ur3RRTManager->detachObject();		// detaching object from robot occurs here
 	ur3RRTManager->setStartandGoal(point1, point2);
@@ -188,7 +188,7 @@ int main(int argc, char **argv)
 	}
 	double time2 = (clock() - start) / (double)CLOCKS_PER_SEC;
 	double error2 = (point2 - ur3traj2[ur3traj2.size() - 1]).norm() / point2.norm();
-	cout << "time for planning: " << time2 << endl;
+	//cout << "time for planning: " << time2 << endl;
 	///////////////////////////////////////////////////////////////////////////
 
 	cout << fixed;
@@ -384,6 +384,13 @@ void URrrtSetting()
 		ur5planningJoint[i] = (srStateJoint*)ur5->gJoint[i];
 	ur5RRTManager->setSystem(ur5planningJoint);
 	ur5RRTManager->setStateBound(ur5->getLowerJointLimit(), ur5->getUpperJointLimit());
+
+	ur3RRTManager->printIter = false;
+	ur3RRTManager->printFinish = false;
+	ur3RRTManager->printDist = false;
+	ur5RRTManager->printIter = false;
+	ur5RRTManager->printFinish = false;
+	ur5RRTManager->printDist = false;
 }
 
 void tempObjectSetting()

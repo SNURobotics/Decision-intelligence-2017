@@ -114,7 +114,7 @@ int main(int argc, char **argv)
 
 	// place object in space
 	obs->GetBaseLink()->SetFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.5, -0.8, 0.12)));
-	cout << ur5Manager->forwardKin(qval, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP]) << endl;
+	//cout << ur5Manager->forwardKin(qval, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP]) << endl;
 
 
 	//hdmi->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, SR_PI_HALF), Vec3(-0.2, -0.5, 0)));
@@ -162,9 +162,9 @@ int main(int argc, char **argv)
 	int flag = 0;
 	point1 = robustInverseKinematics_UR5(soldering->GetBaseLink()->GetFrame() * Tobs2robot, point0, 20);
 	//point1 = ur5Manager->inverseKin(soldering->GetBaseLink()->GetFrame() * Tobs2robot, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
-	cout << "inverse kinematics flag: " << flag << endl;
-	cout << soldering->GetBaseLink()->GetFrame() * Tobs2robot << endl;
-	cout << ur5->gMarkerLink[UR5_Index::MLINK_GRIP].GetFrame() << endl;
+	//cout << "inverse kinematics flag: " << flag << endl;
+	//cout << soldering->GetBaseLink()->GetFrame() * Tobs2robot << endl;
+	//cout << ur5->gMarkerLink[UR5_Index::MLINK_GRIP].GetFrame() << endl;
 	ur5RRTManager->setStartandGoal(point0, point1);
 	ur5RRTManager->execute(0.1);
 	ur5traj1 = ur5RRTManager->extractPath(20);
@@ -176,7 +176,7 @@ int main(int argc, char **argv)
 	}
 	double time1 = (clock() - start) / (double)CLOCKS_PER_SEC;
 	double error1 = (point1 - ur5traj1[ur5traj1.size() - 1]).norm() / point1.norm();
-	cout << "time for planning: " << time1 << endl;
+	//cout << "time for planning: " << time1 << endl;
 	//////////////////////////////////////////////////////////////
 
 	/////////////////// RRT planning for UR5 with object attached (point1 -> point2) ///////////////
@@ -196,7 +196,7 @@ int main(int argc, char **argv)
 	}
 	double time2 = (clock() - start) / (double)CLOCKS_PER_SEC;
 	double error2 = (point2 - ur5traj2[ur5traj2.size() - 1]).norm() / point2.norm();
-	cout << "time for planning: " << time2 << endl;
+	//cout << "time for planning: " << time2 << endl;
 	///////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for UR5 with object detached (point2 -> point3) ///////////////
@@ -204,7 +204,7 @@ int main(int argc, char **argv)
 	SE3 Tgoal = SE3(Vec3(-0.5, 0.5, 0.5));
 	point3 = robustInverseKinematics_UR5(Tgoal, point2, 20);
 	//point3 = ur5Manager->inverseKin(Tgoal, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
-	cout << "inverse kinematics flag: " << flag << endl;
+	//cout << "inverse kinematics flag: " << flag << endl;
 	//ur5RRTManager->detachObject();		// detaching object from robot occurs here
 	ur5RRTManager->setStartandGoal(point2, point1);
 	ur5RRTManager->execute(0.1);
@@ -217,7 +217,7 @@ int main(int argc, char **argv)
 	}
 	double error3 = (point3 - ur5traj3[ur5traj3.size() - 1]).norm() / point3.norm();
 	double time3 = (clock() - start) / (double)CLOCKS_PER_SEC;
-	cout << "time for planning: " << time3 << endl;
+	//cout << "time for planning: " << time3 << endl;
 	///////////////////////////////////////////////////////////////////////////////
 	cout << fixed;
 	cout.precision(2);
@@ -376,6 +376,13 @@ void URrrtSetting()
 		ur5planningJoint[i] = (srStateJoint*)ur5->gJoint[i];
 	ur5RRTManager->setSystem(ur5planningJoint);
 	ur5RRTManager->setStateBound(ur5->getLowerJointLimit(), ur5->getUpperJointLimit());
+
+	ur3RRTManager->printIter = false;
+	ur3RRTManager->printFinish = false;
+	ur3RRTManager->printDist = false;
+	ur5RRTManager->printIter = false;
+	ur5RRTManager->printFinish = false;
+	ur5RRTManager->printDist = false;
 }
 
 void tempObjectSetting()
