@@ -83,6 +83,10 @@ SE3 Tobj2contact = SE3(Vec3(0.0275,0.0,0.0));
 SE3 Tsettop2contactGoal = SE3(Vec3(-0.009, 0.0, 0.0)) * Tsettop2hdmi_init * Tobj2contact;
 string filename = "hdmi.txt";
 double depth = 0.008;
+double max_x = 0.005;
+double min_x = -0.005;
+double max_y = 0.0025;
+double min_y = -0.0025;
 #endif // GRASP_HDMI
 #ifdef GRASP_POWER
 SE3 Tsettop2obj = Tsettop2power_init;
@@ -91,6 +95,10 @@ SE3 Tobj2contact = SE3(Vec3(0.017, 0.0, 0.0));
 SE3 Tsettop2contactGoal = SE3(Vec3(-0.006, 0.0, 0.0)) * Tsettop2power_init * Tobj2contact;
 string filename = "power.txt";
 double depth = 0.005;
+double max_x = 0.005;
+double min_x = -0.005;
+double max_y = 0.0025;
+double min_y = -0.0025;
 #endif // GRASP_POWER
 
 vector<dse3> Fdes;
@@ -161,6 +169,14 @@ int main(int argc, char **argv)
 	//power->setBaseLinkFrame(SE3(Vec3(0.0, 0.1, 0.1)));
 
 	Vec3 initPosOffset(0.0);
+	if (poss[0][0] < min_x)
+		poss[0][0] = min_x;
+	if (poss[0][0] > max_x)
+		poss[0][0] = max_x;
+	if (poss[0][1] < min_y)
+		poss[0][1] = min_y;
+	if (poss[0][1] > max_y)
+		poss[0][1] = max_y;
 	initPosOffset[0] = poss[0][0];
 	initPosOffset[1] = poss[0][1];
 	initPosOffset[2] = 0.05;

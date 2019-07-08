@@ -119,7 +119,7 @@ int main(int argc, char **argv)
 {
 
 	///////////////////////// test file read /////////////////////////
-	string str = "../../../data/environment_setting/test.txt";
+	string str = "../../../data/environment_setting/Task1_Assemblying_SettopBox.txt";
 	vector<int> lineNums(3);
 	lineNums[0] = 10;
 	lineNums[1] = 13;
