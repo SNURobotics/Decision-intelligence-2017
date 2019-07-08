@@ -277,12 +277,16 @@ void robotManager::setGripperInput(Eigen::VectorXd input)
 
 void robotManager::setGripperPosition(Eigen::VectorXd posInput)
 {
-	for (unsigned int i = 0; i < m_gripperInfo->m_gripJoint.size(); i++)
+	for (unsigned int i = 0; i < m_gripperInfo->m_gripJoint.size(); i++) {
 		((srStateJoint*)m_gripperInfo->m_gripJoint[i])->m_State.m_rValue[0] = posInput(i);
+		((srStateJoint*)m_gripperInfo->m_gripJoint[i])->m_State.m_rValue[1] = 0;
+	}
 
 	if (m_gripperInfo->m_gripDummyJoint.size() > 0)
-		for (unsigned int i = 0; i < m_gripperInfo->m_gripDummyJoint.size(); i++)
+		for (unsigned int i = 0; i < m_gripperInfo->m_gripDummyJoint.size(); i++) {
 			((srStateJoint*)m_gripperInfo->m_gripDummyJoint[i])->m_State.m_rValue[0] = posInput(i);
+			((srStateJoint*)m_gripperInfo->m_gripDummyJoint[i])->m_State.m_rValue[1] = 0;
+		}
 }
 
 Eigen::VectorXd robotManager::getGripperPosition() const

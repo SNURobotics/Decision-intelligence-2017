@@ -1,0 +1,17 @@
+Task1 - Assemblying set-top box with HDMI and power cable.
+
+Initial x,y positions of the settop box, HDMI and power cable can be chosen, 
+they must be inside the given intervals otherwise nominal values will be selected. 
+
+Distance between HDMI and power cable should be not too close. 
+
+Initial Settings
+
+settop x, y (x: -0.7 ~ -0.3, y: -0.6 ~ -0.1):
+-0.5 -0.35
+ 
+HDMI cable x, y (x: 0.2 ~ 0.3, y: -0.6 ~ -0.4):
+0.25 -0.5
+
+power cable x, y (x: 0.3 ~ 0.4, y: -0.6 ~ -0.4):
+0.35 -0.5 

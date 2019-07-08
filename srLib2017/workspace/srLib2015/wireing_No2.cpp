@@ -204,7 +204,7 @@ int main(int argc, char **argv)
 	//Tobs2robot4 = EulerXYZ(Vec3(0, -SR_PI_HALF, SR_PI), Vec3(0.020, 0.035, 0.120));
 	Tobs2robot4 = EulerXYZ(Vec3(0, SR_PI_HALF, 0), Vec3(0.020, 0.035, 0.120));
 	Tobs2robot5 = EulerXYZ(Vec3(-SR_PI_HALF, 0, SR_PI_HALF), Vec3(0.115, 0.005, 0.120));
-	cout << Tobs2robot4 << endl;
+	//cout << Tobs2robot4 << endl;
 
 	//wire->addPoint(Vec3());
 	wire1->setColor(0, 0, 0, 0.9);
@@ -225,8 +225,8 @@ int main(int argc, char **argv)
 	ur5Manager->setGripperPosition(gripPos);
 	point1 = robustInverseKinematics_UR5(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot1, point0, 20);
 
-	cout << wireBlock->GetBaseLink()->GetFrame() * Tobs2robot1 << endl;
-	cout << ur5->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() << endl;
+	//cout << wireBlock->GetBaseLink()->GetFrame() * Tobs2robot1 << endl;
+	//cout << ur5->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() << endl;
 
 	ur5RRTManager->setStartandGoal(point0, point1);
 	ur5RRTManager->execute(0.1);
@@ -244,7 +244,7 @@ int main(int argc, char **argv)
 	}
 	double time1 = (clock() - start) / (double)CLOCKS_PER_SEC;
 	double error1 = (point1 - ur5traj1[ur5traj1.size() - 1]).norm() / point1.norm();
-	cout << "time for planning: " << time1 << endl;
+	//cout << "time for planning: " << time1 << endl;
 	//////////////////////////////////////////////////////////////
 
 	/////////////////// RRT planning for ur3 with object attached (point1 -> point2) ///////////////
@@ -263,7 +263,7 @@ int main(int argc, char **argv)
 	}
 	double time2 = (clock() - start) / (double)CLOCKS_PER_SEC;
 	double error2 = (point2 - ur5traj2[ur5traj2.size() - 1]).norm() / point2.norm();
-	cout << "time for planning: " << time2 << endl;
+	//cout << "time for planning: " << time2 << endl;
 	///////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for ur3 with object detached (point2 -> point3) ///////////////
@@ -282,7 +282,7 @@ int main(int argc, char **argv)
 	}
 	double time3 = (clock() - start) / (double)CLOCKS_PER_SEC;
 	double error3 = (point3 - ur5traj3[ur5traj3.size() - 1]).norm() / point3.norm();
-	cout << "time for planning: " << time3 << endl;
+	//cout << "time for planning: " << time3 << endl;
 	///////////////////////////////////////////////////////////////////////////////
 
 	string out_line;
@@ -308,7 +308,7 @@ int main(int argc, char **argv)
 	}
 	double time4 = (clock() - start) / (double)CLOCKS_PER_SEC;
 	double error4 = (point4 - ur5traj4[ur5traj4.size() - 1]).norm() / point4.norm();
-	cout << "time for planning: " << time4 << endl;
+	//cout << "time for planning: " << time4 << endl;
 	///////////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for ur3 with object detached (point4 -> point5) ///////////////
@@ -327,7 +327,7 @@ int main(int argc, char **argv)
 	}
 	double time5 = (clock() - start) / (double)CLOCKS_PER_SEC;
 	double error5 = (point5 - ur5traj5[ur5traj5.size() - 1]).norm() / point5.norm();
-	cout << "time for planning: " << time5 << endl;
+	//cout << "time for planning: " << time5 << endl;
 	///////////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for ur3 with object detached (point4 -> point5) ///////////////
@@ -345,43 +345,43 @@ int main(int argc, char **argv)
 	}
 	double time6 = (clock() - start) / (double)CLOCKS_PER_SEC;
 	double error6 = (point1 - ur5traj6[ur5traj6.size() - 1]).norm() / point1.norm();
-	cout << "time for planning: " << time6 << endl;
+	//cout << "time for planning: " << time6 << endl;
 	///////////////////////////////////////////////////////////////////////////////
 
 	cout << fixed;
 	cout.precision(2);
 	cout << endl;
-	cout << "2. Moving UR5 to waypoint 1" << endl;
+	cout << "2. Move UR5 to the wire bundle and grab wire tip" << endl;
 	cout << "time for planning: " << time1 << " error:" << error1 << ", ";
 	if (error1 * 100 <= 5 && time1 <= 0.6) cout << "success";
 	else cout << "fail";
 	cout << endl << endl;
 
-	cout << "3. Moving UR5 to waypoint 2" << endl;
+	cout << "3. Move UR5 to waypoint 1" << endl;
 	cout << "time for planning: " << time2 << " error:" << error2 << ", ";
 	if (error2 * 100 <= 5 && time2 <= 0.6) cout << "success";
 	else cout << "fail";
 	cout << endl << endl;
 
-	cout << "4. Moving UR5 to waypoint 3" << endl;
+	cout << "4. Move UR5 to waypoint 2" << endl;
 	cout << "time for planning: " << time3 << " error:" << error3 << ", ";
 	if (error3 * 100 <= 5 && time3 <= 0.6) cout << "success";
 	else cout << "fail";
 	cout << endl << endl;
 
-	cout << "5. Moving UR5 to waypoint 4" << endl;
+	cout << "5. Move UR5 to waypoint 3" << endl;
 	cout << "time for planning: " << time4 << " error:" << error4 << ", ";
 	if (error4 * 100 <= 5 && time4 <= 0.6) cout << "success";
 	else cout << "fail";
 	cout << endl << endl;
 
-	cout << "6. Moving UR5 to waypoint 5" << endl;
+	cout << "6. Move UR5 to waypoint 4" << endl;
 	cout << "time for planning: " << time5 << " error:" << error5 << ", ";
 	if (error5 * 100 <= 5 && time5 <= 0.6) cout << "success";
 	else cout << "fail";
 	cout << endl << endl;
 
-	cout << "7. Moving UR5 to waypoint 1 again" << endl;
+	cout << "7. Move UR5 to waypoint 5" << endl;
 	cout << "time for planning: " << time6 << " error:" << error6 << ", ";
 	if (error6 * 100 <= 5 && time6 <= 0.6) cout << "success";
 	else cout << "fail";
@@ -626,6 +626,13 @@ void URrrtSetting()
 		ur5planningJoint[i] = (srStateJoint*)ur5->gJoint[i];
 	ur5RRTManager->setSystem(ur5planningJoint);
 	ur5RRTManager->setStateBound(ur5->getLowerJointLimit(), ur5->getUpperJointLimit());
+
+	ur3RRTManager->printIter = false;
+	ur3RRTManager->printFinish = false;
+	ur3RRTManager->printDist = false;
+	ur5RRTManager->printIter = false;
+	ur5RRTManager->printFinish = false;
+	ur5RRTManager->printDist = false;
 }
 
 void tempObjectSetting()

@@ -50,7 +50,8 @@ void URrobotManagerSetting();
 void URrrtSetting();
 void settopEnvSetting();
 void setHybridPFCtrl(Vec3 initPosOffset = Vec3(0.0));
-void setHybridPFCtrl_2nd(Vec3 posOffset = Vec3(0.0));
+void setHybridPFCtrl_pos(Vec3 posOffset = Vec3(0.0), double z = 0.0);
+void setHybridPFCtrl_Fx(Vec3 posOffset = Vec3(0.0), double Fx = 1.0);
 double norm_dse3(dse3 input);
 // void tempObjectSetting();
 Eigen::VectorXd qval;
@@ -80,12 +81,26 @@ SE3 Tsettop2obj = Tsettop2hdmi_init;
 SE3 Tee2contact = EulerZYX(Vec3(-SR_PI_HALF, -SR_PI_HALF, 0.0), Vec3(0.0, 0.0, 0.0275));
 SE3 Tobj2contact = SE3(Vec3(0.0275,0.0,0.0));
 SE3 Tsettop2contactGoal = SE3(Vec3(-0.009, 0.0, 0.0)) * Tsettop2hdmi_init * Tobj2contact;
+string filename = "hdmi.txt";
+double depth = 0.008;
+double max_x = 0.005;
+double min_x = -0.005;
+double max_y = 0.0025;
+double min_y = -0.0025;
+bool is_hdmi = true;
 #endif // GRASP_HDMI
 #ifdef GRASP_POWER
 SE3 Tsettop2obj = Tsettop2power_init;
 SE3 Tee2contact = EulerZYX(Vec3(-SR_PI_HALF, -SR_PI_HALF, 0.0), Vec3(0.0, 0.0, 0.017));
 SE3 Tobj2contact = SE3(Vec3(0.017, 0.0, 0.0));
 SE3 Tsettop2contactGoal = SE3(Vec3(-0.006, 0.0, 0.0)) * Tsettop2power_init * Tobj2contact;
+string filename = "power.txt";
+double depth = 0.005;
+double max_x = 0.005;
+double min_x = -0.005;
+double max_y = 0.0025;
+double min_y = -0.0025;
+bool is_hdmi = false;
 #endif // GRASP_POWER
 
 vector<dse3> Fdes;
@@ -96,11 +111,9 @@ int main(int argc, char **argv)
 {
 
 	///////////////////////// test file read /////////////////////////
-	string str = "../../../data/environment_setting/test.txt";
-	vector<int> lineNums(3);
+	string str = "../../../data/environment_setting/" + filename;
+	vector<int> lineNums(1);
 	lineNums[0] = 1;
-	lineNums[1] = 3;
-	lineNums[2] = 5;
 	vector<vector<double>> poss = loadDataFromTextSpecifiedLines(str, lineNums);
 	//////////////////////////////////////////////////////////////////
 
@@ -158,8 +171,16 @@ int main(int argc, char **argv)
 	//power->setBaseLinkFrame(SE3(Vec3(0.0, 0.1, 0.1)));
 
 	Vec3 initPosOffset(0.0);
-	initPosOffset[0] = 0.0025;
-	initPosOffset[1] = 0.0025;
+	if (poss[0][0] < min_x)
+		poss[0][0] = min_x;
+	if (poss[0][0] > max_x)
+		poss[0][0] = max_x;
+	if (poss[0][1] < min_y)
+		poss[0][1] = min_y;
+	if (poss[0][1] > max_y)
+		poss[0][1] = max_y;
+	initPosOffset[0] = poss[0][0];
+	initPosOffset[1] = poss[0][1];
 	initPosOffset[2] = 0.05;
 	setHybridPFCtrl(initPosOffset);
 	cout << ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() * Tee2contact << endl;
@@ -200,6 +221,8 @@ void updateFunc()
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 
 	static int cnt = 0;
+	static int success_cnt = 0;
+	static bool successPrinted = false;
 	cnt++;
 	ur3Manager->setGripperDistance(0.01);
 	if (cnt == 1)
@@ -211,17 +234,28 @@ void updateFunc()
 
 
 	static bool contactOccurred = false;
+	static bool insertStarted = false;
 
-
-	// output current contact force
+	// output current position and contact force
 	srLink* contactLink = &ur3->gLink[UR3_Index::OBJECT];
 	SE3 Ttemp = ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() * Tee2contact;
+	SE3 Tcur = (hctrl->m_endeffector->GetFrame() * hctrl->m_offset);
 	dse3 Fext = -InvdAd(Ttemp % contactLink->GetFrame(), contactLink->m_ConstraintImpulse) * (1.0 / ur3Manager->m_space->m_Timestep_dyn_fixed);
 	
+	// phase 1 -> 2: if contact occured, go to insert position
 	if (norm_dse3(Fext) > 1e-5 && !contactOccurred)
 	{
 		contactOccurred = true;
-		setHybridPFCtrl_2nd();
+		setHybridPFCtrl_pos(Vec3(0.0), Tcur[11]);
+	}
+
+	// phase 2 -> 3: if insert position reached, insert the peg
+	Vec3 pos_diff = Tcur.GetPosition() - Tdes[Tdes.size() - 1].GetPosition();
+	double error_pos = Norm(pos_diff);
+	if (error_pos < 1e-4 && !insertStarted && contactOccurred)
+	{
+		insertStarted = true;
+		setHybridPFCtrl_Fx(Vec3(0.0), 1.0);
 	}
 
 	// calculate error rate
@@ -230,9 +264,25 @@ void updateFunc()
 	double error_rate = norm_dse3(Fdiff) / Fdes_norm;
 	double error_rate_Fx = Fdiff[3] / Fdes[Fdes.size() - 1][3];
 	double error_rate_Fnorm = (norm_dse3(Fext) - Fdes_norm) / Fdes_norm;
-	
 	double calc_time = (clock() - start) / (double)CLOCKS_PER_SEC;
-	cout << Fext << "calculation time: " << calc_time << "(sec),     error rate: " << error_rate_Fnorm << endl;
+	
+	if (!successPrinted && insertStarted)
+		cout << Fext << "calculation time: " << calc_time << "(sec),     error rate: " << error_rate_Fnorm << endl;// << ",     pos error: " << error_pos << endl;
+	//cout << Tcur.GetPosition();
+	if (abs(error_rate_Fnorm) < 0.05)
+		success_cnt++;
+	else
+		success_cnt = 0;
+	if (success_cnt > 100 && !successPrinted && abs(pos_diff[2]) < 0.0011)
+	{
+		cout << "(converged)" << endl;
+		if (is_hdmi)
+			cout << endl << "7. Pushing the hdmi into the settop box (force control)" << endl;
+		else
+			cout << endl << "11. Pushing the cable into the settup box (force control)" << endl;
+		cout << "calculation time: " << calc_time << ",  error rate: " << error_rate_Fnorm << ",  success" << endl;
+		successPrinted = true;
+	}
 }
 
 
@@ -345,14 +395,6 @@ void setHybridPFCtrl(Vec3 initPosOffset)
 	hctrl->setGain(kv_v, kp_v, ki_v, kp_f, ki_f);
 
 	// S*V = 0 should be satisfied in contact frame
-	// pos controlled dir: trans y, z, rot x
-	// force controlled dir: moment y, z, force x
-	Eigen::MatrixXd S = Eigen::MatrixXd::Zero(3, 6);
-	S(0, 1) = 1.0;
-	S(1, 2) = 1.0;
-	S(2, 3) = 1.0;
-
-	//hctrl->setSelectionMatrix(S);
 	hctrl->setSelectionMatrix(Eigen::MatrixXd());	//Eigen::MatrixXd(), S
 
 
@@ -365,9 +407,6 @@ void setHybridPFCtrl(Vec3 initPosOffset)
 
 	Fdes.resize(1);
 	Fdes[0] = dse3(0.0);		// expressed in contact frame
-	Fdes[0][1] = 0.0;
-	Fdes[0][2] = 0.0;
-	Fdes[0][3] = 1.0;
 	int flag;
 	Eigen::VectorXd q_config = ur3Manager->inverseKin(SE3(Vec3(initPosOffset)) * Tsettop * Tsettop2obj, &ur3->gLink[UR3_Index::OBJECT], true, SE3(), flag, ur3_invkinInit);
 	hctrl->isDesTrjSet = hctrl->setDesiredTraj(Tdes, Fdes);
@@ -377,7 +416,33 @@ void setHybridPFCtrl(Vec3 initPosOffset)
 	ur3Manager->setJointValVelAcc(q_config, Eigen::VectorXd::Zero(q_config.size()), Eigen::VectorXd::Zero(q_config.size()));
 }
 
-void setHybridPFCtrl_2nd(Vec3 posOffset)
+void setHybridPFCtrl_pos(Vec3 posOffset, double z)
+{
+	double kv_v = 0.25e2, kp_v = 0.25*kv_v*kv_v, ki_v = 0.25e3, kp_f = 1.0e-1, ki_f = 1.0e-1;
+	hctrl->setGain(kv_v, kp_v, ki_v, kp_f, ki_f);
+
+	// S*V = 0 should be satisfied in contact frame
+	hctrl->setSelectionMatrix(Eigen::MatrixXd());	//Eigen::MatrixXd(), S
+
+
+	// set desired trajectory (trajectory of the contact frame)
+	//SE3 TgoalPos = Tsettop * Tsettop2obj * Tobj2contact;
+	//TgoalPos = SE3(initPosOffset) * TgoalPos;
+	Tdes.resize(1);
+	//Tdes[0] = TgoalPos;
+	Tdes[0] = SE3(Vec3(posOffset[0], posOffset[1], 0.0)) * Tsettop * Tsettop2contactGoal;
+	Tdes[0][11] = z;
+	Fdes.resize(1);
+	Fdes[0] = dse3(0.0);		// expressed in contact frame
+	int flag;
+	hctrl->isDesTrjSet = hctrl->setDesiredTraj(Tdes, Fdes);
+	hctrl->F_int = dse3(0.0);
+	hctrl->X_int = se3(0.0);
+	Eigen::VectorXd q_config = ur3Manager->getJointVal();
+	ur3Manager->setJointValVelAcc(q_config, Eigen::VectorXd::Zero(q_config.size()), Eigen::VectorXd::Zero(q_config.size()));
+}
+
+void setHybridPFCtrl_Fx(Vec3 posOffset, double Fx)
 {
 	double kv_v = 0.25e2, kp_v = 0.25*kv_v*kv_v, ki_v = 0.25e3, kp_f = 1.0e-1, ki_f = 1.0e-1;
 	hctrl->setGain(kv_v, kp_v, ki_v, kp_f, ki_f);
@@ -402,7 +467,7 @@ void setHybridPFCtrl_2nd(Vec3 posOffset)
 	Fdes[0] = dse3(0.0);		// expressed in contact frame
 	Fdes[0][1] = 0.0;
 	Fdes[0][2] = 0.0;
-	Fdes[0][3] = 1.0;
+	Fdes[0][3] = Fx;
 	int flag;
 	hctrl->isDesTrjSet = hctrl->setDesiredTraj(Tdes, Fdes);
 	hctrl->F_int = dse3(0.0);
