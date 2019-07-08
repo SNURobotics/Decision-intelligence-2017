@@ -55,7 +55,8 @@ void URrobotSetting();
 void URrobotManagerSetting();
 void URrrtSetting();
 void tempObjectSetting();
-Eigen::VectorXd robustInverseKinematics(SE3 finalpos, Eigen::VectorXd original);
+Eigen::VectorXd robustInverseKinematics(SE3 finalpos, Eigen::VectorXd original, int maxiter);
+Eigen::VectorXd robustInverseKinematics_UR5(SE3 finalpos, Eigen::VectorXd original, int maxiter);
 Eigen::VectorXd qval;
 
 Eigen::VectorXd point0;
@@ -222,7 +223,7 @@ int main(int argc, char **argv)
 	//point1 = ur3Manager->inverseKin(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag);
 	//cout << "inverse kinematics flag: " << flag << endl;
 	ur5Manager->setGripperPosition(gripPos);
-	point1 = robustInverseKinematics(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot1, point0);
+	point1 = robustInverseKinematics_UR5(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot1, point0, 20);
 
 	cout << wireBlock->GetBaseLink()->GetFrame() * Tobs2robot1 << endl;
 	cout << ur5->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() << endl;
@@ -249,7 +250,7 @@ int main(int argc, char **argv)
 	/////////////////// RRT planning for ur3 with object attached (point1 -> point2) ///////////////
 	start = clock();
 	ur5Manager->setGripperPosition(gripPos);
-	point2 = robustInverseKinematics(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot2, point1);
+	point2 = robustInverseKinematics_UR5(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot2, point1, 20);
 
 	ur5RRTManager->setStartandGoal(point1, point2);
 	ur5RRTManager->execute(0.05);
@@ -268,7 +269,7 @@ int main(int argc, char **argv)
 	////////////////// RRT planning for ur3 with object detached (point2 -> point3) ///////////////
 	start = clock();
 	ur5Manager->setGripperPosition(gripPos);
-	point3 = robustInverseKinematics(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot3, point2);
+	point3 = robustInverseKinematics_UR5(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot3, point2, 20);
 
 	ur5RRTManager->setStartandGoal(point2, point3);
 	ur5RRTManager->execute(0.05);
@@ -294,7 +295,7 @@ int main(int argc, char **argv)
 	////////////////// RRT planning for ur3 with object detached (point3 -> point4) ///////////////
 	start = clock();
 	ur5Manager->setGripperPosition(gripPos);
-	point4 = robustInverseKinematics(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot4, point3);
+	point4 = robustInverseKinematics_UR5(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot4, point3, 20);
 
 	ur5RRTManager->setStartandGoal(point3, point4);
 	ur5RRTManager->execute(0.05);
@@ -313,7 +314,7 @@ int main(int argc, char **argv)
 	////////////////// RRT planning for ur3 with object detached (point4 -> point5) ///////////////
 	start = clock();
 	ur5Manager->setGripperPosition(gripPos);
-	point5 = robustInverseKinematics(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot5, point4);
+	point5 = robustInverseKinematics_UR5(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot5, point4, 20);
 
 	ur5RRTManager->setStartandGoal(point4, point5);
 	ur5RRTManager->execute(0.05);
@@ -347,6 +348,8 @@ int main(int argc, char **argv)
 	cout << "time for planning: " << time6 << endl;
 	///////////////////////////////////////////////////////////////////////////////
 
+	cout << fixed;
+	cout.precision(2);
 	cout << endl;
 	cout << "2. Moving UR5 to waypoint 1" << endl;
 	cout << "time for planning: " << time1 << " error:" << error1 << ", ";
@@ -671,7 +674,58 @@ void setFloor()
 	Floor->GetBaseLink()->SetFrame(SE3(Vec3(0.0, 0.0, -0.05)));
 }
 
-Eigen::VectorXd robustInverseKinematics(SE3 finalpos, Eigen::VectorXd original)
+Eigen::VectorXd robustInverseKinematics(SE3 finalpos, Eigen::VectorXd original, int maxiter)
+{
+	srand((unsigned int)time(NULL));
+
+	int flag = 0;
+	Eigen::VectorXd lower = ur3->getLowerJointLimit();
+	Eigen::VectorXd upper = ur3->getUpperJointLimit();
+	Eigen::VectorXd initial = Eigen::VectorXd::Zero(lower.size());
+	Eigen::VectorXd currentpos = ur3Manager->getJointVal();
+
+	vector<Eigen::VectorXd> solList(0);
+
+	for (int i = 0; i < maxiter; i++) {
+		Eigen::VectorXd tempsol;
+		if (i == 0) initial = original;
+		else {
+			for (int j = 0; j < lower.size(); j++) {
+				int temp = int((upper[j] - lower[j]) * 1000);
+				initial[j] = double(rand() % temp) / 1000 + lower[j];
+			}
+		}
+		tempsol = ur3Manager->inverseKin(finalpos, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag, initial);
+		//cout << "inverse kinematics flag: " << flag << endl;
+
+		ur3Manager->setJointVal(tempsol);
+		if (!ur3Manager->checkCollision() && flag == 0) {
+			solList.push_back(tempsol);
+		}
+	}
+	if (solList.size() == 0) {
+		cout << "Cannot find solution..." << endl;
+		ur3Manager->setJointVal(currentpos);
+		return Eigen::VectorXd::Zero(lower.size());
+	}
+	else {
+		double temp = 10000;
+		double newsize = 0;
+		Eigen::VectorXd sol = Eigen::VectorXd::Zero(lower.size());
+		Eigen::VectorXd weight = ur3Manager->getBodyJacobian(currentpos, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], SE3()).colwise().squaredNorm();
+		for (int i = 0; i < solList.size(); i++) {
+			//newsize = (solList[i] - original).squaredNorm();
+			newsize = (solList[i] - original).transpose().cwiseAbs() * weight;
+			if (temp > newsize) {
+				temp = newsize;
+				sol = solList[i];
+			}
+		}
+		return sol;
+	}
+}
+
+Eigen::VectorXd robustInverseKinematics_UR5(SE3 finalpos, Eigen::VectorXd original, int maxiter)
 {
 	srand((unsigned int)time(NULL));
 
@@ -683,11 +737,14 @@ Eigen::VectorXd robustInverseKinematics(SE3 finalpos, Eigen::VectorXd original)
 
 	vector<Eigen::VectorXd> solList(0);
 
-	for (int i = 0; i < 24; i++) {
+	for (int i = 0; i < maxiter; i++) {
 		Eigen::VectorXd tempsol;
-		for (int j = 0; j < lower.size(); j++) {
-			int temp = int((upper[j] - lower[j]) * 1000);
-			initial[j] = double(rand() % temp) / 1000 + lower[j];
+		if (i == 0) initial = original;
+		else {
+			for (int j = 0; j < lower.size(); j++) {
+				int temp = int((upper[j] - lower[j]) * 1000);
+				initial[j] = double(rand() % temp) / 1000 + lower[j];
+			}
 		}
 		tempsol = ur5Manager->inverseKin(finalpos, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag, initial);
 		//cout << "inverse kinematics flag: " << flag << endl;
@@ -699,17 +756,19 @@ Eigen::VectorXd robustInverseKinematics(SE3 finalpos, Eigen::VectorXd original)
 			//return tempsol;
 		}
 	}
+	ur5Manager->setJointVal(currentpos);
 	if (solList.size() == 0) {
 		cout << "Cannot find solution..." << endl;
-		ur5Manager->setJointVal(currentpos);
 		return Eigen::VectorXd::Zero(lower.size());
 	}
 	else {
 		double temp = 10000;
 		double newsize = 0;
 		Eigen::VectorXd sol = Eigen::VectorXd::Zero(lower.size());
+		Eigen::VectorXd weight = ur5Manager->getBodyJacobian(currentpos, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3()).colwise().squaredNorm();
 		for (int i = 0; i < solList.size(); i++) {
-			newsize = (solList[i] - original).squaredNorm();
+			//newsize = (solList[i] - original).squaredNorm();
+			newsize = (solList[i] - original).transpose().cwiseAbs() * weight;
 			if (temp > newsize) {
 				temp = newsize;
 				sol = solList[i];

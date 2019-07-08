@@ -351,6 +351,8 @@ int main(int argc, char **argv)
 	cout << "time for planning: " << time4 << endl;
 	///////////////////////////////////////////////////////////////////////////////
 
+	cout << fixed;
+	cout.precision(2);
 	cout << endl;
 	cout << "8. Grab wire using UR3" << endl;
 	cout << "time for planning: " << time1 << " error:" << error1 << ", ";
@@ -485,46 +487,6 @@ void updateFunc()
 				ur3Manager->setGripperPosition(idlePos);
 			}
 		}
-		//else if (trajcnt < ur5traj1.size() + ur5traj2.size() + ur5traj3.size() + ur5traj4.size() + ur5traj5.size())
-		//{
-		//	SE3 lastPoint = boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(-0.066, 0.005, 0.120));
-		//	SE3 currentPoint = ur5Manager->forwardKin(ur5traj5[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur5traj3.size() - ur5traj4.size()) % ur5traj5.size()], &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());
-		//	wire1->clearPoints();
-		//	wire1->addPoint(lastPoint.GetPosition() + Vec3(0, 0, -0.06));
-		//	wire1->addPoint(currentPoint.GetPosition() + Vec3(0, 0, -0.06));
-		//	wire1->glRender();
-
-		//	ur5Manager->setJointVal(ur5traj5[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur5traj3.size() - ur5traj4.size()) % ur5traj5.size()]);
-		//	if (trajcnt == ur5traj1.size() + ur5traj2.size() + ur5traj3.size() + ur5traj4.size() + ur5traj5.size() - 1) {
-		//		ur5Manager->setGripperPosition(gripPos);
-
-		//		wire2->clearPoints();
-		//		wireNodes.push_back(boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(0.066, 0.005, 0.060)).GetPosition() + Vec3(0, 0, double((rand() % 100) - 50) / 50000));
-		//		for (int i = 0; i < wireNodes.size(); i++) wire2->addPoint(wireNodes[i]);
-		//	}
-		//}
-		//else if (trajcnt < ur5traj1.size() + ur5traj2.size() + ur5traj3.size() + ur5traj4.size() + ur5traj5.size() + ur5traj6.size())
-		//{
-		//	SE3 lastPoint = boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(0.066, 0.005, 0.120));
-		//	SE3 currentPoint = ur5Manager->forwardKin(ur5traj6[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur5traj3.size() - ur5traj4.size() - ur5traj5.size()) % ur5traj6.size()], &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3());
-		//	wire1->clearPoints();
-		//	wire1->addPoint(lastPoint.GetPosition() + Vec3(0, 0, -0.06));
-		//	wire1->addPoint(currentPoint.GetPosition() + Vec3(0, 0, -0.06));
-		//	wire1->glRender();
-
-		//	ur5Manager->setJointVal(ur5traj6[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur5traj3.size() - ur5traj4.size() - ur5traj5.size()) % ur5traj6.size()]);
-		//	if (trajcnt == ur5traj1.size() + ur5traj2.size() + ur5traj3.size() + ur5traj4.size() + ur5traj5.size() + ur5traj6.size() - 1)
-		//	{
-		//		ur5Manager->setGripperPosition(gripPos);
-
-		//		wire2->clearPoints();
-		//		wireNodes.push_back(boxfortape->getBaseLinkFrame() * EulerXYZ(Vec3(), Vec3(0.066, -0.005, 0.060)).GetPosition() + Vec3(0, 0, double((rand() % 100) - 50) / 50000));
-		//		for (int i = 0; i < wireNodes.size(); i++) wire2->addPoint(wireNodes[i]);
-
-		//		loopNumFlag++;
-		//		trajcnt = ur5traj1.size();
-		//	}
-		//}
 	}
 }
 
@@ -663,8 +625,10 @@ Eigen::VectorXd robustInverseKinematics(SE3 finalpos, Eigen::VectorXd original, 
 		double temp = 10000;
 		double newsize = 0;
 		Eigen::VectorXd sol = Eigen::VectorXd::Zero(lower.size());
+		Eigen::VectorXd weight = ur3Manager->getBodyJacobian(currentpos, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], SE3()).colwise().squaredNorm();
 		for (int i = 0; i < solList.size(); i++) {
-			newsize = (solList[i] - original).squaredNorm();
+			//newsize = (solList[i] - original).squaredNorm();
+			newsize = (solList[i] - original).transpose().cwiseAbs() * weight;
 			if (temp > newsize) {
 				temp = newsize;
 				sol = solList[i];
@@ -705,17 +669,19 @@ Eigen::VectorXd robustInverseKinematics_UR5(SE3 finalpos, Eigen::VectorXd origin
 			//return tempsol;
 		}
 	}
+	ur5Manager->setJointVal(currentpos);
 	if (solList.size() == 0) {
 		cout << "Cannot find solution..." << endl;
-		ur5Manager->setJointVal(currentpos);
 		return Eigen::VectorXd::Zero(lower.size());
 	}
 	else {
 		double temp = 10000;
 		double newsize = 0;
 		Eigen::VectorXd sol = Eigen::VectorXd::Zero(lower.size());
+		Eigen::VectorXd weight = ur5Manager->getBodyJacobian(currentpos, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3()).colwise().squaredNorm();
 		for (int i = 0; i < solList.size(); i++) {
-			newsize = (solList[i] - original).squaredNorm();
+			//newsize = (solList[i] - original).squaredNorm();
+			newsize = (solList[i] - original).transpose().cwiseAbs() * weight;
 			if (temp > newsize) {
 				temp = newsize;
 				sol = solList[i];
