@@ -154,7 +154,9 @@ int main(int argc, char **argv)
 		ur5RRTManager->setState(ur5traj1[i]);
 		objTraj.push_back(soldering->GetBaseLink()->GetFrame());
 	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	double time1 = (clock() - start) / (double)CLOCKS_PER_SEC;
+	double error1 = (point1 - ur5traj1[ur5traj1.size() - 1]).norm() / point1.norm();
+	cout << "time for planning: " << time1 << endl;
 	//////////////////////////////////////////////////////////////
 
 	/////////////////// RRT planning for UR5 with object attached (point1 -> point2) ///////////////
@@ -171,7 +173,9 @@ int main(int argc, char **argv)
 		ur5RRTManager->setState(ur5traj2[i]);
 		objTraj.push_back(soldering->GetBaseLink()->GetFrame());
 	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	double time2 = (clock() - start) / (double)CLOCKS_PER_SEC;
+	double error2 = (point2 - ur5traj2[ur5traj2.size() - 1]).norm() / point2.norm();
+	cout << "time for planning: " << time2 << endl;
 	///////////////////////////////////////////////////////////////////////////
 
 	////////////////// RRT planning for UR5 with object detached (point2 -> point3) ///////////////
@@ -189,8 +193,28 @@ int main(int argc, char **argv)
 		ur5RRTManager->setState(ur5traj3[i]);
 		objTraj.push_back(soldering->GetBaseLink()->GetFrame());
 	}
-	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	double error3 = (point3 - ur5traj3[ur5traj3.size() - 1]).norm() / point3.norm();
+	double time3 = (clock() - start) / (double)CLOCKS_PER_SEC;
+	cout << "time for planning: " << time3 << endl;
 	///////////////////////////////////////////////////////////////////////////////
+	cout << fixed;
+	cout.precision(2);
+	cout << endl;
+	cout << "3. Move to soldering iron tool" << endl;
+	cout << "time for planning: " << time1 << " error:" << error1 << ", ";
+	if (error1 * 100 <= 5 && time1 <= 0.6) cout << "success";
+	else cout << "fail";
+	cout << endl << endl;
+	cout << "4. Grab tool, approach to PCB plate and soldering" << endl;
+	cout << "time for planning: " << time2 << " error:" << error2 << ", ";
+	if (error2 * 100 <= 5 && time2 <= 0.6) cout << "success";
+	else cout << "fail";
+	cout << endl << endl;
+	cout << "5. Move tool to initial position" << endl;
+	cout << "time for planning: " << time3 << " error:" << error3 << ", ";
+	if (error3 * 100 <= 5 && time3 <= 0.6) cout << "success";
+	else cout << "fail";
+	cout << endl << endl;
 
 	rendering(argc, argv);
 
