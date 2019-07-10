@@ -219,6 +219,7 @@ int main(int argc, char **argv)
 	// T from wire zig frame
 	Tobs2robot1 = EulerXYZ(Vec3(SR_PI_HALF, 0, SR_PI_HALF), Vec3(0.03, -0.020, 0.085));
 	Tobs2robot2 = EulerXYZ(Vec3(-SR_PI_HALF, -SR_PI_HALF, SR_PI_HALF), Vec3(0.070, -0.015, 0.01));
+	//Tobs2robot2 = EulerXYZ(Vec3(-SR_PI_HALF, -SR_PI_HALF, -SR_PI_HALF), Vec3(0.070, -0.015, 0.01));
 	Tobs2robot3 = EulerXYZ(Vec3(SR_PI_HALF, 0, -SR_PI_HALF), Vec3(-0.0, -0.00, 0.120));
 
 	//Tobs2robot4 = EulerXYZ(Vec3(0, -SR_PI_HALF, SR_PI), Vec3(0.020, 0.035, 0.120));
@@ -474,6 +475,7 @@ void updateFunc()
 				wire1->clearPoints();
 				for (int i = 0; i < wireNodes.size(); i++) {
 					wireNodes[i] = Inv(ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame()) * (Vec3(0.03, -0.02, 0.026) + wireNodes[i]);
+					//wireNodes[i] = Inv(ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame()) * (Vec3(0.01, -0.02, 0.026) + wireNodes[i]);
 					wire1->addPoint(ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() * wireNodes[i]);
 				}
 				wire1->glRender();

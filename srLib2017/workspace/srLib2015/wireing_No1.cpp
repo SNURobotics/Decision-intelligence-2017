@@ -217,8 +217,8 @@ int main(int argc, char **argv)
 	cout << fixed;
 	cout.precision(2);
 	cout << endl;
-	if (fail) cout << "Given wireing zig position is out of range, nominal values are chosen" << endl << endl;
-	cout << "1. Place wire bundle besides wiring zig using UR3" << endl;
+	if (fail) cout << "Given wireing jig position is out of range, nominal values are chosen" << endl << endl;
+	cout << "1. Place wire bundle besides wiring jig using UR3" << endl;
 	cout << "time for planning: " << time1 << " error:" << error1 << ", ";
 	if (error1 * 100 <= 5 && time1 <= 0.6) cout << "success";
 	else cout << "fail";

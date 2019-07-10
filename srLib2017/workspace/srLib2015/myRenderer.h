@@ -19,7 +19,27 @@ public:
 		//m_camera = new Camera(2.0, 0.4*SR_PI_HALF, 0.5*SR_PI_HALF);
 		//m_camera = new Camera(2.0, 0.2*SR_PI_HALF, -0.5*SR_PI_HALF);
 		//m_camera = new Camera(2.5, 0.25*SR_PI_HALF, -0.4*SR_PI_HALF);	// replanning
-		m_camera = new Camera(2.5, SR_PI_HALF + 0.001, 0);	// replanning (task level)
+		
+		
+		// top view
+		//m_camera = new Camera(2.5, SR_PI_HALF + 0.001, 0);
+
+		// demo view (settop)
+		//Vec3 focus = Vec3(-0.3, 0.0, 0.0);
+		//m_camera = new Camera(2.0, SR_PI / 6.0, -SR_PI_HALF, focus);
+
+		// demo view (soldering & wiring 1, 2)
+		//Vec3 focus = Vec3(-0.3, 0.0, 0.0);
+		//m_camera = new Camera(2.5, SR_PI / 5.0, -SR_PI_HALF, focus);
+
+		// demo view (soldering & wiring)
+		//Vec3 focus = Vec3(-0.3, 0.0, 0.0);
+		//m_camera = new Camera(2.5, SR_PI / 5.0, SR_PI_HALF, focus);
+
+		// force control view
+		Vec3 focus = Vec3(-0.23, 0.0, 0.0);
+		m_camera = new Camera(0.75, SR_PI / 7.0, -SR_PI_HALF, focus);
+
 		// workcell view
 		//Vec3 focus = Vec3(0.025, 1.095, 1.176);
 		//m_camera = new Camera(2.5, 0.3*SR_PI_HALF, 2.0*SR_PI_HALF, focus);

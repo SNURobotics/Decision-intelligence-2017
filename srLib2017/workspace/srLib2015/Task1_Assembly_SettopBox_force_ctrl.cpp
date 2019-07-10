@@ -88,6 +88,7 @@ double min_x = -0.005;
 double max_y = 0.0025;
 double min_y = -0.0025;
 bool is_hdmi = true;
+double gripDist = 0.01;
 #endif // GRASP_HDMI
 #ifdef GRASP_POWER
 SE3 Tsettop2obj = Tsettop2power_init;
@@ -101,6 +102,7 @@ double min_x = -0.005;
 double max_y = 0.0025;
 double min_y = -0.0025;
 bool is_hdmi = false;
+double gripDist = 0.006;
 #endif // GRASP_POWER
 
 vector<dse3> Fdes;
@@ -127,7 +129,7 @@ int main(int argc, char **argv)
 	// robotManager setting should come after initDynamics()
 	URrobotManagerSetting();
 
-	ur3Manager->setGripperDistance(0.01);
+	ur3Manager->setGripperDistance(gripDist);
 	qval.setZero(6);
 	qval[1] = -SR_PI_HALF;
 	qval[3] = -SR_PI_HALF;
@@ -185,7 +187,7 @@ int main(int argc, char **argv)
 	setHybridPFCtrl(initPosOffset);
 	//cout << ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() * Tee2contact << endl;
 	//cout << Tsettop * Tsettop2contactGoal << endl;
-
+	cout.precision(3);
 	rendering(argc, argv);
 
 	return 0;
@@ -224,7 +226,7 @@ void updateFunc()
 	static int success_cnt = 0;
 	static bool successPrinted = false;
 	cnt++;
-	ur3Manager->setGripperDistance(0.01);
+	ur3Manager->setGripperDistance(gripDist);
 	//if (cnt == 1)
 	//	cout << gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP();
 

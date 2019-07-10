@@ -85,7 +85,7 @@ int main(int argc, char **argv)
 	srand(NULL);
 	// robot, object, environment settings should come before initDynamics()
 	URrobotSetting();
-	tempObjectSetting();
+	//tempObjectSetting();
 	//gSpace.AddSystem(hdmi);
 	//gSpace.AddSystem(power);
 	//gSpace.AddSystem(settop);
@@ -113,7 +113,7 @@ int main(int argc, char **argv)
 	URrrtSetting();
 
 	// place object in space
-	obs->GetBaseLink()->SetFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.5, -0.8, 0.12)));
+	//obs->GetBaseLink()->SetFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.5, -0.8, 0.12)));
 	//cout << ur5Manager->forwardKin(qval, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP]) << endl;
 
 
