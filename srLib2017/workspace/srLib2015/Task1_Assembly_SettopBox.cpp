@@ -62,13 +62,19 @@ Eigen::VectorXd UR3point3;
 Eigen::VectorXd UR3point4;
 Eigen::VectorXd UR3point5;
 Eigen::VectorXd UR3point6;
+Eigen::VectorXd UR5point1_mid;
+Eigen::VectorXd UR3point1_mid;
+Eigen::VectorXd UR3point4_mid;
 Eigen::VectorXd UR5init;
 vector<Eigen::VectorXd> ur5traj1(0);
+vector<Eigen::VectorXd> ur5traj1_2(0);
 vector<Eigen::VectorXd> ur5traj2(0);
 vector<Eigen::VectorXd> ur3traj1(0);
+vector<Eigen::VectorXd> ur3traj1_2(0);
 vector<Eigen::VectorXd> ur3traj2(0);
 vector<Eigen::VectorXd> ur3traj3(0);
 vector<Eigen::VectorXd> ur3traj4(0);
+vector<Eigen::VectorXd> ur3traj4_2(0);
 vector<Eigen::VectorXd> ur3traj5(0);
 vector<Eigen::VectorXd> ur3traj6(0);
 vector<SE3> SettupTraj(0);
@@ -127,15 +133,15 @@ int main(int argc, char **argv)
 	vector<vector<double>> read = loadDataFromTextSpecifiedLines(str, lineNums);
 	//////////////////////////////////////////////////////////////////
 
-	//float SETTUP_x = read[0][0];
-	//float SETTUP_y = read[0][1];
-	//float HDMI_x = read[1][0];
-	//float HDMI_y = read[1][1];
-	//float POWER_x = read[2][0];
-	//float POWER_y = read[2][1];
+		//float SETTUP_x = read[0][0];
+		  //float SETTUP_y = read[0][1];
+		  //float HDMI_x = read[1][0];
+		  //float HDMI_y = read[1][1];
+		  //float POWER_x = read[2][0];
+		  //float POWER_y = read[2][1];
 
 
-	srand((unsigned int)time(NULL));
+		srand((unsigned int)time(NULL));
 
 	// rnadom setting
 	int temp1 = int((Settup_x_right - Settup_x_left) * 1000);
@@ -223,8 +229,8 @@ int main(int argc, char **argv)
 	// UR5 initial pose
 	//cout << ur5Manager->forwardKin(qval, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP]) << endl;
 
-	// Placing env
-	hdmi->setBaseLinkFrame(hdmi_init);
+		// Placing env
+		hdmi->setBaseLinkFrame(hdmi_init);
 	power->setBaseLinkFrame(power_init);
 	settop->setBaseLinkFrame(settup_init);
 	//soldering->setBaseLinkFrame(ur5Manager->forwardKin(qval, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP]));
@@ -233,12 +239,12 @@ int main(int argc, char **argv)
 	//tape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.5, 0.5, 0)));
 	//boxfortape->setBaseLinkFrame(EulerXYZ(Vec3(0, 0, -SR_PI_HALF), Vec3(-0.4, -0.5, 0)));
 
-	///////////// RRT planning to reach object (1. approaching the settup box & 2. grasping the settup box) ///////////////
-	cout << endl << "1. Approaching the settop box & 2. Grasping the settop box" << endl;
+	///////////// RRT planning to reach object (1. approaching the settup box) ///////////////
+	cout << endl << "1. Approaching the settop box" << endl;
 	clock_t start = clock();
 	UR5point0 = Eigen::VectorXd::Zero(6);
 	int flag = 0;
-	UR5point1 = UR5robustInverseKinematics(settop->GetBaseLink()->GetFrame() * Tobs2robot * Inv(SE3(EulerXYZ(Vec3(SR_PI_HALF, 0, SR_PI_HALF), Vec3(0.05, 0, 0)))), UR5point0);
+	UR5point1_mid = UR5robustInverseKinematics(settop->GetBaseLink()->GetFrame() * Tobs2robot * Inv(SE3(EulerXYZ(Vec3(SR_PI_HALF, 0, SR_PI_HALF), Vec3(0.05, 0, 0)))) * SE3(EulerXYZ(Vec3(0.3*SR_PI_HALF, 0.3*SR_PI_HALF, 0), Vec3(0, 0, 0))), UR5point0);
 	/*cout << ur5Manager->checkCollision() << endl;
 	ur5Manager->setJointVal(UR5point1);
 	cout << ur5Manager->checkCollision() << endl;*/
@@ -247,14 +253,35 @@ int main(int argc, char **argv)
 	cout << soldering->GetBaseLink()->GetFrame() * Tobs2robot << endl;
 	cout << ur5->gMarkerLink[UR5_Index::MLINK_GRIP].GetFrame() << endl;
 	*/
-	ur5RRTManager->setStartandGoal(UR5point0, UR5point1);
+	ur5RRTManager->setStartandGoal(UR5point0, UR5point1_mid);
 	ur5RRTManager->execute(0.1);
 	ur5traj1 = ur5RRTManager->extractPath(20);
 	// set object trajectory
 	for (unsigned int i = 0; i < ur5traj1.size(); i++)
 	{
 		ur5RRTManager->setState(ur5traj1[i]);
-		SettupTraj.push_back(settop->GetBaseLink()->GetFrame());
+	}
+	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << " error:0, success" << endl;
+	//////////////////////////////////////////////////////////////
+
+	///////////// RRT planning to reach object (2. aligning the pose) ///////////////
+	cout << endl << "2. Aligning the pose" << endl;
+	UR5point1 = UR5robustInverseKinematics(settop->GetBaseLink()->GetFrame() * Tobs2robot * Inv(SE3(EulerXYZ(Vec3(SR_PI_HALF, 0, SR_PI_HALF), Vec3(0.05, 0, 0)))), UR5point1_mid);
+	/*cout << ur5Manager->checkCollision() << endl;
+	ur5Manager->setJointVal(UR5point1);
+	cout << ur5Manager->checkCollision() << endl;*/
+	/*
+	cout << "inverse kinematics flag: " <<  flag << endl;
+	cout << soldering->GetBaseLink()->GetFrame() * Tobs2robot << endl;
+	cout << ur5->gMarkerLink[UR5_Index::MLINK_GRIP].GetFrame() << endl;
+	*/
+	ur5RRTManager->setStartandGoal(UR5point1_mid, UR5point1);
+	ur5RRTManager->execute(0.1);
+	ur5traj1_2 = ur5RRTManager->extractPath(20);
+	// set object trajectory
+	for (unsigned int i = 0; i < ur5traj1_2.size(); i++)
+	{
+		ur5RRTManager->setState(ur5traj1_2[i]);
 	}
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << " error:0, success" << endl;
 	//////////////////////////////////////////////////////////////
@@ -274,7 +301,7 @@ int main(int argc, char **argv)
 	UR5point2 = ur5Manager->inverseKin(Tsettop / Tur52settop, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag, ur5_invkinInit);
 	//point2 = ur5Manager->inverseKin(SE3(EulerXYZ(Vec3(0, 0, 0), Vec3(-0.4, -0.2, 0))), &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], true, SE3(), flag);
 
-	ur5RRTManager->attachObject(settop, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3(EulerXYZ(Vec3(SR_PI_HALF, 0, SR_PI_HALF), Vec3(0.05, 0, 0))));		// attaching object occurs here
+		ur5RRTManager->attachObject(settop, &ur5->gMarkerLink[UR5_Index::MLINK_GRIP], SE3(EulerXYZ(Vec3(SR_PI_HALF, 0, SR_PI_HALF), Vec3(0.05, 0, 0))));    // attaching object occurs here
 	ur5RRTManager->setStartandGoal(UR5point1, UR5point2);
 	ur5RRTManager->execute(0.1);
 	ur5traj2 = ur5RRTManager->extractPath(20);
@@ -287,24 +314,46 @@ int main(int argc, char **argv)
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << " error:0, success" << endl;
 	///////////////////////////////////////////////////////////////////////////
 
-	////////////////// RRT planning for UR3 with object detached (4. Approaching the hdmi connector & 5. grasping the hdmi connector) ///////////////
-	cout << endl << "4. Approaching the hdmi connector & 5. Grasping the hdmi connector" << endl;
+	////////////////// RRT planning for UR3 with object detached (4. Approaching the hdmi connector ) ///////////////
+	cout << endl << "3. Approaching the hdmi connector" << endl;
 	start = clock();
 	UR3point0 = qval;
 	ur3_invkinInit[0] = -2.796488; ur3_invkinInit[1] = -SR_PI_HALF; ur3_invkinInit[2] = 1.787395;
 	ur3_invkinInit[3] = -1.75; ur3_invkinInit[4] = -1.570796; ur3_invkinInit[5] = 1.915901;
-	UR3point1 = UR3robustInverseKinematics(hdmi->GetBaseLink()->GetFrame() * Inv(SE3(EulerXYZ(Vec3(-SR_PI_HALF, 0, -SR_PI_HALF), Vec3(0, 0, 0.)))), UR3point0);
+	UR3point1_mid = UR3robustInverseKinematics(hdmi->GetBaseLink()->GetFrame() * Inv(SE3(EulerXYZ(Vec3(-SR_PI_HALF, 0, -SR_PI_HALF), Vec3(0, 0, 0.)))) * SE3(EulerXYZ(Vec3(0.1*SR_PI_HALF, 0, 0), Vec3(0, 0, 0.))), UR3point0);
 
 
 	//cout << "inverse kinematics flag: " <<  flag << endl;
 
-	ur3RRTManager->setStartandGoal(UR3point0, UR3point1);
+	ur3RRTManager->setStartandGoal(UR3point0, UR3point1_mid);
 	ur3RRTManager->execute(0.1);
 	ur3traj1 = ur3RRTManager->extractPath(20);
 	// set object trajectory
 	for (unsigned int i = 0; i < ur3traj1.size(); i++)
 	{
 		ur3RRTManager->setState(ur3traj1[i]);
+	}
+
+	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << " error:0, success" << endl;
+	///////////////////////////////////////////////////////////////////////////////
+
+	////////////////// RRT planning for UR3 with object detached (5. grasping the hdmi connector) ///////////////
+	cout << endl << "4. Aligning the pose" << endl;
+	start = clock();
+	ur3_invkinInit[0] = -2.796488; ur3_invkinInit[1] = -SR_PI_HALF; ur3_invkinInit[2] = 1.787395;
+	ur3_invkinInit[3] = -1.75; ur3_invkinInit[4] = -1.570796; ur3_invkinInit[5] = 1.915901;
+	UR3point1 = UR3robustInverseKinematics(hdmi->GetBaseLink()->GetFrame() * Inv(SE3(EulerXYZ(Vec3(-SR_PI_HALF, 0, -SR_PI_HALF), Vec3(0, 0, 0.)))), UR3point1_mid);
+
+
+	//cout << "inverse kinematics flag: " <<  flag << endl;
+
+	ur3RRTManager->setStartandGoal(UR3point1_mid, UR3point1);
+	ur3RRTManager->execute(0.1);
+	ur3traj1_2 = ur3RRTManager->extractPath(20);
+	// set object trajectory
+	for (unsigned int i = 0; i < ur3traj1_2.size(); i++)
+	{
+		ur3RRTManager->setState(ur3traj1_2[i]);
 	}
 
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << " error:0, success" << endl;
@@ -318,7 +367,7 @@ int main(int argc, char **argv)
 
 	//cout << "inverse kinematics flag: " << flag << endl;
 
-	ur3RRTManager->attachObject(hdmi, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], SE3(EulerXYZ(Vec3(-SR_PI_HALF, 0, -SR_PI_HALF), Vec3(0, 0, 0.))));		// attaching object occurs here
+	ur3RRTManager->attachObject(hdmi, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], SE3(EulerXYZ(Vec3(-SR_PI_HALF, 0, -SR_PI_HALF), Vec3(0, 0, 0.))));    // attaching object occurs here
 	ur3RRTManager->setStartandGoal(UR3point1, UR3point2);
 	ur3RRTManager->execute(0.1);
 	ur3traj2 = ur3RRTManager->extractPath(20);
@@ -332,31 +381,30 @@ int main(int argc, char **argv)
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << " error:0, success" << endl;
 	///////////////////////////////////////////////////////////////////////////////
 
-
-	////////////////// RRT planning for UR3 with object detached (7. Pusing the hdmi into the settup box) ///////////////
-	cout << endl << "7. Pushing the hdmi into the settop box" << endl;
+		////////////////// RRT planning for UR3 with object detached (7. Pusing the hdmi into the settup box) ///////////////
+		cout << endl << "7. Pushing the hdmi into the settop box" << endl;
 	start = clock();
 
 	//cout << "inverse kinematics flag: " << flag << endl;
 	UR3point3 = UR3point2;
 	for (unsigned int i = 0; i < 10; i++)
 	{
-		UR3point3 = ur3Manager->inverseKin(SE3(Vec3(0.0, 0.0, -0.001*i))*Tsettop * Tsettop2hdmi_init, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(EulerXYZ(Vec3(-SR_PI_HALF, 0, -SR_PI_HALF), Vec3(0, 0, 0.))), flag, UR3point3);	ur3traj3.push_back(UR3point3);
+		UR3point3 = ur3Manager->inverseKin(SE3(Vec3(0.0, 0.0, -0.001*i))*Tsettop * Tsettop2hdmi_init, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(EulerXYZ(Vec3(-SR_PI_HALF, 0, -SR_PI_HALF), Vec3(0, 0, 0.))), flag, UR3point3);  ur3traj3.push_back(UR3point3);
 		HdmiTraj2.push_back(SE3(Vec3(0.0, 0.0, -0.001*i)) *Tsettop * Tsettop2hdmi_init * SE3(EulerXYZ(Vec3(-0, 0, -0), Vec3(0, 0, 0.))));
 	}
 
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << " error:0, success" << endl;
 	///////////////////////////////////////////////////////////////////////////////
 
-	////////////////// RRT planning for UR3 with object detached (8. Approaching the power cable & 9. grasping the power cable) ///////////////
-	cout << endl << "8. Approaching the power cable & 9. Grasping the power cable" << endl;
+	////////////////// RRT planning for UR3 with object detached (8. Approaching the power cable) ///////////////
+	cout << endl << "5. Approaching the power cable" << endl;
 	start = clock();
 	ur3RRTManager->detachObject();
 
-	UR3point4 = UR3robustInverseKinematics(power->GetBaseLink()->GetFrame() * Inv(SE3(EulerXYZ(Vec3(-SR_PI_HALF, 0, -SR_PI_HALF), Vec3(0, 0, 0)))), UR3point3);
+	UR3point4_mid = UR3robustInverseKinematics(power->GetBaseLink()->GetFrame() * Inv(SE3(EulerXYZ(Vec3(-SR_PI_HALF, 0, -SR_PI_HALF), Vec3(0, 0, 0)))) * SE3(EulerXYZ(Vec3(0.2*SR_PI_HALF, 0, 0), Vec3(0, 0, 0))), UR3point3);
 	//cout << "inverse kinematics flag: " << flag << endl;
 
-	ur3RRTManager->setStartandGoal(UR3point3, UR3point4);
+	ur3RRTManager->setStartandGoal(UR3point3, UR3point4_mid);
 	ur3RRTManager->execute(0.1);
 	ur3traj4 = ur3RRTManager->extractPath(20);
 	// set object trajectory
@@ -367,10 +415,29 @@ int main(int argc, char **argv)
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << " error:0, success" << endl;
 	/////////////////////////////////////////////////////////////////////////////////
 
+	////////////////// RRT planning for UR3 with object detached (9. grasping the power cable) ///////////////
+	cout << endl << "6. Aligning the pose" << endl;
+	start = clock();
+	ur3RRTManager->detachObject();
+
+	UR3point4 = UR3robustInverseKinematics(power->GetBaseLink()->GetFrame() * Inv(SE3(EulerXYZ(Vec3(-SR_PI_HALF, 0, -SR_PI_HALF), Vec3(0, 0, 0)))), UR3point4_mid);
+	//cout << "inverse kinematics flag: " << flag << endl;
+
+	ur3RRTManager->setStartandGoal(UR3point4_mid, UR3point4);
+	ur3RRTManager->execute(0.1);
+	ur3traj4_2 = ur3RRTManager->extractPath(20);
+	// set object trajectory
+	for (unsigned int i = 0; i < ur3traj4_2.size(); i++)
+	{
+		ur3RRTManager->setState(ur3traj4_2[i]);
+	}
+	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << " error:0, success" << endl;
+	/////////////////////////////////////////////////////////////////////////////////
+
 	////////////////// RRT planning for UR3 with object detached (10. Bringing the cable to the settup box) ///////////////
 	cout << endl << "10. Bringing the cable to the settop box" << endl;
 	start = clock();
-	ur3RRTManager->attachObject(power, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], SE3(EulerXYZ(Vec3(-SR_PI_HALF, 0, -SR_PI_HALF), Vec3(0, 0, 0.))));		// attaching object occurs here
+	ur3RRTManager->attachObject(power, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], SE3(EulerXYZ(Vec3(-SR_PI_HALF, 0, -SR_PI_HALF), Vec3(0, 0, 0.))));    // attaching object occurs here
 
 	UR3point5 = UR3robustInverseKinematics(Tsettop * Tsettop2power_init * Inv(SE3(EulerXYZ(Vec3(-SR_PI_HALF, 0, -SR_PI_HALF), Vec3(0, 0, 0)))), UR3point4);
 	//cout << "inverse kinematics flag: " << flag << endl;
@@ -387,8 +454,8 @@ int main(int argc, char **argv)
 	cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << " error:0, success" << endl;
 	/////////////////////////////////////////////////////////////////////////////////
 
-	////////////////// RRT planning for UR3 with object detached (11. Pushing the cable into the settup box) ///////////////
-	cout << endl << "11. Pushing the cable into the settup box" << endl;
+		////////////////// RRT planning for UR3 with object detached (11. Pushing the cable into the settup box) ///////////////
+		cout << endl << "11. Pushing the cable into the settup box" << endl;
 	start = clock();
 
 	//cout << "inverse kinematics flag: " << flag << endl;
@@ -444,7 +511,7 @@ void updateFunc()
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 
 	static int cnt = 0;
-	static int trajcnt = 0;
+	static int trajcnt = -20;
 	cnt++;
 
 	if (cnt % 10 == 0)
@@ -457,8 +524,11 @@ void updateFunc()
 	{
 		ur5Manager->setJointVal(ur5traj1[trajcnt % ur5traj1.size()]);
 
-		settop->GetBaseLink()->SetFrame(SettupTraj[trajcnt % ur5traj1.size()]);
-		if (trajcnt == ur5traj1.size() - 1) {
+	}
+	else if (trajcnt < ur5traj1.size() + ur5traj1_2.size())
+	{
+		ur5Manager->setJointVal(ur5traj1_2[trajcnt % ur5traj1.size()]);
+		if (trajcnt == ur5traj1.size() + ur5traj1_2.size() - 1) {
 			Eigen::VectorXd tempPos = Eigen::VectorXd::Zero(3);
 			tempPos(0) = -graspAngle;
 			tempPos(1) = -graspAngle;
@@ -468,11 +538,11 @@ void updateFunc()
 			((srStateJoint*)(ur5Manager->m_gripperInfo->m_gripJoint[2]))->m_State.m_rValue[0] = tempPos(2);
 		}
 	}
-	else if (trajcnt < ur5traj1.size() + ur5traj2.size())
+	else if (trajcnt < ur5traj1.size() + ur5traj1_2.size() + ur5traj2.size())
 	{
-		ur5Manager->setJointVal(ur5traj2[(trajcnt - ur5traj1.size()) % ur5traj2.size()]);
-		settop->GetBaseLink()->SetFrame(SettupTraj[trajcnt % (ur5traj1.size() + ur5traj2.size())]);
-		if (trajcnt == ur5traj1.size() + ur5traj2.size() - 1) {
+		ur5Manager->setJointVal(ur5traj2[(trajcnt - ur5traj1.size() - ur5traj1_2.size()) % ur5traj2.size()]);
+		settop->GetBaseLink()->SetFrame(SettupTraj[(trajcnt - ur5traj1.size() - ur5traj1_2.size()) % ur5traj2.size()]);
+		if (trajcnt == ur5traj1.size() + ur5traj1_2.size() + ur5traj2.size() - 1) {
 			Eigen::VectorXd tempPos = Eigen::VectorXd::Zero(3);
 			tempPos(0) = -0.629;
 			tempPos(1) = -0.629;
@@ -483,33 +553,41 @@ void updateFunc()
 		}
 	}
 
-	else if (trajcnt < ur5traj1.size() + ur5traj2.size() + ur3traj1.size())
+	else if (trajcnt < ur5traj1.size() + ur5traj1_2.size() + ur5traj2.size() + ur3traj1.size())
 	{
-		ur3Manager->setJointVal(ur3traj1[(trajcnt - ur5traj1.size() - ur5traj2.size()) % ur3traj1.size()]);
+		ur3Manager->setJointVal(ur3traj1[(trajcnt - ur5traj1.size() - ur5traj1_2.size() - ur5traj2.size()) % ur3traj1.size()]);
 	}
-	else if (trajcnt < ur5traj1.size() + ur5traj2.size() + ur3traj1.size() + ur3traj2.size())
+	else if (trajcnt < ur5traj1.size() + ur5traj1_2.size() + ur5traj2.size() + ur3traj1.size() + ur3traj1_2.size())
 	{
-		ur3Manager->setJointVal(ur3traj2[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur3traj1.size()) % ur3traj2.size()]);
-		hdmi->GetBaseLink()->SetFrame(HdmiTraj[trajcnt % (ur5traj1.size() + ur5traj2.size() + ur3traj1.size())]);
+		ur3Manager->setJointVal(ur3traj1_2[(trajcnt - ur5traj1.size() - ur5traj1_2.size() - ur5traj2.size() - ur3traj1.size()) % ur3traj1_2.size()]);
 	}
-	else if (trajcnt < ur5traj1.size() + ur5traj2.size() + ur3traj1.size() + ur3traj2.size() + ur3traj3.size())
+	else if (trajcnt < ur5traj1.size() + ur5traj1_2.size() + ur5traj2.size() + ur3traj1.size() + ur3traj1_2.size() + ur3traj2.size())
 	{
-		ur3Manager->setJointVal(ur3traj3[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur3traj1.size() - ur3traj2.size()) % ur3traj3.size()]);
-		hdmi->GetBaseLink()->SetFrame(HdmiTraj2[trajcnt % (ur5traj1.size() + ur5traj2.size() + ur3traj1.size() + ur3traj2.size())]);
+		ur3Manager->setJointVal(ur3traj2[(trajcnt - ur5traj1.size() - ur5traj1_2.size() - ur5traj2.size() - ur3traj1.size() - ur3traj1_2.size()) % ur3traj2.size()]);
+		hdmi->GetBaseLink()->SetFrame(HdmiTraj[(trajcnt - ur5traj1.size() - ur5traj1_2.size() - ur5traj2.size() - ur3traj1.size() - ur3traj1_2.size()) % ur3traj2.size()]);
 	}
-	else if (trajcnt < ur5traj1.size() + ur5traj2.size() + ur3traj1.size() + ur3traj2.size() + ur3traj3.size() + ur3traj4.size())
+	else if (trajcnt < ur5traj1.size() + ur5traj1_2.size() + ur5traj2.size() + ur3traj1.size() + ur3traj1_2.size() + ur3traj2.size() + ur3traj3.size())
 	{
-		ur3Manager->setJointVal(ur3traj4[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur3traj1.size() - ur3traj2.size() - ur3traj3.size()) % ur3traj4.size()]);
+		ur3Manager->setJointVal(ur3traj3[(trajcnt - ur5traj1.size() - ur5traj1_2.size() - ur5traj2.size() - ur3traj1.size() - ur3traj1_2.size() - ur3traj2.size()) % ur3traj3.size()]);
+		hdmi->GetBaseLink()->SetFrame(HdmiTraj2[(trajcnt - ur5traj1.size() - ur5traj1_2.size() - ur5traj2.size() - ur3traj1.size() - ur3traj1_2.size() - ur3traj2.size()) % ur3traj3.size()]);
 	}
-	else if (trajcnt < ur5traj1.size() + ur5traj2.size() + ur3traj1.size() + ur3traj2.size() + ur3traj3.size() + ur3traj4.size() + ur3traj5.size())
+	else if (trajcnt < ur5traj1.size() + ur5traj1_2.size() + ur5traj2.size() + ur3traj1.size() + ur3traj1_2.size() + ur3traj2.size() + ur3traj3.size() + ur3traj4.size())
 	{
-		ur3Manager->setJointVal(ur3traj5[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur3traj1.size() - ur3traj2.size() - ur3traj3.size() - ur3traj4.size()) % ur3traj5.size()]);
-		power->GetBaseLink()->SetFrame(PowerTraj[trajcnt % (ur5traj1.size() + ur5traj2.size() + ur3traj1.size() + ur3traj2.size() + ur3traj3.size() + ur3traj4.size())]);
+		ur3Manager->setJointVal(ur3traj4[(trajcnt - ur5traj1.size() - ur5traj1_2.size() - ur5traj2.size() - ur3traj1.size() - ur3traj1_2.size() - ur3traj2.size() - ur3traj3.size()) % ur3traj4.size()]);
 	}
-	else if (trajcnt < ur5traj1.size() + ur5traj2.size() + ur3traj1.size() + ur3traj2.size() + ur3traj3.size() + ur3traj4.size() + ur3traj5.size() + ur3traj6.size())
+	else if (trajcnt < ur5traj1.size() + ur5traj1_2.size() + ur5traj2.size() + ur3traj1.size() + ur3traj1_2.size() + ur3traj2.size() + ur3traj3.size() + ur3traj4.size() + ur3traj4_2.size())
 	{
-		ur3Manager->setJointVal(ur3traj6[(trajcnt - ur5traj1.size() - ur5traj2.size() - ur3traj1.size() - ur3traj2.size() - ur3traj3.size() - ur3traj4.size() - ur3traj5.size()) % ur3traj6.size()]);
-		power->GetBaseLink()->SetFrame(PowerTraj2[trajcnt % (ur5traj1.size() + ur5traj2.size() + ur3traj1.size() + ur3traj2.size() + ur3traj3.size() + ur3traj4.size() + ur3traj5.size())]);
+		ur3Manager->setJointVal(ur3traj4_2[(trajcnt - ur5traj1.size() - ur5traj1_2.size() - ur5traj2.size() - ur3traj1.size() - ur3traj1_2.size() - ur3traj2.size() - ur3traj3.size() - ur3traj4.size()) % ur3traj4_2.size()]);
+	}
+	else if (trajcnt < ur5traj1.size() + ur5traj1_2.size() + ur5traj2.size() + ur3traj1.size() + ur3traj1_2.size() + ur3traj2.size() + ur3traj3.size() + ur3traj4.size() + ur3traj4_2.size() + ur3traj5.size())
+	{
+		ur3Manager->setJointVal(ur3traj5[(trajcnt - ur5traj1.size() - ur5traj1_2.size() - ur5traj2.size() - ur3traj1.size() - ur3traj1_2.size() - ur3traj2.size() - ur3traj3.size() - ur3traj4.size() - ur3traj4_2.size()) % ur3traj5.size()]);
+		power->GetBaseLink()->SetFrame(PowerTraj[(trajcnt - ur5traj1.size() - ur5traj1_2.size() - ur5traj2.size() - ur3traj1.size() - ur3traj1_2.size() - ur3traj2.size() - ur3traj3.size() - ur3traj4.size() - ur3traj4_2.size()) % ur3traj5.size()]);
+	}
+	else if (trajcnt < ur5traj1.size() + ur5traj1_2.size() + ur5traj2.size() + ur3traj1.size() + ur3traj1_2.size() + ur3traj2.size() + ur3traj3.size() + ur3traj4.size() + ur3traj4_2.size() + ur3traj5.size() + ur3traj6.size())
+	{
+		ur3Manager->setJointVal(ur3traj6[(trajcnt - ur5traj1.size() - ur5traj1_2.size() - ur5traj2.size() - ur3traj1.size() - ur3traj1_2.size() - ur3traj2.size() - ur3traj3.size() - ur3traj4.size() - ur3traj4_2.size() - ur3traj5.size()) % ur3traj6.size()]);
+		power->GetBaseLink()->SetFrame(PowerTraj2[(trajcnt - ur5traj1.size() - ur5traj1_2.size() - ur5traj2.size() - ur3traj1.size() - ur3traj1_2.size() - ur3traj2.size() - ur3traj3.size() - ur3traj4.size() - ur3traj4_2.size() - ur3traj5.size()) % ur3traj6.size()]);
 	}
 }
 
@@ -527,7 +605,7 @@ void URrobotSetting()
 	gpIdx[1] = 1;
 	ur3->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
 
-	T_ur3base = ur3->GetBaseLink()->GetFrame() * ur3->TsrLinkbase2robotbase;
+		T_ur3base = ur3->GetBaseLink()->GetFrame() * ur3->TsrLinkbase2robotbase;
 
 	// ur5 setting
 	gSpace.AddSystem((srSystem*)ur5);
@@ -591,17 +669,17 @@ void setObstacle()
 
 //void tempObjectSetting()
 //{
-//	double dim = 0.05;
-//	ee->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
-//	ee->GetGeomInfo().SetDimension(dim);
-//	ee->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
-//	srCollision* tempCol = new srCollision;
-//	tempCol->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
-//	tempCol->GetGeomInfo().SetDimension(dim);
-//	ee->AddCollision(tempCol);
-//	settop->SetBaseLink(ee);
-//	settop->SetBaseLinkType(srSystem::FIXED);
-//	gSpace.AddSystem(settop);
+//  double dim = 0.05;
+//  ee->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
+//  ee->GetGeomInfo().SetDimension(dim);
+//  ee->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
+//  srCollision* tempCol = new srCollision;
+//  tempCol->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
+//  tempCol->GetGeomInfo().SetDimension(dim);
+//  ee->AddCollision(tempCol);
+//  settop->SetBaseLink(ee);
+//  settop->SetBaseLinkType(srSystem::FIXED);
+//  gSpace.AddSystem(settop);
 //}
 
 Eigen::VectorXd UR3robustInverseKinematics(SE3 finalpos, Eigen::VectorXd original)
@@ -712,4 +790,3 @@ vector<Eigen::VectorXd> makeGriptraj(double gripangle, Eigen::VectorXd currentPo
 	}
 	return gripTraj;
 }
-
