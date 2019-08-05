@@ -39,5 +39,5 @@ public:
 
 	virtual	Eigen::VectorXd			getConstraintVector(const Eigen::VectorXd& jointVal) = 0;
 	virtual	Eigen::MatrixXd			getConstraintJacobian(const Eigen::VectorXd& jointVal) = 0;
-	virtual	void					project2ConstraintManifold(Eigen::VectorXd& jointVal) = 0;
+	virtual	bool					project2ConstraintManifold(Eigen::VectorXd& jointVal, int max_iter = 1000) = 0;
 };
