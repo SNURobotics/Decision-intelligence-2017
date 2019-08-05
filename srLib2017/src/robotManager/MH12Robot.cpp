@@ -187,6 +187,18 @@ void MH12Robot::AssembleModel(double gripperRot)
 	gLink[MH12_Index::LINK_4].GetGeomInfo().SetFileName("../../../workspace/robot/mh12_3ds/link4.3ds");
 	//gLink[MH12_Index::LINK_4].GetGeomInfo().SetColor(0.15f, 0.15f, 0.15f, 1.0f);
 
+	///////////////// CAMERA MODULE ////////////////
+	//gWeldJoint[MH12_Index::WELDJOINT_CAMERA]->SetActType(srJoint::HYBRID);
+	//gWeldJoint[MH12_Index::WELDJOINT_CAMERA]->SetParentLink(&gLink[MH12_Index::LINK_4]);
+	//gWeldJoint[MH12_Index::WELDJOINT_CAMERA]->SetChildLink(&gLink[MH12_Index::CAMERA]);
+	//gWeldJoint[MH12_Index::WELDJOINT_CAMERA]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, -SR_PI_HALF), Vec3(-0.155, 0.0, (0.450 + 0.614))));
+	//gWeldJoint[MH12_Index::WELDJOINT_CAMERA]->SetChildLinkFrame(EulerZYX(Vec3(SR_PI, -SR_PI_HALF, 0.0), Vec3(-0.0825, -0.02, 0.4575)));
+
+	//gLink[MH12_Index::CAMERA].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	//gLink[MH12_Index::CAMERA].GetGeomInfo().SetLocalFrame(SE3());
+	//gLink[MH12_Index::CAMERA].GetGeomInfo().SetFileName("../../../workspace/robot/mh12_3ds/camera_.3ds");
+	////////////////////////////////////////////////
+
 	gJoint[MH12_Index::JOINT_4]->SetActType(srJoint::HYBRID);
 	gJoint[MH12_Index::JOINT_4]->SetParentLink(&gLink[MH12_Index::LINK_4]);
 	gJoint[MH12_Index::JOINT_4]->SetChildLink(&gLink[MH12_Index::LINK_5]);
@@ -246,7 +258,7 @@ void MH12Robot::AssembleModel(double gripperRot)
 
 	gLink[MH12_Index::GRIPPER_1].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[MH12_Index::GRIPPER_1].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
-	gLink[MH12_Index::GRIPPER_1].GetGeomInfo().SetColor(0.2, 0.2, 0.2);
+	gLink[MH12_Index::GRIPPER_1].GetGeomInfo().SetColor(0.2f, 0.2f, 0.2f);
 	gLink[MH12_Index::GRIPPER_1].GetGeomInfo().SetFileName("../../../workspace/robot/mh12_3ds/gripper1.3ds");
 
 
@@ -258,7 +270,7 @@ void MH12Robot::AssembleModel(double gripperRot)
 
 	gLink[MH12_Index::GRIPPER_2].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[MH12_Index::GRIPPER_2].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
-	gLink[MH12_Index::GRIPPER_2].GetGeomInfo().SetColor(0.2, 0.2, 0.2);
+	gLink[MH12_Index::GRIPPER_2].GetGeomInfo().SetColor(0.2f, 0.2f, 0.2f);
 	gLink[MH12_Index::GRIPPER_2].GetGeomInfo().SetFileName("../../../workspace/robot/mh12_3ds/gripper2.3ds");
 
 	gWeldJoint[MH12_Index::WELDJOINT_GRIPJOINT_3]->SetParentLink(&gLink[MH12_Index::COUPLING]);
@@ -269,7 +281,7 @@ void MH12Robot::AssembleModel(double gripperRot)
 
 	gLink[MH12_Index::GRIPPER_3].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[MH12_Index::GRIPPER_3].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
-	gLink[MH12_Index::GRIPPER_3].GetGeomInfo().SetColor(0.2, 0.2, 0.2);
+	gLink[MH12_Index::GRIPPER_3].GetGeomInfo().SetColor(0.2f, 0.2f, 0.2f);
 	gLink[MH12_Index::GRIPPER_3].GetGeomInfo().SetFileName("../../../workspace/robot/mh12_3ds/gripper3.3ds");
 
 
@@ -369,6 +381,13 @@ void MH12Robot::AssembleCollision()
 	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.05, 0.07, 0.03));
 	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-0.26, 0.2, 1.152)));
+
+	//////////// CAMERA /////////////
+	//gLink[MH12_Index::CAMERA].AddCollision(&gCollision[m_numCollision]);
+	//gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	//gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.175, 0.140, 0.16));
+	//gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-0.5*0.175, 0.05, 0.5*0.12)));
+	/////////////////////////////////
 
 
 	gLink[MH12_Index::LINK_5].AddCollision(&gCollision[m_numCollision]);
