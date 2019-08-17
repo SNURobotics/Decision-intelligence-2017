@@ -38,6 +38,7 @@ public:
 
 		// force control view
 		Vec3 focus = Vec3(-0.23, 0.0, 0.0);
+		//m_camera = new Camera(0.5, SR_PI / 7.0, -SR_PI_HALF, focus);
 		m_camera = new Camera(2.2, SR_PI / 7.0, -SR_PI_HALF, focus);
 
 		// workcell view

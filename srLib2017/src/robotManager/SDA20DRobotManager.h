@@ -9,8 +9,10 @@
 #include "robotManager.h"
 #include "RRTmanager\rrtManager.h"
 #include "RRTmanager/TBrrtManager.h"
+//#include "RRTmanager/cbirrtManager.h"
 #include "Math\mathOperator.h"
 #include "Math\QuadraticProgramming.h"
+
 //
 //#define		NUM_OF_END_EFFECTOR_RIGHTARM		2
 //#define		NUM_OF_END_EFFECTOR_LEFTARM			2

@@ -133,6 +133,18 @@ struct CUR_POS
 
 };				 
 
+struct CUR_JOINT
+{
+	// 임시 값
+	double q1;
+	double q2;
+	double q3;
+	double q4;
+	double q5;
+	double q6;
+
+};
+
 struct MY_STRUCT
 {
 	int Number;
@@ -154,6 +166,61 @@ LRESULT CESF_Client_Example_JOB_IMOVDlg::OnTraceMsg(WPARAM wParam, LPARAM lParam
 	// 1, 2 대신 특정 변수로 Header 등에 define 시켜서 사용해도 되고 e.g. #define MOVE = 1
 
 	// srLib으로부터 Move Position 받아서 로봇에 전달 (지금은 연결 안되어있어서 실험 못함)
+	if (pcds->dwData == CONNECTION_START_SIGNAL)
+	{
+		////////////////////// initializer (필요한건지 나중에 확인) //////////////////////
+		if (m_dxsock)
+		{
+			m_dxsock->bNoReceive = TRUE;
+			m_bCmdActive = FALSE;
+			Sleep(600);
+			delete m_dxsock;
+			m_dxsock = NULL;
+			m_sendBuf = NULL;
+			m_receiveBuf = NULL;
+			m_bAnswerRecv = FALSE;
+			m_iSendLength = 0;
+			m_RecvTimeout = 5000;
+			m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+			m_sendBuf = new char[MAX_TEXT_LENGTH];
+			m_receiveBuf = new char[MAX_TEXT_LENGTH];
+			delete m_sendThread;	// disconnect에서 delete 안하는데 connect함수에서 생성했었음.
+			m_bIsConnect = FALSE;
+		}
+		/////////////////////////////////////////////////////////////////////////////////
+
+
+		AddStrToList(_T("startConnection() from srLib reached!"));
+		BOOL bRet;
+		INT PosValLeng = 0;
+		CString strIP, strPortNum, strSendCmd, strPosVal, strVal;
+		CString strSendData = _T("\r");
+
+		m_edtServerIP.GetWindowTextW(strIP);
+		m_txtPortNum.GetWindowTextW(strPortNum);
+		bRet = Connect(SOCK_STREAM, strIP, StrToInt(strPortNum));
+
+		if (bRet != TRUE)
+		{
+			Disconnect();
+			AddStrToList(_T("Connect Failed!"));
+			return FALSE;
+		}
+
+		AddStrToList(_T("Connect Success!"));
+		// When using multiple commands in a row 
+		// Here, -1 means infinite number of commands. If the number is specified, change -1 to corresponding number.
+		// Check enthernet server function manual 14 page for more details.
+		bRet = MsgSend(_T("CONNECT Robot_access Keep-Alive:-1\r\n"), TRUE);
+		// turn off servo if turned on
+		ServoControlFunc(TRUE);
+	}
+	if (pcds->dwData == CONNECTION_END_SIGNAL)
+	{
+		ServoControlFunc(FALSE);
+		AddStrToList(_T("endConnection() from srLib reached!"));
+		Disconnect();
+	}
 	if (pcds->dwData == MOVE_SIGNAL)
 	{
 
@@ -167,10 +234,20 @@ LRESULT CESF_Client_Example_JOB_IMOVDlg::OnTraceMsg(WPARAM wParam, LPARAM lParam
 		m_MoveVal[3] = move_pos_from_srLib.Rx;
 		m_MoveVal[4] = move_pos_from_srLib.Ry;
 		m_MoveVal[5] = move_pos_from_srLib.Rz;
-
+#ifdef USE_DISCONNECT
 		ServoControl(TRUE);
 		IncrementalMove();
 		ServoControl(FALSE);
+#endif
+#ifndef USE_DISCONNECT
+#ifndef CONTINUE_SERVOING
+		ServoControlFunc(TRUE);
+#endif
+		IncrementalMoveFunc();
+#ifndef CONTINUE_SERVOING
+		ServoControlFunc(FALSE);
+#endif
+#endif
 	}
 	if (pcds->dwData == GET_CURPOS_SIGNAL)
 	{
@@ -179,7 +256,7 @@ LRESULT CESF_Client_Example_JOB_IMOVDlg::OnTraceMsg(WPARAM wParam, LPARAM lParam
 		INT PosValLeng = 0;
 		CString strIP, strPortNum, strSendCmd, strPosVal, strVal;
 		CString strSendData = _T("\r");
-
+#ifdef USE_DISCONNECT
 		m_edtServerIP.GetWindowTextW(strIP);
 		m_txtPortNum.GetWindowTextW(strPortNum);
 		bRet = Connect(SOCK_STREAM, strIP, StrToInt(strPortNum));
@@ -201,7 +278,7 @@ LRESULT CESF_Client_Example_JOB_IMOVDlg::OnTraceMsg(WPARAM wParam, LPARAM lParam
 			AddStrToList(_T("CONNECT Robot_access Failed!"));
 			return FALSE;
 		}
-
+#endif
 		// 수신 메시지 비교(OK여부) 처리 추가
 
 		strSendData.Format(_T("%d,%d\r"), ROBOT_COORD, RPOSC_NO_EX_AXIS);
@@ -210,7 +287,9 @@ LRESULT CESF_Client_Example_JOB_IMOVDlg::OnTraceMsg(WPARAM wParam, LPARAM lParam
 
 		if (bRet != TRUE)
 		{
+#ifdef USE_DISCONNECT
 			Disconnect();
+#endif
 			AddStrToList(_T("HOSTCTRL_REQUEST Failed!"));
 			return FALSE;
 		}
@@ -221,7 +300,9 @@ LRESULT CESF_Client_Example_JOB_IMOVDlg::OnTraceMsg(WPARAM wParam, LPARAM lParam
 
 		if (bRet != TRUE)
 		{
+#ifdef USE_DISCONNECT
 			Disconnect();
+#endif
 			AddStrToList(_T("DataSend Failed!"));
 			return FALSE;
 		}
@@ -241,9 +322,9 @@ LRESULT CESF_Client_Example_JOB_IMOVDlg::OnTraceMsg(WPARAM wParam, LPARAM lParam
 			GetDlgItem(IDC_TXT_CURX + i)->SetWindowTextW(strVal);
 			strPosVal.Delete(0, strVal.GetLength() + 1);
 		}
-
+#ifdef USE_DISCONNECT
 		Disconnect();
-
+#endif
 		CUR_POS cur_pos;
 		cur_pos.X = tmpCurPos[0];
 		cur_pos.Y = tmpCurPos[1];
@@ -273,8 +354,15 @@ LRESULT CESF_Client_Example_JOB_IMOVDlg::OnTraceMsg(WPARAM wParam, LPARAM lParam
 		CString ExcuteJOBName = _T("GRIPPER-ON");
 
 		//m_cmbJOBList.GetLBText(m_cmbJOBList.GetCurSel(), ExcuteJOBName);
+#ifdef USE_DISCONNECT
 		ServoControl(TRUE);
 		JOBExcute(ExcuteJOBName);
+#endif
+#ifndef USE_DISCONNECT
+		ServoControlFunc(TRUE);
+		JOBExcuteFunc(ExcuteJOBName);
+#endif // !1
+
 	}
 
 	if (pcds->dwData == GRIPPER_OFF_SIGNAL)
@@ -284,10 +372,101 @@ LRESULT CESF_Client_Example_JOB_IMOVDlg::OnTraceMsg(WPARAM wParam, LPARAM lParam
 		CString ExcuteJOBName = _T("GRIPPER-OFF");
 
 		//m_cmbJOBList.GetLBText(m_cmbJOBList.GetCurSel(), ExcuteJOBName);
-		
+#ifdef USE_DISCONNECT
 		ServoControl(TRUE);
 		JOBExcute(ExcuteJOBName);
+#endif
+#ifndef USE_DISCONNECT
+		ServoControlFunc(TRUE);
+		JOBExcuteFunc(ExcuteJOBName);
+#endif
 	}
+
+	if (pcds->dwData == GET_CURJOINT_SIGNAL)
+	{
+		AddStrToList(_T("GetCurJointSignal() from srLib reached!"));
+		BOOL bRet;
+		INT PosValLeng = 0;
+		CString strIP, strPortNum, strSendCmd, strPosVal, strVal;
+		CString strSendData = _T("\r");
+#ifdef USE_DISCONNECT
+		m_edtServerIP.GetWindowTextW(strIP);
+		m_txtPortNum.GetWindowTextW(strPortNum);
+		bRet = Connect(SOCK_STREAM, strIP, StrToInt(strPortNum));
+
+		if (bRet != TRUE)
+		{
+			Disconnect();
+			AddStrToList(_T("Connect Failed!"));
+			return FALSE;
+		}
+
+		AddStrToList(_T("Connect Success!"));
+
+		bRet = MsgSend(_T("CONNECT Robot_access\r\n"), TRUE);
+
+		if (bRet != TRUE)
+		{
+			Disconnect();
+			AddStrToList(_T("CONNECT Robot_access Failed!"));
+			return FALSE;
+		}
+#endif
+		// 수신 메시지 비교(OK여부) 처리 추가
+		
+		strSendCmd.Format(_T("HOSTCTRL_REQUEST RPOSJ\r\n"));
+		bRet = MsgSend(strSendCmd, TRUE);
+
+		if (bRet != TRUE)
+		{
+#ifdef USE_DISCONNECT
+			Disconnect();
+#endif
+			AddStrToList(_T("HOSTCTRL_REQUEST Failed!"));
+			return FALSE;
+		}
+
+		strPosVal = m_strList;
+
+		std::vector<int> tmpCurJoint(0);
+		for (int i = 0; i < 6; i++)
+		{
+			PosValLeng = strPosVal.Find(',');
+
+			if (PosValLeng == -1)
+				PosValLeng = strPosVal.GetLength();
+
+			strVal = strPosVal.Left(PosValLeng);
+			tmpCurJoint.push_back(_wtoi(strVal));
+			GetDlgItem(IDC_TXT_CURX + i)->SetWindowTextW(strVal);
+			strPosVal.Delete(0, strVal.GetLength() + 1);
+		}
+#ifdef USE_DISCONNECT
+		Disconnect();
+#endif
+		CUR_JOINT cur_joint;
+		
+		cur_joint.q1 = (double) tmpCurJoint[0] / PULSE_PER_DEG;
+		cur_joint.q2 = (double) tmpCurJoint[1] / PULSE_PER_DEG;
+		cur_joint.q3 = (double) tmpCurJoint[2] / PULSE_PER_DEG;
+		cur_joint.q4 = (double) tmpCurJoint[3] / PULSE_PER_DEG;
+		cur_joint.q5 = (double) tmpCurJoint[4] / PULSE_PER_DEG;
+		cur_joint.q6 = (double) tmpCurJoint[5] / PULSE_PER_DEG;
+		CWnd *hTargetWnd = CWnd::FindWindow(L"srLibServer", NULL);
+		if (hTargetWnd == NULL)
+		{
+			AddStrToList(_T("Can't find the target window!"));
+			return 0;
+		}
+		if (hTargetWnd) {
+			COPYDATASTRUCT cds;
+			cds.dwData = 223 /* Flag 용도 */;
+			cds.cbData = sizeof(cur_joint);
+			cds.lpData = &cur_joint;
+			hTargetWnd->SendMessage(WM_COPYDATA, (WPARAM)AfxGetApp()->m_pMainWnd->GetSafeHwnd(), (LPARAM)&cds);
+		}
+	}
+
 	return 0;
 	
 }
@@ -1025,4 +1204,203 @@ std::vector<double> CESF_Client_Example_JOB_IMOVDlg::GetCurPos()
 		strPosVal.Delete(0, strVal.GetLength() + 1);
 	}
 	return tmpCurPos;
+}
+
+BOOL CESF_Client_Example_JOB_IMOVDlg::ServoControlFunc(BOOL IsOn)
+{
+	BOOL bRet;
+	CString strIP, strPortNum, strSendCmd;
+	CString strSendData = _T("0\r");
+
+	// 수신 메시지 비교(OK여부) 처리 추가
+
+	strSendData.Format(_T("%d\r"), IsOn);
+	strSendCmd.Format(_T("HOSTCTRL_REQUEST SVON %d\r\n"), strSendData.GetLength());
+	bRet = MsgSend(strSendCmd, TRUE);
+
+	if (bRet != TRUE)
+	{
+		//Disconnect();
+		AddStrToList(_T("HOSTCTRL_REQUEST Failed!"));
+		return FALSE;
+	}
+
+	// 수신 메시지 비교(OK여부) 처리 추가
+
+	bRet = MsgSend(strSendData, TRUE);
+
+	if (bRet != TRUE)
+	{
+		//Disconnect();
+		AddStrToList(_T("DataSend Failed!"));
+		return FALSE;
+	}
+
+	//Disconnect();
+
+	return TRUE;
+}
+
+BOOL CESF_Client_Example_JOB_IMOVDlg::JOBExcuteFunc(CString strJOBName)
+{
+	BOOL bRet;
+	CString strIP, strPortNum, strSendCmd;
+	CString strSendData = _T("\r");
+
+	// 수신 메시지 비교(OK여부) 처리 추가
+
+	strSendData.Format(_T("%s\r"), strJOBName);
+	strSendCmd.Format(_T("HOSTCTRL_REQUEST START %d\r\n"), strSendData.GetLength());
+	bRet = MsgSend(strSendCmd, TRUE);
+
+	if (bRet != TRUE)
+	{
+		//Disconnect();
+		AddStrToList(_T("HOSTCTRL_REQUEST Failed!"));
+		return FALSE;
+	}
+
+	// 수신 메시지 비교(OK여부) 처리 추가
+
+	bRet = MsgSend(strSendData, TRUE);
+
+	if (bRet != TRUE)
+	{
+		//Disconnect();
+		AddStrToList(_T("DataSend Failed!"));
+		return FALSE;
+	}
+
+	//Disconnect();
+
+	return TRUE;
+}
+
+BOOL CESF_Client_Example_JOB_IMOVDlg::CurPosReadFunc()
+{
+	BOOL bRet;
+	INT PosValLeng = 0;
+	CString strIP, strPortNum, strSendCmd, strPosVal, strVal;
+	CString strSendData = _T("\r");
+
+	// 수신 메시지 비교(OK여부) 처리 추가
+
+	strSendData.Format(_T("%d,%d\r"), ROBOT_COORD, RPOSC_NO_EX_AXIS);
+	strSendCmd.Format(_T("HOSTCTRL_REQUEST RPOSC %d\r\n"), strSendData.GetLength());
+	bRet = MsgSend(strSendCmd, TRUE);
+
+	if (bRet != TRUE)
+	{
+		//Disconnect();
+		AddStrToList(_T("HOSTCTRL_REQUEST Failed!"));
+		return FALSE;
+	}
+
+	// 수신 메시지 비교(OK여부) 처리 추가
+
+	bRet = MsgSend(strSendData, TRUE);
+
+	if (bRet != TRUE)
+	{
+		//Disconnect();
+		AddStrToList(_T("DataSend Failed!"));
+		return FALSE;
+	}
+
+	strPosVal = m_strList;
+
+	for (int i = 0; i < 6; i++)
+	{
+		PosValLeng = strPosVal.Find(',');
+
+		if (PosValLeng == -1)
+			PosValLeng = strPosVal.GetLength();
+
+		strVal = strPosVal.Left(PosValLeng);
+		GetDlgItem(IDC_TXT_CURX + i)->SetWindowTextW(strVal);
+		strPosVal.Delete(0, strVal.GetLength() + 1);
+	}
+
+	//Disconnect();
+
+	return TRUE;
+}
+
+BOOL CESF_Client_Example_JOB_IMOVDlg::CurJointReadFunc()
+{
+	BOOL bRet;
+	INT PosValLeng = 0;
+	CString strIP, strPortNum, strSendCmd, strPosVal, strVal;
+	CString strSendData = _T("\r");
+
+	// 수신 메시지 비교(OK여부) 처리 추가
+
+	strSendCmd.Format(_T("HOSTCTRL_REQUEST RPOSJ\r\n"), strSendData.GetLength());
+	bRet = MsgSend(strSendCmd, TRUE);
+
+	if (bRet != TRUE)
+	{
+		//Disconnect();
+		AddStrToList(_T("HOSTCTRL_REQUEST Failed!"));
+		return FALSE;
+	}
+	
+	strPosVal = m_strList;
+
+	for (int i = 0; i < 6; i++)
+	{
+		PosValLeng = strPosVal.Find(',');
+
+		if (PosValLeng == -1)
+			PosValLeng = strPosVal.GetLength();
+
+		strVal = strPosVal.Left(PosValLeng);
+		GetDlgItem(IDC_TXT_CURX + i)->SetWindowTextW(strVal);
+		strPosVal.Delete(0, strVal.GetLength() + 1);
+	}
+
+	//Disconnect();
+
+	return TRUE;
+}
+
+BOOL CESF_Client_Example_JOB_IMOVDlg::IncrementalMoveFunc()
+{
+	BOOL bRet;
+	FLOAT fMoveSpd = IMOV_SPEED;
+	CString strIP, strPortNum, strSendCmd;
+	CString strSendData = _T("\r");
+
+	// 수신 메시지 비교(OK여부) 처리 추가
+
+	strSendData.Format(_T("%d,%.1f,%d,%.3f,%.3f,%.3f,%.4f,%.4f,%.4f,%d,%d,%d,%d,%d,%d,%d,%d\r")
+		, 0, fMoveSpd, ROBOT_COORD, m_MoveVal[0], m_MoveVal[1], m_MoveVal[2], m_MoveVal[3], m_MoveVal[4], m_MoveVal[5], 0, 20, 0, 0, 0, 0, 0, 0);
+
+	strSendCmd.Format(_T("HOSTCTRL_REQUEST IMOV %d\r\n"), strSendData.GetLength());
+	bRet = MsgSend(strSendCmd, TRUE);
+
+	if (bRet != TRUE)
+	{
+		//Disconnect();
+		AddStrToList(_T("HOSTCTRL_REQUEST Failed!"));
+		return FALSE;
+	}
+
+	// 수신 메시지 비교(OK여부) 처리 추가
+
+	bRet = MsgSend(strSendData, TRUE);
+
+	if (bRet != TRUE)
+	{
+		//Disconnect();
+		AddStrToList(_T("DataSend Failed!"));
+		return FALSE;
+	}
+
+	//Sleep(20000);
+	int sleepTime;
+	sleepTime = max(sqrt(m_MoveVal[0] * m_MoveVal[0] + m_MoveVal[1] * m_MoveVal[1] + m_MoveVal[2] * m_MoveVal[2]), sqrt(m_MoveVal[3] * m_MoveVal[3] + m_MoveVal[4] * m_MoveVal[4] + m_MoveVal[5] * m_MoveVal[5])) / IMOV_SPEED;
+	Sleep((sleepTime + 1) * 1000);
+	//Disconnect();
+	return TRUE;
 }

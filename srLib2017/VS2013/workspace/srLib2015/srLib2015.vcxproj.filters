@@ -45,13 +45,13 @@
     <ClInclude Include="..\..\..\workspace\srLib2015\sort_external_lib.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\workspace\srLib2015\NTdemoEnvSetting_4th.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\workspace\srLib2015\tcp_ip_communication_4th.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\workspace\srLib2015\retargettingEnvSetting.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\workspace\srLib2015\NTdemoEnvSetting_5th.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\workspace\srLib2015\tcp_ip_communication_5th.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
@@ -96,9 +96,6 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\main_NTdemoServer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\workspace\srLib2015\NTdemoEnvSetting_4th.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\main_NTdemo_planning.cpp">
@@ -171,6 +168,18 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\soldering_No3.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\test_sda20d_cbirrt.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\NTdemoEnvSetting_5th.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\main_NTdemoServer_5th.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\test_NTdemo_environment_5th.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

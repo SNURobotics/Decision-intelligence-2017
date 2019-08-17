@@ -23,12 +23,15 @@ myRenderer* renderer;
 robotRRTManager* RRTManager = new robotRRTManager;
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::TORQUE;
 SE3 Trobotbase1;
+vector<srSystem*> markers(0);
+vector<Eigen::VectorXd> checkPos(0);
 void initDynamics();
 void rendering(int argc, char **argv);
 void updateFunc();
 void frankaRobotSetting();
 void frankaRobotManagerSetting();
 void frankaRRTSetting();
+void markerSetting(double x_min, double x_max, double y_max, double z);
 int activeJointIdx =0;
 vector<Eigen::VectorXd> traj(0);
 
@@ -37,9 +40,12 @@ int main(int argc, char **argv)
 
     frankaRobotSetting();
 
+	markerSetting(-0.8, 1.0, 0.8, 0.0);
+
 	initDynamics();
 	
 	frankaRobotManagerSetting();
+
 
 	//qval.setZero(7);
 	//qval[1] = -SR_PI_HALF;
@@ -48,9 +54,19 @@ int main(int argc, char **argv)
 	//rManager1->setJointVal(qval);
 	
 	////////////// INVERSE KINEMATICS /////////////
-	//SE3 Tgoal;
-	//int flag = 0;
-	//Eigen::VectorXd qval = rManager1->inverseKin(Tgoal, &frankaRobot->gMarkerLink[Franka_Index::MLINK_GRIP], true, SE3(), flag);
+	for (unsigned int i = 0; i < markers.size(); i++)
+	{
+		int flag = 0;
+		qval = rManager1->inverseKin(markers[i]->GetBaseLink()->GetFrame(), &frankaRobot->gMarkerLink[Franka_Index::MLINK_GRIP], true, SE3(), flag, frankaRobot->qInvKinInit);
+		checkPos.push_back(qval);
+		if (flag == 0)
+			markers[i]->GetBaseLink()->GetGeomInfo().SetColor(0.0, 1.0, 0.0);
+		else
+			markers[i]->GetBaseLink()->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
+	}
+	int flag = 0;
+	qval = rManager1->inverseKin(EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.3,0.0,0.0)), &frankaRobot->gMarkerLink[Franka_Index::MLINK_GRIP], true, SE3(), flag, frankaRobot->qInvKinInit);
+	rManager1->setJointVal(frankaRobot->qInvKinInit);
 	//rManager1->setJointVal(qval);
 	///////////////////////////////////////////////
 
@@ -97,9 +113,9 @@ void updateFunc()
 {
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 
-	static double JointVal = 0;
-	int jointIdx = 3;
-	((srStateJoint*)frankaRobot->m_KIN_Joints[jointIdx])->m_State.m_rValue[0] = JointVal;
+	//static double JointVal = 0;
+	//int jointIdx = 3;
+	//((srStateJoint*)frankaRobot->m_KIN_Joints[jointIdx])->m_State.m_rValue[0] = JointVal;
 	//JointVal += 0.01;
 
 	static int cnt = 0;
@@ -137,4 +153,26 @@ void frankaRRTSetting()
 		planningJoint[i] = (srStateJoint*)frankaRobot->gJoint[i];
 	RRTManager->setSystem(planningJoint);
 	RRTManager->setStateBound(frankaRobot->getLowerJointLimit(), frankaRobot->getUpperJointLimit());
+}
+
+void markerSetting(double x_min, double x_max, double y_max, double z)
+{
+	double stepsize = 0.1;
+	for (int i = 0; i < int((x_max - x_min) / stepsize); i++)
+	{
+		for (int j = 0; j < 2*int(y_max / stepsize) + 1; j++)
+		{
+			srLink* tempLink = new srLink;
+			tempLink->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
+			tempLink->GetGeomInfo().SetDimension(0.03);
+			tempLink->SetFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3((double)i * stepsize + x_min, (double)j * stepsize - y_max, z)));
+			srSystem* tempSys = new srSystem;
+			tempSys->SetBaseLink(tempLink);
+			tempSys->SetBaseLinkType(srSystem::BASELINKTYPE::FIXED);
+			markers.push_back(tempSys);
+			gSpace.AddSystem(tempSys);
+		}
+	}
+		
+
 }
