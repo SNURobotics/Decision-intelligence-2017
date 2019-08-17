@@ -53,7 +53,7 @@ rrtVertex * TBrrtManager::generateNewVertex(rrtVertex * nearest_vertex, const Ei
 	/////////////////////////// check distance to constraint manifold ////////////////////
 	if (rrtConstraints->getConstraintVector(new_vertex->posState).norm() > _error_threshold)
 	{
-		if (projectionNewtonRaphson(new_vertex->posState))
+		if (projectionNewtonRaphson(new_vertex->posState)== rrtConstraint::Success)
 		{
 			//if (setState(new_vertex->posState)) { return NULL; }
 			// Create new Tangent Space and Add to TS list
@@ -474,6 +474,7 @@ vector<rrtVertex*> TBrrtManager::getCandidateVertices(vector<rrtVertex*> vertice
 	return vertices;
 }
 
+// New Version for TB-RRT
 list<rrtVertex*> TBrrtManager::smoothingPath(list<rrtVertex*>& path, int smoothingnum)
 {
 	// Connenct two adjecent nodes, covering all area
@@ -483,6 +484,11 @@ list<rrtVertex*> TBrrtManager::smoothingPath(list<rrtVertex*>& path, int smoothi
 
 	vector<rrtVertex*> vertices(2);
 	list<rrtVertex*>::iterator iter;
+
+	string str1;
+	str1 += "../../../data/tbrrt_traj/tbrrt_traj_begin.txt";
+	list<Eigen::VectorXd> filledPath = fillingPath(path);
+	saveDataToText(filledPath, str1);
 
 	for (int iterSmoothing = 0; iterSmoothing < smoothingnum; iterSmoothing++)
 	{
@@ -709,7 +715,7 @@ list<rrtVertex*> TBrrtManager::smoothingPath(list<rrtVertex*>& path, int smoothi
 }*/
 
 // Project point onto constraint manifold minimizing norm error
-bool TBrrtManager::projectionNewtonRaphson(Eigen::VectorXd& jointval, double threshold, int maxIter)
+int TBrrtManager::projectionNewtonRaphson(Eigen::VectorXd& jointval, double threshold, int maxIter)
 {
 	// consider joint limit during projection
 	return rrtConstraints->project2ConstraintManifold(jointval, maxIter);

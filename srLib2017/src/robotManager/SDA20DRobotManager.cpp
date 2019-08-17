@@ -291,7 +291,7 @@ Eigen::VectorXd SDA20DDualArmClosedLoopConstraint::getConstraintHessian(const Ei
 	return Eigen::VectorXd();
 }
 
-bool SDA20DDualArmClosedLoopConstraint::project2ConstraintManifold(Eigen::VectorXd& jointVal, int max_iter /*= 1000*/)
+int SDA20DDualArmClosedLoopConstraint::project2ConstraintManifold(Eigen::VectorXd& jointVal, int max_iter /*= 1000*/)
 {
 	Eigen::MatrixXd Jc;
 	Eigen::VectorXd delta_q(numEffectiveArmJoints);
@@ -313,10 +313,13 @@ bool SDA20DDualArmClosedLoopConstraint::project2ConstraintManifold(Eigen::Vector
 		if ((norm_delta_q < INVERSEKIN_TOL))
 		{
 			// implement quadratic programming...??
+			Eigen::VectorXd temp = jointVal;
 			_robotManager->moveIntoJointLimit(jointVal);
-			return 1;
+			if ((temp-jointVal).norm() < 1E-3)
+				return Success;
+			return Exeeded_Joint_Limit;
 		}
 		iter++;
 	}
-	return 0;
+	return Exeeded_Max_Iter;
 }

@@ -55,7 +55,7 @@ protected: // TB-RRT functions
 	unsigned int							selectTangentSpace();								// Heuristically select tangent space for extension
 
 	// projection function
-	bool									projectionNewtonRaphson(Eigen::VectorXd& jointval, double threshold = 1.0e-6, int maxIter = 1000);
+	int										projectionNewtonRaphson(Eigen::VectorXd& jointval, double threshold = 1.0e-6, int maxIter = 1000);
 	void									LazyProjection(list<Eigen::VectorXd>& path);
 public:
 	void									LazyProjection(vector<Eigen::VectorXd>& path);
@@ -81,10 +81,12 @@ public:
 	
 	int								nDim;
 
+	enum projection_flag { Exeeded_Max_Iter, Success, Exeeded_Joint_Limit };
+
 	virtual	Eigen::VectorXd			getConstraintVector(const Eigen::VectorXd& jointVal) = 0;
 	virtual	Eigen::MatrixXd			getConstraintJacobian(const Eigen::VectorXd& jointVal) = 0;
 	virtual Eigen::VectorXd			getConstraintHessian(const Eigen::VectorXd& jointVal, unsigned int i, unsigned int j) = 0;
-	virtual	bool					project2ConstraintManifold(Eigen::VectorXd& jointVal, int max_iter = 1000) = 0;
+	virtual	int						project2ConstraintManifold(Eigen::VectorXd& jointVal, int max_iter = 1000) = 0;
 };
 
 class tangentSpace

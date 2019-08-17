@@ -102,7 +102,7 @@ int main(int argc, char **argv)
 	gSpace.AddSystem(boxfortape);
 	gSpace.AddSystem(wireBlock);
 
-	setFloor();
+	//setFloor();
 
 	initDynamics();
 
@@ -168,15 +168,16 @@ int main(int argc, char **argv)
 	// Tobs2robot = EulerXYZ(Vec3(SR_PI_HALF, -SR_PI_HALF, 0), Vec3(0.25, 0.05, 0.07));
 
 	//wire->addPoint(Vec3());
-	wire->setColor(0, 0, 0, 0.9);
+	wire->setColor(1, 0, 0, 0.9);
+	wire->setLineWidth(3);
 
 	/////////////// RRT planning to reach object (point0 -> point1) ///////////////
 	clock_t start = clock();
 	point0 = qval;
 	int flag = 0;
-	//point1 = ur3Manager->inverseKin(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag);
+	point1 = ur3Manager->inverseKin(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot, &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], true, SE3(), flag);
 	//cout << "inverse kinematics flag: " << flag << endl;
-	point1 = robustInverseKinematics(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot, point0, 20);
+	//point1 = robustInverseKinematics(boxfortape->GetBaseLink()->GetFrame() * Tobs2robot, point0, 20);
 
 	//cout << tape->GetBaseLink()->GetFrame() * Tobs2robot << endl;
 	//cout << ur3->gMarkerLink[UR3_Index::MLINK_GRIP].GetFrame() << endl;
@@ -273,10 +274,15 @@ void updateFunc()
 	if (trajcnt == 1)
 	{
 		ur3Manager->setGripperPosition(idlePos);
+		wire->clearPoints();
 	}
 	if (trajcnt < ur3traj1.size())
 	{
 		ur3Manager->setJointVal(ur3traj1[trajcnt % ur3traj1.size()]);
+
+		SE3 currentPoint = ur3Manager->forwardKin(ur3traj1[trajcnt % ur3traj1.size()], &ur3->gMarkerLink[UR3_Index::MLINK_GRIP], SE3());
+		wire->addPoint(currentPoint.GetPosition());
+		wire->glRender();
 
 		wireBlock->GetBaseLink()->SetFrame(objTraj[trajcnt % ur3traj1.size()]);
 		if (trajcnt == ur3traj1.size() - 1) {

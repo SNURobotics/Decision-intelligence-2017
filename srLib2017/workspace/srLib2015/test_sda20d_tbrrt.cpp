@@ -39,7 +39,8 @@ void initDynamics();
 void rendering(int argc, char **argv);
 void updateFunc();
 void sdaRobotSetting();
-void sdaRobotManagerSetting(int robotMode, int excludeNum = 0);
+void sdaRobotManager1Setting(int robotMode, vector<int> excludeNum = vector<int>(0));
+void sdaRobotManager2Setting(int robotMode, vector<int> excludeNum = vector<int>(0));
 void sdarrtSetting();
 void setObstacle();
 void setObstacle2();
@@ -61,24 +62,28 @@ TBrrtManager* RRTManager = new TBrrtManager(armConstraint);
 
 int main(int argc, char **argv)
 {
-	srand(time(NULL));
-    sdaRobotSetting();
-	setObjects();
-	setObstacle();
-	setObstacle2();
+	srand(0);
+	sdaRobotSetting();
+	//setObjects();
+	//setObstacle();
+	//setObstacle2();
 
 	initDynamics();
 
 	obj1->setBaseLinkFrame(SE3(Vec3(1.0, 0.0, 0.0)));
 	obj2->setBaseLinkFrame(SE3(Vec3(1.0, 0.0, 0.0)));
 
-	if (useWaist == 0)
-		sdaRobotManagerSetting(SDA20DManager::MoveBothArmOnly);
-	else
-		sdaRobotManagerSetting(SDA20DManager::MoveWholeBody);
+	if (useWaist == 0) {
+		sdaRobotManager1Setting(SDA20DManager::MoveBothArmOnly);
+	}
+	else {
+		sdaRobotManager1Setting(SDA20DManager::MoveWholeBody);
+	}
+	vector<int> jointForRight = { 1, 2, 3, 4, 5, 6, 7 };
+	sdaRobotManager2Setting(SDA20DManager::MoveBothArmOnly, jointForRight);
 
 	// set joint value for test
-	tempJointVal[0 + useWaist] = 0.5*SR_PI_HALF;
+	/*tempJointVal[0 + useWaist] = 0.5*SR_PI_HALF;
 	tempJointVal[7 + useWaist] = 0.5*SR_PI_HALF;
 	tempJointVal[1 + useWaist] = 0.8*SR_PI_HALF;
 	tempJointVal[8 + useWaist] = 0.8*SR_PI_HALF;
@@ -87,23 +92,100 @@ int main(int argc, char **argv)
 	tempJointVal[3 + useWaist] = -SR_PI_HALF;
 	tempJointVal[10 + useWaist] = -SR_PI_HALF;
 	tempJointVal[5 + useWaist] = 0.0;
-	tempJointVal[12 + useWaist] = 0.0;
+	tempJointVal[12 + useWaist] = 0.0;*/
+
+	tempJointVal[0 + useWaist] = 1*SR_PI_HALF;
+	tempJointVal[7 + useWaist] = 1*SR_PI_HALF;
+	tempJointVal[1 + useWaist] = 1*SR_PI_HALF;
+	tempJointVal[8 + useWaist] = 1*SR_PI_HALF;
+	tempJointVal[2 + useWaist] = -SR_PI_HALF;
+	tempJointVal[9 + useWaist] = -SR_PI_HALF;
+	tempJointVal[3 + useWaist] = -SR_PI_HALF;
+	tempJointVal[10 + useWaist] = -SR_PI_HALF;
+	tempJointVal[5 + useWaist] = SR_PI_HALF;
+	tempJointVal[12 + useWaist] = -SR_PI_HALF;
+	tempJointVal[4 + useWaist] = SR_PI_HALF;
+	tempJointVal[11 + useWaist] = -SR_PI_HALF;
 	rManager1->setJointVal(tempJointVal);
+	
+	SE3 Tcenter = EulerZYX(Vec3(0, 0, 0), Vec3(0.8, 0.0, 0.3));
+	SE3 TtoRight = EulerXYZ(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF*(1)), Vec3(0.1, -0.2, 0.0));
+	SE3 TtoLeft = EulerXYZ(Vec3(SR_PI_HALF, 0.0, SR_PI_HALF*(0)), Vec3(-0.1, 0.2, 0.0));
+	SE3 Trotate = EulerZYX(Vec3(0, SR_PI, 0), Vec3(0.0, 0.0, 0.0));
+
+	SE3 Tright;
+	SE3 Tleft;
+
+	srand((unsigned int)time(NULL));
+	int feasiblePoints = 0;
+	while (!feasiblePoints) {
+		Eigen::VectorXd temp = tempJointVal;
+		Eigen::VectorXd upper = VecToVector(rManager1->m_upperJointLimit);
+		Eigen::VectorXd lower = VecToVector(rManager1->m_lowerJointLimit);
+		for (int i = 0; i < temp.size(); i++) {
+			int tmp = int((upper[i] - lower[i]) * 1000);
+			temp[i] = double(rand() % tmp) / 1000 + lower[i];
+		}
+
+		int flag = 0;
+		Eigen::VectorXd qRight;
+		Eigen::VectorXd qLeft;
+		qRight = rManager1->inverseKin(Tcenter*TtoRight, &sdaRobot->gMarkerLink[SDA20D_Index::MLINK_RIGHT_T], true, SE3(), flag, temp, 500, robotManager::NR, robotManager::DG);
+		//cout << "Right arm IK flag: " << flag << endl;
+		rManager1->setJointVal(qRight);
+		qLeft = rManager2->inverseKin(Tcenter*TtoLeft, &sdaRobot->gMarkerLink[SDA20D_Index::MLINK_LEFT_T], true, SE3(), flag, temp, 500, robotManager::NR, robotManager::DG);
+		//cout << "Left arm IK flag: " << flag << endl;
+		rManager2->setJointVal(qLeft);
+		tempJointVal = rManager1->getJointVal();
+		bool isCol_Start = rManager1->checkCollision();
+
+		Tright = ((SDA20D*)rManager1->m_robot)->gMarkerLink[SDA20D_Index::MLINK_RIGHT_T].GetFrame();
+		Tleft = ((SDA20D*)rManager1->m_robot)->gMarkerLink[SDA20D_Index::MLINK_LEFT_T].GetFrame();
+		//cout << "Const" << endl << Tright % Tleft << endl;
+
+		qRight = rManager1->inverseKin(Tcenter*Trotate*TtoRight, &sdaRobot->gMarkerLink[SDA20D_Index::MLINK_RIGHT_T], true, SE3(), flag, temp, 500, robotManager::NR, robotManager::DG);
+		//cout << "Right arm IK flag: " << flag << endl;
+		rManager1->setJointVal(qRight);
+		qLeft = rManager2->inverseKin(Tcenter*Trotate*TtoLeft, &sdaRobot->gMarkerLink[SDA20D_Index::MLINK_LEFT_T], true, SE3(), flag, temp, 500, robotManager::NR, robotManager::DG);
+		//cout << "Left arm IK flag: " << flag << endl;
+		rManager2->setJointVal(qLeft);
+		tempJointVal2 = rManager1->getJointVal();
+		bool isCol_Goal = rManager1->checkCollision();
+
+		if (!isCol_Start && !isCol_Goal) feasiblePoints = 1;
+	}
 
 	// set constraint
-	SE3 Tright = ((SDA20D*)rManager1->m_robot)->gMarkerLink[SDA20D_Index::MLINK_RIGHT_T].GetFrame();
-	SE3 Tleft = ((SDA20D*)rManager1->m_robot)->gMarkerLink[SDA20D_Index::MLINK_LEFT_T].GetFrame();
+	Tright = ((SDA20D*)rManager1->m_robot)->gMarkerLink[SDA20D_Index::MLINK_RIGHT_T].GetFrame();
+	Tleft = ((SDA20D*)rManager1->m_robot)->gMarkerLink[SDA20D_Index::MLINK_LEFT_T].GetFrame();
 	armConstraint = new SDA20DDualArmClosedLoopConstraint(rManager1, Tright % Tleft);
 	printf("constraint vector:\n");
 	cout << armConstraint->getConstraintVector(tempJointVal).transpose() << endl;
 	//printf("constraint jacobian:\n");
 	//cout << armConstraint->getConstraintJacobian(tempJointVal) << endl;
 
+	//vector<Eigen::VectorXd> StartToGoal;
+	//Eigen::VectorXd diff;
+	//for (int i = 0; i < 100; i++) {
+	//	StartToGoal.push_back((tempJointVal2 - tempJointVal) / 100 * i + tempJointVal);
+	//}
+	//for (int i = 0; i < 100; i++) {
+	//	cout << armConstraint->project2ConstraintManifold(StartToGoal[i]) << endl;
+	//}
+	//for (int i = 0; i < 99; i++) {
+	//	cout << (StartToGoal[i+1]- StartToGoal[i]).norm() << endl;
+	//}
+
+	cout << "Const" << endl << Tright % Tleft << endl;
+
 
 	// check projection
-	tempJointVal2 = tempJointVal + 0.1*Eigen::VectorXd::Random(tempJointVal.size());
-	tempJointVal2[0 + useWaist] += 0.5*SR_PI_HALF;
-	tempJointVal2[7 + useWaist] += 0.5*SR_PI_HALF;
+	////tempJointVal2 = tempJointVal + 0.1*Eigen::VectorXd::Random(tempJointVal.size());
+	//tempJointVal2 = tempJointVal;
+	///*tempJointVal2[0 + useWaist] += 0.5*SR_PI_HALF;
+	//tempJointVal2[7 + useWaist] += 0.5*SR_PI_HALF;*/
+	//tempJointVal2[6 + useWaist] += 0.5*SR_PI_HALF;
+	//tempJointVal2[13 + useWaist] += 0.5*SR_PI_HALF;
 	printf("jointval before projection:\n");
 	cout << tempJointVal2.transpose() << endl;
 	printf("constraint vector before projection:\n");
@@ -113,7 +195,7 @@ int main(int argc, char **argv)
 	cout << armConstraint->getConstraintVector(tempJointVal2).transpose() << endl;
 	printf("jointval after projection:\n");
 	cout << tempJointVal2.transpose() << endl;
-	rManager1->setJointVal(tempJointVal2);
+	//rManager1->setJointVal(tempJointVal2);
 
 	sdarrtSetting();
 
@@ -294,16 +376,30 @@ void sdaRobotSetting()
 	//robot2->SetGripperActType(srJoint::ACTTYPE::HYBRID, gpIdx);
 }
 
-void sdaRobotManagerSetting(int robotMode, int excludeNum /*= 0*/)
+void sdaRobotManager1Setting(int robotMode, vector<int> excludeNum /*= vector<int>(0)*/)
 {
-	rManager1 = new SDA20DManager(sdaRobot, &gSpace, robotMode);
-	if (excludeNum == 0)
+	if (excludeNum.size() == 0)
+		rManager1 = new SDA20DManager(sdaRobot, &gSpace, robotMode);
+	else
+	{
+		// set non-operating joint
+		vector<srJoint*> excludeJoints(0);
+		for (int i = 0; i < excludeNum.size(); i++)
+			excludeJoints.push_back(sdaRobot->gJoint[excludeNum[i]]);
+		rManager1 = new SDA20DManager(sdaRobot, &gSpace, robotMode, excludeJoints);
+	}
+}
+
+void sdaRobotManager2Setting(int robotMode, vector<int> excludeNum /*= vector<int>(0)*/)
+{
+	if (excludeNum.size() == 0)
 		rManager2 = new SDA20DManager(sdaRobot, &gSpace, robotMode);
 	else
 	{
 		// set non-operating joint
 		vector<srJoint*> excludeJoints(0);
-		excludeJoints.push_back(sdaRobot->gJoint[excludeNum]);
+		for (int i = 0; i < excludeNum.size(); i++)
+			excludeJoints.push_back(sdaRobot->gJoint[excludeNum[i]]);
 		rManager2 = new SDA20DManager(sdaRobot, &gSpace, robotMode, excludeJoints);
 	}
 }
