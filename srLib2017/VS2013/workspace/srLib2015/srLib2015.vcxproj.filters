@@ -191,5 +191,8 @@
     <ClCompile Include="..\..\..\workspace\srLib2015\NTdemoEnvSetting_6th.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\workspace\srLib2015\main_NTdemo_SKKU_VisionVerification.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -430,47 +430,17 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 		if (isHead[i])
 		{
 			objectGraspCandidatePos[i].resize(1);
-
-			if (v_objCandMinMax[i][0] == -1.0 && v_objCandMinMax[i][1] == -1.0 && v_objCandMinMax[i][2] == -1.0 && v_objCandMinMax[i][3] == -1.0)
-				objectGraspCandidatePos[i][0] = Vec3(-0.02, 0.0, 0.0);
-			else
-			{
-				//objectGraspCandidatePos[i][0] = Vec3(v_objCandMinMax[i][0], v_objCandMinMax[i][2], 0.0036);
-				objectGraspCandidatePos[i][0] = Vec3(v_objCandMinMax[i][0], v_objCandMinMax[i][2], 0.0);
-			}
+			objectGraspCandidatePos[i][0] = Vec3(-0.02, 0.0, 0.0);
 		}
-		else
+		else // isTail[i]
 		{
 			objectGraspCandidatePos[i].resize(5);
-
-			if (v_objCandMinMax[i][0] == -1.0 && v_objCandMinMax[i][1] == -1.0 && v_objCandMinMax[i][2] == -1.0 && v_objCandMinMax[i][3] == -1.0)
-				objectGraspCandidatePos[i][0] = Vec3(-0.02, 0.0, -0.004);
-			else
-			{
-				//objectGraspCandidatePos[i][0] = Vec3(0.5 * (v_objCandMinMax[i][0] + v_objCandMinMax[i][1]), 0.5 * (v_objCandMinMax[i][2] + v_objCandMinMax[i][3]), -0.0004);
-				//objectGraspCandidatePos[i][1] = Vec3(0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], 0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], -0.0004);
-				//objectGraspCandidatePos[i][2] = Vec3(0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], 0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], -0.0004);
-				//objectGraspCandidatePos[i][3] = Vec3(0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], 0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], -0.0004);
-				//objectGraspCandidatePos[i][4] = Vec3(0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], 0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], -0.0004);
-				objectGraspCandidatePos[i][0] = Vec3(0.5 * (v_objCandMinMax[i][0] + v_objCandMinMax[i][1]), 0.5 * (v_objCandMinMax[i][2] + v_objCandMinMax[i][3]), -0.004);
-				objectGraspCandidatePos[i][1] = Vec3(0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], 0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], -0.004);
-				objectGraspCandidatePos[i][2] = Vec3(0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], 0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], -0.004);
-				objectGraspCandidatePos[i][3] = Vec3(0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], 0.8 * v_objCandMinMax[i][0] + 0.2 * v_objCandMinMax[i][1], -0.004);
-				objectGraspCandidatePos[i][4] = Vec3(0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], 0.2 * v_objCandMinMax[i][0] + 0.8 * v_objCandMinMax[i][1], -0.004);
-			}
+			objectGraspCandidatePos[i][0] = Vec3(-0.02, 0.0, -0.004);
 		}
 
 	}
 
-	if (v_binOri.size() != 0)
-	{
-		if (v_binOri[0] == -1.0 && v_binOri[1] == -1.0 && v_binOri[2] == -1.0 && v_binOri[3] == -1.0 && v_binOri[4] == -1.0 && v_binOri[5] == -1.0 && v_binOri[6] == -1.0 && v_binOri[7] == -1.0 && v_binOri[8] == -1.0)
-			binSE3 = SE3(EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Vec3(v_binPos[0], v_binPos[1], v_binPos[2])));
-		else
-			binSE3 = SE3(v_binOri[0], v_binOri[1], v_binOri[2], v_binOri[3], v_binOri[4], v_binOri[5], v_binOri[6], v_binOri[7], v_binOri[8], v_binPos[0], v_binPos[1], v_binPos[2]);
-	}
-	else
-		binSE3 = SE3(demoEnv->Trobotbase2link1.GetPosition()) * EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), demoEnv->Plink12bin);
+	binSE3 = SE3(demoEnv->Trobotbase2link1.GetPosition()) * EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), demoEnv->Plink12bin);
 
 	cout << objIdx << endl;
 }

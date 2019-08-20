@@ -414,7 +414,7 @@ LRESULT CESF_Client_Example_JOB_IMOVDlg::OnTraceMsg(WPARAM wParam, LPARAM lParam
 #endif
 		// 수신 메시지 비교(OK여부) 처리 추가
 		
-		strSendCmd.Format(_T("HOSTCTRL_REQUEST RPOSJ\r\n"));
+		strSendCmd.Format(_T("HOSTCTRL_REQUEST RPOSJ 0\r\n"));
 		bRet = MsgSend(strSendCmd, TRUE);
 
 		if (bRet != TRUE)
@@ -425,6 +425,8 @@ LRESULT CESF_Client_Example_JOB_IMOVDlg::OnTraceMsg(WPARAM wParam, LPARAM lParam
 			AddStrToList(_T("HOSTCTRL_REQUEST Failed!"));
 			return FALSE;
 		}
+
+		bRet = MsgSend(strSendData, TRUE);
 
 		strPosVal = m_strList;
 
