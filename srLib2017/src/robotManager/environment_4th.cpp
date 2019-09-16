@@ -134,7 +134,7 @@ void Table4th::AssembleModel()
 	}
 
 	// base
-	Vec3 dim0(0.6, 1.0, 0.05);
+	Vec3 dim0(0.8, 0.8, 0.3);
 	Vec3 dim1(0.05, 0.05, 0.6);
 
 	vector<Vec3> dims(m_numLink);
@@ -155,22 +155,22 @@ void Table4th::AssembleModel()
 	m_ObjWeldJoint[0].SetParentLink(&m_ObjLink[0]);
 	m_ObjWeldJoint[0].SetParentLinkFrame();
 	m_ObjWeldJoint[0].SetChildLink(&m_ObjLink[1]);
-	m_ObjWeldJoint[0].SetChildLinkFrame(SE3(Vec3(-0.5*(0.6 - 0.05), -0.5*(1.0 - 0.05), 0.5*(0.6 + 0.05))));
+	m_ObjWeldJoint[0].SetChildLinkFrame(SE3(Vec3(-0.5*(dim0[0] - 0.05), -0.5*(dim0[1] - 0.05), 0.5*(dim1[2] + 0.05))));
 
 	m_ObjWeldJoint[1].SetParentLink(&m_ObjLink[0]);
 	m_ObjWeldJoint[1].SetParentLinkFrame();
 	m_ObjWeldJoint[1].SetChildLink(&m_ObjLink[2]);
-	m_ObjWeldJoint[1].SetChildLinkFrame(SE3(Vec3(-0.5*(0.6 - 0.05), 0.5*(1.0 - 0.05), 0.5*(0.6 + 0.05))));
+	m_ObjWeldJoint[1].SetChildLinkFrame(SE3(Vec3(-0.5*(dim0[0] - 0.05), 0.5*(dim0[1] - 0.05), 0.5*(dim1[2] + 0.05))));
 	// yz plane
 	m_ObjWeldJoint[2].SetParentLink(&m_ObjLink[0]);
 	m_ObjWeldJoint[2].SetParentLinkFrame();
 	m_ObjWeldJoint[2].SetChildLink(&m_ObjLink[3]);
-	m_ObjWeldJoint[2].SetChildLinkFrame(SE3(Vec3(0.5*(0.6 - 0.05), -0.5*(1.0 - 0.05), 0.5*(0.6 + 0.05))));
+	m_ObjWeldJoint[2].SetChildLinkFrame(SE3(Vec3(0.5*(dim0[0] - 0.05), -0.5*(dim0[1] - 0.05), 0.5*(dim1[2] + 0.05))));
 
 	m_ObjWeldJoint[3].SetParentLink(&m_ObjLink[0]);
 	m_ObjWeldJoint[3].SetParentLinkFrame();
 	m_ObjWeldJoint[3].SetChildLink(&m_ObjLink[4]);
-	m_ObjWeldJoint[3].SetChildLinkFrame(SE3(Vec3(0.5*(0.6 - 0.05), 0.5*(1.0 - 0.05), 0.5*(0.6 + 0.05))));
+	m_ObjWeldJoint[3].SetChildLinkFrame(SE3(Vec3(0.5*(dim0[0] - 0.05), 0.5*(dim0[1] - 0.05), 0.5*(dim1[2] + 0.05))));
 
 	///// set collision
 	Vec3 colli_offset(m_collision_offset);

@@ -45,6 +45,15 @@ Server serv = Server::Server();
 char communication_flag;
 void communicationFunc(int argc, char **argv);
 
+//
+vector<SE3> Twaypoints1;
+vector<SE3> Twaypoints2;
+vector<SE3> Twaypoints3;
+vector<SE3> Twaypoints4;
+int cnt;
+int iter;
+vector<Eigen::VectorXd> renderTraj;
+
 struct CUR_POS
 {
 	double X;
@@ -107,15 +116,6 @@ LRESULT CALLBACK getMessageFromRobot(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 			curJoint.push_back(cur_joint.q5*(SR_PI / 180.0));
 			curJoint.push_back(cur_joint.q6*(SR_PI / 180.0));
 			demoTask->setCurJoint(curJoint);
-			//double eps = 1e-5;
-			//if (abs(curJoint[0]) < eps && abs(curJoint[1]) < eps && abs(curJoint[2]) < eps && abs(curJoint[3]) < eps && abs(curJoint[4]) < eps && abs(curJoint[5]) < eps)
-			//{
-			//	cout << "RPOSJ error: retry get currunt position" << endl;
-			//	demoTask->getCurJointSignal();
-			//	return 0;
-			//}
-			//else
-			//	demoTask->setCurJoint(curJoint);
 			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		}
 
@@ -164,10 +164,11 @@ int main(int argc, char **argv)
 	}
 
 	// read given text data (for Test)
-	std::ifstream in("../../../data/SKKU_data_6th/ResultsChkeck000.txt");
+	std::ifstream in("../../../data/SKKU_data_6th/TestData.txt");
 	std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 	char* received_data = (char*)contents.c_str();
 	communication_flag = received_data[0];
+	cout << received_data << endl;
 
 	if (communication_flag == 'V')
 	{
@@ -175,6 +176,40 @@ int main(int argc, char **argv)
 		printf("%s\n", received_data);
 		demoTask->updateEnv(received_data);
 		demoTask->setObjectNum();
+	}
+
+	cnt = 0;
+	iter = 0;
+
+	Twaypoints1 = demoTask->planBetweenWaypoints(demoTask->homeSE3, demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * demoTask->reachOffset, 9);
+	int flag;
+	renderTraj.push_back(rManager1->inverseKin(demoTask->homeSE3, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	for (int i = 0; i < Twaypoints1.size(); i++)
+	{
+		// Reaching
+		renderTraj.push_back(rManager1->inverseKin(Twaypoints1[i], &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+		rManager1->setJointVal(renderTraj.back());
+	}
+	// Go to grasp pose
+	renderTraj.push_back(rManager1->inverseKin(demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)), &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	rManager1->setJointVal(renderTraj.back());
+	renderTraj.push_back(rManager1->inverseKin(SE3(Vec3(0.0, 0.0, 0.15)) * demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)), &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	rManager1->setJointVal(renderTraj.back());
+
+	Twaypoints2 = demoTask->planBetweenWaypoints(SE3(Vec3(0.0, 0.0, 0.15)) * demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)), demoTask->goalSE3[demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset, 9);
+	for (int i = 0; i < Twaypoints2.size(); i++)
+	{
+		// Reaching
+		renderTraj.push_back(rManager1->inverseKin(Twaypoints2[i], &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+		rManager1->setJointVal(renderTraj.back());
+	}
+
+	Twaypoints3 = demoTask->planBetweenWaypoints(demoTask->goalSE3[demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset, demoTask->homeSE3, 9);
+	for (int i = 0; i < Twaypoints3.size(); i++)
+	{
+		// Home position
+		renderTraj.push_back(rManager1->inverseKin(Twaypoints3[i], &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+		rManager1->setJointVal(renderTraj.back());
 	}
 
 	// 둘 중 하나만 골라서 실행
@@ -199,7 +234,7 @@ void communicationFunc(int argc, char **argv)
 
 		// For code test
 		//char* received_data = serv.RecevData();
-		std::ifstream in("../../../data/SKKU_data_6th/ResultsChkeck000.txt");
+		std::ifstream in("../../../data/SKKU_data_6th/TestData.txt");
 		std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 		char* received_data = (char*)contents.c_str();
 
@@ -249,6 +284,17 @@ void initDynamics()
 
 void updateFunc()
 {
+	if (cnt % 10 == 0)
+	{
+		int flag;
+		iter++;
+		rManager1->setJointVal(renderTraj[iter-1]);
+		if (iter == renderTraj.size())
+		{
+			cnt = 0; iter = 0;
+		}
+	}
+	cnt++;
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 	int stop = 1;
 }

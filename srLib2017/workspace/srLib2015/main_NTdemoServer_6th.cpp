@@ -109,24 +109,7 @@ LRESULT CALLBACK getMessageFromRobot(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 			curJoint.push_back(cur_joint.q5*(SR_PI / 180.0));
 			curJoint.push_back(cur_joint.q6*(SR_PI / 180.0));
 			demoTask->setCurJoint(curJoint);
-			//double eps = 1e-5;
-			//if (abs(curJoint[0]) < eps && abs(curJoint[1]) < eps && abs(curJoint[2]) < eps && abs(curJoint[3]) < eps && abs(curJoint[4]) < eps && abs(curJoint[5]) < eps)
-			//{
-			//	cout << "RPOSJ error: retry get currunt position" << endl;
-			//	demoTask->getCurJointSignal();
-			//	return 0;
-			//}
-			//else
-			//	demoTask->setCurJoint(curJoint);
-			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		}
-
-		//std::cout << "==================" << std::endl;
-		//std::cout << "getMessageFromRobot function" << std::endl;
-		//for(int i = 0; i < 6; i++)
-		//{
-		//	std::cout << "curPos: " << curPos[i] << std::endl;
-		//}
 	}
 
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -148,12 +131,9 @@ int main(int argc, char **argv)
 	MHRobotManagerSetting();
 	demoTask = new demoTaskManager(demoEnv, rManager1);
 	demoTask->setRobotRRTManager();
-	//cout << demoEnv->Trobotbase2camera * demoEnv->Tcamera2robotbase;
-
 
 	// for communication (dummy window dialog)
 	WNDCLASS windowClass = {};
-	//windowClass.lpfnWndProc = demoTask->WindowProcedure;
 	windowClass.lpfnWndProc = getMessageFromRobot;
 	LPCWSTR windowClassName = L"srLibServer";
 	windowClass.lpszClassName = windowClassName;
@@ -168,40 +148,39 @@ int main(int argc, char **argv)
 	}
 
 	// test code (19.03.21)
-	//demoTask->endConnection();
-	//demoTask->startConnection();
-	//demoTask->endConnection();
-	//demoTask->startConnection();
-	//for (int i = 0; i < 2; i++)
-	//{
-	//	demoTask->getCurPosSignal();
-	//	Sleep(1000);
-	//}
-	//Eigen::VectorXd curPos(6);
-	//curPos[0] = DEG2RAD(180.0);
-	//curPos[1] = DEG2RAD(2);
-	//curPos[2] = DEG2RAD(-132);
-	//curPos[3] = 0.417;
-	//curPos[4] = 0.088;
-	//curPos[5] = 0.509;
-	//SE3 testPos1 = demoTask->YKpos2SE3(curPos);
-	//SE3 testPos2 = SE3(Vec3(0.0, 0.0, 0.1)) * testPos1;
-	//demoTask->printImovCommand(demoTask->getTcurRobot(), testPos1);
-	//for (int i = 0; i < 3; i++)
-	//{
-	//	cout << "######################    " << i+1 << "    ########################" << endl;
-	//	demoTask->goToWaypoint(testPos1);
-	//	cout << "pos2 to pos1 (down) finished !!!!!!!!!!!!!" << endl;
-	//	Sleep(1000);
-	//	demoTask->goToWaypoint(testPos2);
-	//	cout << "pos1 to pos2 (up) finished !!!!!!!!!!!!!" << endl;
-	//	Sleep(1000);
-	//}
+	demoTask->startConnection();
+	demoTask->endConnection();
+	demoTask->startConnection();
+	for (int i = 0; i < 2; i++)
+	{
+		demoTask->getCurPosSignal();
+		Sleep(1000);
+	}
+	/*Eigen::VectorXd curPos(6);
+	curPos[0] = DEG2RAD(180.0);
+	curPos[1] = DEG2RAD(2);
+	curPos[2] = DEG2RAD(-132);
+	curPos[3] = 0.417;
+	curPos[4] = 0.088;
+	curPos[5] = 0.509;
+	SE3 testPos1 = demoTask->YKpos2SE3(curPos);
+	SE3 testPos2 = SE3(Vec3(0.0, 0.0, 0.1)) * testPos1;
+	demoTask->printImovCommand(demoTask->getTcurRobot(), testPos1);
+	for (int i = 0; i < 3; i++)
+	{
+		cout << "######################    " << i+1 << "    ########################" << endl;
+		demoTask->goToWaypoint(testPos1);
+		cout << "pos2 to pos1 (down) finished !!!!!!!!!!!!!" << endl;
+		Sleep(1000);
+		demoTask->goToWaypoint(testPos2);
+		cout << "pos1 to pos2 (up) finished !!!!!!!!!!!!!" << endl;
+		Sleep(1000);
+	}*/
 	//demoTask->endConnection();
 
+	demoTask->goToWaypoint(demoTask->homeSE3);
 
-
-	qval.setZero(6);
+	//qval.setZero(6);
 	//qval[2] = 1.0;
 	//rManager1->setJointVal(qval);
 	//qval[0] = DEG2RAD(0.0);
@@ -219,26 +198,26 @@ int main(int argc, char **argv)
 	//cout << flag << endl;
 
 	// read given text data (for Test)
-	std::ifstream in("../../../data/SKKU_data_6th/ResultsChkeck000.txt");
-	std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-	char* received_data = (char*)contents.c_str();
+	//std::ifstream in("../../../data/SKKU_data_6th/TestData.txt");
+	//std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+	//char* received_data = (char*)contents.c_str();
 
-	communication_flag = received_data[0];
+	//communication_flag = received_data[0];
 
-	if (communication_flag == 'V')
-	{
-		// vision data
-		printf("%s\n", received_data);
-		demoTask->updateEnv(received_data);
-		demoTask->setObjectNum();
-	}
+	//if (communication_flag == 'V')
+	//{
+	//	// vision data
+	//	std::printf("%s\n", received_data);
+	//	demoTask->updateEnv(received_data);
+	//	demoTask->setObjectNum();
+	//}
 
 	cout << "EE SE3: " << endl;
 	cout << rManager1->forwardKin(rManager1->getJointVal(), &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], SE3()) << endl;
 
 	// 둘 중 하나만 골라서 실행
-	rendering(argc, argv);
-	//communicationFunc(argc, argv);
+	//rendering(argc, argv);
+	communicationFunc(argc, argv);
 
 	//만약 while 루프를 돌리지 않을 경우 무한정 서버를 기다리는 함수, 실제 사용하지는 않는다.
 	//serv.WaitServer(); 
@@ -258,15 +237,15 @@ void communicationFunc(int argc, char **argv)
 
 		// For code test
 		//char* received_data = serv.RecevData();
-		//char* received_data = "VtestString!";
-		std::ifstream in("../../../data/SKKU_data_6th/ResultsChkeck000.txt");
+
+		std::ifstream in("../../../data/SKKU_data_6th/TestData.txt");
 		std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 		char* received_data = (char*)contents.c_str();
 
 		communication_flag = received_data[0];
 		if (!sentInit)
 		{
-			printf("push the button to get vision data\n");
+			std::printf("push the button to get vision data\n");
 			getchar();
 			serv.SendMessageToClient("I");
 			sentInit = true;
@@ -276,7 +255,7 @@ void communicationFunc(int argc, char **argv)
 		if (communication_flag == 'V')
 		{
 			// vision data
-			printf("%s\n", received_data);
+			std::printf("%s\n", received_data);
 			demoTask->updateEnv(received_data);
 			demoTask->setObjectNum();
 
@@ -285,7 +264,7 @@ void communicationFunc(int argc, char **argv)
 			bool isJobFinished = demoTask->moveJob();
 
 			// return to home pos
-			printf("push the botton to do return job\n");
+			std::printf("push the botton to do return job\n");
 			getchar();
 			bool isReturned = demoTask->returnJob();
 #else
@@ -367,7 +346,8 @@ void updateFunc()
 {
 
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
-	cout << gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP();
+	//cout << gSpace._KIN_COLLISION_RUNTIME_SIMULATION_LOOP();
+
 	//static double JointVal = 0;
 	////((srStateJoint*)MHRobot->m_KIN_Joints[activeJointIdx])->m_State.m_rValue[0] = JointVal;
 	//((srStateJoint*)MHRobot->m_KIN_Joints[5])->m_State.m_rValue[0] = JointVal;

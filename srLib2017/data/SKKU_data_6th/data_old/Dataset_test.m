@@ -5,7 +5,7 @@ datasize = 5;
 data = cell(datasize,1);
 %%
 for iter = 1:5
-    filename = strcat('ResultsChkeck0',num2str(iter-1),'.txt');
+    filename = strcat('ResultsChkeck00',num2str(iter-1),'.txt');
     fileID = fopen(filename,'r');
     formatSpec = '%s';
     A = fscanf(fileID,formatSpec);
@@ -37,7 +37,7 @@ for iter = 1:5
         for j = 2:10
             tempR(j-1) = str2double(A{i}{j});
         end
-        data{iter}{i}{2,1} = reshape(tempR, 3, 3)';
+        data{iter}{i}{2,1} = reshape(tempR, 3, 3);
         tempX = zeros(1,3);
         for j = 11:13
             tempX(j-10) = str2double(A{i}{j});

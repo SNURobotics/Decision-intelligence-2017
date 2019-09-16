@@ -40,6 +40,7 @@ public:
 	SE3 Trobotbase2link1;
 	SE3 Tworld2camera;
 	Bin* bin;
+	Bin* bin2;
 	Table4th* table;
 	Barrier1* barrier1;
 	Barrier2* barrier2;
@@ -181,7 +182,7 @@ public:
 	SE3 lastObjectSE3;
 	vector<Eigen::VectorXd> tempTraj;
 	vector<SE3> tempObjTraj;
-private:
+public:
 	int curGoalID;					// current goal ID (0: head, 1: tail)
 	// Robot communication related variables
 	SE3 TcurRobot;

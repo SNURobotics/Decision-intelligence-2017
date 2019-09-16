@@ -15,13 +15,15 @@ demoEnvironment::demoEnvironment(unsigned int _objectNum) {
 	Tcamera2robotbase = Inv(Trobotbase2camera);
 
 	// set bin
-	bin = new Bin(0.002);
-	Plink12bin = Vec3(0.89, 0.07, 0.45);
+	bin = new Bin(0.00);
+	bin2 = new Bin(0.00);
+	Plink12bin = Vec3(0.575, -0.035, 0.450 + 0.0075);
 	bin->setBaseLinkFrame(SE3(Trobotbase2link1.GetPosition()) * EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Plink12bin));	// change to exact value later
+	bin2->setBaseLinkFrame(SE3(Trobotbase2link1.GetPosition()) * EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Plink12bin+Vec3(0,0.270 + 0.005,0)));	// change to exact value later
 
 	// set table
-	table = new Table4th(0.01);
-	Plink12table = Vec3(0.89, 0.0, 0.41);
+	table = new Table4th(0.00);
+	Plink12table = Vec3(0.75, 0.23, 0.3);
 	table->setBaseLinkFrame(SE3(Trobotbase2link1.GetPosition()) * EulerZYX(Vec3(0.0, 0.0, 0.0), Plink12table));	// change to exact value later
 
 	// set objects																											// set objects
@@ -50,6 +52,7 @@ demoEnvironment::demoEnvironment(unsigned int _objectNum) {
 demoEnvironment::~demoEnvironment()
 {
 	delete bin;
+	delete bin2;
 	delete table;
 	for (unsigned int i = 0; i < objectNum; i++)
 		delete objects[i];
@@ -98,6 +101,7 @@ void demoEnvironment::setObjectFromRobot2VisionData(vector<SE3> objectSE3, SE3 b
 void demoEnvironment::setEnvironmentInSrSpace(srSpace * space)
 {
 	space->AddSystem(bin);
+	space->AddSystem(bin2);
 	space->AddSystem(table);
 	for (unsigned int i = 0; i < objectNum; i++)
 		space->AddSystem(objects[i]);
@@ -214,11 +218,12 @@ demoTaskManager::demoTaskManager(demoEnvironment* _demoEnv, MH12RobotManager* _r
 	double temp_r2 = 0.001;
 	SE3 temp_robot2objhead = EulerZYX(Vec3(-SR_PI / 6.0, 0.0, SR_PI), Vec3(temp_r * cos(SR_PI / 6.0), -temp_r * sin(SR_PI / 6.0), 0.0));
 	SE3 temp_robot2objtail = EulerZYX(Vec3(-SR_PI / 6.0, 0.0, 0.0), Vec3(temp_r * cos(SR_PI / 6.0) + temp_r2 * sin(SR_PI / 6.0), -temp_r * sin(SR_PI / 6.0) + temp_r2 * cos(SR_PI / 6.0), 0.004));
+	// 0: Head 1: Tail
 	goalSE3[0] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.226048, 0.871385, 0.466791)) * temp_robot2objhead; // head case
-	goalSE3[1] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.226048, 0.871385, 0.466791)) * temp_robot2objtail; // tail case
+	goalSE3[1] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(180-179.8125)), Vec3(0.226048, 0.871385, 0.466791)) * temp_robot2objtail; // tail case
 
 	//homeSE3 = EulerZYX(Vec3(SR_PI, -SR_PI_HALF, 0.0), Vec3(1.029, 0.0, 0.814));		// where robot goes when job is done (should be modified)
-	homeSE3 = EulerZYX(Vec3(DEG2RAD(-130.8872), DEG2RAD(2.0460), DEG2RAD(179.0799)), Vec3(0.416704, 0.093653, 0.509468));
+	homeSE3 = EulerZYX(Vec3(DEG2RAD(-0.8872), DEG2RAD(2.0460), DEG2RAD(179.0799)), Vec3(0.416704, 0.093653, 0.509468));
 	homeSE3.SetOrientation(homeSE3.GetOrientation() * Exp(Vec3(0.0, 0.0, DEG2RAD(-130.8872))));
 	reachOffset = SE3(Vec3(0.0, 0.0, -0.03));
 	goalOffset = SE3(Vec3(0.0, 0.0, 0.0));
@@ -354,7 +359,7 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 	v_objFtr.resize(0);
 	int objIdx = 0;
 	int objID;
-	int max_recv_cnt = 18;
+	int max_recv_cnt = 20;
 	bool isDummy = false;
 	bool isNaN = false;
 
@@ -364,32 +369,39 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 		{
 			if (string(recv_data) == "-nan") isNaN = true;
 			objID = atoi(recv_data);
-			if (objID == 3)
+			if (abs(objID) == 3) // Dummy Data
 				isDummy = true;
 			else if (isNaN) {}
 			else
 			{
-				//cout << "received data: " << recv_data << endl;
-				v_objID.push_back(objID);
+				cout << "ID: " << recv_data << endl;
+				v_objID.push_back(objID); // 1: FixedContactCover 2: FixedContact
 				v_objPos.resize(objIdx + 1);
 				v_objOri.resize(objIdx + 1);
 				v_objFtr.resize(objIdx + 1);
+				v_objFtr[objIdx] = vector<int>{ 0, 0, 0, 0, 0, 0, 0 };
 			}
 		}
 
 		if (!isDummy && !isNaN)
 		{
-			cout << "received data: " << recv_data << endl;
-			if (1 <= recv_cnt && recv_cnt < 10)
+			if (1 <= recv_cnt && recv_cnt < 10) 
+			{
 				v_objOri[objIdx].push_back(atof(recv_data));
+				cout << "Orientation: " << recv_data << endl;
+			}
 			else if (10 <= recv_cnt && recv_cnt < 13)
 			{
 				v_objPos[objIdx].push_back(atof(recv_data));
+				cout << "Position: " << recv_data << endl;
 			}
-			else if (13 <= recv_cnt && recv_cnt < 18)
+			else if (13 <= recv_cnt && recv_cnt < 20)
 			{
 				if (string(recv_data) != "-nan")
-					v_objFtr[objIdx].push_back(atoi(recv_data));
+				{
+					v_objFtr[objIdx][atoi(recv_data)] = v_objFtr[objIdx][atoi(recv_data)] + 1;
+					cout << "Feature: " << recv_data << endl;
+				}
 			}
 		}
 
@@ -398,8 +410,9 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 
 		if (recv_cnt == max_recv_cnt)
 		{
-			if (!isDummy && !isNaN)
+			if (!isDummy && !isNaN) {
 				objIdx++;
+			}
 			recv_cnt = 0;
 			isDummy = false;
 			isNaN = false;
@@ -417,7 +430,6 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 	for (unsigned int i = 0; i < objectNumData; i++)
 	{
 		SE3 objSE3_Camera = SE3(v_objOri[i][0], v_objOri[i][3], v_objOri[i][6], v_objOri[i][1], v_objOri[i][4], v_objOri[i][7], v_objOri[i][2], v_objOri[i][5], v_objOri[i][8], v_objPos[i][0], v_objPos[i][1], v_objPos[i][2]);
-		//SE3 objSE3_Camera = SE3(v_objOri[i][0], v_objOri[i][1], v_objOri[i][2], v_objOri[i][3], v_objOri[i][4], v_objOri[i][5], v_objOri[i][6], v_objOri[i][7], v_objOri[i][8], v_objPos[i][0], v_objPos[i][1], v_objPos[i][2]);
 
 		// coordinate change
 		//objectSE3[i] = demoEnv->Trobotbase2camera * objSE3_Camera;
@@ -425,24 +437,62 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 		objectSE3[i] = objSE3_Camera;
 
 		// is z direcition of objectSE3 is upward
-		isHead[i] = (objectSE3[i][8] > 0);
+		cout << objectSE3[i][8] << endl;
+		isHead[i] = (objectSE3[i][8] > 0) || (abs(v_objID[i]) / v_objID[i] == 1);
+		cout << "Object No [" << i+1 << "] is in ";
+		if (isHead[i]) cout << "Head" << endl;
+		else cout << "Tail" << endl;
 
 		if (isHead[i])
 		{
-			objectGraspCandidatePos[i].resize(1);
-			objectGraspCandidatePos[i][0] = Vec3(-0.02, 0.0, 0.0);
+			if (abs(v_objID[i]) == 1) // FixedContactCover
+			{
+				if (v_objFtr[i][0] && v_objFtr[i][1] && v_objFtr[i][2])
+				{
+					objectGraspCandidatePos[i].resize(1);
+					objectGraspCandidatePos[i][0] = Vec3(-0.02, 0.0, 0.0);
+					cout << "Object " << i << ", Head Candidate Pos 1" << endl;
+				}
+			}
+			else
+			{
+				objectGraspCandidatePos[i].resize(1);
+				objectGraspCandidatePos[i][0] = Vec3(-0.02, 0.0, 0.0);
+			}
 		}
 		else // isTail[i]
 		{
-			objectGraspCandidatePos[i].resize(5);
-			objectGraspCandidatePos[i][0] = Vec3(-0.02, 0.0, -0.004);
+			if (abs(v_objID[i]) == 1) // FixedContactCover
+			{
+				if (v_objFtr[i][0] && v_objFtr[i][1] && v_objFtr[i][2])
+				{
+					objectGraspCandidatePos[i].resize(objectGraspCandidatePos[i].size()+1);
+					objectGraspCandidatePos[i][objectGraspCandidatePos[i].size()-1] = Vec3(-0.02, 0.0, -0.004);
+					cout << "Object " << i << ", Tail Candidate Pos 1" << endl;
+				}
+				if (v_objFtr[i][0] && v_objFtr[i][2] && v_objFtr[i][4])
+				{
+					objectGraspCandidatePos[i].resize(objectGraspCandidatePos[i].size() + 1);
+					objectGraspCandidatePos[i][objectGraspCandidatePos[i].size() - 1] = Vec3(0.0, 0.02, -0.004);
+					cout << "Object " << i << ", Tail Candidate Pos 2" << endl;
+				}
+				if (v_objFtr[i][0] && v_objFtr[i][1] && v_objFtr[i][3])
+				{
+					objectGraspCandidatePos[i].resize(objectGraspCandidatePos[i].size() + 1);
+					objectGraspCandidatePos[i][objectGraspCandidatePos[i].size() - 1] = Vec3(0.0, -0.02, -0.004);
+					cout << "Object " << i << ", Tail Candidate Pos 3" << endl;
+				}
+			}
+			else
+			{
+				objectGraspCandidatePos[i].resize(1);
+				objectGraspCandidatePos[i][0] = Vec3(-0.02, 0.0, -0.004);
+			}
 		}
 
 	}
 
 	binSE3 = SE3(demoEnv->Trobotbase2link1.GetPosition()) * EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), demoEnv->Plink12bin);
-
-	cout << objIdx << endl;
 }
 
 
@@ -535,7 +585,8 @@ bool demoTaskManager::setObjectNum()
 
 				if (!collision)
 				{
-					printf("object number %d is set!\n", curObjID + 1);
+					printf("object number %d is set as goal\n", curObjID + 1);
+					printf("candidate pos: %d\n", j + 1);
 					//cout << qval.transpose() << endl;
 					//curGraspOffset = SE3(curObjectData.objectGraspCandidatePos[i][j]);
 					printf("curObject SE3:\n");
@@ -562,7 +613,7 @@ bool demoTaskManager::setObjectNum()
 
 	rManager->setJointVal(lastPlanningJointVal);
 
-	printf("none of objects are not reachable!\n");
+	printf("none of objects are reachable!\n");
 	return false;
 }
 
