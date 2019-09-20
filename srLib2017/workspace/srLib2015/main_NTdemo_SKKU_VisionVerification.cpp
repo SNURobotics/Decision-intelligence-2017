@@ -164,7 +164,7 @@ int main(int argc, char **argv)
 	}
 
 	// read given text data (for Test)
-	std::ifstream in("../../../data/SKKU_data_6th/TestData.txt");
+	std::ifstream in("../../../data/SKKU_data_6th/ResultsChkeck03.txt");
 	std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 	char* received_data = (char*)contents.c_str();
 	communication_flag = received_data[0];

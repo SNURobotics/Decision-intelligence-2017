@@ -34,14 +34,18 @@ void updateFunc();
 void sdaRobotSetting();
 void sdaRobotManagerSetting(int robotMode, int excludeNum = 0);
 void sdarrtSetting();
-int activeJointIdx =0;
+int activeJointIdx = 0;
 vector<Eigen::VectorXd> traj(0);
 Eigen::VectorXd qTemp;
 Eigen::VectorXd q;
+
+vector<Eigen::VectorXd> angleData(10);
+
+
 int main(int argc, char **argv)
 {
 	srand(time(NULL));
-    sdaRobotSetting();
+	sdaRobotSetting();
 
 	ee->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
 	ee->GetGeomInfo().SetDimension(0.03);
@@ -103,12 +107,25 @@ int main(int argc, char **argv)
 	//{
 	//	traj = RRTManager->extractPath();
 	//}
-	
+
 	//rManager2->setJointVal(q);
-	
+
 	//SE3 temp = SE3(Vec3(0.0, -0.1, 0.3));
 	//Eigen::VectorXd qq = rManager1->inverseKin(temp, &sdaRobot->gMarkerLink[SDA20D_Index::MLINK_RIGHT_T], false, SE3(), flag, rManager1->qInvKinInitActiveJoint, 500, robotManager::QP, robotManager::DG);
 
+	//vector<Eigen::VectorXd> angleData(10);
+
+	ifstream in("../../../data/NT_Data/Data.txt");
+	string str;
+	for (int i = 0; i < 10; i++)
+	{
+		angleData[i] = Eigen::VectorXd(15);
+		for (int j = 0; j < 15; j++)
+		{
+			getline(in, str, ',');
+			angleData[i][j] = DEG2RAD((atof((char*)str.c_str())) / 1000);
+		}
+	}
 
 	Eigen::VectorXd qq(15);
 	qq.setZero();
@@ -127,6 +144,8 @@ int main(int argc, char **argv)
 	qq(12) = DEG2RAD(0);
 	qq(13) = DEG2RAD(0);
 	qq(14) = DEG2RAD(0);
+	qq = angleData[0];
+	cout << angleData[0] << endl;
 	rManager1->setJointVal(qq);
 	rendering(argc, argv);
 
@@ -170,13 +189,13 @@ void updateFunc()
 	static int trajcnt = 0;
 	cnt++;
 
-	//if (cnt % 10 == 0)
-	//	trajcnt++;
-	//if (traj.size() > 0)
-	//	rManager1->setJointVal(traj[trajcnt % traj.size()]);
-
 	if (cnt % 100 == 0)
 		trajcnt++;
+
+	rManager1->setJointVal(angleData[trajcnt % angleData.size()]);
+
+	//if (cnt % 100 == 0)
+	//	trajcnt++;
 	//if (trajcnt % 2 == 0)
 	//	rManager1->setJointVal(qTemp);
 	//else
@@ -184,7 +203,7 @@ void updateFunc()
 	//	rManager1->setJointVal(Eigen::VectorXd::Zero(7));
 	//	rManager2->setJointVal(q);
 	//}
-		
+
 	//cout << sdaRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() << endl;
 	//cout << sdaRobot->gLink[MH12_Index::GRIPPER].GetFrame() << endl;
 	//rManager1->setJointVal(qval);
@@ -238,7 +257,7 @@ void sdarrtSetting()
 	RRTManager->setSpace(&gSpace);
 	vector<srStateJoint*> planningJoint(0);
 	for (int i = 0; i < rManager1->m_activeArmInfo->m_numJoint; i++)
-		planningJoint.push_back( (srStateJoint*) rManager1->m_activeArmInfo->m_activeJoint[i]);
+		planningJoint.push_back((srStateJoint*)rManager1->m_activeArmInfo->m_activeJoint[i]);
 	RRTManager->setSystem(planningJoint);
 	RRTManager->setStateBound(VecToVector(rManager1->m_lowerJointLimit), VecToVector(rManager1->m_upperJointLimit));
 }
