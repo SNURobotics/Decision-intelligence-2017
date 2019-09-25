@@ -144,8 +144,9 @@ int main(int argc, char **argv)
 	envSetting();
 	initDynamics();
 	MHRobotManagerSetting();
-	demoTask = new demoTaskManager(demoEnv, rManager1);
+	demoTask = new demoTaskManager(demoEnv, rManager1, 1);
 	demoTask->setRobotRRTManager();
+	demoTask->setWhichTask(1);
 
 	// for communication (dummy window dialog)
 	WNDCLASS windowClass = {};
@@ -164,7 +165,7 @@ int main(int argc, char **argv)
 	}
 
 	// read given text data (for Test)
-	std::ifstream in("../../../data/SKKU_data_6th/ResultsChkeck03.txt");
+	std::ifstream in("../../../data/SKKU_data_6th/ResultsChkeck00.txt");
 	std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 	char* received_data = (char*)contents.c_str();
 	communication_flag = received_data[0];
@@ -234,7 +235,7 @@ void communicationFunc(int argc, char **argv)
 
 		// For code test
 		//char* received_data = serv.RecevData();
-		std::ifstream in("../../../data/SKKU_data_6th/TestData.txt");
+		std::ifstream in("../../../data/SKKU_data_6th/ResultsChkeck00.txt");
 		std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 		char* received_data = (char*)contents.c_str();
 

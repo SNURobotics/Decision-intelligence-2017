@@ -73,7 +73,7 @@ public:
 class demoTaskManager
 {
 public:
-	demoTaskManager(demoEnvironment* _demoEnv, MH12RobotManager* _rManager);
+	demoTaskManager(demoEnvironment* _demoEnv, MH12RobotManager* _rManager, bool taskType);
 	~demoTaskManager();
 
 public:
@@ -93,6 +93,7 @@ public:
 	int getGoalNum();
 	bool moveJob();
 	bool returnJob();
+	void setWhichTask(bool taskType);				// select task type
 
 	// do job functions (all functions send waypoints to robot, and return true when robot moved successfully)
 	bool reachObject(bool usePlanning = false);		// plan to reach candidate SE3
@@ -148,7 +149,9 @@ public:
 	SE3 homeSE3;
 	SE3 reachOffset;				// offset between grasp point and waypoint right before grasp point (to reach vertically to object)
 	SE3 goalOffset;					// offset between goal point and waypoint right before goal point (to reach vertically to object)
-
+	bool which_task;				// 0: Transfering task 1: Alligning task
+	int goal_iterator;				// Goal index for Alligning task
+		
 	enum Object_ID
 	{
 		Fixed_Cover, Fixed_Contact, Dummy

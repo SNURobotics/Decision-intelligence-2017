@@ -189,6 +189,11 @@ void updateFunc()
 	//cout << sdaRobot->gLink[MH12_Index::GRIPPER].GetFrame() << endl;
 	//rManager1->setJointVal(qval);
 
+	qval = Eigen::VectorXd(15);
+	qval << 0,
+		-1.60441, - 0.926026,  0.976632, - 1.6752, - 1.06246, - 1.45269, - 0.942826,
+		- 2.45903, - 1.89469, - 0.733918,  1.06264,   1.93704, - 1.22409,   0.481425;
+	rManager1->setJointVal(qval);
 
 	int stop = 1;
 }

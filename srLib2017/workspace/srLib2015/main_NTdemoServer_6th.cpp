@@ -129,7 +129,7 @@ int main(int argc, char **argv)
 	envSetting();
 	initDynamics();
 	MHRobotManagerSetting();
-	demoTask = new demoTaskManager(demoEnv, rManager1);
+	demoTask = new demoTaskManager(demoEnv, rManager1, 0);
 	demoTask->setRobotRRTManager();
 
 	// for communication (dummy window dialog)
@@ -233,15 +233,12 @@ void communicationFunc(int argc, char **argv)
 	static bool sentInit = false;
 	while (TRUE)
 	{
-		//Receiving data from HYU client
-
-		// For code test
-		//char* received_data = serv.RecevData();
-
 		std::ifstream in("../../../data/SKKU_data_6th/TestData.txt");
 		std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 		char* received_data = (char*)contents.c_str();
 
+		//Receiving data from HYU client
+		char* received_data = serv.RecevData();
 		communication_flag = received_data[0];
 		if (!sentInit)
 		{

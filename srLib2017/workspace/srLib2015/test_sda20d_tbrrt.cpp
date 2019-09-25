@@ -20,6 +20,7 @@ SDA20DManager* rManager2;
 Bin* bin = new Bin(0.01);
 
 Eigen::VectorXd qval;
+Eigen::VectorXd qval_bfproj;
 
 srSpace gSpace;
 myRenderer* renderer;
@@ -55,7 +56,7 @@ Eigen::VectorXd q;
 int useWaist = 1;
 Eigen::VectorXd tempJointVal = Eigen::VectorXd::Zero(14 + useWaist);
 Eigen::VectorXd tempJointVal2;
-bool doPlanning = true;
+bool doPlanning = false;
 
 SDA20DDualArmClosedLoopConstraint* armConstraint;
 TBrrtManager* RRTManager = new TBrrtManager(armConstraint);
@@ -109,8 +110,8 @@ int main(int argc, char **argv)
 	rManager1->setJointVal(tempJointVal);
 	
 	SE3 Tcenter = EulerZYX(Vec3(0, 0, 0), Vec3(0.8, 0.0, 0.3));
-	SE3 TtoRight = EulerXYZ(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF*(1)), Vec3(0.1, -0.2, 0.0));
-	SE3 TtoLeft = EulerXYZ(Vec3(SR_PI_HALF, 0.0, SR_PI_HALF*(0)), Vec3(-0.1, 0.2, 0.0));
+	SE3 TtoRight = EulerXYZ(Vec3(-SR_PI_HALF, 0.0, SR_PI_HALF*(1)), Vec3(0.0, -0.2, 0.0));
+	SE3 TtoLeft = EulerXYZ(Vec3(SR_PI_HALF, 0.0, SR_PI_HALF*(0)), Vec3(-0.0, 0.2, 0.0));
 	SE3 Trotate = EulerZYX(Vec3(0, SR_PI, 0), Vec3(0.0, 0.0, 0.0));
 
 	SE3 Tright;
@@ -220,7 +221,6 @@ int main(int argc, char **argv)
 	cout << armConstraint->getConstraintVector(q) << endl;
 
 	///////////////////////////// solve RRT ////////////////////////////
-	doPlanning = true;
 	RRTManager->printIter = false;
 	if (doPlanning)
 	{
@@ -241,7 +241,7 @@ int main(int argc, char **argv)
 			//for (unsigned int i = 0; i < traj.size(); i++)
 			//	constraintVec.push_back(armConstraint->getConstraintVector(traj[i]));
 			//saveDataToText(constraintVec, "../../../data/tbrrt_traj/tbrrt_traj_constraintVec.txt");
-			traj2 = RRTManager->extractPath(20);
+			traj2 = RRTManager->extractPath(0);
 			saveDataToText(traj2, "../../../data/tbrrt_traj/tbrrt_traj_test2.txt");
 			vector<Eigen::VectorXd> constraintVec2(0);
 			for (unsigned int i = 0; i < traj2.size(); i++)
@@ -270,10 +270,29 @@ int main(int argc, char **argv)
 	
 	///////////////////////////////////////////////////////////////////
 
-	//rManager1->setJointVal(tempJointVal);
-	//cout << rManager1->checkCollision() << endl;
-	//rManager1->setJointVal(tempJointVal2);
-	//cout << rManager1->checkCollision() << endl;
+	if (!doPlanning) {
+		qval = Eigen::VectorXd(15);
+
+		string in_line;
+		ifstream in("../../../data/tbrrt_traj/sampled_data.txt");
+		qval[0] = 0;
+		getline(in, in_line);
+		istringstream stream(in_line);
+		for (int i = 0; i < 14; i++) {
+			stream >> qval[i + 1];
+		}
+		in.close();
+		cout << "qval : " << qval << endl;
+		//qval << 0,
+		//	-2.1380305,   1.5417776 ,- 0.32366797 , 1.8623528, - 0.21050131, - 0.7551563,
+		//	- 2.3995957,   1.3592176, - 3.0336275, - 4.1633906, - 2.9996004, - 0.61977756,
+		//	0.25164294 , 0.12486485;
+		qval_bfproj = qval;
+		armConstraint->project2ConstraintManifold(qval);
+		rManager1->setJointVal(qval_bfproj);
+
+		cout << "projection distance : " << (qval - qval_bfproj).norm() << endl;
+	}
 	rendering(argc, argv);
 
 	return 0;
@@ -316,20 +335,22 @@ void updateFunc()
 	static int trajcnt = 0;
 	cnt++;
 
-	//if (cnt % 10 == 0)
-	//	trajcnt++;
-	if (traj.size() > 0)
-		rManager1->setJointVal(traj[trajcnt % traj.size()]);
-	if (traj2.size() > 0)
-		rManager1->setJointVal(traj2[trajcnt % traj2.size()]);
-	if (cnt % 10 == 0)
-		trajcnt++;
-	if (!doPlanning)
+
+	if (doPlanning) {
+		if (traj.size() > 0)
+			rManager1->setJointVal(traj[trajcnt % traj.size()]);
+		if (traj2.size() > 0)
+			rManager1->setJointVal(traj2[trajcnt % traj2.size()]);
+		if (cnt % 10 == 0)
+			trajcnt++;
+	}
+	else
 	{
-		if (cnt % 100 < 50)
-			rManager1->setJointVal(tempJointVal);
+		if (cnt % 100 < 50) {
+			rManager1->setJointVal(qval);
+		}
 		else
-			rManager1->setJointVal(tempJointVal2);
+			rManager1->setJointVal(qval_bfproj);
 	}
 	
 	//if (trajcnt % 2 == 0)
