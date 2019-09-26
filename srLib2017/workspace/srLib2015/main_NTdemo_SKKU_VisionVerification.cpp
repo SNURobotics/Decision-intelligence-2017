@@ -165,7 +165,7 @@ int main(int argc, char **argv)
 	}
 
 	// read given text data (for Test)
-	std::ifstream in("../../../data/SKKU_data_6th/ResultsChkeck00.txt");
+	std::ifstream in("../../../data/SKKU_data_6th/ResultsChkeck.txt");
 	std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 	char* received_data = (char*)contents.c_str();
 	communication_flag = received_data[0];
@@ -182,36 +182,36 @@ int main(int argc, char **argv)
 	cnt = 0;
 	iter = 0;
 
-	Twaypoints1 = demoTask->planBetweenWaypoints(demoTask->homeSE3, demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * demoTask->reachOffset, 9);
-	int flag;
-	renderTraj.push_back(rManager1->inverseKin(demoTask->homeSE3, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-	for (int i = 0; i < Twaypoints1.size(); i++)
-	{
-		// Reaching
-		renderTraj.push_back(rManager1->inverseKin(Twaypoints1[i], &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-		rManager1->setJointVal(renderTraj.back());
-	}
-	// Go to grasp pose
-	renderTraj.push_back(rManager1->inverseKin(demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)), &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-	rManager1->setJointVal(renderTraj.back());
-	renderTraj.push_back(rManager1->inverseKin(SE3(Vec3(0.0, 0.0, 0.15)) * demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)), &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-	rManager1->setJointVal(renderTraj.back());
+	//Twaypoints1 = demoTask->planBetweenWaypoints(demoTask->homeSE3, demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * demoTask->reachOffset, 9);
+	//int flag;
+	//renderTraj.push_back(rManager1->inverseKin(demoTask->homeSE3, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	//for (int i = 0; i < Twaypoints1.size(); i++)
+	//{
+	//	// Reaching
+	//	renderTraj.push_back(rManager1->inverseKin(Twaypoints1[i], &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	//	rManager1->setJointVal(renderTraj.back());
+	//}
+	//// Go to grasp pose
+	//renderTraj.push_back(rManager1->inverseKin(demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)), &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	//rManager1->setJointVal(renderTraj.back());
+	//renderTraj.push_back(rManager1->inverseKin(SE3(Vec3(0.0, 0.0, 0.15)) * demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)), &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	//rManager1->setJointVal(renderTraj.back());
 
-	Twaypoints2 = demoTask->planBetweenWaypoints(SE3(Vec3(0.0, 0.0, 0.15)) * demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)), demoTask->goalSE3[demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset, 9);
-	for (int i = 0; i < Twaypoints2.size(); i++)
-	{
-		// Reaching
-		renderTraj.push_back(rManager1->inverseKin(Twaypoints2[i], &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-		rManager1->setJointVal(renderTraj.back());
-	}
+	//Twaypoints2 = demoTask->planBetweenWaypoints(SE3(Vec3(0.0, 0.0, 0.15)) * demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)), demoTask->goalSE3[demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset, 9);
+	//for (int i = 0; i < Twaypoints2.size(); i++)
+	//{
+	//	// Reaching
+	//	renderTraj.push_back(rManager1->inverseKin(Twaypoints2[i], &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	//	rManager1->setJointVal(renderTraj.back());
+	//}
 
-	Twaypoints3 = demoTask->planBetweenWaypoints(demoTask->goalSE3[demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset, demoTask->homeSE3, 9);
-	for (int i = 0; i < Twaypoints3.size(); i++)
-	{
-		// Home position
-		renderTraj.push_back(rManager1->inverseKin(Twaypoints3[i], &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-		rManager1->setJointVal(renderTraj.back());
-	}
+	//Twaypoints3 = demoTask->planBetweenWaypoints(demoTask->goalSE3[demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset, demoTask->homeSE3, 9);
+	//for (int i = 0; i < Twaypoints3.size(); i++)
+	//{
+	//	// Home position
+	//	renderTraj.push_back(rManager1->inverseKin(Twaypoints3[i], &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	//	rManager1->setJointVal(renderTraj.back());
+	//}
 
 	// 둘 중 하나만 골라서 실행
 	rendering(argc, argv);
@@ -234,10 +234,10 @@ void communicationFunc(int argc, char **argv)
 		//Receiving data from HYU client
 
 		// For code test
-		//char* received_data = serv.RecevData();
-		std::ifstream in("../../../data/SKKU_data_6th/ResultsChkeck00.txt");
+		char* received_data = serv.RecevData();
+		/*std::ifstream in("../../../data/SKKU_data_6th/ResultsChkeck03.txt");
 		std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-		char* received_data = (char*)contents.c_str();
+		char* received_data = (char*)contents.c_str();*/
 
 		communication_flag = received_data[0];
 		if (!sentInit)
@@ -289,7 +289,7 @@ void updateFunc()
 	{
 		int flag;
 		iter++;
-		rManager1->setJointVal(renderTraj[iter-1]);
+		//rManager1->setJointVal(renderTraj[iter-1]);
 		if (iter == renderTraj.size())
 		{
 			cnt = 0; iter = 0;

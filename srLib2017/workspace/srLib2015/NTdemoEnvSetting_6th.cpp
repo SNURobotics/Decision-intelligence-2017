@@ -17,9 +17,9 @@ demoEnvironment::demoEnvironment(unsigned int _objectNum) {
 	// set bin
 	bin = new Bin(0.00);
 	bin2 = new Bin(0.00);
-	Plink12bin = Vec3(0.575, -0.035, 0.450 + 0.0075);
+	Plink12bin = Vec3(0.575, -0.015, 0.450 + 0.0075);
 	bin->setBaseLinkFrame(SE3(Trobotbase2link1.GetPosition()) * EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Plink12bin));	// change to exact value later
-	bin2->setBaseLinkFrame(SE3(Trobotbase2link1.GetPosition()) * EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Plink12bin+Vec3(0,0.270 + 0.005,0)));	// change to exact value later
+	bin2->setBaseLinkFrame(SE3(Trobotbase2link1.GetPosition()) * EulerZYX(Vec3(SR_PI_HALF, 0.0, 0.0), Plink12bin + Vec3(0, 0.270 + 0.005, 0)));	// change to exact value later
 
 	// set table
 	table = new Table4th(0.00);
@@ -222,8 +222,8 @@ demoTaskManager::demoTaskManager(demoEnvironment* _demoEnv, MH12RobotManager* _r
 	// Transfering Task
 	if (taskType == 0) {
 		// 0: Head 1: Tail
-		goalSE3[0] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.226048, 0.871385, 0.466791)) * temp_robot2objhead; // head case
-		goalSE3[1] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(180 - 179.8125)), Vec3(0.226048, 0.871385, 0.466791)) * temp_robot2objtail; // tail case
+		goalSE3[0] = EulerZYX(Vec3(DEG2RAD(0.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.226048, 0.871385, 0.466791)) * temp_robot2objhead; // head case
+		goalSE3[1] = EulerZYX(Vec3(DEG2RAD(0.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.226048, 0.871385, 0.466791)) * temp_robot2objtail; // tail case
 	}
 	// Alligning Task
 	else {
@@ -231,12 +231,12 @@ demoTaskManager::demoTaskManager(demoEnvironment* _demoEnv, MH12RobotManager* _r
 		goalSE3[0] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57, -0.1, 0.08)) * temp_robot2objhead;
 		goalSE3[1] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57, -0.05, 0.08)) * temp_robot2objhead;
 		goalSE3[2] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57, -0.0, 0.08)) * temp_robot2objhead;
-		goalSE3[3] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57,  0.05, 0.08)) * temp_robot2objhead;
-		goalSE3[4] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57,  0.1, 0.08)) * temp_robot2objhead;
-		goalSE3[5] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57,  0.15, 0.08)) * temp_robot2objhead;
-		goalSE3[6] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57,  0.2, 0.08)) * temp_robot2objhead;
-		goalSE3[7] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57,  0.25, 0.08)) * temp_robot2objhead;
-		goalSE3[8] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57,  0.3, 0.08)) * temp_robot2objhead;
+		goalSE3[3] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57, 0.05, 0.08)) * temp_robot2objhead;
+		goalSE3[4] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57, 0.1, 0.08)) * temp_robot2objhead;
+		goalSE3[5] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57, 0.15, 0.08)) * temp_robot2objhead;
+		goalSE3[6] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57, 0.2, 0.08)) * temp_robot2objhead;
+		goalSE3[7] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57, 0.25, 0.08)) * temp_robot2objhead;
+		goalSE3[8] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57, 0.3, 0.08)) * temp_robot2objhead;
 	}
 	//homeSE3 = EulerZYX(Vec3(SR_PI, -SR_PI_HALF, 0.0), Vec3(1.029, 0.0, 0.814));		// where robot goes when job is done (should be modified)
 	homeSE3 = EulerZYX(Vec3(DEG2RAD(-0.8872), DEG2RAD(2.0460), DEG2RAD(179.0799)), Vec3(0.416704, 0.093653, 0.509468));
@@ -403,7 +403,7 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 
 		if (!isDummy && !isNaN)
 		{
-			if (1 <= recv_cnt && recv_cnt < 10) 
+			if (1 <= recv_cnt && recv_cnt < 10)
 			{
 				v_objOri[objIdx].push_back(atof(recv_data));
 				cout << "Orientation: " << recv_data << endl;
@@ -457,7 +457,7 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 		if (abs(v_objID[i]) == 2)
 		{
 			objectSE3[i] = objSE3_Camera;
-			objectSE3[i] = objectSE3[i] * Inv(EulerZYX(Vec3(SR_PI_HALF, 0, SR_PI_HALF), Vec3(0,0,0)))*EulerZYX(Vec3(SR_PI, 0, 0), Vec3(0, 0, 0));
+			objectSE3[i] = objectSE3[i] * Inv(EulerZYX(Vec3(SR_PI_HALF, 0, SR_PI_HALF), Vec3(0, 0, 0)))*EulerZYX(Vec3(SR_PI, 0, 0), Vec3(0, 0, 0));
 		}
 		else
 			objectSE3[i] = objSE3_Camera;
@@ -465,7 +465,7 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 		// is z direcition of objectSE3 is upward
 		cout << objectSE3[i][8] << endl;
 		isHead[i] = (objectSE3[i][8] > 0) || (abs(v_objID[i]) / v_objID[i] == 1);
-		cout << "Object No [" << i+1 << "] is in ";
+		cout << "Object No [" << i + 1 << "] is in ";
 		if (isHead[i]) cout << "Head" << endl;
 		else cout << "Tail" << endl;
 
@@ -492,8 +492,8 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 			{
 				if (v_objFtr[i][0] && v_objFtr[i][1] && v_objFtr[i][2])
 				{
-					objectGraspCandidatePos[i].resize(objectGraspCandidatePos[i].size()+1);
-					objectGraspCandidatePos[i][objectGraspCandidatePos[i].size()-1] = Vec3(-0.02, 0.0, -0.004);
+					objectGraspCandidatePos[i].resize(objectGraspCandidatePos[i].size() + 1);
+					objectGraspCandidatePos[i][objectGraspCandidatePos[i].size() - 1] = Vec3(-0.02, 0.0, -0.004);
 					cout << "Object " << i << ", Tail Candidate Pos 1" << endl;
 				}
 				if (v_objFtr[i][0] && v_objFtr[i][2] && v_objFtr[i][4])
@@ -598,6 +598,8 @@ bool demoTaskManager::setObjectNum()
 			double z_angle_for_zeroq6 = Log(Inv(targetObject.GetOrientation()) * homeSE3.GetOrientation())[2];
 			SE3 testPos = targetObject;
 			testPos.SetOrientation(testPos.GetOrientation() * Exp(Vec3(0.0, 0.0, z_angle_for_zeroq6)));
+			// 2019-9-26 Resolve collision error
+			testPos = EulerZYX(Vec3(0, 0, 0), Vec3(0, 0, 0.03)) * testPos;
 			qval = rManager->inverseKin(testPos, &robot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, lastPlanningJointVal);
 
 			if (flag == 0)
@@ -712,7 +714,12 @@ bool demoTaskManager::reachObject(bool usePlanning /*= false*/)
 }
 bool demoTaskManager::goToGraspPos()
 {
-	return goToWaypoint(curObjectData.objectSE3[curObjID] * curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)));
+	// 2019-9-26 Resolve z error
+	SE3 temp = curObjectData.objectSE3[curObjID] * curGraspOffset * SE3(Vec3(0.0, 0.0, 0.055));
+	if (temp.GetPosition()[2] < 0.015) {
+		temp = curObjectData.objectSE3[curObjID] * curGraspOffset * SE3(Vec3(0.0, 0.0, 0.040));
+	}
+	return goToWaypoint(temp);
 }
 bool demoTaskManager::graspObject()
 {
@@ -979,7 +986,7 @@ bool demoTaskManager::goToWaypoint(SE3 Twaypoint)
 			//SendMessage(hTargetWnd, WM_COPYDATA, NULL, reinterpret_cast<LPARAM>(&cds));
 			PDWORD_PTR temp = NULL;
 			int sleepTime;
-			int IMOV_SPEED = 50;
+			int IMOV_SPEED = 80;
 			sleepTime = max(sqrt(posForSend.X * posForSend.X + posForSend.Y * posForSend.Y + posForSend.Z * posForSend.Z), sqrt(posForSend.Rx * posForSend.Rx + posForSend.Ry * posForSend.Ry + posForSend.Rz * posForSend.Rz)) / IMOV_SPEED;
 			LRESULT success = SendMessageTimeout(hTargetWnd, WM_COPYDATA, NULL, reinterpret_cast<LPARAM>(&cds), SMTO_NORMAL, 1000 * (5 + sleepTime), temp);
 			printf("isGetPos == true and send goToWaypoint message (goToWaypoint())\n");

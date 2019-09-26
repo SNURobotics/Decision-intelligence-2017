@@ -156,6 +156,9 @@ int main(int argc, char **argv)
 		demoTask->getCurPosSignal();
 		Sleep(1000);
 	}
+	demoTask->gripperOnSignal();
+	Sleep(100);
+	demoTask->gripperOffSignal();
 	/*Eigen::VectorXd curPos(6);
 	curPos[0] = DEG2RAD(180.0);
 	curPos[1] = DEG2RAD(2);
@@ -233,9 +236,9 @@ void communicationFunc(int argc, char **argv)
 	static bool sentInit = false;
 	while (TRUE)
 	{
-		std::ifstream in("../../../data/SKKU_data_6th/TestData.txt");
-		std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-		char* received_data = (char*)contents.c_str();
+		//std::ifstream in("../../../data/SKKU_data_6th/TestData.txt");
+		//std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+		//char* received_data = (char*)contents.c_str();
 
 		//Receiving data from HYU client
 		char* received_data = serv.RecevData();
@@ -257,6 +260,10 @@ void communicationFunc(int argc, char **argv)
 			demoTask->setObjectNum();
 
 #ifdef USE_TASK_MANAGER_FUNC
+			demoTask->startConnection();
+			demoTask->endConnection();
+			demoTask->startConnection();
+
 			// move robot to deliver workingobject
 			bool isJobFinished = demoTask->moveJob();
 
@@ -264,6 +271,7 @@ void communicationFunc(int argc, char **argv)
 			std::printf("push the botton to do return job\n");
 			getchar();
 			bool isReturned = demoTask->returnJob();
+			if (isReturned) sentInit = 0;
 #else
 
 			int curObjID = demoTask->curObjID;
