@@ -32,10 +32,11 @@ public:
 	~demoEnvironment();
 
 	void setObjectFromRobot2ObjectText(string loc, bool print = false);
-	void setObjectFromRobot2VisionData(vector<SE3> objectSE3, SE3 binSE3);
+	void setObjectFromRobot2VisionData(vector<SE3> objectSE3, vector<int> objectID, SE3 binSE3);
 	void setEnvironmentInSrSpace(srSpace* space);
 public:
 	vector<SE3> objDefaultPositon;
+	vector<SE3> objDefaultPositon2;
 	SE3 Trobotbase;
 	SE3 Trobotbase2link1;
 	SE3 Tworld2camera;
@@ -46,6 +47,7 @@ public:
 	Barrier2* barrier2;
 	unsigned int objectNum;
 	vector<workingObject*> objects;
+	vector<workingObject2*> objects2;
 	SE3 Trobotbase2camera;
 	SE3 Tcamera2robotbase;
 	Vec3 Plink12bin;
@@ -60,10 +62,11 @@ public:
 	SKKUobjectData();
 	~SKKUobjectData();
 
-	void setObjectDataFromString(vector<SE3> _objectSE3, vector<bool> _isHead, vector<vector<Vec3>> _objectGraspCandidatePos, SE3 binSE3);
+	void setObjectDataFromString(vector<SE3> _objectSE3, vector<bool> _isHead, vector<vector<Vec3>> _objectGraspCandidatePos, vector<int> _objectID, SE3 binSE3);
 public:
 	unsigned int objectNum;
 	vector<SE3> objectSE3;
+	vector<int> objectID;
 	vector<bool> isHead;
 	vector<vector<Vec3>> objectGraspCandidatePos;		// first vector: object ID, second vector: candidates per object
 	SE3 binSE3;
@@ -82,7 +85,7 @@ public:
 
 	// Vision information functions
 	void updateEnv(char* stringfromSKKU);		// get vision data from SKKU, and update object locations
-	void readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vector<bool>& isHead, vector<vector<Vec3>>& objectGraspCandidatePos, SE3& binSE3);
+	void readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vector<bool>& isHead, vector<vector<Vec3>>& objectGraspCandidatePos, vector<int>& objectID, SE3& binSE3);
 
 	bool setObjectNumManually(int objNum);
 	bool setObjectNum();	// select object to move from object SE3 and grasp candidates (return true if object is reachable, false if none of the objects are reachable)

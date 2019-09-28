@@ -36,6 +36,14 @@ public:
 	void AssembleModel();
 };
 
+class workingObject2 : public Object
+{
+public:
+	workingObject2();
+	~workingObject2();
+	void AssembleModel();
+};
+
 // Barrier1 (with camera)
 class Barrier1 : public Object
 {

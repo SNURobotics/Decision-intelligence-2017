@@ -312,6 +312,69 @@ void workingObject::AssembleModel()
 	this->SetBaseLinkType(srSystem::KINEMATIC);
 }
 
+workingObject2::workingObject2()
+{
+	AssembleModel();
+}
+
+workingObject2::~workingObject2()
+{
+}
+
+void workingObject2::AssembleModel()
+{
+	m_numLink = 2;
+	m_numCollision = 10;
+	m_numWeldJoint = 1;
+
+	for (int i = 0; i < m_numLink; i++)
+	{
+		srLink* temp = new srLink;
+		m_ObjLink.push_back(*temp);
+	}
+	for (int i = 0; i < m_numCollision; i++)
+	{
+		srCollision* temp = new srCollision;
+		m_ObjCollision.push_back(*temp);
+	}
+	for (int i = 0; i < m_numWeldJoint; i++)
+	{
+		srWeldJoint* temp = new srWeldJoint;
+		m_ObjWeldJoint.push_back(*temp);
+	}
+
+	m_ObjLink[0].GetGeomInfo().SetColor(0.2f, 0.2f, 0.2f);
+
+	m_ObjLink[0].SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	m_ObjLink[0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	m_ObjLink[0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	m_ObjLink[0].GetGeomInfo().SetFileName("../../../workspace/robot/mh12_3ds/Fixed_Conatct_Simplified.3ds");
+
+	// dummy link
+	m_ObjLink[1].GetGeomInfo().SetDimension(Vec3(0.0, 0.0, 0.0));
+
+	m_ObjWeldJoint[0].SetParentLink(&m_ObjLink[1]);
+	m_ObjWeldJoint[0].SetParentLinkFrame();
+	m_ObjWeldJoint[0].SetChildLink(&m_ObjLink[0]);
+	m_ObjWeldJoint[0].SetChildLinkFrame();
+
+	m_numCollision = 0;
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[m_numCollision]);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.0587, 0.0315, 0.060));
+	m_ObjCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(0.0587 / 2, 0.0315 / 2, -0.060 / 2)));
+
+	m_ObjLink[0].AddCollision(&m_ObjCollision[m_numCollision]);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
+	m_ObjCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.044, 0.0033, 0.057));
+	m_ObjCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(0.0587 / 2, 0.018 - 0.0033 / 2, -0.060 - 0.057 / 2)));
+
+	this->SetSelfCollision(false);
+	this->SetBaseLink(&m_ObjLink[1]);
+	this->SetBaseLinkType(srSystem::KINEMATIC);
+}
+
 Barrier1::Barrier1(double collision_offset /*= 0.01*/)
 {
 	m_collision_offset = collision_offset;

@@ -30,15 +30,20 @@ demoEnvironment::demoEnvironment(unsigned int _objectNum) {
 	objectNum = _objectNum;
 
 	objDefaultPositon.resize(objectNum);
+	objDefaultPositon2.resize(objectNum);
 
-	for (unsigned int i = 0; i < objectNum; i++)
-		objDefaultPositon[i] = SE3(Vec3(-1.0, 0.1 * i, 0.0));
-
+	for (unsigned int i = 0; i < objectNum; i++) {
+		objDefaultPositon[i] =  SE3(Vec3(-1.0, 0.1 * i, 0.0));
+		objDefaultPositon2[i] = SE3(Vec3(-1.2, 0.1 * i, 0.0));
+	}
 	objects.resize(objectNum);
+	objects2.resize(objectNum);
 	for (unsigned int i = 0; i < objectNum; i++)
 	{
 		objects[i] = new workingObject;
 		objects[i]->setBaseLinkFrame(objDefaultPositon[i]);
+		objects2[i] = new workingObject2;
+		objects2[i]->setBaseLinkFrame(objDefaultPositon2[i]);
 	}
 
 
@@ -76,7 +81,7 @@ void demoEnvironment::setObjectFromRobot2ObjectText(string loc, bool print /*= f
 }
 
 
-void demoEnvironment::setObjectFromRobot2VisionData(vector<SE3> objectSE3, SE3 binSE3)
+void demoEnvironment::setObjectFromRobot2VisionData(vector<SE3> objectSE3, vector<int> objectID, SE3 binSE3)
 {
 	if (objectSE3.size() == 0)
 	{
@@ -87,8 +92,14 @@ void demoEnvironment::setObjectFromRobot2VisionData(vector<SE3> objectSE3, SE3 b
 
 	for (unsigned int i = 0; i < objectNum; i++)
 	{
-		if (i < objectNumData)
-			objects[i]->setBaseLinkFrame(Trobotbase * objectSE3[i]);
+		if (i < objectNumData) {
+			if (abs(objectID[i]) == 2)
+				objects[i]->setBaseLinkFrame(Trobotbase * objectSE3[i]);
+			else if (abs(objectID[i]) == 1)
+				objects2[i]->setBaseLinkFrame(Trobotbase * objectSE3[i]);
+			else
+				objects[i]->setBaseLinkFrame(Trobotbase * objectSE3[i]);
+		}
 		else
 			objects[i]->setBaseLinkFrame(objDefaultPositon[i]);
 	}
@@ -103,8 +114,10 @@ void demoEnvironment::setEnvironmentInSrSpace(srSpace * space)
 	space->AddSystem(bin);
 	space->AddSystem(bin2);
 	space->AddSystem(table);
-	for (unsigned int i = 0; i < objectNum; i++)
+	for (unsigned int i = 0; i < objectNum; i++) {
 		space->AddSystem(objects[i]);
+		space->AddSystem(objects2[i]);
+	}
 	space->AddSystem(barrier1);
 	space->AddSystem(barrier2);
 }
@@ -127,11 +140,12 @@ SKKUobjectData::~SKKUobjectData()
 	binSE3 = SE3();
 }
 
-void SKKUobjectData::setObjectDataFromString(vector<SE3> _objectSE3, vector<bool> _isHead, vector<vector<Vec3>> _objectGraspCandidatePos, SE3 _binSE3)
+void SKKUobjectData::setObjectDataFromString(vector<SE3> _objectSE3, vector<bool> _isHead, vector<vector<Vec3>> _objectGraspCandidatePos, vector<int> _objectID, SE3 _binSE3)
 {
 	objectSE3.clear();
 	isHead.clear();
 	objectGraspCandidatePos.clear();
+	objectID.clear();
 	vector<double> length;
 	Vec3 temp;
 	vector<unsigned int> order;
@@ -196,6 +210,7 @@ void SKKUobjectData::setObjectDataFromString(vector<SE3> _objectSE3, vector<bool
 	objectSE3 = _objectSE3;
 	isHead = _isHead;
 	objectGraspCandidatePos = _objectGraspCandidatePos;
+	objectID = _objectID;
 
 	binSE3 = _binSE3;
 }
@@ -276,15 +291,16 @@ void demoTaskManager::updateEnv(char* stringfromSKKU)
 	// read vision data by readSKKUvision function from tcp_ip_communication header
 
 	vector<SE3> objectSE3;
+	vector<int> objectID;
 	vector<bool> isHead;
 	vector<vector<Vec3>> objectGraspCandidatePos;
 	SE3 binSE3;
 
-	readSKKUvision(stringfromSKKU, objectSE3, isHead, objectGraspCandidatePos, binSE3);
+	readSKKUvision(stringfromSKKU, objectSE3, isHead, objectGraspCandidatePos, objectID, binSE3);
 
-	curObjectData.setObjectDataFromString(objectSE3, isHead, objectGraspCandidatePos, binSE3);
+	curObjectData.setObjectDataFromString(objectSE3, isHead, objectGraspCandidatePos, objectID, binSE3);
 
-	demoEnv->setObjectFromRobot2VisionData(curObjectData.objectSE3, curObjectData.binSE3);
+	demoEnv->setObjectFromRobot2VisionData(curObjectData.objectSE3, curObjectData.objectID, curObjectData.binSE3);
 
 	return;
 }
@@ -301,7 +317,7 @@ static void Eliminate(char *str, char ch)
 	}
 }
 
-void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vector<bool>& isHead, vector<vector<Vec3>>& objectGraspCandidatePos, SE3& binSE3)
+void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vector<bool>& isHead, vector<vector<Vec3>>& objectGraspCandidatePos, vector<int>& objectID, SE3& binSE3)
 {
 	size_t pos = std::string::npos;
 	string str_data = string(hyu_data);
@@ -316,57 +332,11 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 	Eliminate(hyu_data, 'V');
 	cout << hyu_data << endl;
 
-	//vector <char*> data_chunk;
-	//char *ctemp;
-	//data_chunk.push_back(strtok(hyu_data, "V"));
-	//cout << data_chunk.back() << endl;
-	//for (int i = 1; i < 50; i++) 
-	//{
-	//	string temp = strtok(NULL, "V");
-	//	string NaN = "-nan";
-	//	if (temp.find(NaN) == 0)
-	//	{
-	//		break;
-	//	}
-	//	else {
-	//		ctemp = new char(temp.length()+1);
-	//		strcpy(ctemp, temp.c_str());
-	//		data_chunk.push_back(ctemp);
-	//		cout << data_chunk.back() << endl;
-	//	}
-	//}
-
 	// temporary vector variables
 	vector<int>				v_objID;
 	vector<vector<double>>	v_objPos;					//id, (x, y, z)
 	vector<vector<double>>	v_objOri;					//id, (R_x, R_y, R_z)
 	vector<vector<int>>		v_objFtr;					//id, (min_x, max_x, min_y, max_y)
-
-	//for (int i = 0; i < data_chunk.size(); i++)
-	//{
-	//	char *data = data_chunk[i];
-	//	v_objID.push_back(atoi(strtok(NULL, "d")));
-	//	vector<double> tempOri;
-	//	vector<double> tempPos;
-	//	vector<int> tempFtr;
-	//	for (int j = 0; j < 9; j++)
-	//	{
-	//		tempOri.push_back(atof(strtok(NULL, "d")));
-	//	}
-	//	for (int j = 0; j < 3; j++)
-	//	{
-	//		tempPos.push_back(atof(strtok(NULL, "d")));
-	//	}
-	//	for (int j = 0; j < 5; j++)
-	//	{
-	//		char* tmp = strtok(NULL, "d");
-	//		if (tmp != "-nan" && tmp != "-nan(ind)")
-	//			tempFtr.push_back(atoi(strtok(NULL, "d")));
-	//	}
-	//	v_objOri.push_back(tempOri);
-	//	v_objPos.push_back(tempPos);
-	//	
-	//}
 
 	// read char data and save it to vector double format
 	char *recv_data = strtok(hyu_data, "d");
@@ -441,6 +411,7 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 
 	objectSE3.resize(objectNumData);
 	isHead.resize(objectNumData);
+	objectID.resize(objectNumData);
 	objectGraspCandidatePos.resize(objectNumData);
 
 
@@ -459,13 +430,20 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 			objectSE3[i] = objSE3_Camera;
 			objectSE3[i] = objectSE3[i] * Inv(EulerZYX(Vec3(SR_PI_HALF, 0, SR_PI_HALF), Vec3(0, 0, 0)))*EulerZYX(Vec3(SR_PI, 0, 0), Vec3(0, 0, 0));
 		}
-		else
+		else {
 			objectSE3[i] = objSE3_Camera;
+		}
+		objectID[i] = v_objID[i];
 
 		// is z direcition of objectSE3 is upward
 		cout << objectSE3[i][8] << endl;
-		isHead[i] = (objectSE3[i][8] > 0) || (abs(v_objID[i]) / v_objID[i] == 1);
-		cout << "Object No [" << i + 1 << "] is in ";
+		if (abs(v_objID[i]) == 2) {
+			isHead[i] = (objectSE3[i][8] > 0) || (abs(v_objID[i]) / v_objID[i] == 1);
+		}
+		else if (abs(v_objID[i]) == 1) {
+			isHead[i] = (objectSE3[i][4] > 0) || (abs(v_objID[i]) / v_objID[i] == 1);
+		}
+		cout << "Object No [" << i  << "] is in ";
 		if (isHead[i]) cout << "Head" << endl;
 		else cout << "Tail" << endl;
 
@@ -478,6 +456,27 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 					objectGraspCandidatePos[i].resize(1);
 					objectGraspCandidatePos[i][0] = Vec3(-0.02, 0.0, 0.0);
 					cout << "Object " << i << ", Head Candidate Pos 1" << endl;
+				}
+			}
+			else if (abs(v_objID[i]) == 1) // FixedContact
+			{
+				if (v_objFtr[i][0] && v_objFtr[i][1] && v_objFtr[i][2])
+				{
+					objectGraspCandidatePos[i].resize(objectGraspCandidatePos[i].size() + 1);
+					objectGraspCandidatePos[i][objectGraspCandidatePos[i].size() - 1] = Vec3(0.032, 0.032, -0.070);
+					cout << "Object " << i << ", Head Candidate Pos 1" << endl;
+				}
+				else if (v_objFtr[i][1] && v_objFtr[i][2] && (v_objFtr[i][3] || v_objFtr[i][5]))
+				{
+					objectGraspCandidatePos[i].resize(objectGraspCandidatePos[i].size() + 1);
+					objectGraspCandidatePos[i][objectGraspCandidatePos[i].size() - 1] = Vec3(0.017, 0.032, -0.036);
+					cout << "Object " << i << ", Head Candidate Pos 2" << endl;
+				}
+				else if (v_objFtr[i][1] && v_objFtr[i][2] && (v_objFtr[i][4] || v_objFtr[i][6]))
+				{
+					objectGraspCandidatePos[i].resize(objectGraspCandidatePos[i].size() + 1);
+					objectGraspCandidatePos[i][objectGraspCandidatePos[i].size() - 1] = Vec3(0.047, 0.032, -0.036);
+					cout << "Object " << i << ", Head Candidate Pos 3" << endl;
 				}
 			}
 			else
@@ -507,6 +506,21 @@ void demoTaskManager::readSKKUvision(char* hyu_data, vector<SE3>& objectSE3, vec
 					objectGraspCandidatePos[i].resize(objectGraspCandidatePos[i].size() + 1);
 					objectGraspCandidatePos[i][objectGraspCandidatePos[i].size() - 1] = Vec3(0.0, -0.02, -0.004);
 					cout << "Object " << i << ", Tail Candidate Pos 3" << endl;
+				}
+			}
+			if (abs(v_objID[i]) == 1) // FixedContact
+			{
+				if (v_objFtr[i][0] && v_objFtr[i][1] && v_objFtr[i][2])
+				{
+					objectGraspCandidatePos[i].resize(objectGraspCandidatePos[i].size() + 1);
+					objectGraspCandidatePos[i][objectGraspCandidatePos[i].size() - 1] = Vec3(0.032, 0.030, -0.075);
+					cout << "Object " << i << ", Tail Candidate Pos 1" << endl;
+				}
+				if ((v_objFtr[i][1] || v_objFtr[i][3]) && (v_objFtr[i][2] || v_objFtr[i][4]))
+				{
+					objectGraspCandidatePos[i].resize(objectGraspCandidatePos[i].size() + 1);
+					objectGraspCandidatePos[i][objectGraspCandidatePos[i].size() - 1] = Vec3(0.032, 0.0, -0.04);
+					cout << "Object " << i << ", Tail Candidate Pos 2" << endl;
 				}
 			}
 			else
@@ -581,16 +595,33 @@ bool demoTaskManager::setObjectNum()
 
 			if (curObjectData.isHead[i])
 			{
-				if (curObjectData.objectGraspCandidatePos[i][j][2] < 0)
-				{
-					printf("Cannot reach the underside!\n");
-					break;
+				if (abs(curObjectData.objectID[i]) == 2) {
+					if (curObjectData.objectGraspCandidatePos[i][j][2] < 0)
+					{
+						printf("Cannot reach the underside!\n");
+						break;
+					}
+					headSE3 = EulerZYX(Vec3(0.0, 0.0, SR_PI), curObjectData.objectGraspCandidatePos[i][j]);
+					//cout << headSE3 << endl;
 				}
-				headSE3 = EulerZYX(Vec3(0.0, 0.0, SR_PI), curObjectData.objectGraspCandidatePos[i][j]);
-				//cout << headSE3 << endl;
+				else if (abs(curObjectData.objectID[i]) == 1) {
+					if (curObjectData.objectGraspCandidatePos[i][j][1] < 0)
+					{
+						printf("Cannot reach the underside!\n");
+						break;
+					}
+					headSE3 = EulerZYX(Vec3(SR_PI_HALF, -SR_PI_HALF, 0.0), curObjectData.objectGraspCandidatePos[i][j]);
+					//cout << headSE3 << endl;
+				}
 			}
-			else
-				headSE3 = SE3(curObjectData.objectGraspCandidatePos[i][j]);
+			else {
+				if (abs(curObjectData.objectID[i]) == 2) {
+					headSE3 = SE3(curObjectData.objectGraspCandidatePos[i][j]);
+				}
+				else if (abs(curObjectData.objectID[i]) == 1) {
+					headSE3 = EulerZYX(Vec3(-SR_PI_HALF, -SR_PI_HALF, 0.0), curObjectData.objectGraspCandidatePos[i][j]);
+				}
+			}
 
 			SE3 targetObject = curObjectData.objectSE3[i] * headSE3;
 
