@@ -38,6 +38,7 @@ int activeJointIdx = 0;
 vector<Eigen::VectorXd> traj(0);
 Eigen::VectorXd qTemp;
 Eigen::VectorXd q;
+Eigen::VectorXd zeroPoint(15);
 
 vector<Eigen::VectorXd> angleData(10);
 
@@ -115,16 +116,60 @@ int main(int argc, char **argv)
 
 	//vector<Eigen::VectorXd> angleData(10);
 
+	vector<Eigen::VectorXd> rawData(10);
 	ifstream in("../../../data/NT_Data/Data.txt");
 	string str;
 	for (int i = 0; i < 10; i++)
 	{
-		angleData[i] = Eigen::VectorXd(15);
+		string a;
+		string b;
+		rawData[i] = Eigen::VectorXd(15);
 		for (int j = 0; j < 15; j++)
 		{
 			getline(in, str, ',');
-			angleData[i][j] = DEG2RAD((atof((char*)str.c_str())) / 1000);
+			rawData[i][j] = atof((char*)str.c_str());
 		}
+	}
+	for (int i = 0; i < 10; i++)
+	{
+		angleData[i] = Eigen::VectorXd(15);
+		angleData[i][0] = rawData[i][0];
+		for (int j = 1; j < 3; j++)
+		{
+			angleData[i][j] = rawData[i][j];
+			angleData[i][j + 7] = rawData[i][j + 7];
+		}
+		angleData[i][3] = rawData[i][7];
+		angleData[i][3 + 7] = rawData[i][7 + 7];
+		for (int j = 4; j < 8; j++)
+		{
+			angleData[i][j] = rawData[i][j - 1];
+			angleData[i][j + 7] = rawData[i][j + 7 - 1];
+		}
+	}
+	cout << angleData[0] << endl<< endl;
+	cout << angleData[1] << endl<< endl;
+	cout << angleData[2] << endl<< endl;
+	cout << angleData[3] << endl<< endl;
+	cout << angleData[4] << endl<< endl;
+	zeroPoint << 1993, -62195, 91219, -96329, 84423, -4091, 77212, -50749,
+					   -60931, 93994, -93520, 80367, 1291, 82073, -50613;
+	//zeroPoint << 1993, -62195, 91219, -96329, 84423, -4091, 77212, -50749,
+	//	-184320, 93994, -93520, 80368, 1291, 82072, -50614;
+
+	Eigen::VectorXd weight(15);
+	weight << 180 / 324576.0,
+			180 / 184320.0, 110 / 112640.0, -170 / 174080.0, -130 / 133120.0, -180 / 206848.0, 110 / 126408.0, 180 / 104448.0,
+			180 / 184320.0, 110 / 112640.0, -170 / 174080.0, -130 / 133120.0, -180 / 206848.0, 110 / 126408.0, 180 / 104448.0;
+	for (int i = 0; i < 10; i++)
+	{
+		for (int j = 0; j < 15; j++)
+		{
+			angleData[i][j] = DEG2RAD(angleData[i][j]) * weight[j];
+		}
+	}
+	for (int i = 0; i < 15; i++) {
+		zeroPoint[i] = DEG2RAD(zeroPoint[i]) * weight[i];
 	}
 
 	Eigen::VectorXd qq(15);
@@ -193,6 +238,7 @@ void updateFunc()
 		trajcnt++;
 
 	rManager1->setJointVal(angleData[trajcnt % angleData.size()]);
+	//rManager1->setJointVal(zeroPoint);
 
 	//if (cnt % 100 == 0)
 	//	trajcnt++;

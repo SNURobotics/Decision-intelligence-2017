@@ -237,21 +237,30 @@ demoTaskManager::demoTaskManager(demoEnvironment* _demoEnv, MH12RobotManager* _r
 	// Transfering Task
 	if (taskType == 0) {
 		// 0: Head 1: Tail
-		goalSE3[0] = EulerZYX(Vec3(DEG2RAD(0.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.226048, 0.871385, 0.466791)) * temp_robot2objhead; // head case
-		goalSE3[1] = EulerZYX(Vec3(DEG2RAD(0.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.226048, 0.871385, 0.466791)) * temp_robot2objtail; // tail case
+		goalSE3[0] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.226048, 0.871385, 0.466791)) * temp_robot2objhead; // head case
+		goalSE3[1] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.226048, 0.871385, 0.466791)) * temp_robot2objtail; // tail case
 	}
 	// Alligning Task
 	else {
-		goalSE3.resize(9);
-		goalSE3[0] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57, -0.1, 0.08)) * temp_robot2objhead;
-		goalSE3[1] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57, -0.05, 0.08)) * temp_robot2objhead;
-		goalSE3[2] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57, -0.0, 0.08)) * temp_robot2objhead;
-		goalSE3[3] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57, 0.05, 0.08)) * temp_robot2objhead;
-		goalSE3[4] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57, 0.1, 0.08)) * temp_robot2objhead;
-		goalSE3[5] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57, 0.15, 0.08)) * temp_robot2objhead;
-		goalSE3[6] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57, 0.2, 0.08)) * temp_robot2objhead;
-		goalSE3[7] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57, 0.25, 0.08)) * temp_robot2objhead;
-		goalSE3[8] = EulerZYX(Vec3(DEG2RAD(-0.01), DEG2RAD(0.01), DEG2RAD(179.99)), Vec3(0.57, 0.3, 0.08)) * temp_robot2objhead;
+		goalSE3.resize(18);
+		goalSE3[0] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, -0.1, 0.08)) * temp_robot2objhead;
+		goalSE3[1] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, -0.1, 0.08)) * temp_robot2objtail;
+		goalSE3[2] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, -0.05, 0.08)) * temp_robot2objhead;
+		goalSE3[3] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, -0.05, 0.08)) * temp_robot2objtail;
+		goalSE3[4] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, -0.0, 0.08)) * temp_robot2objhead;
+		goalSE3[5] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, -0.0, 0.08)) * temp_robot2objtail;
+		goalSE3[6] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.05, 0.08)) * temp_robot2objhead;
+		goalSE3[7] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.05, 0.08)) * temp_robot2objtail;
+		goalSE3[8] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.1, 0.08)) * temp_robot2objhead;
+		goalSE3[9] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.1, 0.08)) * temp_robot2objtail;
+		goalSE3[10] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.15, 0.08)) * temp_robot2objhead;
+		goalSE3[11] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.15, 0.08)) * temp_robot2objtail;
+		goalSE3[12] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.2, 0.08)) * temp_robot2objhead;
+		goalSE3[13] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.2, 0.08)) * temp_robot2objtail;
+		goalSE3[14] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.25, 0.08)) * temp_robot2objhead;
+		goalSE3[15] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.25, 0.08)) * temp_robot2objtail;
+		goalSE3[16] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.3, 0.08)) * temp_robot2objhead;
+		goalSE3[17] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.3, 0.08)) * temp_robot2objtail;
 	}
 	//homeSE3 = EulerZYX(Vec3(SR_PI, -SR_PI_HALF, 0.0), Vec3(1.029, 0.0, 0.814));		// where robot goes when job is done (should be modified)
 	homeSE3 = EulerZYX(Vec3(DEG2RAD(-0.8872), DEG2RAD(2.0460), DEG2RAD(179.0799)), Vec3(0.416704, 0.093653, 0.509468));
@@ -745,12 +754,22 @@ bool demoTaskManager::reachObject(bool usePlanning /*= false*/)
 }
 bool demoTaskManager::goToGraspPos()
 {
+	// 2019-10-02 custom z resolve value for FixedContact object
 	// 2019-9-26 Resolve z error
-	SE3 temp = curObjectData.objectSE3[curObjID] * curGraspOffset * SE3(Vec3(0.0, 0.0, 0.055));
-	if (temp.GetPosition()[2] < 0.015) {
-		temp = curObjectData.objectSE3[curObjID] * curGraspOffset * SE3(Vec3(0.0, 0.0, 0.040));
+	if (abs(curObjectData.objectID[curObjID]) == 2) {
+		SE3 temp = curObjectData.objectSE3[curObjID] * curGraspOffset * SE3(Vec3(0.0, 0.0, 0.055));
+		if (temp.GetPosition()[2] < 0.015) {
+			temp = curObjectData.objectSE3[curObjID] * curGraspOffset * SE3(Vec3(0.0, 0.0, 0.040));
+		}
+		return goToWaypoint(temp);
 	}
-	return goToWaypoint(temp);
+	else {
+		SE3 temp = curObjectData.objectSE3[curObjID] * curGraspOffset * SE3(Vec3(0.0, 0.0, 0.035));
+		if (temp.GetPosition()[2] < 0.015) {
+			temp = curObjectData.objectSE3[curObjID] * curGraspOffset * SE3(Vec3(0.0, 0.0, 0.020));
+		}
+		return goToWaypoint(temp);
+	}
 }
 bool demoTaskManager::graspObject()
 {
@@ -768,16 +787,30 @@ bool demoTaskManager::moveObject(bool usePlanning /*= false*/)
 {
 	if (robotrrtManager == NULL || !usePlanning) {
 		if (which_task == 0) {
-			return goToWaypoint(SE3(Vec3(0.0, 0.0, 0.005)) * goalSE3[curGoalID] * goalOffset * curGraspOffset);
+			if (abs(curObjectData.objectID[curObjID]) == 1) { // FixedContact case
+				SE3 goal = SE3(Vec3(0.0, 0.0, 0.005)) * goalSE3[curGoalID] * goalOffset * curGraspOffset;
+				goal.SetOrientation(EulerZYX(Vec3(0, SR_PI_HALF, 0), Vec3(0, 0, 0)).GetOrientation() * goal.GetOrientation());
+				return goToWaypoint(goal);
+			}
+			else // FixedContactCover case
+				return goToWaypoint(SE3(Vec3(0.0, 0.0, 0.005)) * goalSE3[curGoalID] * goalOffset * curGraspOffset);
 		}
 		else {
-			if (goal_iterator + 1 == goalSE3.size()) {
-				bool success = goToWaypoint(SE3(Vec3(0.0, 0.0, 0.005)) * goalSE3[goal_iterator] * goalOffset * curGraspOffset);
+			SE3 goal;
+			if (abs(curObjectData.objectID[curObjID]) == 1) { // FixedContact case
+				goal = SE3(Vec3(0.0, 0.0, 0.005)) * goalSE3[goal_iterator * 2 + curGoalID] * goalOffset * curGraspOffset;
+				goal.SetOrientation(EulerZYX(Vec3(0, SR_PI_HALF, 0), Vec3(0, 0, 0)).GetOrientation() * goal.GetOrientation());
+			}
+			else // FixedContactCover case
+				goal = SE3(Vec3(0.0, 0.0, 0.005)) * goalSE3[goal_iterator * 2 + curGoalID] * goalOffset * curGraspOffset;
+
+			if (goal_iterator * 2 + 1 == goalSE3.size()) {
 				goal_iterator = 0;
-				return success;
+				return goToWaypoint(goal);
 			}
 			else {
-				return goToWaypoint(SE3(Vec3(0.0, 0.0, 0.005)) * goalSE3[goal_iterator++] * goalOffset * curGraspOffset);
+				goal_iterator++;
+				return goToWaypoint(goal);
 			}
 		}
 	}

@@ -270,28 +270,30 @@ int main(int argc, char **argv)
 	
 	///////////////////////////////////////////////////////////////////
 
+	int step = 0;
 	if (!doPlanning) {
-		qval = Eigen::VectorXd(15);
 
 		string in_line;
 		ifstream in("../../../data/tbrrt_traj/sampled_data.txt");
-		qval[0] = 0;
-		getline(in, in_line);
-		istringstream stream(in_line);
-		for (int i = 0; i < 14; i++) {
-			stream >> qval[i + 1];
+		while (getline(in, in_line)) {
+			traj1.push_back(Eigen::VectorXd(15));
+			traj1[traj1.size() - 1][0] = 0;
+			istringstream stream(in_line);
+			for (int i = 0; i < 14; i++) {
+				stream >> traj1[traj1.size() - 1][i + 1];
+			}
+			step++;
 		}
 		in.close();
-		cout << "qval : " << qval << endl;
-		//qval << 0,
-		//	-2.1380305,   1.5417776 ,- 0.32366797 , 1.8623528, - 0.21050131, - 0.7551563,
-		//	- 2.3995957,   1.3592176, - 3.0336275, - 4.1633906, - 2.9996004, - 0.61977756,
-		//	0.25164294 , 0.12486485;
-		qval_bfproj = qval;
-		armConstraint->project2ConstraintManifold(qval);
-		rManager1->setJointVal(qval_bfproj);
+		for (int i = 0; i < traj1.size(); i++) {
+			qval_bfproj = traj1[i];
+			armConstraint->project2ConstraintManifold(traj1[i]);
+			rManager1->setJointVal(qval_bfproj);
+			//cout << traj1[i] << endl;
+			cout << "projection distance : " << (traj1[i] - qval_bfproj).norm() << endl;
+		}
 
-		cout << "projection distance : " << (qval - qval_bfproj).norm() << endl;
+		//cout << "projection distance : " << (qval - qval_bfproj).norm() << endl;
 	}
 	rendering(argc, argv);
 
@@ -346,11 +348,16 @@ void updateFunc()
 	}
 	else
 	{
-		if (cnt % 100 < 50) {
-			rManager1->setJointVal(qval);
-		}
-		else
-			rManager1->setJointVal(qval_bfproj);
+		//if (cnt % 100 < 50) {
+		//	rManager1->setJointVal(qval);
+		//}
+		//else
+		//	rManager1->setJointVal(qval_bfproj);
+
+		if (cnt % 50 == 0)
+			trajcnt++;
+		rManager1->setJointVal(traj1[trajcnt]);
+		if (trajcnt == traj1.size() - 1) trajcnt = 0;
 	}
 	
 	//if (trajcnt % 2 == 0)
