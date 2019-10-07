@@ -245,22 +245,22 @@ demoTaskManager::demoTaskManager(demoEnvironment* _demoEnv, MH12RobotManager* _r
 		goalSE3.resize(18);
 		goalSE3[0] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, -0.1, 0.08)) * temp_robot2objhead;
 		goalSE3[1] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, -0.1, 0.08)) * temp_robot2objtail;
-		goalSE3[2] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, -0.05, 0.08)) * temp_robot2objhead;
-		goalSE3[3] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, -0.05, 0.08)) * temp_robot2objtail;
-		goalSE3[4] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, -0.0, 0.08)) * temp_robot2objhead;
-		goalSE3[5] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, -0.0, 0.08)) * temp_robot2objtail;
-		goalSE3[6] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.05, 0.08)) * temp_robot2objhead;
-		goalSE3[7] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.05, 0.08)) * temp_robot2objtail;
-		goalSE3[8] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.1, 0.08)) * temp_robot2objhead;
-		goalSE3[9] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.1, 0.08)) * temp_robot2objtail;
-		goalSE3[10] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.15, 0.08)) * temp_robot2objhead;
-		goalSE3[11] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.15, 0.08)) * temp_robot2objtail;
-		goalSE3[12] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.2, 0.08)) * temp_robot2objhead;
-		goalSE3[13] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.2, 0.08)) * temp_robot2objtail;
-		goalSE3[14] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.25, 0.08)) * temp_robot2objhead;
-		goalSE3[15] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.25, 0.08)) * temp_robot2objtail;
-		goalSE3[16] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.3, 0.08)) * temp_robot2objhead;
-		goalSE3[17] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.3, 0.08)) * temp_robot2objtail;
+		goalSE3[2] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, -0.0, 0.08)) * temp_robot2objhead;
+		goalSE3[3] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, -0.0, 0.08)) * temp_robot2objtail;
+		goalSE3[4] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.1, 0.08)) * temp_robot2objhead;
+		goalSE3[5] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.1, 0.08)) * temp_robot2objtail;
+		goalSE3[6] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.2, 0.08)) * temp_robot2objhead;
+		goalSE3[7] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.2, 0.08)) * temp_robot2objtail;
+		goalSE3[8] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.3, 0.08)) * temp_robot2objhead;
+		goalSE3[9] =  EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.3, 0.08)) * temp_robot2objtail;
+		goalSE3[10] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.4, 0.08)) * temp_robot2objhead;
+		goalSE3[11] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.4, 0.08)) * temp_robot2objtail;
+		goalSE3[12] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.5, 0.08)) * temp_robot2objhead;
+		goalSE3[13] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.5, 0.08)) * temp_robot2objtail;
+		goalSE3[14] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.6, 0.08)) * temp_robot2objhead;
+		goalSE3[15] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.6, 0.08)) * temp_robot2objtail;
+		goalSE3[16] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.7, 0.08)) * temp_robot2objhead;
+		goalSE3[17] = EulerZYX(Vec3(DEG2RAD(58.4843), DEG2RAD(-0.1395), DEG2RAD(179.8125)), Vec3(0.97, 0.7, 0.08)) * temp_robot2objtail;
 	}
 	//homeSE3 = EulerZYX(Vec3(SR_PI, -SR_PI_HALF, 0.0), Vec3(1.029, 0.0, 0.814));		// where robot goes when job is done (should be modified)
 	homeSE3 = EulerZYX(Vec3(DEG2RAD(-0.8872), DEG2RAD(2.0460), DEG2RAD(179.0799)), Vec3(0.416704, 0.093653, 0.509468));
@@ -710,7 +710,7 @@ bool demoTaskManager::moveJob()
 	while (!grasped)
 		grasped = graspObject();
 	while (!lifted1)
-		lifted1 = moveWorkspaceDisplacement(Vec3(0.0, 0.0, 0.15));
+		lifted1 = moveWorkspaceDisplacement(Vec3(0.0, 0.0, 0.25));
 	while (!moved)
 		moved = moveObject();
 	//return (reached && reachedGraspPos && grasped && lifted1 && moved);

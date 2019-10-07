@@ -241,7 +241,7 @@ int main(int argc, char **argv)
 			//for (unsigned int i = 0; i < traj.size(); i++)
 			//	constraintVec.push_back(armConstraint->getConstraintVector(traj[i]));
 			//saveDataToText(constraintVec, "../../../data/tbrrt_traj/tbrrt_traj_constraintVec.txt");
-			traj2 = RRTManager->extractPath(0);
+			traj2 = RRTManager->extractPath(30);
 			saveDataToText(traj2, "../../../data/tbrrt_traj/tbrrt_traj_test2.txt");
 			vector<Eigen::VectorXd> constraintVec2(0);
 			for (unsigned int i = 0; i < traj2.size(); i++)

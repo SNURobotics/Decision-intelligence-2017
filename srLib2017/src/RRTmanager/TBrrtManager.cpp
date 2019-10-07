@@ -21,7 +21,8 @@ rrtVertex * TBrrtManager::generateNewVertex(rrtVertex * nearest_vertex, const Ei
 	//////////////////// project onto tangent space //////////////////
 	Eigen::VectorXd pos1 = nearest_vertex->posState;
 	Eigen::VectorXd temp_vertex_pos = pos2;
-	((TBrrtVertex*)nearest_vertex)->_tangentSpace->projectOntoTangentSpace(temp_vertex_pos);
+	if (rrtConstraints != NULL)
+		((TBrrtVertex*)nearest_vertex)->_tangentSpace->projectOntoTangentSpace(temp_vertex_pos);
 
 	double length = getDistance(pos1, temp_vertex_pos);
 
@@ -51,21 +52,23 @@ rrtVertex * TBrrtManager::generateNewVertex(rrtVertex * nearest_vertex, const Ei
 	new_vertex->parentVertex = nearest_vertex;
 
 	/////////////////////////// check distance to constraint manifold ////////////////////
-	if (rrtConstraints->getConstraintVector(new_vertex->posState).norm() > _error_threshold)
-	{
-		if (projectionNewtonRaphson(new_vertex->posState)== rrtConstraint::Success)
+	if (rrtConstraints != NULL) {
+		if (rrtConstraints->getConstraintVector(new_vertex->posState).norm() > _error_threshold)
 		{
-			//if (setState(new_vertex->posState)) { return NULL; }
-			// Create new Tangent Space and Add to TS list
-			tangentSpace * TS = new tangentSpace(new_vertex->posState, rrtConstraints);
-			TangentSpaces.push_back(TS);
-			((TBrrtVertex*)new_vertex)->_tangentSpace = TS;
+			if (projectionNewtonRaphson(new_vertex->posState) == rrtConstraint::Success)
+			{
+				//if (setState(new_vertex->posState)) { return NULL; }
+				// Create new Tangent Space and Add to TS list
+				tangentSpace * TS = new tangentSpace(new_vertex->posState, rrtConstraints);
+				TangentSpaces.push_back(TS);
+				((TBrrtVertex*)new_vertex)->_tangentSpace = TS;
+			}
+			else
+				return NULL;
 		}
 		else
-			return NULL;
+			((TBrrtVertex*)new_vertex)->_tangentSpace = ((TBrrtVertex*)nearest_vertex)->_tangentSpace;
 	}
-	else
-		((TBrrtVertex*)new_vertex)->_tangentSpace = ((TBrrtVertex*)nearest_vertex)->_tangentSpace;
 	//new_vertex->distance2parent = getDistance(new_vertex->parentVertex->posState, new_vertex->posState);
 	//if (_vectorFieldExist)
 	//	new_vertex->cost2parent = getUpstreamCost(new_vertex->parentVertex->posState, new_vertex->posState);
@@ -296,12 +299,14 @@ void TBrrtManager::setStartandGoal(const Eigen::VectorXd & _start, const Eigen::
 	pTargetTree1 = &startTree;
 	pTargetTree2 = &goalTree;
 
-	tangentSpace* startTangentSpace = new tangentSpace(_start, rrtConstraints);
-	tangentSpace* goalTangentSpace = new tangentSpace(_goal, rrtConstraints);
-	((TBrrtVertex*)startVertex)->_tangentSpace = startTangentSpace;
-	((TBrrtVertex*)goalVertex)->_tangentSpace = goalTangentSpace;
-	TangentSpaces.push_back(startTangentSpace);
-	TangentSpaces.push_back(goalTangentSpace);
+	if (rrtConstraints != NULL) {
+		tangentSpace* startTangentSpace = new tangentSpace(_start, rrtConstraints);
+		tangentSpace* goalTangentSpace = new tangentSpace(_goal, rrtConstraints);
+		((TBrrtVertex*)startVertex)->_tangentSpace = startTangentSpace;
+		((TBrrtVertex*)goalVertex)->_tangentSpace = goalTangentSpace;
+		TangentSpaces.push_back(startTangentSpace);
+		TangentSpaces.push_back(goalTangentSpace);
+	}
 }
 
 vector<Eigen::VectorXd> TBrrtManager::extractPath(int smoothingNum)
@@ -371,7 +376,8 @@ vector<Eigen::VectorXd> TBrrtManager::extractPath(int smoothingNum)
 	saveDataToText(filledPath, "../../../data/tbrrt_traj/tbrrt_traj_bfproj.txt");
 
 	// project to constraint manifold
-	LazyProjection(filledPath);
+	if (rrtConstraints != NULL)
+		LazyProjection(filledPath);
 
 	// save trajectory after projection
 	saveDataToText(filledPath, "../../../data/tbrrt_traj/tbrrt_traj_afproj.txt");
@@ -430,7 +436,8 @@ vector<rrtVertex*> TBrrtManager::getCandidateVertices(vector<rrtVertex*> vertice
 		int numMidPoint = (int)floor(length / (step_size)) + 1;
 		vector<Eigen::VectorXd> checkSet(numMidPoint);
 		checkSet = generateIntermediateVertex(temp1, temp2, numMidPoint);
-		LazyProjection(checkSet);
+		if (rrtConstraints != NULL)
+			LazyProjection(checkSet);
 		bool Collision = false;
 		for (int j = 0; j < numMidPoint; j++) {
 			bool bCollision = setState(checkSet[j]);

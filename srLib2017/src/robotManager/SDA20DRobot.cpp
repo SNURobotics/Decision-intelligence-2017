@@ -442,7 +442,7 @@ void SDA20D::AssembleCollision()
 		gCollision[m_numCollision].GetGeomInfo().SetDimension(boxSet[i].first);
 		gCollision[m_numCollision++].SetLocalFrame(boxSet[i].second);
 	}
-	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, -0.18, 0.0)), 0.07, 0.05, thickness, space, numBox);
+	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, -0.18, 0.0)), 0.06, 0.05, thickness, space, numBox);
 	for (int i = 0; i < numBox; i++)
 	{
 		gLink[SDA20D_Index::LINK_RIGHT_ELBOW].AddCollision(&gCollision[m_numCollision]);
@@ -450,7 +450,7 @@ void SDA20D::AssembleCollision()
 		gCollision[m_numCollision].GetGeomInfo().SetDimension(boxSet[i].first);
 		gCollision[m_numCollision++].SetLocalFrame(boxSet[i].second);
 	}
-	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, -0.08, 0.0)), 0.07, 0.08, thickness, space, numBox);
+	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, -0.08, 0.0)), 0.065, 0.08, thickness, space, numBox);
 	for (int i = 0; i < numBox; i++)
 	{
 		gLink[SDA20D_Index::LINK_RIGHT_WRIST1].AddCollision(&gCollision[m_numCollision]);
@@ -458,7 +458,7 @@ void SDA20D::AssembleCollision()
 		gCollision[m_numCollision].GetGeomInfo().SetDimension(boxSet[i].first);
 		gCollision[m_numCollision++].SetLocalFrame(boxSet[i].second);
 	}
-	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, -0.42 / 2, -0.04)), 0.07, 0.07, thickness, space, numBox);
+	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, -0.42 / 2, -0.04)), 0.055, 0.07, thickness, space, numBox);
 	for (int i = 0; i < numBox; i++)
 	{
 		gLink[SDA20D_Index::LINK_RIGHT_WRIST1].AddCollision(&gCollision[m_numCollision]);
@@ -466,7 +466,7 @@ void SDA20D::AssembleCollision()
 		gCollision[m_numCollision].GetGeomInfo().SetDimension(boxSet[i].first);
 		gCollision[m_numCollision++].SetLocalFrame(boxSet[i].second);
 	}
-	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.05)), 0.07, 0.065, thickness, space, numBox);
+	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.05)), 0.055, 0.065, thickness, space, numBox);
 	for (int i = 0; i < numBox; i++)
 	{
 		gLink[SDA20D_Index::LINK_RIGHT_WRIST2].AddCollision(&gCollision[m_numCollision]);
@@ -474,7 +474,7 @@ void SDA20D::AssembleCollision()
 		gCollision[m_numCollision].GetGeomInfo().SetDimension(boxSet[i].first);
 		gCollision[m_numCollision++].SetLocalFrame(boxSet[i].second);
 	}
-	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, -0.13, 0.0)), 0.07, 0.07, thickness, space, numBox);
+	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, -0.13, 0.0)), 0.055, 0.07, thickness, space, numBox);
 	for (int i = 0; i < numBox; i++)
 	{
 		gLink[SDA20D_Index::LINK_RIGHT_WRIST2].AddCollision(&gCollision[m_numCollision]);
@@ -601,7 +601,7 @@ void SDA20D::AssembleCollision()
 		gCollision[m_numCollision].GetGeomInfo().SetDimension(boxSet[i].first);
 		gCollision[m_numCollision++].SetLocalFrame(boxSet[i].second);
 	}
-	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.08, 0.0)), 0.07, 0.08, thickness, space, numBox);
+	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.08, 0.0)), 0.065, 0.08, thickness, space, numBox);
 	for (int i = 0; i < numBox; i++)
 	{
 		gLink[SDA20D_Index::LINK_LEFT_WRIST1].AddCollision(&gCollision[m_numCollision]);
@@ -609,7 +609,7 @@ void SDA20D::AssembleCollision()
 		gCollision[m_numCollision].GetGeomInfo().SetDimension(boxSet[i].first);
 		gCollision[m_numCollision++].SetLocalFrame(boxSet[i].second);
 	}
-	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.42 / 2, -0.04)), 0.07, 0.07, thickness, space, numBox);
+	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.42 / 2, -0.04)), 0.055, 0.07, thickness, space, numBox);
 	for (int i = 0; i < numBox; i++)
 	{
 		gLink[SDA20D_Index::LINK_LEFT_WRIST1].AddCollision(&gCollision[m_numCollision]);
@@ -617,7 +617,7 @@ void SDA20D::AssembleCollision()
 		gCollision[m_numCollision].GetGeomInfo().SetDimension(boxSet[i].first);
 		gCollision[m_numCollision++].SetLocalFrame(boxSet[i].second);
 	}
-	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.05)), 0.07, 0.065, thickness, space, numBox);
+	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.05)), 0.055, 0.065, thickness, space, numBox);
 	for (int i = 0; i < numBox; i++)
 	{
 		gLink[SDA20D_Index::LINK_LEFT_WRIST2].AddCollision(&gCollision[m_numCollision]);
@@ -625,7 +625,7 @@ void SDA20D::AssembleCollision()
 		gCollision[m_numCollision].GetGeomInfo().SetDimension(boxSet[i].first);
 		gCollision[m_numCollision++].SetLocalFrame(boxSet[i].second);
 	}
-	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.13, 0.0)), 0.07, 0.07, thickness, space, numBox);
+	boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.13, 0.0)), 0.055, 0.07, thickness, space, numBox);
 	for (int i = 0; i < numBox; i++)
 	{
 		gLink[SDA20D_Index::LINK_LEFT_WRIST2].AddCollision(&gCollision[m_numCollision]);

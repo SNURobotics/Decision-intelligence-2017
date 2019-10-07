@@ -260,16 +260,21 @@ void communicationFunc(int argc, char **argv)
 			demoTask->setObjectNum();
 
 #ifdef USE_TASK_MANAGER_FUNC
+
+			// move robot to deliver workingobject
+			std::printf("push the botton to do move job\n");
+			getchar();
 			demoTask->startConnection();
 			demoTask->endConnection();
 			demoTask->startConnection();
-
-			// move robot to deliver workingobject
 			bool isJobFinished = demoTask->moveJob();
 
 			// return to home pos
 			std::printf("push the botton to do return job\n");
 			getchar();
+			demoTask->startConnection();
+			demoTask->endConnection();
+			demoTask->startConnection();
 			bool isReturned = demoTask->returnJob();
 			if (isReturned) sentInit = 0;
 #else

@@ -74,6 +74,7 @@ bool rrtManager::checkStartGoalFeasibility()
 	bool startFeasible = !setState((*iter)->posState);
 	iter = goalTree.begin();
 	bool goalFeasible = !setState((*iter)->posState);
+	cout << startFeasible << goalFeasible << endl;
 	return startFeasible && goalFeasible;
 }
 

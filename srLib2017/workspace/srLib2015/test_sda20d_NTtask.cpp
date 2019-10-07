@@ -22,8 +22,6 @@ Eigen::VectorXd qval;
 srSpace gSpace;
 myRenderer* renderer;
 
-rrtManager* RRTManager = new rrtManager;
-
 srLink* ee = new srLink;
 srSystem* obs = new srSystem;
 srJoint::ACTTYPE actType = srJoint::ACTTYPE::TORQUE;
@@ -36,9 +34,19 @@ void sdaRobotManagerSetting(int robotMode, int excludeNum = 0);
 void sdarrtSetting();
 int activeJointIdx = 0;
 vector<Eigen::VectorXd> traj(0);
+vector<Eigen::VectorXd> traj1(0);
+vector<Eigen::VectorXd> traj2(0);
+vector<Eigen::VectorXd> traj3(0);
+vector<Eigen::VectorXd> traj4(0);
+vector<Eigen::VectorXd> traj5(0);
 Eigen::VectorXd qTemp;
 Eigen::VectorXd q;
 Eigen::VectorXd zeroPoint(15);
+
+SDA20DDualArmClosedLoopConstraint* armConstraint;
+TBrrtManager* RRTManager = new TBrrtManager(armConstraint);
+rrtManager* RRTManager2 = new rrtManager();
+bool doPlanning;
 
 vector<Eigen::VectorXd> angleData(10);
 
@@ -61,16 +69,6 @@ int main(int argc, char **argv)
 	sdaRobotManagerSetting(SDA20DManager::MoveWholeBody);
 
 	sdarrtSetting();
-
-	//busbar->setBaseLinkFrame(sdaRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() * Inv(Tbusbar2gripper_ur));
-	//ctCase->setBaseLinkFrame(sdaRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() * Inv(TctCase2gripper_ur));
-	//qval.setZero(6);
-	//qval[0] = SR_PI_HALF/3;
-	//qval[1] = SR_PI_HALF/4;
-	//qval[2] = SR_PI_HALF/7;
-	//qval[3] = SR_PI_HALF/2;
-	//qval[4] = SR_PI_HALF/6;
-	//qval[5] = SR_PI_HALF/5;
 
 	qTemp = Eigen::VectorXd::Random(rManager1->m_activeArmInfo->m_numJoint);
 	Eigen::VectorXd qTemp2 = Eigen::VectorXd::Random(rManager1->m_activeArmInfo->m_numJoint);
@@ -98,27 +96,12 @@ int main(int argc, char **argv)
 	SE3 T = rManager2->forwardKin(q, &sdaRobot->gMarkerLink[SDA20D_Index::MLINK_RIGHT_T]);
 	cout << T << endl;
 
-	//RRTManager->setStartandGoal(qTemp, qTemp2);
-	//cout << RRTManager->setState(qTemp) << RRTManager->setState(qTemp2);
-	//RRTManager->execute(0.1);
-	////rManager1->setJointVal(qval);
-	//obs->GetBaseLink()->SetFrame(sdaRobot->gMarkerLink[SDA20D_Index::MLINK_RIGHT_T].GetFrame());
-	//bin->setBaseLinkFrame(SE3(Vec3(1.0, 0.0, 0.0)));
-	//if (RRTManager->isExecuted())
-	//{
-	//	traj = RRTManager->extractPath();
-	//}
-
-	//rManager2->setJointVal(q);
-
-	//SE3 temp = SE3(Vec3(0.0, -0.1, 0.3));
-	//Eigen::VectorXd qq = rManager1->inverseKin(temp, &sdaRobot->gMarkerLink[SDA20D_Index::MLINK_RIGHT_T], false, SE3(), flag, rManager1->qInvKinInitActiveJoint, 500, robotManager::QP, robotManager::DG);
-
-	//vector<Eigen::VectorXd> angleData(10);
+	////////////////////////////////////////// NT Data aquisition ///////////////////////////////////////////////
 
 	vector<Eigen::VectorXd> rawData(10);
 	ifstream in("../../../data/NT_Data/Data.txt");
 	string str;
+
 	for (int i = 0; i < 10; i++)
 	{
 		string a;
@@ -152,46 +135,152 @@ int main(int argc, char **argv)
 	cout << angleData[2] << endl<< endl;
 	cout << angleData[3] << endl<< endl;
 	cout << angleData[4] << endl<< endl;
-	zeroPoint << 1993, -62195, 91219, -96329, 84423, -4091, 77212, -50749,
-					   -60931, 93994, -93520, 80367, 1291, 82073, -50613;
-	//zeroPoint << 1993, -62195, 91219, -96329, 84423, -4091, 77212, -50749,
-	//	-184320, 93994, -93520, 80368, 1291, 82072, -50614;
 
+	//zeroPoint << 1993, -62195, 91219, -96329, 84423, -4091, 77212, -50749 + 30000,
+	//					 -60931, 93994, -93520, 80367, 1291, 82073, -50613;
+	/*zeroPoint << 0, 61440, 92160, 92160, 128000, 0, 28729, 0,
+					61440, 92160, 92160, 128000, 0, 28729, 0;*/
+
+	zeroPoint << 0, -0, 0, -0, 0, 0, 0, -0,
+		-0, 0, -0, 0, 0, 0, -0;
+
+	// 2019-10-07 Fixed
 	Eigen::VectorXd weight(15);
-	weight << 180 / 324576.0,
-			180 / 184320.0, 110 / 112640.0, -170 / 174080.0, -130 / 133120.0, -180 / 206848.0, 110 / 126408.0, 180 / 104448.0,
-			180 / 184320.0, 110 / 112640.0, -170 / 174080.0, -130 / 133120.0, -180 / 206848.0, 110 / 126408.0, 180 / 104448.0;
+	weight << 180.0 / 324576.0,
+			180.0 / 184320.0, 110.0 / 112640.0, 170.0 / 174080.0, -130.0 / 133120.0, 180.0 / 206848.0, -110.0 / 126408.0, 180.0 / 104448.0,
+			180.0 / 184320.0, 110.0 / 112640.0, 170.0 / 174080.0 ,-130.0 / 133120.0, 180.0 / 206848.0, -110.0 / 126408.0, -180.0 / 104448.0;
 	for (int i = 0; i < 10; i++)
 	{
 		for (int j = 0; j < 15; j++)
 		{
 			angleData[i][j] = DEG2RAD(angleData[i][j]) * weight[j];
+			if (j % 7 == 3) angleData[i][j]+= DEG2RAD(0 + 180);
 		}
 	}
 	for (int i = 0; i < 15; i++) {
 		zeroPoint[i] = DEG2RAD(zeroPoint[i]) * weight[i];
+		if (i % 7 == 3) zeroPoint[i] += DEG2RAD(0 + 180);
 	}
 
+	for (int i = 0; i < 10; i++) {
+		rManager1->setJointVal(angleData[i]);
+		cout << rManager1->checkCollision() << endl;
+	}
+
+	////////////////////////////////////// RRT //////////////////////////////////////////////
+	rManager1->setJointVal(angleData[3]);
+	SE3 Tright = ((SDA20D*)rManager1->m_robot)->gMarkerLink[SDA20D_Index::MLINK_RIGHT_T].GetFrame();
+	SE3 Tleft = ((SDA20D*)rManager1->m_robot)->gMarkerLink[SDA20D_Index::MLINK_LEFT_T].GetFrame();
+	armConstraint = new SDA20DDualArmClosedLoopConstraint(rManager1, Tright % Tleft);
+
+	sdarrtSetting();
+	RRTManager->setConstraint(armConstraint);
+
+	//////////////////////////////////////////////////////////////////////
+	doPlanning = true;
+	RRTManager->printIter = false;
+	RRTManager2->printIter = false;
+
+	if (doPlanning)
+	{
+		for (int i = 0; i < 9; i++) {
+			cout << "Task step : " << i << endl;
+			clock_t start = clock();
+			if (i == 0 || i == 1 || i == 2 || i == 5 || i == 8)
+			//if (1)
+			{
+				vector<unsigned int> colliIdx(0);
+
+				// define planning problem
+				RRTManager2->setStartandGoal(angleData[i], angleData[i + 1]);
+
+				// run RRT
+				RRTManager2->execute(0.1);
+				traj1 = RRTManager2->extractPath(200);
+
+				// feasibility check for output trajectory
+				bool pathFeasible = true;
+				for (unsigned int i = 0; i < traj1.size(); i++)
+				{
+					rManager1->setJointVal(traj1[i]);
+					pathFeasible = pathFeasible && (!rManager1->checkCollision());
+					if (rManager1->checkCollision())
+						colliIdx.push_back(i);
+				}
+				printf("output path feasible?\n");
+				cout << pathFeasible << endl;
+				printf("collision occuring path index:\n");
+				for (unsigned int i = 0; i < colliIdx.size(); i++)
+					cout << colliIdx[i] << ", ";
+				cout << endl;
+
+				traj3 = vector<Eigen::VectorXd>(0);
+				traj3.reserve(traj.size() + traj1.size()); // preallocate memory
+				traj3.insert(traj3.end(), traj.begin(), traj.end());
+				traj3.insert(traj3.end(), traj1.begin(), traj1.end());
+				traj = traj3;
+			}
+			else {
+				vector<unsigned int> colliIdx(0);
+
+				//rManager1->setJointVal(angleData[i]);
+				//SE3 Tright = ((SDA20D*)rManager1->m_robot)->gMarkerLink[SDA20D_Index::MLINK_RIGHT_T].GetFrame();
+				//SE3 Tleft = ((SDA20D*)rManager1->m_robot)->gMarkerLink[SDA20D_Index::MLINK_LEFT_T].GetFrame();
+				//armConstraint = new SDA20DDualArmClosedLoopConstraint(rManager1, Tright % Tleft);
+
+				// define planning problem
+				RRTManager->setConstraint(armConstraint);
+				Eigen::VectorXd tempData1 = angleData[i];
+				Eigen::VectorXd tempData2 = angleData[i + 1];
+				armConstraint->project2ConstraintManifold(tempData1);
+				cout << "projection distance : " << (tempData1 - angleData[i]).norm() << endl;
+				cout << "projection distance : " << (tempData2 - angleData[i + 1]).norm() << endl;
+				RRTManager->setStartandGoal(tempData1, tempData2);
+				RRTManager->setThreshold(0.01);
+				RRTManager->setSmoothingErrorThreshold(0.25);
+				// run RRT
+				RRTManager->execute(0.1);
+				traj1 = RRTManager->extractPath(30);
+				//saveDataToText(traj, "../../../data/NT_Data/NT_traj_out.txt");
+				vector<Eigen::VectorXd> constraintVec2(0);
+				for (unsigned int i = 0; i < traj1.size(); i++)
+					constraintVec2.push_back(armConstraint->getConstraintVector(traj1[i]));
+				//saveDataToText(constraintVec2, "../../../data/NT_Data/NT_traj_constraintVec2.txt");
+
+				// feasibility check for output trajectory
+				bool pathFeasible = true;
+				for (unsigned int i = 0; i < traj1.size(); i++)
+				{
+					rManager1->setJointVal(traj1[i]);
+					pathFeasible = pathFeasible && (!rManager1->checkCollision());
+					if (rManager1->checkCollision())
+						colliIdx.push_back(i);
+				}
+				printf("output path feasible?\n");
+				cout << pathFeasible << endl;
+				printf("collision occuring path index:\n");
+				for (unsigned int i = 0; i < colliIdx.size(); i++)
+					cout << colliIdx[i] << ", ";
+				cout << endl;
+
+				traj3 = vector<Eigen::VectorXd>(0);
+				traj3.reserve(traj.size() + traj1.size()); // preallocate memory
+				traj3.insert(traj3.end(), traj.begin(), traj.end());
+				traj3.insert(traj3.end(), traj1.begin(), traj1.end());
+				traj = traj3;
+			}
+		}
+
+		cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
+	}
+
+
+	/////////////////////////////////////////////////////////////////////////////////////////
+
 	Eigen::VectorXd qq(15);
-	qq.setZero();
-	qq(0) = DEG2RAD(30);
-	qq(1) = DEG2RAD(0);
-	qq(2) = DEG2RAD(0);
-	qq(3) = DEG2RAD(0);
-	qq(4) = DEG2RAD(0);
-	qq(5) = DEG2RAD(0);
-	qq(6) = DEG2RAD(0);
-	qq(7) = DEG2RAD(0);
-	qq(8) = DEG2RAD(0);
-	qq(9) = DEG2RAD(0);
-	qq(10) = DEG2RAD(0);
-	qq(11) = DEG2RAD(0);
-	qq(12) = DEG2RAD(0);
-	qq(13) = DEG2RAD(0);
-	qq(14) = DEG2RAD(0);
-	qq = angleData[0];
-	cout << angleData[0] << endl;
-	rManager1->setJointVal(qq);
+	qq << 0, -0, 0, -0, 0, 0, 0, -0,
+		-0, 0, -0, 0, 0, 0, -0;
+	//rManager1->setJointVal(qq);
 	rendering(argc, argv);
 
 	return 0;
@@ -234,11 +323,20 @@ void updateFunc()
 	static int trajcnt = 0;
 	cnt++;
 
-	if (cnt % 100 == 0)
-		trajcnt++;
 
-	rManager1->setJointVal(angleData[trajcnt % angleData.size()]);
-	//rManager1->setJointVal(zeroPoint);
+	if (doPlanning) {
+		if (traj.size() > 0)
+			rManager1->setJointVal(traj[trajcnt % traj.size()]);
+		if (cnt % 10 == 0)
+			trajcnt++;
+	}
+	else {
+		if (cnt % 100 == 0)
+			trajcnt++;
+		rManager1->setJointVal(angleData[trajcnt % angleData.size()]);
+		//rManager1->setJointVal(zeroPoint);
+		//rManager1->setJointVal(qq);
+	}
 
 	//if (cnt % 100 == 0)
 	//	trajcnt++;
@@ -306,6 +404,10 @@ void sdarrtSetting()
 		planningJoint.push_back((srStateJoint*)rManager1->m_activeArmInfo->m_activeJoint[i]);
 	RRTManager->setSystem(planningJoint);
 	RRTManager->setStateBound(VecToVector(rManager1->m_lowerJointLimit), VecToVector(rManager1->m_upperJointLimit));
+
+	RRTManager2->setSpace(&gSpace);
+	RRTManager2->setSystem(planningJoint);
+	RRTManager2->setStateBound(VecToVector(rManager1->m_lowerJointLimit), VecToVector(rManager1->m_upperJointLimit));
 }
 
 
