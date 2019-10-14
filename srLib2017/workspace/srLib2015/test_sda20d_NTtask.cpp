@@ -8,6 +8,8 @@
 #include "robotManager\SDA20DRobotManager.h"
 #include "robotManager\SDA20DRobot.h"
 #include "robotManager\environment_4th.h"
+#include "robotManager\environment_5th.h"
+#include "robotManager\robotRRTManager.h"
 #include <time.h>
 #include <ctime>
 
@@ -16,6 +18,8 @@ SDA20D* sdaRobot = new SDA20D;
 SDA20DManager* rManager1;
 SDA20DManager* rManager2;
 Bin* bin = new Bin(0.01);
+ACB_FL* FL = new ACB_FL();
+ACB_FU* FU = new ACB_FU();
 
 Eigen::VectorXd qval;
 
@@ -39,16 +43,20 @@ vector<Eigen::VectorXd> traj2(0);
 vector<Eigen::VectorXd> traj3(0);
 vector<Eigen::VectorXd> traj4(0);
 vector<Eigen::VectorXd> traj5(0);
+vector<SE3> ObjTraj1(0);
+vector<SE3> ObjTraj2(0);
 Eigen::VectorXd qTemp;
 Eigen::VectorXd q;
 Eigen::VectorXd zeroPoint(15);
 
 SDA20DDualArmClosedLoopConstraint* armConstraint;
 TBrrtManager* RRTManager = new TBrrtManager(armConstraint);
-rrtManager* RRTManager2 = new rrtManager();
+robotRRTManager* RRTManager2 = new robotRRTManager();
 bool doPlanning;
 
 vector<Eigen::VectorXd> angleData(10);
+
+#define isOptimal
 
 
 int main(int argc, char **argv)
@@ -63,6 +71,12 @@ int main(int argc, char **argv)
 	obs->SetBaseLinkType(srSystem::FIXED);
 	//gSpace.AddSystem(obs);
 	//gSpace.AddSystem(bin);
+
+	gSpace.AddSystem(FL);
+	gSpace.AddSystem(FU);
+
+	//FU->setBaseLinkFrame(EulerZYX(Vec3(-SR_PI_HALF, 0, 0), Vec3(0.05, -0.82, -0.1)));
+	FL->setBaseLinkFrame(EulerZYX(Vec3(0, 0, SR_PI), Vec3(0.21, -0.68, 0.2)));
 
 	initDynamics();
 	int excludeNum = 0;
@@ -148,7 +162,7 @@ int main(int argc, char **argv)
 	Eigen::VectorXd weight(15);
 	weight << 180.0 / 324576.0,
 			180.0 / 184320.0, 110.0 / 112640.0, 170.0 / 174080.0, -130.0 / 133120.0, 180.0 / 206848.0, -110.0 / 126408.0, 180.0 / 104448.0,
-			180.0 / 184320.0, 110.0 / 112640.0, 170.0 / 174080.0 ,-130.0 / 133120.0, 180.0 / 206848.0, -110.0 / 126408.0, -180.0 / 104448.0;
+			180.0 / 184320.0, 110.0 / 112640.0, 170.0 / 174080.0 ,-130.0 / 133120.0, 180.0 / 206848.0, -110.0 / 126408.0, 180.0 / 104448.0;
 	for (int i = 0; i < 10; i++)
 	{
 		for (int j = 0; j < 15; j++)
@@ -167,6 +181,11 @@ int main(int argc, char **argv)
 		cout << rManager1->checkCollision() << endl;
 	}
 
+#ifdef isOptimal
+		angleData.erase(angleData.begin() + 4);
+		angleData.erase(angleData.begin() + 1);
+#endif
+
 	////////////////////////////////////// RRT //////////////////////////////////////////////
 	rManager1->setJointVal(angleData[3]);
 	SE3 Tright = ((SDA20D*)rManager1->m_robot)->gMarkerLink[SDA20D_Index::MLINK_RIGHT_T].GetFrame();
@@ -181,13 +200,109 @@ int main(int argc, char **argv)
 	RRTManager->printIter = false;
 	RRTManager2->printIter = false;
 
+	SE3 Tleft2Obj;
+
 	if (doPlanning)
 	{
+#ifndef isOptimal
 		for (int i = 0; i < 9; i++) {
+
 			cout << "Task step : " << i << endl;
 			clock_t start = clock();
-			if (i == 0 || i == 1 || i == 2 || i == 5 || i == 8)
-			//if (1)
+				if (i == 0 || i == 1 || i == 2 || i == 8)
+				{
+					vector<unsigned int> colliIdx(0);
+
+					// define planning problem
+					RRTManager2->setStartandGoal(angleData[i], angleData[i + 1]);
+
+					// run RRT
+					RRTManager2->execute(0.1);
+					traj1 = RRTManager2->extractPath(200);
+
+					// feasibility check for output trajectory
+					bool pathFeasible = true;
+					for (unsigned int i = 0; i < traj1.size(); i++)
+					{
+						rManager1->setJointVal(traj1[i]);
+						pathFeasible = pathFeasible && (!rManager1->checkCollision());
+						if (rManager1->checkCollision())
+							colliIdx.push_back(i);
+
+						ObjTraj1.push_back(FU->getBaseLinkFrame());
+						ObjTraj2.push_back(FL->getBaseLinkFrame());
+					}
+					printf("output path feasible?\n");
+					cout << pathFeasible << endl;
+					printf("collision occuring path index:\n");
+					for (unsigned int i = 0; i < colliIdx.size(); i++)
+						cout << colliIdx[i] << ", ";
+					cout << endl;
+
+					traj3 = vector<Eigen::VectorXd>(0);
+					traj3.reserve(traj.size() + traj1.size()); // preallocate memory
+					traj3.insert(traj3.end(), traj.begin(), traj.end());
+					traj3.insert(traj3.end(), traj1.begin(), traj1.end());
+					traj = traj3;
+				}
+
+				else {
+					vector<unsigned int> colliIdx(0);
+
+					// define planning problem
+					RRTManager->setConstraint(armConstraint);
+					Eigen::VectorXd tempData1 = angleData[i];
+					Eigen::VectorXd tempData2 = angleData[i + 1];
+					armConstraint->project2ConstraintManifold(tempData1);
+					armConstraint->project2ConstraintManifold(tempData2);
+					cout << "projection distance : " << (tempData1 - angleData[i]).norm() << endl;
+					cout << "projection distance : " << (tempData2 - angleData[i + 1]).norm() << endl;
+					RRTManager->setStartandGoal(tempData1, tempData2);
+					RRTManager->setThreshold(0.01);
+					RRTManager->setSmoothingErrorThreshold(0.25);
+					// run RRT
+					RRTManager->execute(0.1);
+					traj1 = RRTManager->extractPath(30);
+					//saveDataToText(traj, "../../../data/NT_Data/NT_traj_out.txt");
+					vector<Eigen::VectorXd> constraintVec2(0);
+					for (unsigned int i = 0; i < traj1.size(); i++)
+						constraintVec2.push_back(armConstraint->getConstraintVector(traj1[i]));
+					//saveDataToText(constraintVec2, "../../../data/NT_Data/NT_traj_constraintVec2.txt");
+
+					// feasibility check for output trajectory
+					bool pathFeasible = true;
+					for (unsigned int i = 0; i < traj1.size(); i++)
+					{
+						rManager1->setJointVal(traj1[i]);
+						pathFeasible = pathFeasible && (!rManager1->checkCollision());
+						if (rManager1->checkCollision())
+							colliIdx.push_back(i);
+
+						SE3 Tleft = ((SDA20D*)rManager1->m_robot)->gMarkerLink[SDA20D_Index::MLINK_LEFT_T].GetFrame();
+						if (Tleft2Obj == SE3())
+							Tleft2Obj = Tleft % FL->getBaseLinkFrame();
+						ObjTraj1.push_back(FU->getBaseLinkFrame());
+						ObjTraj2.push_back(Tleft * Tleft2Obj);
+						FL->setBaseLinkFrame(Tleft * Tleft2Obj);
+					}
+					printf("output path feasible?\n");
+					cout << pathFeasible << endl;
+					printf("collision occuring path index:\n");
+					for (unsigned int i = 0; i < colliIdx.size(); i++)
+						cout << colliIdx[i] << ", ";
+					cout << endl;
+
+					traj3 = vector<Eigen::VectorXd>(0);
+					traj3.reserve(traj.size() + traj1.size()); // preallocate memory
+					traj3.insert(traj3.end(), traj.begin(), traj.end());
+					traj3.insert(traj3.end(), traj1.begin(), traj1.end());
+					traj = traj3;
+				}
+			}
+
+#else
+		for (int i = 0; i < 7; i++) {
+			if (i == 0 || i == 1 || i == 6)
 			{
 				vector<unsigned int> colliIdx(0);
 
@@ -206,6 +321,9 @@ int main(int argc, char **argv)
 					pathFeasible = pathFeasible && (!rManager1->checkCollision());
 					if (rManager1->checkCollision())
 						colliIdx.push_back(i);
+
+					ObjTraj1.push_back(FU->getBaseLinkFrame());
+					ObjTraj2.push_back(FL->getBaseLinkFrame());
 				}
 				printf("output path feasible?\n");
 				cout << pathFeasible << endl;
@@ -220,19 +338,16 @@ int main(int argc, char **argv)
 				traj3.insert(traj3.end(), traj1.begin(), traj1.end());
 				traj = traj3;
 			}
+
 			else {
 				vector<unsigned int> colliIdx(0);
-
-				//rManager1->setJointVal(angleData[i]);
-				//SE3 Tright = ((SDA20D*)rManager1->m_robot)->gMarkerLink[SDA20D_Index::MLINK_RIGHT_T].GetFrame();
-				//SE3 Tleft = ((SDA20D*)rManager1->m_robot)->gMarkerLink[SDA20D_Index::MLINK_LEFT_T].GetFrame();
-				//armConstraint = new SDA20DDualArmClosedLoopConstraint(rManager1, Tright % Tleft);
 
 				// define planning problem
 				RRTManager->setConstraint(armConstraint);
 				Eigen::VectorXd tempData1 = angleData[i];
 				Eigen::VectorXd tempData2 = angleData[i + 1];
 				armConstraint->project2ConstraintManifold(tempData1);
+				armConstraint->project2ConstraintManifold(tempData2);
 				cout << "projection distance : " << (tempData1 - angleData[i]).norm() << endl;
 				cout << "projection distance : " << (tempData2 - angleData[i + 1]).norm() << endl;
 				RRTManager->setStartandGoal(tempData1, tempData2);
@@ -255,6 +370,13 @@ int main(int argc, char **argv)
 					pathFeasible = pathFeasible && (!rManager1->checkCollision());
 					if (rManager1->checkCollision())
 						colliIdx.push_back(i);
+
+					SE3 Tleft = ((SDA20D*)rManager1->m_robot)->gMarkerLink[SDA20D_Index::MLINK_LEFT_T].GetFrame();
+					if (Tleft2Obj == SE3())
+						Tleft2Obj = Tleft % FL->getBaseLinkFrame();
+					ObjTraj1.push_back(FU->getBaseLinkFrame());
+					ObjTraj2.push_back(Tleft * Tleft2Obj);
+					FL->setBaseLinkFrame(Tleft * Tleft2Obj);
 				}
 				printf("output path feasible?\n");
 				cout << pathFeasible << endl;
@@ -270,6 +392,9 @@ int main(int argc, char **argv)
 				traj = traj3;
 			}
 		}
+#endif
+
+
 
 		cout << "time for planning: " << (clock() - start) / (double)CLOCKS_PER_SEC << endl;
 	}
@@ -325,8 +450,11 @@ void updateFunc()
 
 
 	if (doPlanning) {
-		if (traj.size() > 0)
+		if (traj.size() > 0) {
 			rManager1->setJointVal(traj[trajcnt % traj.size()]);
+			FU->setBaseLinkFrame(ObjTraj1[trajcnt % traj.size()]);
+			FL->setBaseLinkFrame(ObjTraj2[trajcnt % traj.size()]);
+		}
 		if (cnt % 10 == 0)
 			trajcnt++;
 	}

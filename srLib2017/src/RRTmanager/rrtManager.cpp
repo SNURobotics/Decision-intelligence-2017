@@ -382,7 +382,7 @@ vector<Eigen::VectorXd> rrtManager::extractPath(int smoothingNum /*= 200*/)
 		connectParentAndChild((*iter2), (*iter));
 	}
 
-	path = smoothingPath(path, smoothingNum);
+	path = smoothingPathOptimal(path);
 	list<Eigen::VectorXd> filledPath = fillingPath(path);
 	list<Eigen::VectorXd>::iterator iter_path = filledPath.begin();
 	vector<Eigen::VectorXd> outputPath(filledPath.size());
@@ -563,7 +563,7 @@ list<rrtVertex*> rrtManager::smoothingPath(list<rrtVertex*>& path, int smoothing
 		{
 			cmp = getNewPathSmoothingCost(tempVertices);
 
-			if (cmp < cmp_rrtpath)
+			if (cmp <= cmp_rrtpath)
 				replaceVertices(path, tempVertices, removedVertex);
 		}
 		/////////////////////////////////////////////////////////////

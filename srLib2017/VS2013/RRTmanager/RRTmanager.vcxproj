@@ -119,7 +119,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\RRTmanager\cbirrtManager.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\src\RRTmanager\rrtManager.cpp" />
     <ClCompile Include="..\..\src\RRTmanager\TBrrtManager.cpp">
@@ -131,7 +131,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\RRTmanager\cbirrtManager.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\src\RRTmanager\rrtManager.h" />
     <ClInclude Include="..\..\src\RRTmanager\TBrrtManager.h">

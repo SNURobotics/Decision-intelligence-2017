@@ -110,3 +110,21 @@ public:
 	void AssembleModel();
 	double m_collision_offset;
 };
+
+class ACB_FU : public Object
+{
+public:
+	ACB_FU(double collision_offset = 0.01);
+	~ACB_FU();
+	void AssembleModel();
+	double m_collision_offset;
+};
+
+class ACB_FL : public Object
+{
+public:
+	ACB_FL(double collision_offset = 0.01);
+	~ACB_FL();
+	void AssembleModel();
+	double m_collision_offset;
+};

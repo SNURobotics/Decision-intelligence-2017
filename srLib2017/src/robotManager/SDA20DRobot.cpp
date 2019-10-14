@@ -3,6 +3,7 @@
 #include "common/utils.h"
 
 #define GRAYCOLORSDA20D		0.15f, 0.15f, 0.15f, 1.0f
+#define SHOW_GRIPPER
 SDA20D::SDA20D()
 {
 
@@ -150,6 +151,7 @@ void SDA20D::AssembleModel()
 
 
 	gLink[SDA20D_Index::LINK_RIGHT_GRIPPER].GetGeomInfo().SetDimension(0.001);
+
 #ifdef SHOW_GRIPPER
 	gLink[SDA20D_Index::LINK_RIGHT_GRIPPER].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[SDA20D_Index::LINK_RIGHT_GRIPPER].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(-SR_PI_HALF, SR_PI_HALF, 0.0), Vec3(0.0595, -0.1735, 0.0)));
