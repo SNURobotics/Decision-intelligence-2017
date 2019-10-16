@@ -67,6 +67,13 @@ struct CUR_JOINT
 	double q6;
 };
 
+struct READ_SIGNAL
+{
+	int q1;
+	int q2;
+	int q3;
+};
+
 LRESULT CALLBACK getMessageFromRobot(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if (uMsg == WM_COPYDATA)
@@ -110,6 +117,21 @@ LRESULT CALLBACK getMessageFromRobot(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 			curJoint.push_back(cur_joint.q6*(SR_PI / 180.0));
 			demoTask->setCurJoint(curJoint);
 		}
+		else if (pcds->dwData == 224)
+		{
+			READ_SIGNAL io_from_ESF;
+			memcpy_s(&io_from_ESF, sizeof(io_from_ESF), pcds->lpData, pcds->cbData);
+
+			///////////////////////////////////////
+			if (io_from_ESF.q2 == 10)
+				demoTask->readSignal = 1;
+			else if (io_from_ESF.q2 == 0)
+				demoTask->readSignal = 0;
+			else
+				cout << "Exceptional input from IOread!!!" << endl;
+
+			///////////////////////////////////////
+		}
 	}
 
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -129,7 +151,7 @@ int main(int argc, char **argv)
 	envSetting();
 	initDynamics();
 	MHRobotManagerSetting();
-	demoTask = new demoTaskManager(demoEnv, rManager1, 0);
+	demoTask = new demoTaskManager(demoEnv, rManager1, 1);
 	demoTask->setRobotRRTManager();
 
 	// for communication (dummy window dialog)
@@ -149,16 +171,20 @@ int main(int argc, char **argv)
 
 	// test code (19.03.21)
 	demoTask->startConnection();
+	Sleep(100);
 	demoTask->endConnection();
+	Sleep(100);
 	demoTask->startConnection();
+	Sleep(100);
 	for (int i = 0; i < 2; i++)
 	{
 		demoTask->getCurPosSignal();
-		Sleep(1000);
+		Sleep(500);
 	}
 	demoTask->gripperOnSignal();
 	Sleep(100);
 	demoTask->gripperOffSignal();
+	Sleep(100);
 	/*Eigen::VectorXd curPos(6);
 	curPos[0] = DEG2RAD(180.0);
 	curPos[1] = DEG2RAD(2);
@@ -181,8 +207,11 @@ int main(int argc, char **argv)
 	}*/
 	//demoTask->endConnection();
 
-	demoTask->goToWaypoint(demoTask->homeSE3);
+	//demoTask->IOread(9);
+	//demoTask->IOwrite(9, false);
 
+	demoTask->goToWaypoint(demoTask->homeSE3);
+	Sleep(100);
 	//qval.setZero(6);
 	//qval[2] = 1.0;
 	//rManager1->setJointVal(qval);
@@ -234,19 +263,28 @@ int main(int argc, char **argv)
 void communicationFunc(int argc, char **argv)
 {
 	static bool sentInit = false;
+	clock_t start = clock();
 	while (TRUE)
 	{
-		//std::ifstream in("../../../data/SKKU_data_6th/TestData.txt");
-		//std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-		//char* received_data = (char*)contents.c_str();
+		/*std::ifstream in("../../../data/SKKU_data_6th/ResultsChkeck00.txt");
+		std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+		char* received_data = (char*)contents.c_str();*/
 
 		//Receiving data from HYU client
 		char* received_data = serv.RecevData();
 		communication_flag = received_data[0];
+
+		if ((clock() - start) / (double)CLOCKS_PER_SEC > 25) {
+			cout << "Resend init data..." << endl;
+			sentInit = 0;
+			start = clock();
+		}
+
 		if (!sentInit)
 		{
 			std::printf("push the button to get vision data\n");
 			getchar();
+			start = clock();
 			serv.SendMessageToClient("I");
 			sentInit = true;
 		}
@@ -254,28 +292,32 @@ void communicationFunc(int argc, char **argv)
 
 		if (communication_flag == 'V')
 		{
+			ofstream output;
+			output.open("../../../data/SKKU_data_6th/tempData.txt");
+			output << received_data;
+
 			// vision data
 			std::printf("%s\n", received_data);
 			demoTask->updateEnv(received_data);
-			demoTask->setObjectNum();
-
+			bool canContinue = demoTask->setObjectNum();
+			if (!canContinue) {
+				sentInit = false;
+				continue;
+			}
 #ifdef USE_TASK_MANAGER_FUNC
 
 			// move robot to deliver workingobject
 			std::printf("push the botton to do move job\n");
 			getchar();
-			demoTask->startConnection();
-			demoTask->endConnection();
-			demoTask->startConnection();
+
 			bool isJobFinished = demoTask->moveJob();
 
 			// return to home pos
 			std::printf("push the botton to do return job\n");
 			getchar();
-			demoTask->startConnection();
-			demoTask->endConnection();
-			demoTask->startConnection();
+
 			bool isReturned = demoTask->returnJob();
+
 			if (isReturned) sentInit = 0;
 #else
 

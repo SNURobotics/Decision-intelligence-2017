@@ -145,6 +145,7 @@
     </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\main_NTdemo_SKKU_VisionVerification.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DeploymentContent>
     </ClCompile>
     <ClCompile Include="..\..\..\workspace\srLib2015\NTdemoEnvSetting_5th.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>

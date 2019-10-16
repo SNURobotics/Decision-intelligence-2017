@@ -21,6 +21,8 @@
 #define GRIPPER_OFF_SIGNAL 4
 #define CONNECTION_END_SIGNAL 5
 #define GET_CURJOINT_SIGNAL 6
+#define IOREAD 7
+#define IOWRITE 8
 
 #define MAX_TIME_DURATION   5.0
 #define GRASP_WAIT_TIME 50
@@ -41,7 +43,7 @@ public:
 	SE3 Trobotbase2link1;
 	SE3 Tworld2camera;
 	Bin* bin;
-	Bin* bin2;
+	//Bin* bin2;
 	Table4th* table;
 	Barrier1* barrier1;
 	Barrier2* barrier2;
@@ -126,6 +128,8 @@ public:
 	void setCurJoint(vector<double> values);
 	LRESULT gripperOnSignal();
 	LRESULT gripperOffSignal();
+	LRESULT IOwrite(int port, bool ON);
+	LRESULT IOread(int port);
 
 public:
 	// demo environemnt
@@ -149,12 +153,14 @@ public:
 
 	// Place task related variables
 	vector<SE3> goalSE3;			// goal SE3 of objects (should be predefined and be the same as workspace)
+	vector<SE3> goalSE32;
 	SE3 homeSE3;
 	SE3 reachOffset;				// offset between grasp point and waypoint right before grasp point (to reach vertically to object)
 	SE3 goalOffset;					// offset between goal point and waypoint right before goal point (to reach vertically to object)
 	bool which_task;				// 0: Transfering task 1: Alligning task
 	int goal_iterator;				// Goal index for Alligning task
-		
+	int goal_iterator2;				// Goal index for Alligning task
+
 	enum Object_ID
 	{
 		Fixed_Cover, Fixed_Contact, Dummy
@@ -180,7 +186,14 @@ public:
 		double Rz;
 
 	};
+	struct IO_WRITE
+	{
+		int PORT;
+		int SIGNAL[3];
+
+	};
 	bool isGetPos;
+	bool readSignal;
 
 
 	// Planning related variables

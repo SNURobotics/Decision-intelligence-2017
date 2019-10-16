@@ -53,6 +53,7 @@ vector<SE3> Twaypoints4;
 int cnt;
 int iter;
 vector<Eigen::VectorXd> renderTraj;
+vector<SE3> objTraj;
 
 struct CUR_POS
 {
@@ -165,7 +166,7 @@ int main(int argc, char **argv)
 	}
 
 	// read given text data (for Test)
-	std::ifstream in("../../../data/SKKU_data_6th/ResultsChkeck02.txt");
+	std::ifstream in("../../../data/SKKU_data_6th/ResultsChkeck05.txt");
 	std::string contents((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 	char* received_data = (char*)contents.c_str();
 	communication_flag = received_data[0];
@@ -182,93 +183,92 @@ int main(int argc, char **argv)
 	cnt = 0;
 	iter = 0;
 
-	//Twaypoints1 = demoTask->planBetweenWaypoints(demoTask->homeSE3, demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * demoTask->reachOffset, 9);
-	//int flag;
-	//renderTraj.push_back(rManager1->inverseKin(demoTask->homeSE3, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-	//for (int i = 0; i < Twaypoints1.size(); i++)
-	//{
-	//	// Reaching
-	//	renderTraj.push_back(rManager1->inverseKin(Twaypoints1[i], &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-	//	rManager1->setJointVal(renderTraj.back());
-	//}
-	//// Go to grasp pose
-	//renderTraj.push_back(rManager1->inverseKin(demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)), &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-	//rManager1->setJointVal(renderTraj.back());
-	//renderTraj.push_back(rManager1->inverseKin(SE3(Vec3(0.0, 0.0, 0.15)) * demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)), &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-	//rManager1->setJointVal(renderTraj.back());
-
-	//Twaypoints2 = demoTask->planBetweenWaypoints(SE3(Vec3(0.0, 0.0, 0.15)) * demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)), demoTask->goalSE3[demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset, 9);
-	//for (int i = 0; i < Twaypoints2.size(); i++)
-	//{
-	//	// Reaching
-	//	renderTraj.push_back(rManager1->inverseKin(Twaypoints2[i], &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-	//	rManager1->setJointVal(renderTraj.back());
-	//}
-
-	//Twaypoints3 = demoTask->planBetweenWaypoints(demoTask->goalSE3[demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset, demoTask->homeSE3, 9);
-	//for (int i = 0; i < Twaypoints3.size(); i++)
-	//{
-	//	// Home position
-	//	renderTraj.push_back(rManager1->inverseKin(Twaypoints3[i], &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-	//	rManager1->setJointVal(renderTraj.back());
-	//}
-
+	Twaypoints1 = demoTask->planBetweenWaypoints(demoTask->homeSE3, demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * demoTask->reachOffset, 20);
 	int flag;
 	renderTraj.push_back(rManager1->inverseKin(demoTask->homeSE3, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-	rManager1->setJointVal(renderTraj.back());
-	renderTraj.push_back(rManager1->inverseKin(demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * demoTask->reachOffset, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-	rManager1->setJointVal(renderTraj.back());
-
-	renderTraj.push_back(rManager1->inverseKin(demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)), &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-	rManager1->setJointVal(renderTraj.back());
-
-	renderTraj.push_back(rManager1->inverseKin(SE3(Vec3(0.0, 0.0, 0.25)) * demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)), &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-	rManager1->setJointVal(renderTraj.back());
-	
-	//if (abs(demoTask->curObjectData.objectID[demoTask->curObjID]) == 1) {
-	//	SE3 goal = demoTask->goalSE3[demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset;
-	//	goal.SetOrientation(EulerZYX(Vec3(0, SR_PI_HALF, 0), Vec3(0, 0, 0)).GetOrientation() * goal.GetOrientation());
-	//	renderTraj.push_back(rManager1->inverseKin(goal, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-	//}
-	//else {
-	//	renderTraj.push_back(rManager1->inverseKin(demoTask->goalSE3[demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-	//}
-	for (int i = 0; i < 3; i++) {
-		if (demoTask->which_task == 0) {
-			if (abs(demoTask->curObjectData.objectID[demoTask->curObjID]) == 1) { // FixedContact case
-				SE3 goal = SE3(Vec3(0.0, 0.0, 0.005)) * demoTask->goalSE3[demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset;
-				goal.SetOrientation(EulerZYX(Vec3(0, SR_PI_HALF, 0), Vec3(0, 0, 0)).GetOrientation() * goal.GetOrientation());
-				renderTraj.push_back(rManager1->inverseKin(goal, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-			}
-			else // FixedContactCover case
-			{
-				SE3 goal = SE3(Vec3(0.0, 0.0, 0.005)) * demoTask->goalSE3[demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset;
-				renderTraj.push_back(rManager1->inverseKin(goal, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-			}
-		}
-		else {
-			SE3 goal;
-			if (abs(demoTask->curObjectData.objectID[demoTask->curObjID]) == 1) { // FixedContact case
-				goal = SE3(Vec3(0.0, 0.0, 0.005)) * demoTask->goalSE3[demoTask->goal_iterator * 2 + demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset;
-				goal.SetOrientation(EulerZYX(Vec3(0, SR_PI_HALF, 0), Vec3(0, 0, 0)).GetOrientation() * goal.GetOrientation());
-			}
-			else // FixedContactCover case
-				goal = SE3(Vec3(0.0, 0.0, 0.005)) * demoTask->goalSE3[demoTask->goal_iterator * 2 + demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset;
-
-			if (demoTask->goal_iterator * 2 + 1 == demoTask->goalSE3.size()) {
-				demoTask->goal_iterator = 0;
-				renderTraj.push_back(rManager1->inverseKin(goal, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-			}
-			else {
-				demoTask->goal_iterator++;
-				renderTraj.push_back(rManager1->inverseKin(goal, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
-			}
-		}
-		rManager1->setJointVal(renderTraj.back());
-
-		renderTraj.push_back(rManager1->inverseKin(demoTask->homeSE3, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	objTraj.push_back(demoTask->curObjectData.objectSE3[demoTask->curObjID]);
+	for (int i = 0; i < Twaypoints1.size(); i++)
+	{
+		// Reaching
+		renderTraj.push_back(rManager1->inverseKin(Twaypoints1[i], &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+		objTraj.push_back(demoTask->curObjectData.objectSE3[demoTask->curObjID]);
 		rManager1->setJointVal(renderTraj.back());
 	}
+	// Go to grasp pose
+	renderTraj.push_back(rManager1->inverseKin(demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)), &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	rManager1->setJointVal(renderTraj.back());
+	objTraj.push_back(MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() / demoTask->curGraspOffset);
+
+	renderTraj.push_back(rManager1->inverseKin(SE3(Vec3(0.0, 0.0, 0.15)) * demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)), &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	rManager1->setJointVal(renderTraj.back());
+	objTraj.push_back(MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() / demoTask->curGraspOffset);
+
+	Twaypoints2 = demoTask->planBetweenWaypoints(SE3(Vec3(0.0, 0.0, 0.15)) * demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)), demoTask->goalSE3[demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset, 20);
+	for (int i = 0; i < Twaypoints2.size(); i++)
+	{
+		renderTraj.push_back(rManager1->inverseKin(Twaypoints2[i], &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+		rManager1->setJointVal(renderTraj.back());
+		objTraj.push_back(MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP].GetFrame() / demoTask->curGraspOffset);
+	}
+
+	Twaypoints3 = demoTask->planBetweenWaypoints(demoTask->goalSE3[demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset, demoTask->homeSE3, 20);
+	for (int i = 0; i < Twaypoints3.size(); i++)
+	{
+		renderTraj.push_back(rManager1->inverseKin(Twaypoints3[i], &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+		rManager1->setJointVal(renderTraj.back());
+		objTraj.push_back(objTraj.back());
+	}
+
+	//int flag;
+	//renderTraj.push_back(rManager1->inverseKin(demoTask->homeSE3, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	//rManager1->setJointVal(renderTraj.back());
+	//renderTraj.push_back(rManager1->inverseKin(demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * demoTask->reachOffset, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	//rManager1->setJointVal(renderTraj.back());
+
+	//renderTraj.push_back(rManager1->inverseKin(demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)), &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	//rManager1->setJointVal(renderTraj.back());
+
+	//renderTraj.push_back(rManager1->inverseKin(SE3(Vec3(0.0, 0.0, 0.25)) * demoTask->curObjectData.objectSE3[demoTask->curObjID] * demoTask->curGraspOffset * SE3(Vec3(0.0, 0.0, 0.005)), &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	//rManager1->setJointVal(renderTraj.back());
+	//
+	//for (int i = 0; i < 3; i++) {
+	//	if (demoTask->which_task == 0) {
+	//		if (abs(demoTask->curObjectData.objectID[demoTask->curObjID]) == 1) { // FixedContact case
+	//			SE3 goal = SE3(Vec3(0.0, 0.0, 0.005)) * demoTask->goalSE3[demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset;
+	//			goal.SetOrientation(EulerZYX(Vec3(0, SR_PI_HALF, 0), Vec3(0, 0, 0)).GetOrientation() * goal.GetOrientation());
+	//			renderTraj.push_back(rManager1->inverseKin(goal, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	//			break;
+	//		}
+	//		else // FixedContactCover case
+	//		{
+	//			SE3 goal = SE3(Vec3(0.0, 0.0, 0.005)) * demoTask->goalSE3[demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset;
+	//			renderTraj.push_back(rManager1->inverseKin(goal, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	//			break;
+	//		}
+	//	}
+	//	else {
+	//		SE3 goal;
+	//		if (abs(demoTask->curObjectData.objectID[demoTask->curObjID]) == 1) { // FixedContact case
+	//			goal = SE3(Vec3(0.0, 0.0, 0.005)) * demoTask->goalSE3[demoTask->goal_iterator * 2 + demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset;
+	//			goal.SetOrientation(EulerZYX(Vec3(0, SR_PI_HALF, 0), Vec3(0, 0, 0)).GetOrientation() * goal.GetOrientation());
+	//		}
+	//		else // FixedContactCover case
+	//			goal = SE3(Vec3(0.0, 0.0, 0.005)) * demoTask->goalSE3[demoTask->goal_iterator * 2 + demoTask->curGoalID] * demoTask->goalOffset * demoTask->curGraspOffset;
+
+	//		if (demoTask->goal_iterator * 2 + 1 == demoTask->goalSE3.size()) {
+	//			demoTask->goal_iterator = 0;
+	//			renderTraj.push_back(rManager1->inverseKin(goal, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	//		}
+	//		else {
+	//			demoTask->goal_iterator++;
+	//			renderTraj.push_back(rManager1->inverseKin(goal, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	//		}
+	//	}
+	//	rManager1->setJointVal(renderTraj.back());
+
+	//	renderTraj.push_back(rManager1->inverseKin(demoTask->homeSE3, &MHRobot->gMarkerLink[MH12_Index::MLINK_GRIP], true, SE3(), flag, rManager1->getJointVal()));
+	//	rManager1->setJointVal(renderTraj.back());
+	//}
 
 	// 둘 중 하나만 골라서 실행
 	rendering(argc, argv);
@@ -347,6 +347,7 @@ void updateFunc()
 		int flag;
 		iter++;
 		rManager1->setJointVal(renderTraj[iter-1]);
+		demoEnv->objects[1]->setBaseLinkFrame(objTraj[iter-1]);
 		if (iter == renderTraj.size())
 		{
 			cnt = 0; iter = 0;

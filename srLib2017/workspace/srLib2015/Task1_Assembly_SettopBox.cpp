@@ -511,10 +511,10 @@ void updateFunc()
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 
 	static int cnt = 0;
-	static int trajcnt = -20;
+	static int trajcnt = -60;
 	cnt++;
 
-	if (cnt % 10 == 0)
+	if (cnt % 5 == 0)
 		trajcnt++;
 
 	// plot planned trajectory
@@ -589,6 +589,8 @@ void updateFunc()
 		ur3Manager->setJointVal(ur3traj6[(trajcnt - ur5traj1.size() - ur5traj1_2.size() - ur5traj2.size() - ur3traj1.size() - ur3traj1_2.size() - ur3traj2.size() - ur3traj3.size() - ur3traj4.size() - ur3traj4_2.size() - ur3traj5.size()) % ur3traj6.size()]);
 		power->GetBaseLink()->SetFrame(PowerTraj2[(trajcnt - ur5traj1.size() - ur5traj1_2.size() - ur5traj2.size() - ur3traj1.size() - ur3traj1_2.size() - ur3traj2.size() - ur3traj3.size() - ur3traj4.size() - ur3traj4_2.size() - ur3traj5.size()) % ur3traj6.size()]);
 	}
+	else if (trajcnt == ur5traj1.size() + ur5traj1_2.size() + ur5traj2.size() + ur3traj1.size() + ur3traj1_2.size() + ur3traj2.size() + ur3traj3.size() + ur3traj4.size() + ur3traj4_2.size() + ur3traj5.size() + ur3traj6.size())
+		trajcnt = -10;
 }
 
 

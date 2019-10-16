@@ -12,7 +12,7 @@
 class Bin : public Object
 {
 public:
-	Bin(double collision_offset = 0.01);
+	Bin(double collision_offset = 0.005);
 	~Bin();
 	void AssembleModel();
 	double m_collision_offset;
@@ -23,6 +23,15 @@ class Table4th : public Object
 public:
 	Table4th(double collision_offset = 0.01);
 	~Table4th();
+	void AssembleModel();
+	double m_collision_offset;
+};
+
+class Table5th : public Object
+{
+public:
+	Table5th(double collision_offset = 0.01);
+	~Table5th();
 	void AssembleModel();
 	double m_collision_offset;
 };

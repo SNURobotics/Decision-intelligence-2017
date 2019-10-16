@@ -473,10 +473,10 @@ void updateFunc()
 	gSpace.DYN_MODE_RUNTIME_SIMULATION_LOOP();
 
 	static int cnt = 0;
-	static int trajcnt = 0;
+	static int trajcnt = -60;
 	cnt++;
 
-	if (cnt % 10 == 0)
+	if (cnt % 5 == 0)
 		trajcnt++;
 
 	// plot planned trajectory

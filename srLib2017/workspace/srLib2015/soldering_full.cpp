@@ -319,7 +319,7 @@ void updateFunc()
 	static int trajcnt = 0;
 	cnt++;
 
-	if (cnt % 10 == 0)
+	if (cnt % 5 == 0)
 		trajcnt++;
 
 	// plot planned trajectory

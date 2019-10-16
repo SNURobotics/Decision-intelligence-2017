@@ -445,7 +445,7 @@ void updateFunc()
 	//JointVal += 0.01;
 	obs->GetBaseLink()->SetFrame(sdaRobot->gMarkerLink[SDA20D_Index::MLINK_RIGHT_T].GetFrame());
 	static int cnt = 0;
-	static int trajcnt = 0;
+	static int trajcnt = -50;
 	cnt++;
 
 
@@ -455,7 +455,7 @@ void updateFunc()
 			FU->setBaseLinkFrame(ObjTraj1[trajcnt % traj.size()]);
 			FL->setBaseLinkFrame(ObjTraj2[trajcnt % traj.size()]);
 		}
-		if (cnt % 10 == 0)
+		if (cnt % 5 == 0)
 			trajcnt++;
 	}
 	else {

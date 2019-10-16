@@ -13,8 +13,8 @@
 #include <ctime>
 #include "common/dataIO.h"
 
-#define PROBLEM_DEFINITION
-//#define REPLANNING
+//#define PROBLEM_DEFINITION
+#define REPLANNING
 //#define ADD_TASK
 
 // Robot

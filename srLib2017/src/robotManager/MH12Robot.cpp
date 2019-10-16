@@ -6,7 +6,7 @@ MH12Robot::MH12Robot(bool elbowUp, double gripperRot)
 {
 	for (int i = 0; i < NUM_OF_RJOINT_MH12; i++)
 		gJoint[i] = new srRevoluteJoint;
-	
+
 	//for (int i = 0; i < NUM_OF_GRIPERJOINT_MH12; i++)
 	//	gGripJoint[i] = new srPrismaticJoint;
 
@@ -38,7 +38,7 @@ MH12Robot::MH12Robot(bool elbowUp, double gripperRot)
 
 MH12Robot::~MH12Robot()
 {
-	for (int i = 0; i<NUM_OF_RJOINT_MH12; i++)
+	for (int i = 0; i < NUM_OF_RJOINT_MH12; i++)
 		SR_SAFE_DELETE(gJoint[i]);
 	//for (int i = 0; i<NUM_OF_GRIPERJOINT_MH12; i++)
 	//	SR_SAFE_DELETE(gGripJoint[i]);
@@ -67,7 +67,7 @@ void MH12Robot::SetJointLimit(bool elbowUp)
 {
 	// unit: deg
 	// from robot spec
-	
+
 	// R joint
 	if (elbowUp)
 	{
@@ -144,14 +144,14 @@ void MH12Robot::AssembleModel(double gripperRot)
 	gLink[MH12_Index::LINK_1].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[MH12_Index::LINK_1].GetGeomInfo().SetLocalFrame(Tcad2srlib);
 	gLink[MH12_Index::LINK_1].GetGeomInfo().SetFileName("../../../workspace/robot/mh12_3ds/link1.3ds");
-	
+
 
 
 	gJoint[MH12_Index::JOINT_1]->SetActType(srJoint::HYBRID);
 	gJoint[MH12_Index::JOINT_1]->SetParentLink(&gLink[MH12_Index::LINK_1]);
 	gJoint[MH12_Index::JOINT_1]->SetChildLink(&gLink[MH12_Index::LINK_2]);
-	gJoint[MH12_Index::JOINT_1]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0,0.0), Vec3(0.0, 0.0, 0.0)));
-	gJoint[MH12_Index::JOINT_1]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0,0.0), Vec3(0.0, 0.0, 0.0)));
+	gJoint[MH12_Index::JOINT_1]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
+	gJoint[MH12_Index::JOINT_1]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 	gJoint[MH12_Index::JOINT_1]->GetGeomInfo().SetDimension(0.0, 0.0, 0.0);
 	gJoint[MH12_Index::JOINT_1]->MakePositionLimit(false);
 
@@ -238,7 +238,7 @@ void MH12Robot::AssembleModel(double gripperRot)
 	gLink[MH12_Index::ENDEFFECTOR].GetGeomInfo().SetLocalFrame(Tcad2srlib);
 	gLink[MH12_Index::ENDEFFECTOR].GetGeomInfo().SetFileName("../../../workspace/robot/mh12_3ds/link7.3ds");
 
-	
+
 	//gripper
 	gWeldJoint[MH12_Index::WELDJOINT_COUPLING]->SetParentLink(&gLink[MH12_Index::ENDEFFECTOR]);
 	gWeldJoint[MH12_Index::WELDJOINT_COUPLING]->SetChildLink(&gLink[MH12_Index::COUPLING]);
@@ -296,7 +296,7 @@ void MH12Robot::AssembleModel(double gripperRot)
 	gMarkerLink[MH12_Index::MLINK_GRIP].GetGeomInfo().SetDimension(Vec3(0.00, 0.00, 0.00));
 	gMarkerLink[MH12_Index::MLINK_GRIP].GetGeomInfo().SetColor(0.1f, 0.1f, 0.1f);
 	gMarkerLink[MH12_Index::MLINK_GRIP].SetInertia(Inertia(0.001));
-	
+
 
 	this->SetBaseLink(&gLink[MH12_Index::LINK_1]);
 	this->SetBaseLinkType(srSystem::FIXED);
@@ -309,12 +309,12 @@ void MH12Robot::AssembleCollision()
 	int numBox = 5;
 	double thickness = 0.03;
 	double space = 0.005;
-	vector<pair<Vec3, SE3>> boxSet;	
+	vector<pair<Vec3, SE3>> boxSet;
 
 	// Link1: 
 	// Cylinder size: H = 86.05, D = 90
 	// Center position = (0,0,86.05*0.5)
-	
+
 	//boxSet = makeCylinderWithBoxes(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.08605*0.5)), 0.09*0.5, 0.08605, thickness, space, numBox);
 	//for (int i = 0; i < numBox; i++)
 	//{
@@ -345,7 +345,7 @@ void MH12Robot::AssembleCollision()
 	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.18, 0.25, 0.28));
 	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-0.16, -0.08, 0.43)));
 
-	
+
 	gLink[MH12_Index::LINK_3].AddCollision(&gCollision[m_numCollision]);
 	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.175, 0.1, 0.76));
@@ -376,7 +376,7 @@ void MH12Robot::AssembleCollision()
 	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.05, 0.15, 0.085));
 	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-0.2, 0.125, 1.265)));
-	
+
 	gLink[MH12_Index::LINK_4].AddCollision(&gCollision[m_numCollision]);
 	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.05, 0.07, 0.03));
@@ -431,76 +431,76 @@ void MH12Robot::AssembleCollision()
 	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.013, 0.013, 0.02));
 	//gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(-1.019, 1.269, 0.0087)));
-	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(-(0.155 + 0.640 + 0.100 + 0.134 - (0.02/2)), (0.450 + 0.614 + 0.200 + 0.005), 0.0087)));
-	
+	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(-(0.155 + 0.640 + 0.100 + 0.134 - (0.02 / 2)) + 0.01, (0.450 + 0.614 + 0.200 + 0.005), 0.0087)));
+
 	gLink[MH12_Index::GRIPPER_2].AddCollision(&gCollision[m_numCollision]);
 	//gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::CYLINDER);
 	//gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.015, 0.02, 0.0));
 	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.013, 0.013, 0.02));
-	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(-(0.155 + 0.640 + 0.100 + 0.134 - (0.02 / 2)), (0.450 + 0.614 + 0.200 - 0.010), 0.0)));
+	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(-(0.155 + 0.640 + 0.100 + 0.134 - (0.02 / 2)) + 0.01, (0.450 + 0.614 + 0.200 - 0.010), 0.0)));
 
 	gLink[MH12_Index::GRIPPER_3].AddCollision(&gCollision[m_numCollision]);
 	//gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::CYLINDER);
 	//gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.015, 0.02, 0.0));
 	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
 	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.013, 0.013, 0.02));
-	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(-(0.155 + 0.640 + 0.100 + 0.134 - (0.02 / 2)), (0.450 + 0.614 + 0.200 + 0.005), -0.0087)));
-	
+	gCollision[m_numCollision++].SetLocalFrame(EulerZYX(Vec3(0.0, SR_PI_HALF, 0.0), Vec3(-(0.155 + 0.640 + 0.100 + 0.134 - (0.02 / 2)) + 0.01, (0.450 + 0.614 + 0.200 + 0.005), -0.0087)));
+
 }
 
 void MH12Robot::SetInertia()
 {
-//	double m1 = 5.598009;
-//	double m2 = 4.722018;
-//	double m3 = 6.17608;
-//	double m4 = 6.549344;
-//	double m5 = 1.923968;
-//	double m6 = 3.3099;
-//	double m7 = 0.0913;
-//	Vec3 r1 = Vec3(0.001027, -0.000056, 0.087474);
-//	Vec3 r2 = Vec3(-0.000007, 0.0256, 0.255037);
-//	Vec3 r3 = Vec3(-0.002282, -0.006782, 0.469538);
-//	Vec3 r4 = Vec3(0.010135, 0.016094, 0.735077);
-//	Vec3 r5 = Vec3(0.316302, -0.000768, 0.785255);
-//	Vec3 r6 = Vec3(0.423187, 0.000899, 0.873598);
-//	Vec3 r7 = Vec3(0.552202, 0.0, 0.995299);
-//	
-//	Inertia G1(0.031682, 0.031384, 0.017293, -0.000023, -0.000017, -0.000468, 0.0, 0.0, 0.0, m1);
-//	Inertia G2(0.02108, 0.010309, 0.021876, 0, 0.000901, 0.000001, 0.0, 0.0, 0.0, m2);
-//	Inertia G3(0.216937, 0.167656, 0.067914, -0.000322, -0.001387, -0.001728, 0.0, 0.0, 0.0, m3);
-//	Inertia G4(0.033518, 0.046678, 0.042127, -0.001069, -0.004744, 0.003172, 0.0, 0.0, 0.0, m4);
-//	Inertia G5(0.004299, 0.024684, 0.023256, -0.000053, -0.000005, -0.000499, 0.0, 0.0, 0.0, m5);
-//	Inertia G6(0.022679, 0.028158, 0.00752, -0.000064, 0.000104, 0.001751, 0.0, 0.0, 0.0, m6);
-//	Inertia G7(0.000101, 0.000101, 0.0001, 0, 0, 0, 0.0, 0.0, 0.0, m7);
-//
-//	gLink[Indy_Index::LINK_1].SetInertia(G1.Transform(SE3(-r1)));
-//	gLink[Indy_Index::LINK_2].SetInertia(G2.Transform(SE3(-r2)));
-//	gLink[Indy_Index::LINK_3].SetInertia(G3.Transform(SE3(-r3)));
-//	gLink[Indy_Index::LINK_4].SetInertia(G4.Transform(SE3(-r4)));
-//	gLink[Indy_Index::LINK_5].SetInertia(G5.Transform(SE3(-r5)));
-//	gLink[Indy_Index::LINK_6].SetInertia(G6.Transform(SE3(-r6)));
-//	gLink[Indy_Index::ENDEFFECTOR].SetInertia(G7.Transform(SE3(-r7)));
-//		
-//
-//	// GIMATIC MPLM1630N GRIPPER MODEL
-//	double m_g1 = 0.10629;
-//	double m_g2 = 0.16205;
-//	double m_g3 = 0.00515;
-//	double m_g4 = 0.00515;
-//	Vec3 r_g1 = Vec3(0.01e-3, -17.35e-3, 0.04e-3);
-//	Vec3 r_g2 = Vec3(-0.01e-3, -61.66e-3, -0.06e-3);
-//	Vec3 r_g3 = Vec3(-0.61e-3, -106.69e-3, 22.76e-3);
-//	Vec3 r_g4 = Vec3(0.61e-3, -106.69e-3, -22.76e-3);
-//	Inertia G_g1(42161.46e-9, 63838.67e-9, 42131.49e-9, 9.63e-9, 8.46e-9, -37.38e-9, 0.0, 0.0, 0.0, m_g1);
-//	Inertia G_g2(94794.64e-9, 82474.62e-9, 77696.95e-9, -22.07e-9, -57.59e-9, 408.09e-9, 0.0, 0.0, 0.0, m_g2);
-//	double ratio = 1.0;
-//	Inertia G_g3(ratio * 530.34e-9, ratio * 177.96e-9, ratio * 551.94e-9, -ratio * 33.21e-9, ratio * 56.44e-9, -ratio * 3.22e-9, 0.0, 0.0, 0.0, ratio * m_g3);
-//	Inertia G_g4(ratio * 530.34e-9, ratio * 177.96e-9, ratio * 551.94e-9, ratio * 33.21e-9, -ratio * 56.44e-9, -ratio * 3.22e-9, 0.0, 0.0, 0.0, ratio * m_g4);
-//	gLink[Indy_Index::SENSOR].SetInertia(G_g1.Transform(SE3(-r_g1)));
-//	gLink[Indy_Index::GRIPPER].SetInertia(G_g2.Transform(SE3(-r_g2)));
-//	gLink[Indy_Index::GRIPPER_FINGER_L].SetInertia(G_g3.Transform(SE3(-r_g3)));
-//	gLink[Indy_Index::GRIPPER_FINGER_U].SetInertia(G_g4.Transform(SE3(-r_g4)));
+	//	double m1 = 5.598009;
+	//	double m2 = 4.722018;
+	//	double m3 = 6.17608;
+	//	double m4 = 6.549344;
+	//	double m5 = 1.923968;
+	//	double m6 = 3.3099;
+	//	double m7 = 0.0913;
+	//	Vec3 r1 = Vec3(0.001027, -0.000056, 0.087474);
+	//	Vec3 r2 = Vec3(-0.000007, 0.0256, 0.255037);
+	//	Vec3 r3 = Vec3(-0.002282, -0.006782, 0.469538);
+	//	Vec3 r4 = Vec3(0.010135, 0.016094, 0.735077);
+	//	Vec3 r5 = Vec3(0.316302, -0.000768, 0.785255);
+	//	Vec3 r6 = Vec3(0.423187, 0.000899, 0.873598);
+	//	Vec3 r7 = Vec3(0.552202, 0.0, 0.995299);
+	//	
+	//	Inertia G1(0.031682, 0.031384, 0.017293, -0.000023, -0.000017, -0.000468, 0.0, 0.0, 0.0, m1);
+	//	Inertia G2(0.02108, 0.010309, 0.021876, 0, 0.000901, 0.000001, 0.0, 0.0, 0.0, m2);
+	//	Inertia G3(0.216937, 0.167656, 0.067914, -0.000322, -0.001387, -0.001728, 0.0, 0.0, 0.0, m3);
+	//	Inertia G4(0.033518, 0.046678, 0.042127, -0.001069, -0.004744, 0.003172, 0.0, 0.0, 0.0, m4);
+	//	Inertia G5(0.004299, 0.024684, 0.023256, -0.000053, -0.000005, -0.000499, 0.0, 0.0, 0.0, m5);
+	//	Inertia G6(0.022679, 0.028158, 0.00752, -0.000064, 0.000104, 0.001751, 0.0, 0.0, 0.0, m6);
+	//	Inertia G7(0.000101, 0.000101, 0.0001, 0, 0, 0, 0.0, 0.0, 0.0, m7);
+	//
+	//	gLink[Indy_Index::LINK_1].SetInertia(G1.Transform(SE3(-r1)));
+	//	gLink[Indy_Index::LINK_2].SetInertia(G2.Transform(SE3(-r2)));
+	//	gLink[Indy_Index::LINK_3].SetInertia(G3.Transform(SE3(-r3)));
+	//	gLink[Indy_Index::LINK_4].SetInertia(G4.Transform(SE3(-r4)));
+	//	gLink[Indy_Index::LINK_5].SetInertia(G5.Transform(SE3(-r5)));
+	//	gLink[Indy_Index::LINK_6].SetInertia(G6.Transform(SE3(-r6)));
+	//	gLink[Indy_Index::ENDEFFECTOR].SetInertia(G7.Transform(SE3(-r7)));
+	//		
+	//
+	//	// GIMATIC MPLM1630N GRIPPER MODEL
+	//	double m_g1 = 0.10629;
+	//	double m_g2 = 0.16205;
+	//	double m_g3 = 0.00515;
+	//	double m_g4 = 0.00515;
+	//	Vec3 r_g1 = Vec3(0.01e-3, -17.35e-3, 0.04e-3);
+	//	Vec3 r_g2 = Vec3(-0.01e-3, -61.66e-3, -0.06e-3);
+	//	Vec3 r_g3 = Vec3(-0.61e-3, -106.69e-3, 22.76e-3);
+	//	Vec3 r_g4 = Vec3(0.61e-3, -106.69e-3, -22.76e-3);
+	//	Inertia G_g1(42161.46e-9, 63838.67e-9, 42131.49e-9, 9.63e-9, 8.46e-9, -37.38e-9, 0.0, 0.0, 0.0, m_g1);
+	//	Inertia G_g2(94794.64e-9, 82474.62e-9, 77696.95e-9, -22.07e-9, -57.59e-9, 408.09e-9, 0.0, 0.0, 0.0, m_g2);
+	//	double ratio = 1.0;
+	//	Inertia G_g3(ratio * 530.34e-9, ratio * 177.96e-9, ratio * 551.94e-9, -ratio * 33.21e-9, ratio * 56.44e-9, -ratio * 3.22e-9, 0.0, 0.0, 0.0, ratio * m_g3);
+	//	Inertia G_g4(ratio * 530.34e-9, ratio * 177.96e-9, ratio * 551.94e-9, ratio * 33.21e-9, -ratio * 56.44e-9, -ratio * 3.22e-9, 0.0, 0.0, 0.0, ratio * m_g4);
+	//	gLink[Indy_Index::SENSOR].SetInertia(G_g1.Transform(SE3(-r_g1)));
+	//	gLink[Indy_Index::GRIPPER].SetInertia(G_g2.Transform(SE3(-r_g2)));
+	//	gLink[Indy_Index::GRIPPER_FINGER_L].SetInertia(G_g3.Transform(SE3(-r_g3)));
+	//	gLink[Indy_Index::GRIPPER_FINGER_U].SetInertia(G_g4.Transform(SE3(-r_g4)));
 }
 //
 void MH12Robot::SetTorqueLimit()
@@ -528,7 +528,7 @@ Eigen::VectorXd MH12Robot::getLowerJointLimit() const
 {
 	Eigen::VectorXd llim(DEGREE_OF_FREEDOM_MH12_JOINT);
 	for (int i = 0; i < DEGREE_OF_FREEDOM_MH12_JOINT; i++)
-		llim[i] =  DEG2RAD(LowerJointLimit[i]);
+		llim[i] = DEG2RAD(LowerJointLimit[i]);
 	return llim;
 }
 
