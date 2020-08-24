@@ -64,7 +64,7 @@ public:
 	double UpperGripJointLimit[NUM_OF_GRIPERJOINT_Franka];
 	double LowerGripJointLimit[NUM_OF_GRIPERJOINT_Franka];
 
-
+	vector<SE3> Tcad2srlib;
 
 
 public:

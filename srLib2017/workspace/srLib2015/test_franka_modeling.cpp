@@ -80,6 +80,27 @@ int main(int argc, char **argv)
 	//traj = RRTManager->extractPath(200);
 	//
 	////////////////////////////////////////////////
+	cout << frankaRobot->gLink[Franka_Index::LINK_0].GetFrame() << endl;
+	cout << frankaRobot->gLink[Franka_Index::LINK_1].GetFrame() << endl;
+	cout << frankaRobot->gLink[Franka_Index::LINK_2].GetFrame() << endl;
+	cout << frankaRobot->gLink[Franka_Index::LINK_3].GetFrame() << endl;
+	cout << frankaRobot->gLink[Franka_Index::LINK_4].GetFrame() << endl;
+	cout << frankaRobot->gLink[Franka_Index::LINK_5].GetFrame() << endl;
+	cout << frankaRobot->gLink[Franka_Index::LINK_6].GetFrame() << endl;
+
+	// for (int j = 0; j < 7; j++)
+	// {
+	// 	srLink* tempLink = new srLink;
+	// 	tempLink->GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
+	// 	tempLink->GetGeomInfo().SetDimension(0.03);
+	// 	tempLink->SetFrame(frankaRobot->gLink[j].GetFrame());
+	// 	srSystem* tempSys = new srSystem;
+	// 	tempSys->SetBaseLink(tempLink);
+	// 	tempSys->SetBaseLinkType(srSystem::BASELINKTYPE::FIXED);
+	// 	tempSys->GetBaseLink()->GetGeomInfo().SetColor(1.0, 0.0, 0.0);
+	// 	markers.push_back(tempSys);
+	// 	gSpace.AddSystem(tempSys);
+	// }
 
 	rendering(argc, argv);
 

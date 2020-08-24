@@ -37,9 +37,13 @@ public:
 		//m_camera = new Camera(2.5, SR_PI / 5.0, SR_PI_HALF, focus);
 
 		// force control view
-		Vec3 focus = Vec3(-0.23, 0.0, 0.0);
-		//m_camera = new Camera(0.5, SR_PI / 7.0, -SR_PI_HALF, focus);
-		m_camera = new Camera(2.2, SR_PI / 7.0, -SR_PI_HALF, focus);
+		// Vec3 focus = Vec3(-0.23, 0.0, 0.0);
+		// //m_camera = new Camera(0.5, SR_PI / 7.0, -SR_PI_HALF, focus);
+		//m_camera = new Camera(2.2, SR_PI / 7.0, -SR_PI_HALF, focus);
+
+		// IMAT view
+		Vec3 focus = Vec3(-0.0, -0.23, 0.23);
+		m_camera = new Camera(1.6, SR_PI / 7.0, SR_PI_HALF * 7 / 8, focus);
 
 		// workcell view
 		//Vec3 focus = Vec3(0.025, 1.095, 1.176);
@@ -58,7 +62,7 @@ public:
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		addNode(grid);
+		// addNode(grid);
 		addNode(nodeGroup);
 		addNode(coordinateGroup);
 

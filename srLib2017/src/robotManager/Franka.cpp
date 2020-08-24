@@ -1,6 +1,7 @@
 #include "Franka.h"
 #include "common\utils.h"
 #include "makeSpecialCol.h"
+#include "common/dataIO.h"
 
 Franka::Franka(bool elbowUp, double gripperRot)
 {
@@ -12,6 +13,8 @@ Franka::Franka(bool elbowUp, double gripperRot)
 
 	for (int i = 0; i < NUM_OF_WJOINT_Franka; i++)
 		gWeldJoint[i] = new srWeldJoint;
+
+	Tcad2srlib = vector<SE3>(8);
 
 	AssembleModel(gripperRot);
 	AssembleCollision();
@@ -31,6 +34,7 @@ Franka::Franka(bool elbowUp, double gripperRot)
 	{
 		//qInvKinInit[0] = -0.074913; qInvKinInit[1] = -0.612778; qInvKinInit[2] = -2.488023; qInvKinInit[3] = 1.570796; qInvKinInit[4] = -1.530005; qInvKinInit[5] = 1.645710;
 	}
+
 	TsrLinkbase2robotbase = SE3();
 	this->SetSelfCollision(true);
 }
@@ -144,7 +148,14 @@ void Franka::AssembleModel(double gripperRot)
 	for (int i = 0; i < NUM_OF_LINK_Franka; i++)
 		gLink[i].GetGeomInfo().SetColor(0.3f, 0.3f, 0.3f, 1.0f);
 
-	SE3 Tcad2srlib = EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0));
+	Tcad2srlib[0] = EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0));
+	Tcad2srlib[1] = EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.1665));
+	Tcad2srlib[2] = EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.158));
+	Tcad2srlib[3] = EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0));
+	Tcad2srlib[4] = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.0));
+	Tcad2srlib[5] = EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0));
+	Tcad2srlib[6] = EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(-0.044, 0.0, 0.0));
+	Tcad2srlib[7] = EulerXYZ(Vec3(SR_PI_HALF, -0.5*SR_PI_HALF, 0.0), Vec3(0.0, 0.0, -0.107));
 
 	// WHEN CAD MODELS ARE AVAILABLE...
 	//gLink[Franka_Index::LINK_1].SetFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
@@ -156,9 +167,9 @@ void Franka::AssembleModel(double gripperRot)
 
 	// TEMPORARY MODELINGS
 	gLink[Franka_Index::LINK_0].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	gLink[Franka_Index::LINK_0].GetGeomInfo().SetColor(0.3f, 0.3f, 0.3f, alpha);
+	gLink[Franka_Index::LINK_0].GetGeomInfo().SetColor(0.1f, 0.1f, 0.1f, alpha);
 	gLink[Franka_Index::LINK_0].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link0.3ds");
-	gLink[Franka_Index::LINK_0].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0,0.0)));
+	gLink[Franka_Index::LINK_0].GetGeomInfo().SetLocalFrame(Tcad2srlib[0]);
 
 	gJoint[Franka_Index::JOINT_1]->SetActType(srJoint::HYBRID);
 	gJoint[Franka_Index::JOINT_1]->SetParentLink(&gLink[Franka_Index::LINK_0]);
@@ -171,7 +182,7 @@ void Franka::AssembleModel(double gripperRot)
 	gLink[Franka_Index::LINK_1].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[Franka_Index::LINK_1].GetGeomInfo().SetColor(0.3f, 0.3f, 0.3f, alpha);
 	gLink[Franka_Index::LINK_1].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link1.3ds");
-	gLink[Franka_Index::LINK_1].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.1665)));
+	gLink[Franka_Index::LINK_1].GetGeomInfo().SetLocalFrame(Tcad2srlib[1]);
 
 	gJoint[Franka_Index::JOINT_2]->SetActType(srJoint::HYBRID);
 	gJoint[Franka_Index::JOINT_2]->SetParentLink(&gLink[Franka_Index::LINK_1]);
@@ -184,7 +195,7 @@ void Franka::AssembleModel(double gripperRot)
 	gLink[Franka_Index::LINK_2].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[Franka_Index::LINK_2].GetGeomInfo().SetColor(0.3f, 0.3f, 0.3f, alpha);
 	gLink[Franka_Index::LINK_2].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link2.3ds");
-	gLink[Franka_Index::LINK_2].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, -0.158)));
+	gLink[Franka_Index::LINK_2].GetGeomInfo().SetLocalFrame(Tcad2srlib[2]);
 
 	gJoint[Franka_Index::JOINT_3]->SetActType(srJoint::HYBRID);
 	gJoint[Franka_Index::JOINT_3]->SetParentLink(&gLink[Franka_Index::LINK_2]);
@@ -197,7 +208,7 @@ void Franka::AssembleModel(double gripperRot)
 	gLink[Franka_Index::LINK_3].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[Franka_Index::LINK_3].GetGeomInfo().SetColor(0.3f, 0.3f, 0.3f, alpha);
 	gLink[Franka_Index::LINK_3].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link3.3ds");
-	gLink[Franka_Index::LINK_3].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0)));
+	gLink[Franka_Index::LINK_3].GetGeomInfo().SetLocalFrame(Tcad2srlib[3]);
 
 	gJoint[Franka_Index::JOINT_4]->SetActType(srJoint::HYBRID);
 	gJoint[Franka_Index::JOINT_4]->SetParentLink(&gLink[Franka_Index::LINK_3]);
@@ -210,7 +221,7 @@ void Franka::AssembleModel(double gripperRot)
 	gLink[Franka_Index::LINK_4].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[Franka_Index::LINK_4].GetGeomInfo().SetColor(0.3f, 0.3f, 0.3f, alpha);
 	gLink[Franka_Index::LINK_4].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link4.3ds");
-	gLink[Franka_Index::LINK_4].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(0.0, 0.0, 0.0)));
+	gLink[Franka_Index::LINK_4].GetGeomInfo().SetLocalFrame(Tcad2srlib[4]);
 
 	gJoint[Franka_Index::JOINT_5]->SetActType(srJoint::HYBRID);
 	gJoint[Franka_Index::JOINT_5]->SetParentLink(&gLink[Franka_Index::LINK_4]);
@@ -223,7 +234,7 @@ void Franka::AssembleModel(double gripperRot)
 	gLink[Franka_Index::LINK_5].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[Franka_Index::LINK_5].GetGeomInfo().SetColor(0.3f, 0.3f, 0.3f, alpha);
 	gLink[Franka_Index::LINK_5].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link5.3ds");
-	gLink[Franka_Index::LINK_5].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI_HALF), Vec3(0.0, 0.0, 0.0)));
+	gLink[Franka_Index::LINK_5].GetGeomInfo().SetLocalFrame(Tcad2srlib[5]);
 
 	gJoint[Franka_Index::JOINT_6]->SetActType(srJoint::HYBRID);
 	gJoint[Franka_Index::JOINT_6]->SetParentLink(&gLink[Franka_Index::LINK_5]);
@@ -236,7 +247,7 @@ void Franka::AssembleModel(double gripperRot)
 	gLink[Franka_Index::LINK_6].GetGeomInfo().SetShape(srGeometryInfo::TDS);
 	gLink[Franka_Index::LINK_6].GetGeomInfo().SetColor(0.3f, 0.3f, 0.3f, alpha);
 	gLink[Franka_Index::LINK_6].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link6.3ds");
-	gLink[Franka_Index::LINK_6].GetGeomInfo().SetLocalFrame(EulerZYX(Vec3(0.0, 0.0, SR_PI), Vec3(-0.044, 0.0, 0.0)));
+	gLink[Franka_Index::LINK_6].GetGeomInfo().SetLocalFrame(Tcad2srlib[6]);
 
 	gJoint[Franka_Index::JOINT_7]->SetActType(srJoint::HYBRID);
 	gJoint[Franka_Index::JOINT_7]->SetParentLink(&gLink[Franka_Index::LINK_6]);
@@ -248,22 +259,25 @@ void Franka::AssembleModel(double gripperRot)
 
 	
 	gLink[Franka_Index::LINK_7].GetGeomInfo().SetShape(srGeometryInfo::TDS);
-	gLink[Franka_Index::LINK_7].GetGeomInfo().SetColor(0.3f, 0.3f, 0.3f, alpha);
+	gLink[Franka_Index::LINK_7].GetGeomInfo().SetColor(0.1f, 0.1f, 0.1f, alpha);
 	gLink[Franka_Index::LINK_7].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/link7.3ds");
-	gLink[Franka_Index::LINK_7].GetGeomInfo().SetLocalFrame(EulerXYZ(Vec3(SR_PI_HALF, -0.5*SR_PI_HALF, 0.0), Vec3(0.0, 0.0, -0.107)));
+	gLink[Franka_Index::LINK_7].GetGeomInfo().SetLocalFrame(Tcad2srlib[7]);
 
 	gWeldJoint[Franka_Index::WELDJOINT_HAND]->SetActType(srJoint::PASSIVE);
 	gWeldJoint[Franka_Index::WELDJOINT_HAND]->SetParentLink(&gLink[Franka_Index::LINK_7]);
 	gWeldJoint[Franka_Index::WELDJOINT_HAND]->SetChildLink(&gLink[Franka_Index::HAND]);
 	gWeldJoint[Franka_Index::WELDJOINT_HAND]->SetParentLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));
 	gWeldJoint[Franka_Index::WELDJOINT_HAND]->SetChildLinkFrame(EulerZYX(Vec3(0.0, 0.0, 0.0), Vec3(0.0, 0.0, 0.0)));		// consider offset for gripper assembly
+	
+	
+	// gLink[Franka_Index::HAND].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	// gLink[Franka_Index::HAND].GetGeomInfo().SetColor(0.1f, 0.1f, 0.1f, alpha);
+	// gLink[Franka_Index::HAND].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/hand.3ds");
+	// gLink[Franka_Index::HAND].GetGeomInfo().SetLocalFrame(EulerXYZ(Vec3(SR_PI_HALF, -SR_PI_HALF, 0.0), Vec3(0.0, 0.0, 0.0)));
 
-	
-	
-	gLink[Franka_Index::HAND].GetGeomInfo().SetShape(srGeometryInfo::TDS);
+	gLink[Franka_Index::HAND].GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
+	gLink[Franka_Index::HAND].GetGeomInfo().SetDimension(0.00);
 	gLink[Franka_Index::HAND].GetGeomInfo().SetColor(0.1f, 0.1f, 0.1f, alpha);
-	gLink[Franka_Index::HAND].GetGeomInfo().SetFileName("../../../workspace/robot/Franka/hand.3ds");
-	gLink[Franka_Index::HAND].GetGeomInfo().SetLocalFrame(EulerXYZ(Vec3(SR_PI_HALF, -SR_PI_HALF, 0.0), Vec3(0.0, 0.0, 0.0)));
 
 
 	// marker links (act as the reference frames for the outputs from forward kinematics etc.)
@@ -278,7 +292,7 @@ void Franka::AssembleModel(double gripperRot)
 	gMarkerLink[Franka_Index::MLINK_GRIP].GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
 	gMarkerLink[Franka_Index::MLINK_GRIP].GetGeomInfo().SetColor(0.1f, 0.1f, 0.1f);
 	gMarkerLink[Franka_Index::MLINK_GRIP].SetInertia(Inertia(0.001));
-	gMarkerLink[Franka_Index::MLINK_GRIP].GetGeomInfo().SetDimension(0.01);
+	gMarkerLink[Franka_Index::MLINK_GRIP].GetGeomInfo().SetDimension(0.00);
 
 	// hand 뒤에 finger 추가 필요
 	
@@ -288,12 +302,34 @@ void Franka::AssembleModel(double gripperRot)
 
 void Franka::AssembleCollision()
 {
-	m_numCollision = 0;
+	vector<double> collision_r_ratio_IMAT = { 1.6, 1.25, 1.25, 1.3, 1.3, 1.4, 1.4, 1.35 };
+	vector<double> collision_r_ratio_LSMAT = { 1.95, 1.35, 1.35, 1.45, 1.5, 1.6, 2.7, 2.45 };
+	vector<vector<vector<double>>> collisionSpheres_cr_all(8);
+	///////////////////////// test file read /////////////////////////
+	for (int link_idx = 0; link_idx < 8; link_idx++) {
+		string str = "../../../data/franka_setting/IMAT_" + to_string(link_idx) + ".txt";
+		vector<int> lineNums(10);
+		for (int i = 0; i < 10; i++) {
+			lineNums[i] = i;
+		}
+		collisionSpheres_cr_all[link_idx] = loadDataFromTextSpecifiedLines(str, lineNums);
+	}
+	//////////////////////////////////////////////////////////////////
 
-	gLink[Franka_Index::LINK_1].AddCollision(&gCollision[m_numCollision]);
-	gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::BOX);
-	gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(0.1, 0.1, 0.333));
-	gCollision[m_numCollision++].SetLocalFrame(SE3(Vec3(0.0, 0.0, 0.0)));
+	m_numCollision = 0;
+	SE3 eye = SE3(Vec3(0.0, 0.0, 0.0));
+
+	for (int link_idx = 0; link_idx < 8; link_idx++) {
+		for (int sphere_idx = 0; sphere_idx < 10; sphere_idx++) {
+			gLink[link_idx].AddCollision(&gCollision[m_numCollision]);
+			gCollision[m_numCollision].GetGeomInfo().SetShape(srGeometryInfo::SPHERE);
+			gCollision[m_numCollision].GetGeomInfo().SetDimension(Vec3(collisionSpheres_cr_all[link_idx][sphere_idx][3] * collision_r_ratio_IMAT[link_idx] * 2, 1.0, 1.0));
+			gCollision[m_numCollision].GetGeomInfo().SetColor(0.3f, 0.0f, 0.0f);
+			gCollision[m_numCollision++].SetLocalFrame(Tcad2srlib[link_idx] * EulerZYX(Vec3(0.0, 0.0, 0.0), 
+				Vec3(collisionSpheres_cr_all[link_idx][sphere_idx][0], collisionSpheres_cr_all[link_idx][sphere_idx][1], collisionSpheres_cr_all[link_idx][sphere_idx][2])));
+		}
+	}
+
 	
 	// ADD FOR OTHER LINKS
 }

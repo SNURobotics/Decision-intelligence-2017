@@ -53,7 +53,7 @@ void Camera::initializeCamera()
 	mode = _NONE;
 	bOrtho = false;
 
-	bDrawFocus = true;
+	bDrawFocus = false;
 }
 void Camera::initializeCamera(Vec3 focus)
 {

@@ -3,7 +3,7 @@
 #include "common/utils.h"
 
 #define GRAYCOLORSDA20D		0.15f, 0.15f, 0.15f, 1.0f
-#define SHOW_GRIPPER
+//#define SHOW_GRIPPER
 SDA20D::SDA20D()
 {
 
